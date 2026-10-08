@@ -8,6 +8,7 @@ license.workspace = true
 serde.workspace = true
 serde_json.workspace = true
 sanctum-policy = { path = "../policy" }
+tiny_http = "=0.12.0"
 
 [target.'cfg(all(target_os = "linux", target_arch = "x86_64"))'.dependencies]
 libc.workspace = true
@@ -15,3 +16,7 @@ libc.workspace = true
 [[bin]]
 name = "sanctum-foundation"
 path = "src/main.rs"
+
+[[bin]]
+name = "sanctum-runtime"
+path = "src/runtime_main.rs"

@@ -100,6 +100,41 @@
       "verified_at": "2026-10-08"
     },
     {
+      "name": "rust",
+      "version": "1.99.0",
+      "license": "MIT OR Apache-2.0",
+      "license_source": "https://github.com/rust-lang/rust/blob/1.99.0/COPYRIGHT",
+      "scope": "rust-toolchain",
+      "verified_at": "2026-10-08"
+    },
+    {
+      "name": "ascii",
+      "version": "1.1.0",
+      "license": "Apache-2.0 OR MIT",
+      "license_source": "https://crates.io/crates/ascii/1.1.0",
+      "scope": "rust",
+      "verified_at": "2026-10-08",
+      "sha256": "d92bec98840b8f03a5ff5413de5293bfcd8bf96467cf5452609f939ec6f5de16"
+    },
+    {
+      "name": "chunked_transfer",
+      "version": "1.5.0",
+      "license": "MIT OR Apache-2.0",
+      "license_source": "https://crates.io/crates/chunked_transfer/1.5.0",
+      "scope": "rust",
+      "verified_at": "2026-10-08",
+      "sha256": "6e4de3bc4ea267985becf712dc6d9eed8b04c953b3fcfb339ebc87acd9804901"
+    },
+    {
+      "name": "httpdate",
+      "version": "1.0.3",
+      "license": "MIT OR Apache-2.0",
+      "license_source": "https://crates.io/crates/httpdate/1.0.3",
+      "scope": "rust",
+      "verified_at": "2026-10-08",
+      "sha256": "df3b46402a9d5adb4c86a0cf463f42e19994e3ee891101b1841f30a545cb49a9"
+    },
+    {
       "name": "itoa",
       "version": "1.0.18",
       "license": "MIT OR Apache-2.0",
@@ -116,6 +151,15 @@
       "scope": "rust",
       "verified_at": "2026-10-08",
       "sha256": "ce5d3ddc6d3fa000eb1536d85e147bfe31aacaba692ed6a876f95cb7c855be78"
+    },
+    {
+      "name": "log",
+      "version": "0.4.34",
+      "license": "MIT OR Apache-2.0",
+      "license_source": "https://crates.io/crates/log/0.4.34",
+      "scope": "rust",
+      "verified_at": "2026-10-08",
+      "sha256": "f9f8bd3e56ce4dfc153cf470fffbfa98c7620958b312ca5c3a4b8d5181fd13c6"
     },
     {
       "name": "memchr",
@@ -190,6 +234,15 @@
       "sha256": "8593e8e72159ed2257d083c7a454a85cbf854f37a0966d8d483aff8c8a3ebcee"
     },
     {
+      "name": "tiny_http",
+      "version": "0.12.0",
+      "license": "MIT OR Apache-2.0",
+      "license_source": "https://crates.io/crates/tiny_http/0.12.0",
+      "scope": "rust",
+      "verified_at": "2026-10-08",
+      "sha256": "389915df6413a2e74fb181895f933386023c71110878cd0825588928e64cdc82"
+    },
+    {
       "name": "unicode-ident",
       "version": "1.0.26",
       "license": "(MIT OR Apache-2.0) AND Unicode-3.0",
@@ -206,14 +259,6 @@
       "scope": "rust",
       "verified_at": "2026-10-08",
       "sha256": "29666d0abbfad1e3dc4dcf6144730dd3a3ab225bbbdac83319345b1b44ccfc1b"
-    },
-    {
-      "name": "rust",
-      "version": "1.99.0",
-      "license": "MIT OR Apache-2.0",
-      "license_source": "https://github.com/rust-lang/rust/blob/1.99.0/COPYRIGHT",
-      "scope": "rust-toolchain",
-      "verified_at": "2026-10-08"
     }
   ]
 }

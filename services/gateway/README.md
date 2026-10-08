@@ -24,3 +24,9 @@ The child receives a cleared environment, inherited Unix stdin/stdout and null s
 Tests: `cargo test --locked --offline -p sanctum-gateway`. Includes shared schema
 fixtures, frame bounds/truncation, separate-process security probes, invalid inputs,
 and rejection of unapproved process transport. No production privacy claim yet.
+
+Runtime health (Linux x86_64): `target/debug/sanctum-runtime --port 8765`.
+GET /healthz is served through a host-loopback socket after entering private
+user/network namespaces and applying the runtime filter. No external route exists.
+`--test-child` verifies exec inheritance; `--once` serves one health request.
+Contract: docs/contracts/runtime.openapi.json; ADR 0006 describes the boundary.

@@ -1,11 +1,11 @@
 # Implementation status
 
 Updated: 2026-10-08. Source of truth: ../plan.md. Phase 0, slices 1–2 implemented.
-No later phase has started. Placeholder service directories are not implementations.
+Phase 1 starts after the Phase 0 completion commit below. Placeholder service directories are not implementations.
 
 | Phase | State | Exit criteria / evidence |
 |---|---|---|
-| 0 Foundations | in progress | Doctor prints hardware tier/profile: passed. Expanded early privacy foundation remains incomplete. |
+| 0 Foundations | done (Linux x86_64) | Doctor tier/profile passes; real isolated HTTP ingress, exec inheritance and egress startup probes pass. Other runtime platforms fail closed. |
 | 1 Chat | not started | Clean install to answer <5 min; official OpenAI SDK compatibility: unverified. |
 | 2 Knowledge | not started | Hybrid beats vector-only on recall and faithfulness: unverified; numerical margin pending. |
 | 3 Speech | not started | T1 voice latency <800 ms and WER target: unverified; WER target pending. |
@@ -25,7 +25,8 @@ No later phase has started. Placeholder service directories are not implementati
 - [x] Early evaluation harness with measured foundation baseline and regression rejection.
 - [x] Early Linux isolated startup self-test exercised under WSL2.
 - [x] Two-process Rust bootstrap with inherited IPC and per-process kernel denial tests.
-- [ ] Production HTTP/gRPC transport and engine-specific containment/startup enforcement.
+- [x] HTTP health ingress and exec/thread-compatible runtime egress isolation on Linux x86_64.
+- [ ] Native engine execution verification is the next Phase 1 integration gate.
 - [ ] Native Windows/macOS containment (unverified/unsupported; no services start).
 - [ ] Complete GPU/VRAM/CPU-feature/NPU support matrix; real Apple/NVIDIA checks.
 - [x] Rust toolchain, envelope contracts and executable supervisor/worker foundation.
@@ -91,3 +92,20 @@ Measured response: ../evals/results/containment-linux.json; schema validated by 
 Python contract suite. These kernel checks do not measure inference, RAG, or latency.
 ADR 0005 scopes the bootstrap protocol and containment limitations. Phase 0 remains
 in progress until actual product-service startup uses an enforceable supported profile.
+
+## Phase 0 completion evidence (slice 3)
+
+ADR 0006 defines Linux x86_64 as the verified initial runtime; other operating
+systems remain unsupported, not silently unconfined. Doctor's configured tier/profile
+exit passes on the Windows host. Partial accelerator discovery remains documented.
+
+Rust tests: 13/13 pass; formatting/Clippy pass. All 17 resolved crate licenses and
+archive hashes pass. The actual host-to-isolated-gateway HTTP request succeeds;
+16/16 runtime/exec-child denial probes pass. Existing strict bootstrap probes remain
+22/22. Python suite: 26/26 plus formatting, lint, typecheck and license checks pass.
+Evidence: evals/results/runtime-linux.json. Hosted CI remains unverified.
+
+Phase 0 is complete for this support scope. Engine-specific real inference, model
+licenses, auth, persistence, UI, SDK compatibility and clean-install timing are
+Phase 1 work; no Phase 1 exit claim is made. Historical slice limitations above
+remain as provenance, superseded only by this completion record and ADR 0006.

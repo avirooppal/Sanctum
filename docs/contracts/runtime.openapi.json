@@ -1,0 +1,8 @@
+{
+  "openapi": "3.1.0",
+  "info": {"title": "Sanctum runtime health", "version": "0.1.0"},
+  "paths": {"/healthz": {"get": {"operationId": "runtimeHealth", "responses": {"200": {"description": "Kernel startup checks passed", "content": {"application/json": {"schema": {"$ref": "#/components/schemas/Health"}}}}}}}},
+  "components": {"schemas": {"Health": {"type": "object", "additionalProperties": false,
+    "required": ["status", "cloud_connectors", "isolation", "checks"],
+    "properties": {"status": {"const": "ok"}, "cloud_connectors": {"const": "disabled"}, "isolation": {"const": "linux-user-netns-seccomp"}, "checks": {"type": "object", "minProperties": 8, "additionalProperties": {"const": "denied"}}}}}}
+}

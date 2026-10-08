@@ -10,6 +10,11 @@ ROOT = Path(__file__).resolve().parents[3]
 
 
 class ContractTests(unittest.TestCase):
+    def test_measured_runtime_health(self):
+        spec = json.loads((ROOT / "docs/contracts/runtime.openapi.json").read_text())
+        evidence = json.loads((ROOT / "evals/results/runtime-linux.json").read_text())
+        Draft202012Validator(spec["components"]["schemas"]["Health"]).validate(evidence["health"])
+
     def test_measured_bootstrap_response(self):
         schema = json.loads((ROOT / "docs/contracts/bootstrap.schema.json").read_text())
         measured = json.loads((ROOT / "evals/results/containment-linux.json").read_text())

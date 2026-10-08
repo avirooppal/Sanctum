@@ -1,0 +1,27 @@
+{
+  "health": {
+    "checks": {
+      "host_fd_import": "denied",
+      "host_unix_socket": "denied",
+      "io_uring": "denied",
+      "ipv4_tcp": "denied",
+      "ipv4_udp": "denied",
+      "ipv6_tcp": "denied",
+      "ipv6_udp": "denied",
+      "namespace_change": "denied"
+    },
+    "cloud_connectors": "disabled",
+    "isolation": "linux-user-netns-seccomp",
+    "status": "ok"
+  },
+  "exec_child_checks": {
+    "host_fd_import": "denied",
+    "host_unix_socket": "denied",
+    "io_uring": "denied",
+    "ipv4_tcp": "denied",
+    "ipv4_udp": "denied",
+    "ipv6_tcp": "denied",
+    "ipv6_udp": "denied",
+    "namespace_change": "denied"
+  }
+}
