@@ -1,0 +1,9 @@
+[
+  {"name":"valid", "valid":true, "value":{"user":"u1","workspace":"w1","data_class":"restricted","trace_id":"0123456789abcdef0123456789abcdef","policy_context":{"cloud_connectors":[]}}},
+  {"name":"zero-trace", "valid":false, "value":{"user":"u1","workspace":"w1","data_class":"restricted","trace_id":"00000000000000000000000000000000","policy_context":{"cloud_connectors":[]}}},
+  {"name":"missing-workspace", "valid":false, "value":{"user":"u1","data_class":"internal","trace_id":"0123456789abcdef0123456789abcdef","policy_context":{"cloud_connectors":[]}}},
+  {"name":"cloud-enabled", "valid":false, "value":{"user":"u1","workspace":"w1","data_class":"internal","trace_id":"0123456789abcdef0123456789abcdef","policy_context":{"cloud_connectors":["remote"]}}},
+  {"name":"unknown-field", "valid":false, "value":{"user":"u1","workspace":"w1","data_class":"internal","trace_id":"0123456789abcdef0123456789abcdef","policy_context":{"cloud_connectors":[]},"admin":true}},
+  {"name":"empty-user", "valid":false, "value":{"user":"","workspace":"w1","data_class":"internal","trace_id":"0123456789abcdef0123456789abcdef","policy_context":{"cloud_connectors":[]}}},
+  {"name":"invalid-class", "valid":false, "value":{"user":"u1","workspace":"w1","data_class":"secret","trace_id":"0123456789abcdef0123456789abcdef","policy_context":{"cloud_connectors":[]}}}
+]

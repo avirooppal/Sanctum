@@ -1,0 +1,28 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "Contained bootstrap response v1",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["schema_version", "trace_id", "accepted", "worker_checks", "supervisor_checks"],
+  "properties": {
+    "schema_version": {"const": "1.0"},
+    "trace_id": {"type": "string", "pattern": "^(?!0{32}$)[0-9a-f]{32}$"},
+    "accepted": {"const": true},
+    "worker_checks": {"$ref": "#/$defs/checks"},
+    "supervisor_checks": {"$ref": "#/$defs/checks"}
+  },
+  "$defs": {
+    "checks": {
+      "type": "object", "additionalProperties": false,
+      "required": ["ipv4_tcp", "ipv4_udp", "ipv6_tcp", "ipv6_udp", "unix_socket", "file_open", "exec", "namespace", "connect", "descriptor_passing", "io_uring"],
+      "properties": {
+        "ipv4_tcp": {"const": "denied"}, "ipv4_udp": {"const": "denied"},
+        "ipv6_tcp": {"const": "denied"}, "ipv6_udp": {"const": "denied"},
+        "unix_socket": {"const": "denied"}, "file_open": {"const": "denied"},
+        "exec": {"const": "denied"}, "namespace": {"const": "denied"},
+        "connect": {"const": "denied"}, "descriptor_passing": {"const": "denied"},
+        "io_uring": {"const": "denied"}
+      }
+    }
+  }
+}

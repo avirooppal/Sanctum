@@ -10,6 +10,17 @@ ROOT = Path(__file__).resolve().parents[3]
 
 
 class ContractTests(unittest.TestCase):
+    def test_measured_bootstrap_response(self):
+        schema = json.loads((ROOT / "docs/contracts/bootstrap.schema.json").read_text())
+        measured = json.loads((ROOT / "evals/results/containment-linux.json").read_text())
+        Draft202012Validator(schema).validate(measured)
+
+    def test_shared_envelope_fixtures(self):
+        validator = Draft202012Validator(self.schemas["RequestEnvelope"])
+        cases = json.loads((ROOT / "docs/contracts/envelope-fixtures.json").read_text())
+        for case in cases:
+            self.assertEqual(validator.is_valid(case["value"]), case["valid"], case["name"])
+
     def test_committed_registry(self):
         schema = json.loads((ROOT / "docs/contracts/registry.schema.json").read_text())
         registry = json.loads((ROOT / "profiles/registry.json").read_text())

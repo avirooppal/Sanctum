@@ -1,0 +1,17 @@
+[package]
+name = "sanctum-gateway"
+version.workspace = true
+edition.workspace = true
+license.workspace = true
+
+[dependencies]
+serde.workspace = true
+serde_json.workspace = true
+sanctum-policy = { path = "../policy" }
+
+[target.'cfg(all(target_os = "linux", target_arch = "x86_64"))'.dependencies]
+libc.workspace = true
+
+[[bin]]
+name = "sanctum-foundation"
+path = "src/main.rs"

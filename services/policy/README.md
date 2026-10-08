@@ -1,13 +1,20 @@
-# policy
+# Policy foundation (Rust)
 
-Planned: Rust policy host with OPA/Rego or Cedar bundles. Implementation: Phase 5; egress brought forward.
+Implemented: Linux x86_64 containment primitives for the foundation diagnostic.
+Declarative OPA/Cedar authorization, data-flow rules and agent approvals are pending.
 
-Contract: no executable service yet. Foundation request envelope is in
-`docs/contracts/diagnostics.openapi.json`; versioned service contracts must be added
-before tests and implementation.
+Contract: docs/contracts/bootstrap.md; design: docs/adr/0005-contained-bootstrap-ipc.md.
+The launcher calls close_extra_fds, validates inherited transport, then install and
+self_test in each newly launched single-threaded process before processing data.
+Filters validate architecture and default-deny unknown syscalls with EPERM.
+Capabilities are cleared; no_new_privs prevents privilege acquisition on execution.
+The worker cannot create sockets, open files, exec, pass descriptors or change namespaces.
 
-Config: cloud disabled; no listeners or service startup configured. Future adapters
-read model/engine profiles rather than hardcoded model names.
+Configuration is intentionally fixed for this diagnostic; there is no insecure
+override. Do not reuse for ML engines without a separately reviewed syscall profile.
+This does not provide filesystem/CPU/memory quotas or a hostile-code sandbox.
+The trusted OS/launcher and explicit IPC peers remain security boundaries.
 
-Tests: no service tests exist yet; do not count this placeholder as coverage.
-Run foundation gates from repository root with `uv run --offline python tools/check.py`.
+Tests: `cargo test --locked --offline -p sanctum-policy` for descriptor validation;
+`cargo test --locked --offline -p sanctum-gateway --test contained` for real processes
+and kernel enforcement. Run all checks with `bash tools/check_rust.sh` on Linux x86_64.

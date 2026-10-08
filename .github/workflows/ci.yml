@@ -17,3 +17,13 @@ jobs:
       - run: uv run --offline python tools/check.py
       - if: runner.os == 'Linux'
         run: python3 tools/isolated_run.py -- python3 -c "print('isolated child started')"
+  rust-foundation:
+    runs-on: ubuntu-22.04
+    steps:
+      - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683
+      - name: Install pinned development toolchain and fetch locked crates
+        run: |
+          rustup toolchain install 1.99.0 --profile minimal --component rustfmt --component clippy
+          cargo fetch --locked
+      - name: Offline Rust checks and real kernel containment test
+        run: bash tools/check_rust.sh

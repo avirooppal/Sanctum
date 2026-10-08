@@ -1,13 +1,26 @@
-# gateway
+# Gateway foundation (Rust)
 
-Planned: Rust auth, API, request envelope, policy hooks and ledger. Implementation: Phase 1.
+Implemented: typed, validated request envelope; bounded bootstrap framing; a separate
+supervisor/worker diagnostic. No public HTTP API, authentication or model routing yet.
 
-Contract: no executable service yet. Foundation request envelope is in
-`docs/contracts/diagnostics.openapi.json`; versioned service contracts must be added
-before tests and implementation.
+Contracts: docs/contracts/diagnostics.openapi.json (RequestEnvelope),
+docs/contracts/bootstrap.md and bootstrap.schema.json. The diagnostic takes caller
+assertions, not authenticated identities. HTTP/gRPC product interfaces remain pending.
 
-Config: cloud disabled; no listeners or service startup configured. Future adapters
-read model/engine profiles rather than hardcoded model names.
+On Linux x86_64 (including WSL2), after explicitly online Rust setup and
+`cargo fetch --locked`, run from repository root:
 
-Tests: no service tests exist yet; do not count this placeholder as coverage.
-Run foundation gates from repository root with `uv run --offline python tools/check.py`.
+```sh
+cargo build --locked --offline --workspace
+python3 tools/verify_containment.py target/debug/sanctum-foundation
+bash tools/check_rust.sh
+```
+
+Config: maximum IPC payload 64 KiB, five-second socket idle timeout. Cloud connectors
+must be empty. Unsupported platforms and all startup probe failures return exit 78.
+No flag bypasses kernel containment. Supervisor stdin/stdout/stderr cannot be sockets.
+The child receives a cleared environment, inherited Unix stdin/stdout and null stderr.
+
+Tests: `cargo test --locked --offline -p sanctum-gateway`. Includes shared schema
+fixtures, frame bounds/truncation, separate-process security probes, invalid inputs,
+and rejection of unapproved process transport. No production privacy claim yet.

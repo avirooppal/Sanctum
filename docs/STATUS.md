@@ -1,6 +1,6 @@
 # Implementation status
 
-Updated: 2026-10-08. Source of truth: ../plan.md. Phase 0, slice 1 implemented.
+Updated: 2026-10-08. Source of truth: ../plan.md. Phase 0, slices 1–2 implemented.
 No later phase has started. Placeholder service directories are not implementations.
 
 | Phase | State | Exit criteria / evidence |
@@ -24,10 +24,11 @@ No later phase has started. Placeholder service directories are not implementati
 - [x] CI definition on Linux, Windows and macOS; hosted runs **unverified** (not pushed).
 - [x] Early evaluation harness with measured foundation baseline and regression rejection.
 - [x] Early Linux isolated startup self-test exercised under WSL2.
-- [ ] Transport-aware, per-service egress enforcement and process containment.
+- [x] Two-process Rust bootstrap with inherited IPC and per-process kernel denial tests.
+- [ ] Production HTTP/gRPC transport and engine-specific containment/startup enforcement.
 - [ ] Native Windows/macOS containment (unverified/unsupported; no services start).
 - [ ] Complete GPU/VRAM/CPU-feature/NPU support matrix; real Apple/NVIDIA checks.
-- [ ] Rust control-plane toolchain/contracts and executable service foundation.
+- [x] Rust toolchain, envelope contracts and executable supervisor/worker foundation.
 
 ## Measured results for slice 1
 
@@ -56,12 +57,37 @@ hardware fixtures, **not model/RAG/audio benchmarks**. Default regression thresh
 ## Limits and next slice
 
 Doctor does not attest runtime containment; it always reports egress unverified and
-service_start_allowed=false. The Linux prototype has no service transport or hostile
-code isolation; it must not be used to claim production privacy. No ACL, injection,
+service_start_allowed=false. The Rust bootstrap has inherited local IPC, but no product
+HTTP/gRPC adapter or engine-compatible confinement. Neither diagnostic is a hostile
+code sandbox; neither establishes production privacy. No ACL, injection,
 container, GPU/audio, SDK, load or application E2E tests exist yet. They remain gated
 requirements for their owning phases, not passing placeholders.
 
-Next: build Rust service contracts and a transport-aware isolated launcher with
-per-service egress tests. Revisit the conservative 15.70 GiB -> T0 decision after
-actual model fit measurements. ADRs 0001–0004 record current choices; no approval
+Next: production HTTP/gRPC adapter over brokered transport, startup health contract,
+and engine-compatible Linux isolation before starting Phase 1. Revisit the conservative
+15.70 GiB -> T0 decision after model fit measurements. ADRs 0001–0005 record choices; no approval
 is required to reproduce this slice. Phase 1 stays blocked until Phase 0 is complete.
+
+## Slice 2 evidence
+
+Rust 1.99.0 installed in WSL Ubuntu 22.04 (Linux x86_64, kernel 6.6.87.2).
+Dependencies fetched only during explicit development setup; all verification below
+uses offline/locked builds. Native Windows/macOS Rust containment remains unsupported.
+
+| Check | Observed result |
+|---|---|
+| `bash tools/check_rust.sh` in WSL | PASS |
+| Rust contract/integration/unit tests | 10/10 pass |
+| Rust fmt and Clippy (`-D warnings`) | Pass |
+| Resolved Rust crates | 12/12 permissive licenses and cached archive SHA-256 verified |
+| Separate supervisor + worker | 11 EPERM checks each; 22/22 pass; envelope/trace round trip succeeds |
+| Prohibited operations | IPv4/IPv6 TCP/UDP sockets, Unix socket, file open, exec, namespace, connect, descriptor passing, io_uring |
+| Invalid request/transport tests | Missing workspace, zero trace, cloud enabled, unknown fields, empty user, invalid class, malformed JSON, oversized stdin/frame, wrong stdio: rejected |
+| Python source gate after Rust integration | 25/25 tests, lint/format/typecheck and nine Python dependency checks pass |
+| Existing profile evaluation | 8/8 correct; false-ready count 0 (unchanged) |
+| Hosted Rust CI | Configured; execution unverified (not pushed) |
+
+Measured response: ../evals/results/containment-linux.json; schema validated by the
+Python contract suite. These kernel checks do not measure inference, RAG, or latency.
+ADR 0005 scopes the bootstrap protocol and containment limitations. Phase 0 remains
+in progress until actual product-service startup uses an enforceable supported profile.
