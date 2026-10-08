@@ -1,0 +1,29 @@
+{
+  "openapi": "3.1.0",
+  "info": {"title": "Sanctum foundation contracts", "version": "0.1.0", "description": "CLI JSON contracts; no HTTP service is exposed in Phase 0."},
+  "paths": {},
+  "components": {"schemas": {
+    "RequestEnvelope": {
+      "type": "object", "additionalProperties": false,
+      "required": ["user", "workspace", "data_class", "trace_id", "policy_context"],
+      "properties": {
+        "user": {"type": "string", "minLength": 1},
+        "workspace": {"type": "string", "minLength": 1},
+        "data_class": {"enum": ["public", "internal", "confidential", "restricted"]},
+        "trace_id": {"type": "string", "pattern": "^(?!0{32}$)[0-9a-f]{32}$"},
+        "policy_context": {"type": "object", "additionalProperties": false, "required": ["cloud_connectors"], "properties": {"cloud_connectors": {"type": "array", "maxItems": 0}}}
+      }
+    },
+    "DoctorReport": {
+      "type": "object", "additionalProperties": false,
+      "required": ["schema_version", "hardware", "recommendation", "privacy", "warnings"],
+      "properties": {
+        "schema_version": {"const": "1.0"},
+        "hardware": {"type": "object", "required": ["os", "arch", "cpu_count", "ram_bytes", "gpus", "cpu_features", "npu"], "properties": {"os": {"type": "string"}, "arch": {"type": "string"}, "cpu_count": {"type": "integer", "minimum": 1}, "ram_bytes": {"type": ["integer", "null"], "minimum": 0}, "gpus": {"type": "array"}, "cpu_features": {"type": "array", "items": {"type": "string"}}, "npu": {"type": "string"}}},
+        "recommendation": {"type": ["object", "null"]},
+        "privacy": {"type": "object", "additionalProperties": false, "required": ["cloud_connectors", "egress_enforcement", "service_start_allowed"], "properties": {"cloud_connectors": {"const": "disabled"}, "egress_enforcement": {"const": "unverified"}, "service_start_allowed": {"const": false}}},
+        "warnings": {"type": "array", "items": {"type": "string"}}
+      }
+    }
+  }}
+}

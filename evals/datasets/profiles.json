@@ -1,0 +1,10 @@
+[
+  {"id": "below-minimum", "os": "Linux", "arch": "x86_64", "ram_gib": 4, "mode": "solo", "expected": null},
+  {"id": "tiny", "os": "Linux", "arch": "x86_64", "ram_gib": 8, "mode": "solo", "expected": "t0-cpu"},
+  {"id": "laptop", "os": "Windows", "arch": "AMD64", "ram_gib": 16, "mode": "solo", "expected": "t1-cpu"},
+  {"id": "apple-laptop", "os": "Darwin", "arch": "arm64", "ram_gib": 16, "mode": "solo", "expected": "t1-apple"},
+  {"id": "apple-workstation", "os": "Darwin", "arch": "arm64", "ram_gib": 64, "mode": "solo", "expected": "t2-apple"},
+  {"id": "nvidia-workstation", "os": "Linux", "arch": "x86_64", "ram_gib": 32, "vram_gib": 24, "mode": "solo", "expected": "t2-gpu"},
+  {"id": "nvidia-team", "os": "Linux", "arch": "x86_64", "ram_gib": 64, "vram_gib": 48, "mode": "team", "expected": "t3-nvidia-team"},
+  {"id": "unknown", "os": "Linux", "arch": "x86_64", "ram_gib": null, "mode": "solo", "expected": null}
+]

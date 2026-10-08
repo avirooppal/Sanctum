@@ -1,0 +1,11 @@
+{
+  "schema_version": "1.0",
+  "profiles": [
+    {"id": "t3-nvidia-team", "tier": "T3", "priority": 60, "mode": "team", "min_ram_gib": 32, "min_vram_gib": 48, "gpu_vendor": "nvidia", "engine": "vllm", "quantization": "profile-required", "context_tokens": 4096, "kv_cache": "auto", "models": []},
+    {"id": "t2-apple", "tier": "T2", "priority": 50, "mode": "any", "os": "Darwin", "arch": "arm64", "min_ram_gib": 64, "engine": "mlx", "quantization": "4bit", "context_tokens": 8192, "kv_cache": "auto", "models": []},
+    {"id": "t2-gpu", "tier": "T2", "priority": 40, "mode": "any", "min_ram_gib": 16, "min_vram_gib": 24, "engine": "llama.cpp", "quantization": "Q4_K_M", "context_tokens": 8192, "kv_cache": "q8_0", "models": []},
+    {"id": "t1-apple", "tier": "T1", "priority": 30, "mode": "any", "os": "Darwin", "arch": "arm64", "min_ram_gib": 16, "engine": "mlx", "quantization": "4bit", "context_tokens": 4096, "kv_cache": "auto", "models": []},
+    {"id": "t1-cpu", "tier": "T1", "priority": 20, "mode": "any", "min_ram_gib": 16, "engine": "llama.cpp", "quantization": "Q4_K_M", "context_tokens": 4096, "kv_cache": "q8_0", "models": []},
+    {"id": "t0-cpu", "tier": "T0", "priority": 10, "mode": "any", "min_ram_gib": 8, "engine": "llama.cpp", "quantization": "Q4_K_M", "context_tokens": 2048, "kv_cache": "q8_0", "models": []}
+  ]
+}

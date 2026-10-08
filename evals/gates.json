@@ -1,0 +1,7 @@
+{
+  "schema_version": "1.0",
+  "metrics": {
+    "profile_accuracy": {"direction": "higher", "regression_fraction": 0.05},
+    "false_ready_count": {"direction": "lower", "regression_fraction": 0.0}
+  }
+}

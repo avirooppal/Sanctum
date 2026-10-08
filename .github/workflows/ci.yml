@@ -1,0 +1,19 @@
+name: foundation
+on: [push, pull_request]
+permissions:
+  contents: read
+jobs:
+  source-gates:
+    strategy:
+      matrix:
+        os: [ubuntu-22.04, windows-latest, macos-latest]
+    runs-on: ${{ matrix.os }}
+    steps:
+      - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683
+      - uses: astral-sh/setup-uv@d0d8abe699bfb85fec6de9f7adb5ae17292296ff
+        with:
+          version: "0.12.14"
+      - run: uv sync --locked --python 3.12
+      - run: uv run --offline python tools/check.py
+      - if: runner.os == 'Linux'
+        run: python3 tools/isolated_run.py -- python3 -c "print('isolated child started')"

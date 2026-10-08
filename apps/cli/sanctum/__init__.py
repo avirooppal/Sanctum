@@ -1,0 +1,1 @@
+"""Sanctum offline foundation diagnostics."""

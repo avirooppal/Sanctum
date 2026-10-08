@@ -1,0 +1,9 @@
+{
+  "suite": "foundation-profiles-v1",
+  "cases": 8,
+  "dataset_sha256": "1c8437a7acc3f70de328ca59303105a22e8f9c19597354d9a274bd2ab325f7c4",
+  "metrics": {
+    "profile_accuracy": 1.0,
+    "false_ready_count": 0
+  }
+}

@@ -1,0 +1,103 @@
+{
+  "schema_version": "1.0",
+  "models": [],
+  "dependencies": [
+    {
+      "name": "attrs",
+      "version": "26.1.0",
+      "license": "MIT",
+      "license_source": "https://pypi.org/pypi/attrs/26.1.0/json",
+      "metadata_evidence": "MIT",
+      "verified_at": "2026-10-08",
+      "scope": "development"
+    },
+    {
+      "name": "cpython",
+      "version": "3.12.13",
+      "license": "PSF-2.0",
+      "license_source": "https://docs.python.org/3/license.html",
+      "scope": "interpreter",
+      "verified_at": "2026-10-08"
+    },
+    {
+      "name": "jsonschema",
+      "version": "4.25.1",
+      "license": "MIT",
+      "license_source": "https://pypi.org/pypi/jsonschema/4.25.1/json",
+      "metadata_evidence": "MIT",
+      "verified_at": "2026-10-08",
+      "scope": "development"
+    },
+    {
+      "name": "jsonschema-specifications",
+      "version": "2025.9.1",
+      "license": "MIT",
+      "license_source": "https://pypi.org/pypi/jsonschema-specifications/2025.9.1/json",
+      "metadata_evidence": "MIT",
+      "verified_at": "2026-10-08",
+      "scope": "development"
+    },
+    {
+      "name": "referencing",
+      "version": "0.37.0",
+      "license": "MIT",
+      "license_source": "https://pypi.org/pypi/referencing/0.37.0/json",
+      "metadata_evidence": "MIT",
+      "verified_at": "2026-10-08",
+      "scope": "development"
+    },
+    {
+      "name": "rpds-py",
+      "version": "0.30.0",
+      "license": "MIT",
+      "license_source": "https://pypi.org/pypi/rpds-py/0.30.0/json",
+      "metadata_evidence": "MIT",
+      "verified_at": "2026-10-08",
+      "scope": "development"
+    },
+    {
+      "name": "ruff",
+      "version": "0.14.0",
+      "license": "MIT",
+      "license_source": "https://pypi.org/pypi/ruff/0.14.0/json",
+      "metadata_evidence": "License :: OSI Approved :: MIT License",
+      "verified_at": "2026-10-08",
+      "scope": "development"
+    },
+    {
+      "name": "setuptools",
+      "version": "80.9.0",
+      "license": "MIT",
+      "license_source": "https://pypi.org/pypi/setuptools/80.9.0/json",
+      "metadata_evidence": "MIT",
+      "verified_at": "2026-10-08",
+      "scope": "development"
+    },
+    {
+      "name": "ty",
+      "version": "0.0.85",
+      "license": "MIT",
+      "license_source": "https://pypi.org/pypi/ty/0.0.85/json",
+      "metadata_evidence": "License :: OSI Approved :: MIT License",
+      "verified_at": "2026-10-08",
+      "scope": "development"
+    },
+    {
+      "name": "typing-extensions",
+      "version": "4.16.0",
+      "license": "PSF-2.0",
+      "license_source": "https://pypi.org/pypi/typing-extensions/4.16.0/json",
+      "metadata_evidence": "PSF-2.0",
+      "verified_at": "2026-10-08",
+      "scope": "development"
+    },
+    {
+      "name": "uv",
+      "version": "0.12.14",
+      "license": "MIT OR Apache-2.0",
+      "license_source": "https://github.com/astral-sh/uv/blob/0.12.14/LICENSE-MIT",
+      "scope": "development-bootstrap",
+      "verified_at": "2026-10-08"
+    }
+  ]
+}
