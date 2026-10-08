@@ -131,7 +131,7 @@ class Catalog:
                     "INSERT INTO chunks VALUES(?,?,?,?,?)",
                     (cid, key, chunk["text"], chunk["parent_text"], chunk.get("page")),
                 )
-                self.db.execute("INSERT INTO lexical VALUES(?,?)", (cid, chunk["text"]))
+                self.db.execute("INSERT INTO lexical VALUES(?,?)", (cid, chunk["parent_text"]))
         return {"id": key, "version": version, "sha256": digest}
 
     def allowed_chunks(self, user, workspace):

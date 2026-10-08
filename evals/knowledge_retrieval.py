@@ -16,7 +16,12 @@ def main():
     parser = argparse.ArgumentParser()
     parser.add_argument("--token-file", type=Path, required=True)
     parser.add_argument("--base-url", default="http://127.0.0.1:8765")
+    parser.add_argument("--dataset", type=Path, default=DATASET)
+    parser.add_argument("--resume", action="store_true")
     args = parser.parse_args()
+    sys.path.insert(0, str(ROOT / "services/knowledge"))
+    from sanctum_knowledge.parsing import StructuralParser, chunks
+
     token = args.token_file.read_text().strip()
     opener = urllib.request.build_opener(urllib.request.ProxyHandler({}))
 
@@ -29,7 +34,32 @@ def main():
         with opener.open(req, timeout=180) as response:
             return json.load(response)
 
-    dataset = json.loads(DATASET.read_text(encoding="utf-8"))
+    dataset = json.loads(args.dataset.read_text(encoding="utf-8"))
+    dataset_hash = hashlib.sha256(args.dataset.read_bytes()).hexdigest()
+    suite = dataset.get("suite", "synthetic-frozen-knowledge-v1")
+    if not isinstance(suite, str) or not suite.replace("-", "").isalnum():
+        raise ValueError("dataset suite must be a filename-safe identifier")
+    source_docs = {document["name"]: document for document in dataset["documents"]}
+    parser_impl = StructuralParser()
+    for case in dataset["questions"]:
+        document = source_docs.get(case["source"])
+        if document is None or not any(
+            case["answer"] in chunk["text"]
+            for chunk in chunks(parser_impl.parse(document["content"].encode(), document["name"]))
+        ):
+            raise ValueError(f"label {case['id']} is not an exact quote in a parsed source chunk")
+    output = ROOT / f"evals/results/{suite}.json"
+    records = []
+    if args.resume and output.exists():
+        previous = json.loads(output.read_text(encoding="utf-8"))
+        if previous.get("suite") != suite or previous.get("dataset_sha256") != dataset_hash:
+            raise ValueError("checkpoint does not match this immutable dataset")
+        if previous.get("complete"):
+            raise ValueError("evaluation is already complete")
+        records = previous.get("records", [])
+        expected_ids = [case["id"] for case in dataset["questions"][: len(records)]]
+        if [record.get("id") for record in records] != expected_ids:
+            raise ValueError("checkpoint records are not a prefix of the dataset")
     workspace = call("/v1/workspaces", {"name": "Frozen Phase 2 eval"})["id"]
     for document in dataset["documents"]:
         call(
@@ -43,13 +73,17 @@ def main():
                 "data_class": "internal",
             },
         )
-    output = ROOT / "evals/results/phase2-retrieval.json"
-    records = []
-    vector_hits = hybrid_hits = 0
-    reciprocal_vector = reciprocal_hybrid = 0.0
-    supported = 0
+    vector_hits = sum(record["vector_rank"] is not None for record in records)
+    hybrid_hits = sum(record["hybrid_rank"] is not None for record in records)
+    reciprocal_vector = sum(
+        1 / record["vector_rank"] for record in records if record["vector_rank"]
+    )
+    reciprocal_hybrid = sum(
+        1 / record["hybrid_rank"] for record in records if record["hybrid_rank"]
+    )
+    supported = sum(record["citation_supported"] for record in records)
     started = time.perf_counter()
-    for case in dataset["questions"]:
+    for case in dataset["questions"][len(records) :]:
         common = {"query": case["question"], "k": 5}
         vector = call(f"/v1/workspaces/{workspace}/search", dict(common, mode="vector"))["hits"]
         hybrid = call(f"/v1/workspaces/{workspace}/search", dict(common, mode="hybrid"))["hits"]
@@ -87,8 +121,8 @@ def main():
         )
         processed = len(records)
         partial = {
-            "suite": "synthetic-frozen-knowledge-v1",
-            "dataset_sha256": hashlib.sha256(DATASET.read_bytes()).hexdigest(),
+            "suite": suite,
+            "dataset_sha256": dataset_hash,
             "questions": len(dataset["questions"]),
             "processed": processed,
             "complete": False,
@@ -106,9 +140,10 @@ def main():
     abstention = call(f"/v1/workspaces/{empty}/ask", {"query": "Unsupported fact?"})
     n = len(records)
     result = {
-        "suite": "synthetic-frozen-knowledge-v1",
-        "dataset_sha256": hashlib.sha256(DATASET.read_bytes()).hexdigest(),
+        "suite": suite,
+        "dataset_sha256": dataset_hash,
         "questions": n,
+        "complete": True,
         "recall_at_5": {
             "vector": vector_hits / n,
             "hybrid": hybrid_hits / n,
@@ -121,6 +156,7 @@ def main():
             abstention["abstained"] and not abstention["citations"]
         ),
         "seconds": round(time.perf_counter() - started, 3),
+        "seconds_scope": "resumed_segment_only" if args.resume and records else "qa_loop_only",
         "human_spot_check": "pending",
         "local_judge": "pending",
         "records": records,

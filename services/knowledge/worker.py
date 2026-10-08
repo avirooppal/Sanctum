@@ -13,6 +13,10 @@ from sanctum_knowledge.local_models import LocalModels
 from sanctum_knowledge.retrieval import Knowledge
 
 
+def operation_deadline(_signum, _frame):
+    raise TimeoutError("knowledge operation deadline exceeded")
+
+
 def main():
     # The Rust --engine-child entry repeats kernel probes before this interpreter.
     # Independently reject direct host startup, without making any network probe.
@@ -34,6 +38,7 @@ def main():
     models = LocalModels(config)
     knowledge = Knowledge(catalog, StructuralParser(), models, vectors, models)
     print(json.dumps({"ready": True}), flush=True)
+    signal.signal(signal.SIGALRM, operation_deadline)
     while True:
         line = sys.stdin.buffer.readline(16 * 1024 * 1024 + 1)
         if not line:
@@ -78,6 +83,8 @@ def main():
             response = {"ok": True, "result": result}
         except PermissionError:
             response = {"ok": False, "error": "access denied", "status": 403}
+        except TimeoutError:
+            response = {"ok": False, "error": "operation deadline exceeded", "status": 503}
         except Exception:
             response = {"ok": False, "error": "knowledge operation failed", "status": 400}
         finally:

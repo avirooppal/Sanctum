@@ -1,0 +1,236 @@
+{
+  "suite": "knowledge-needle-v2",
+  "description": "Synthetic identifier lookup with 30 matched near-duplicate decoys; pipeline stress test, not a representative corpus.",
+  "documents": [
+    {
+      "name": "register-01.md",
+      "content": "# Maintenance register\n\n## Ledger key QX-417\nAssigned sealant: sodium silicate.\n\n## Ledger key LM-082\nAssigned coolant: propylene glycol.\n\n## Ledger key VR-639\nAssigned filter grade: nominal 14 micron.\n\n## Ledger key BK-251\nAssigned lubricant: ISO VG 46.\n\n## Ledger key TN-908\nAssigned insulation: mica sheet.\n"
+    },
+    {
+      "name": "register-02.md",
+      "content": "# Maintenance register\n\n## Ledger key CP-134\nAssigned fastener: M8 by 30 millimeter.\n\n## Ledger key WY-763\nAssigned calibration gas: zero air.\n\n## Ledger key DF-520\nAssigned gasket material: EPDM.\n\n## Ledger key HS-396\nAssigned storage bin: blue compartment 7.\n\n## Ledger key JG-641\nAssigned inspection interval: 120 operating hours.\n"
+    },
+    {
+      "name": "register-03.md",
+      "content": "# Maintenance register\n\n## Ledger key RA-275\nAssigned cable jacket: halogen-free LSZH.\n\n## Ledger key NE-834\nAssigned bearing grease: NLGI grade 1.\n\n## Ledger key UX-109\nAssigned valve position: normally closed.\n\n## Ledger key MG-582\nAssigned panel label: PANEL C17.\n\n## Ledger key ZB-346\nAssigned solvent: isopropyl alcohol.\n"
+    },
+    {
+      "name": "register-04.md",
+      "content": "# Maintenance register\n\n## Ledger key FK-715\nAssigned belt profile: SPZ 1000.\n\n## Ledger key PD-028\nAssigned sensor range: minus 20 to 80 Celsius.\n\n## Ledger key CY-954\nAssigned connector key: keyway D.\n\n## Ledger key AL-683\nAssigned packing type: spiral wound graphite.\n\n## Ledger key RW-192\nAssigned relay rating: 24 volt DC.\n"
+    },
+    {
+      "name": "register-05.md",
+      "content": "# Maintenance register\n\n## Ledger key ET-847\nAssigned shelf location: aisle K shelf 12.\n\n## Ledger key OS-361\nAssigned test pressure: 1.6 megapascal.\n\n## Ledger key GI-530\nAssigned paint code: RAL 5014.\n\n## Ledger key MK-276\nAssigned fuse rating: 2.5 ampere slow-blow.\n\n## Ledger key FV-619\nAssigned pump rotation: clockwise from drive end.\n"
+    },
+    {
+      "name": "register-06.md",
+      "content": "# Maintenance register\n\n## Ledger key BD-403\nAssigned seal size: 32 by 47 by 7 millimeter.\n\n## Ledger key KC-785\nAssigned battery chemistry: lithium iron phosphate.\n\n## Ledger key SP-240\nAssigned thread pitch: 1.25 millimeter.\n\n## Ledger key YH-671\nAssigned trigger threshold: 0.35 bar.\n\n## Ledger key NW-058\nAssigned replacement element: cartridge XR-14.\n"
+    },
+    {
+      "name": "register-decoys-01.md",
+      "content": "# Maintenance register\n\n## Ledger key D00-417\nAssigned sealant: potassium silicate.\n\n## Ledger key D01-082\nAssigned coolant: ethylene glycol.\n\n## Ledger key D02-639\nAssigned filter grade: nominal 40 micron.\n\n## Ledger key D03-251\nAssigned lubricant: ISO VG 68.\n\n## Ledger key D04-908\nAssigned insulation: ceramic fiber.\n"
+    },
+    {
+      "name": "register-decoys-02.md",
+      "content": "# Maintenance register\n\n## Ledger key D05-134\nAssigned fastener: M8 by 40 millimeter.\n\n## Ledger key D06-763\nAssigned calibration gas: span air.\n\n## Ledger key D07-520\nAssigned gasket material: FKM.\n\n## Ledger key D08-396\nAssigned storage bin: blue compartment 9.\n\n## Ledger key D09-641\nAssigned inspection interval: 210 operating hours.\n"
+    },
+    {
+      "name": "register-decoys-03.md",
+      "content": "# Maintenance register\n\n## Ledger key D10-275\nAssigned cable jacket: PVC.\n\n## Ledger key D11-834\nAssigned bearing grease: NLGI grade 2.\n\n## Ledger key D12-109\nAssigned valve position: normally open.\n\n## Ledger key D13-582\nAssigned panel label: PANEL C71.\n\n## Ledger key D14-346\nAssigned solvent: ethyl alcohol.\n"
+    },
+    {
+      "name": "register-decoys-04.md",
+      "content": "# Maintenance register\n\n## Ledger key D15-715\nAssigned belt profile: SPA 1000.\n\n## Ledger key D16-028\nAssigned sensor range: minus 40 to 80 Celsius.\n\n## Ledger key D17-954\nAssigned connector key: keyway B.\n\n## Ledger key D18-683\nAssigned packing type: spiral wound PTFE.\n\n## Ledger key D19-192\nAssigned relay rating: 24 volt AC.\n"
+    },
+    {
+      "name": "register-decoys-05.md",
+      "content": "# Maintenance register\n\n## Ledger key D20-847\nAssigned shelf location: aisle K shelf 21.\n\n## Ledger key D21-361\nAssigned test pressure: 1.8 megapascal.\n\n## Ledger key D22-530\nAssigned paint code: RAL 5041.\n\n## Ledger key D23-276\nAssigned fuse rating: 2.5 ampere fast-blow.\n\n## Ledger key D24-619\nAssigned pump rotation: counterclockwise from drive end.\n"
+    },
+    {
+      "name": "register-decoys-06.md",
+      "content": "# Maintenance register\n\n## Ledger key D25-403\nAssigned seal size: 32 by 47 by 9 millimeter.\n\n## Ledger key D26-785\nAssigned battery chemistry: lithium cobalt oxide.\n\n## Ledger key D27-240\nAssigned thread pitch: 1.5 millimeter.\n\n## Ledger key D28-671\nAssigned trigger threshold: 0.53 bar.\n\n## Ledger key D29-058\nAssigned replacement element: cartridge XR-41.\n"
+    }
+  ],
+  "questions": [
+    {
+      "id": "needle-01",
+      "question": "For ledger key QX-417, what is the assigned sealant?",
+      "answer": "Ledger key QX-417. Assigned sealant: sodium silicate.",
+      "source": "register-01.md"
+    },
+    {
+      "id": "needle-02",
+      "question": "For ledger key LM-082, what is the assigned coolant?",
+      "answer": "Ledger key LM-082. Assigned coolant: propylene glycol.",
+      "source": "register-01.md"
+    },
+    {
+      "id": "needle-03",
+      "question": "For ledger key VR-639, what is the assigned filter grade?",
+      "answer": "Ledger key VR-639. Assigned filter grade: nominal 14 micron.",
+      "source": "register-01.md"
+    },
+    {
+      "id": "needle-04",
+      "question": "For ledger key BK-251, what is the assigned lubricant?",
+      "answer": "Ledger key BK-251. Assigned lubricant: ISO VG 46.",
+      "source": "register-01.md"
+    },
+    {
+      "id": "needle-05",
+      "question": "For ledger key TN-908, what is the assigned insulation?",
+      "answer": "Ledger key TN-908. Assigned insulation: mica sheet.",
+      "source": "register-01.md"
+    },
+    {
+      "id": "needle-06",
+      "question": "For ledger key CP-134, what is the assigned fastener?",
+      "answer": "Ledger key CP-134. Assigned fastener: M8 by 30 millimeter.",
+      "source": "register-02.md"
+    },
+    {
+      "id": "needle-07",
+      "question": "For ledger key WY-763, what is the assigned calibration gas?",
+      "answer": "Ledger key WY-763. Assigned calibration gas: zero air.",
+      "source": "register-02.md"
+    },
+    {
+      "id": "needle-08",
+      "question": "For ledger key DF-520, what is the assigned gasket material?",
+      "answer": "Ledger key DF-520. Assigned gasket material: EPDM.",
+      "source": "register-02.md"
+    },
+    {
+      "id": "needle-09",
+      "question": "For ledger key HS-396, what is the assigned storage bin?",
+      "answer": "Ledger key HS-396. Assigned storage bin: blue compartment 7.",
+      "source": "register-02.md"
+    },
+    {
+      "id": "needle-10",
+      "question": "For ledger key JG-641, what is the assigned inspection interval?",
+      "answer": "Ledger key JG-641. Assigned inspection interval: 120 operating hours.",
+      "source": "register-02.md"
+    },
+    {
+      "id": "needle-11",
+      "question": "For ledger key RA-275, what is the assigned cable jacket?",
+      "answer": "Ledger key RA-275. Assigned cable jacket: halogen-free LSZH.",
+      "source": "register-03.md"
+    },
+    {
+      "id": "needle-12",
+      "question": "For ledger key NE-834, what is the assigned bearing grease?",
+      "answer": "Ledger key NE-834. Assigned bearing grease: NLGI grade 1.",
+      "source": "register-03.md"
+    },
+    {
+      "id": "needle-13",
+      "question": "For ledger key UX-109, what is the assigned valve position?",
+      "answer": "Ledger key UX-109. Assigned valve position: normally closed.",
+      "source": "register-03.md"
+    },
+    {
+      "id": "needle-14",
+      "question": "For ledger key MG-582, what is the assigned panel label?",
+      "answer": "Ledger key MG-582. Assigned panel label: PANEL C17.",
+      "source": "register-03.md"
+    },
+    {
+      "id": "needle-15",
+      "question": "For ledger key ZB-346, what is the assigned solvent?",
+      "answer": "Ledger key ZB-346. Assigned solvent: isopropyl alcohol.",
+      "source": "register-03.md"
+    },
+    {
+      "id": "needle-16",
+      "question": "For ledger key FK-715, what is the assigned belt profile?",
+      "answer": "Ledger key FK-715. Assigned belt profile: SPZ 1000.",
+      "source": "register-04.md"
+    },
+    {
+      "id": "needle-17",
+      "question": "For ledger key PD-028, what is the assigned sensor range?",
+      "answer": "Ledger key PD-028. Assigned sensor range: minus 20 to 80 Celsius.",
+      "source": "register-04.md"
+    },
+    {
+      "id": "needle-18",
+      "question": "For ledger key CY-954, what is the assigned connector key?",
+      "answer": "Ledger key CY-954. Assigned connector key: keyway D.",
+      "source": "register-04.md"
+    },
+    {
+      "id": "needle-19",
+      "question": "For ledger key AL-683, what is the assigned packing type?",
+      "answer": "Ledger key AL-683. Assigned packing type: spiral wound graphite.",
+      "source": "register-04.md"
+    },
+    {
+      "id": "needle-20",
+      "question": "For ledger key RW-192, what is the assigned relay rating?",
+      "answer": "Ledger key RW-192. Assigned relay rating: 24 volt DC.",
+      "source": "register-04.md"
+    },
+    {
+      "id": "needle-21",
+      "question": "For ledger key ET-847, what is the assigned shelf location?",
+      "answer": "Ledger key ET-847. Assigned shelf location: aisle K shelf 12.",
+      "source": "register-05.md"
+    },
+    {
+      "id": "needle-22",
+      "question": "For ledger key OS-361, what is the assigned test pressure?",
+      "answer": "Ledger key OS-361. Assigned test pressure: 1.6 megapascal.",
+      "source": "register-05.md"
+    },
+    {
+      "id": "needle-23",
+      "question": "For ledger key GI-530, what is the assigned paint code?",
+      "answer": "Ledger key GI-530. Assigned paint code: RAL 5014.",
+      "source": "register-05.md"
+    },
+    {
+      "id": "needle-24",
+      "question": "For ledger key MK-276, what is the assigned fuse rating?",
+      "answer": "Ledger key MK-276. Assigned fuse rating: 2.5 ampere slow-blow.",
+      "source": "register-05.md"
+    },
+    {
+      "id": "needle-25",
+      "question": "For ledger key FV-619, what is the assigned pump rotation?",
+      "answer": "Ledger key FV-619. Assigned pump rotation: clockwise from drive end.",
+      "source": "register-05.md"
+    },
+    {
+      "id": "needle-26",
+      "question": "For ledger key BD-403, what is the assigned seal size?",
+      "answer": "Ledger key BD-403. Assigned seal size: 32 by 47 by 7 millimeter.",
+      "source": "register-06.md"
+    },
+    {
+      "id": "needle-27",
+      "question": "For ledger key KC-785, what is the assigned battery chemistry?",
+      "answer": "Ledger key KC-785. Assigned battery chemistry: lithium iron phosphate.",
+      "source": "register-06.md"
+    },
+    {
+      "id": "needle-28",
+      "question": "For ledger key SP-240, what is the assigned thread pitch?",
+      "answer": "Ledger key SP-240. Assigned thread pitch: 1.25 millimeter.",
+      "source": "register-06.md"
+    },
+    {
+      "id": "needle-29",
+      "question": "For ledger key YH-671, what is the assigned trigger threshold?",
+      "answer": "Ledger key YH-671. Assigned trigger threshold: 0.35 bar.",
+      "source": "register-06.md"
+    },
+    {
+      "id": "needle-30",
+      "question": "For ledger key NW-058, what is the assigned replacement element?",
+      "answer": "Ledger key NW-058. Assigned replacement element: cartridge XR-14.",
+      "source": "register-06.md"
+    }
+  ]
+}

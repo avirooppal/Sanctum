@@ -7,7 +7,7 @@ Phase 1 starts after the Phase 0 completion commit below. Placeholder service di
 |---|---|---|
 | 0 Foundations | done (Linux x86_64) | Doctor tier/profile passes; real isolated HTTP ingress, exec inheritance and egress startup probes pass. Other runtime platforms fail closed. |
 | 1 Chat | done (Linux reference) | Offline clean-rootfs install to answer 50.6005s; official SDK 8/8. Downloads/build excluded; native macOS/Windows unverified. |
-| 2 Knowledge | in progress (gate failed) | 30-question synthetic run: dense recall@5 1.00, hybrid 1.00, gain 0.00 (<0.05); exact citations 1.00; human/local judge pending. |
+| 2 Knowledge | in progress (gate failed) | V1: recall gain 0.00, citations 1.00. V3: recall gain 0.00, citations 0.567. V4 tuned run in progress. Human/local judge pending. |
 | 3 Speech | not started | T1 voice latency <800 ms and WER target: unverified; WER target pending. |
 | 4 Vision | not started | Measurable visual QA lift: unverified; dataset/threshold pending. |
 | 5 Agents | not started | Red team passes and zero unexpected ledger egress: unverified. |
@@ -166,3 +166,20 @@ before tuning. The questions/corpus are synthetic, so this is pipeline evidence 
 No no-faithfulness-regression result is available (only hybrid answers were judged).
 Folder watch, local judge and human faithfulness review remain outstanding. Phase 3
 remains gated on all Phase 2 exit criteria.
+
+## Phase 2 slice 3
+
+V2's zero scores were invalid: expected quotes included heading metadata absent from
+child citation text. The runner now validates every frozen expected quote against the
+real parser output before making API calls. V3 is a valid 30-question opaque-key suite;
+it completed with dense/hybrid recall@5 1.00/1.00, MRR 0.708/0.783, exact citation
+support 0.567, and abstention passed. No faithfulness comparison was performed.
+
+Those records exposed that embeddings, BM25, reranking, and answer generation omitted
+structural heading context. The pipeline now embeds and lexically indexes parent text,
+reranks with parent context, and gives the answer model context while restricting quotes
+to child text. A recoverable SIGALRM deadline handler prevents slow inference from
+terminating the worker; the eval runner resumes only matching hash-verified checkpoints.
+Knowledge tests: 10/10; full Python source/license gate passes. V4 is an independent
+30-question/two-register challenge with 60 parsed passages, currently running on the
+confined WSL2 CPU runtime. It is not a customer-corpus benchmark. Phase 3 remains gated.

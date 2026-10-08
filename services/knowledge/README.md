@@ -19,7 +19,8 @@ Run `uv sync --locked --group knowledge`, then
 `uv run --offline --group knowledge python -m unittest discover -s services/knowledge/tests -v`.
 Run the real upload/retrieve/citation smoke test against a confined Linux runtime with
 `python evals/knowledge_smoke.py --token-file PATH`. The frozen 30-question ablation is
-`python evals/knowledge_retrieval.py --token-file PATH`; outputs are written to
-`evals/results/phase2-retrieval.json` and checkpointed per question. Synthetic results
-do not establish quality on representative customer corpora. Folder watching, a local
-faithfulness judge, human review, and the full exit gate remain outstanding.
+`python evals/knowledge_retrieval.py --token-file PATH`; use `--dataset PATH` for a
+versioned alternative and `--resume` to continue a matching partial checkpoint. Outputs
+are written to suite-named files in `evals/results/`. Synthetic results do not establish
+quality on representative customer corpora. Folder watching, a local faithfulness judge,
+human review, and the full exit gate remain outstanding.

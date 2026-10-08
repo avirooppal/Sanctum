@@ -1,0 +1,196 @@
+{
+  "suite": "knowledge-needle-v4",
+  "description": "Synthetic opaque-key lookup with 30 matched decoys in one target and one decoy register; stress test only.",
+  "documents": [
+    {
+      "name": "register-targets.md",
+      "content": "# Target register\n\n## Ledger key QX-417\nAssigned sealant: sodium silicate.\n\n## Ledger key LM-082\nAssigned coolant: propylene glycol.\n\n## Ledger key VR-639\nAssigned filter grade: nominal 14 micron.\n\n## Ledger key BK-251\nAssigned lubricant: ISO VG 46.\n\n## Ledger key TN-908\nAssigned insulation: mica sheet.\n\n## Ledger key CP-134\nAssigned fastener: M8 by 30 millimeter.\n\n## Ledger key WY-763\nAssigned calibration gas: zero air.\n\n## Ledger key DF-520\nAssigned gasket material: EPDM.\n\n## Ledger key HS-396\nAssigned storage bin: blue compartment 7.\n\n## Ledger key JG-641\nAssigned inspection interval: 120 operating hours.\n\n## Ledger key RA-275\nAssigned cable jacket: halogen-free LSZH.\n\n## Ledger key NE-834\nAssigned bearing grease: NLGI grade 1.\n\n## Ledger key UX-109\nAssigned valve position: normally closed.\n\n## Ledger key MG-582\nAssigned panel label: PANEL C17.\n\n## Ledger key ZB-346\nAssigned solvent: isopropyl alcohol.\n\n## Ledger key FK-715\nAssigned belt profile: SPZ 1000.\n\n## Ledger key PD-028\nAssigned sensor range: minus 20 to 80 Celsius.\n\n## Ledger key CY-954\nAssigned connector key: keyway D.\n\n## Ledger key AL-683\nAssigned packing type: spiral wound graphite.\n\n## Ledger key RW-192\nAssigned relay rating: 24 volt DC.\n\n## Ledger key ET-847\nAssigned shelf location: aisle K shelf 12.\n\n## Ledger key OS-361\nAssigned test pressure: 1.6 megapascal.\n\n## Ledger key GI-530\nAssigned paint code: RAL 5014.\n\n## Ledger key MK-276\nAssigned fuse rating: 2.5 ampere slow-blow.\n\n## Ledger key FV-619\nAssigned pump rotation: clockwise from drive end.\n\n## Ledger key BD-403\nAssigned seal size: 32 by 47 by 7 millimeter.\n\n## Ledger key KC-785\nAssigned battery chemistry: lithium iron phosphate.\n\n## Ledger key SP-240\nAssigned thread pitch: 1.25 millimeter.\n\n## Ledger key YH-671\nAssigned trigger threshold: 0.35 bar.\n\n## Ledger key NW-058\nAssigned replacement element: cartridge XR-14.\n"
+    },
+    {
+      "name": "register-decoys.md",
+      "content": "# Matched decoy register\n\n## Ledger key D00-417\nAssigned sealant: potassium silicate.\n\n## Ledger key D01-082\nAssigned coolant: ethylene glycol.\n\n## Ledger key D02-639\nAssigned filter grade: nominal 40 micron.\n\n## Ledger key D03-251\nAssigned lubricant: ISO VG 68.\n\n## Ledger key D04-908\nAssigned insulation: ceramic fiber.\n\n## Ledger key D05-134\nAssigned fastener: M8 by 40 millimeter.\n\n## Ledger key D06-763\nAssigned calibration gas: span air.\n\n## Ledger key D07-520\nAssigned gasket material: FKM.\n\n## Ledger key D08-396\nAssigned storage bin: blue compartment 9.\n\n## Ledger key D09-641\nAssigned inspection interval: 210 operating hours.\n\n## Ledger key D10-275\nAssigned cable jacket: PVC.\n\n## Ledger key D11-834\nAssigned bearing grease: NLGI grade 2.\n\n## Ledger key D12-109\nAssigned valve position: normally open.\n\n## Ledger key D13-582\nAssigned panel label: PANEL C71.\n\n## Ledger key D14-346\nAssigned solvent: ethyl alcohol.\n\n## Ledger key D15-715\nAssigned belt profile: SPA 1000.\n\n## Ledger key D16-028\nAssigned sensor range: minus 40 to 80 Celsius.\n\n## Ledger key D17-954\nAssigned connector key: keyway B.\n\n## Ledger key D18-683\nAssigned packing type: spiral wound PTFE.\n\n## Ledger key D19-192\nAssigned relay rating: 24 volt AC.\n\n## Ledger key D20-847\nAssigned shelf location: aisle K shelf 21.\n\n## Ledger key D21-361\nAssigned test pressure: 1.8 megapascal.\n\n## Ledger key D22-530\nAssigned paint code: RAL 5041.\n\n## Ledger key D23-276\nAssigned fuse rating: 2.5 ampere fast-blow.\n\n## Ledger key D24-619\nAssigned pump rotation: counterclockwise from drive end.\n\n## Ledger key D25-403\nAssigned seal size: 32 by 47 by 9 millimeter.\n\n## Ledger key D26-785\nAssigned battery chemistry: lithium cobalt oxide.\n\n## Ledger key D27-240\nAssigned thread pitch: 1.5 millimeter.\n\n## Ledger key D28-671\nAssigned trigger threshold: 0.53 bar.\n\n## Ledger key D29-058\nAssigned replacement element: cartridge XR-41.\n"
+    }
+  ],
+  "questions": [
+    {
+      "id": "needle-v4-01",
+      "question": "For ledger key QX-417, what is the assigned sealant?",
+      "answer": "Assigned sealant: sodium silicate.",
+      "source": "register-targets.md"
+    },
+    {
+      "id": "needle-v4-02",
+      "question": "For ledger key LM-082, what is the assigned coolant?",
+      "answer": "Assigned coolant: propylene glycol.",
+      "source": "register-targets.md"
+    },
+    {
+      "id": "needle-v4-03",
+      "question": "For ledger key VR-639, what is the assigned filter grade?",
+      "answer": "Assigned filter grade: nominal 14 micron.",
+      "source": "register-targets.md"
+    },
+    {
+      "id": "needle-v4-04",
+      "question": "For ledger key BK-251, what is the assigned lubricant?",
+      "answer": "Assigned lubricant: ISO VG 46.",
+      "source": "register-targets.md"
+    },
+    {
+      "id": "needle-v4-05",
+      "question": "For ledger key TN-908, what is the assigned insulation?",
+      "answer": "Assigned insulation: mica sheet.",
+      "source": "register-targets.md"
+    },
+    {
+      "id": "needle-v4-06",
+      "question": "For ledger key CP-134, what is the assigned fastener?",
+      "answer": "Assigned fastener: M8 by 30 millimeter.",
+      "source": "register-targets.md"
+    },
+    {
+      "id": "needle-v4-07",
+      "question": "For ledger key WY-763, what is the assigned calibration gas?",
+      "answer": "Assigned calibration gas: zero air.",
+      "source": "register-targets.md"
+    },
+    {
+      "id": "needle-v4-08",
+      "question": "For ledger key DF-520, what is the assigned gasket material?",
+      "answer": "Assigned gasket material: EPDM.",
+      "source": "register-targets.md"
+    },
+    {
+      "id": "needle-v4-09",
+      "question": "For ledger key HS-396, what is the assigned storage bin?",
+      "answer": "Assigned storage bin: blue compartment 7.",
+      "source": "register-targets.md"
+    },
+    {
+      "id": "needle-v4-10",
+      "question": "For ledger key JG-641, what is the assigned inspection interval?",
+      "answer": "Assigned inspection interval: 120 operating hours.",
+      "source": "register-targets.md"
+    },
+    {
+      "id": "needle-v4-11",
+      "question": "For ledger key RA-275, what is the assigned cable jacket?",
+      "answer": "Assigned cable jacket: halogen-free LSZH.",
+      "source": "register-targets.md"
+    },
+    {
+      "id": "needle-v4-12",
+      "question": "For ledger key NE-834, what is the assigned bearing grease?",
+      "answer": "Assigned bearing grease: NLGI grade 1.",
+      "source": "register-targets.md"
+    },
+    {
+      "id": "needle-v4-13",
+      "question": "For ledger key UX-109, what is the assigned valve position?",
+      "answer": "Assigned valve position: normally closed.",
+      "source": "register-targets.md"
+    },
+    {
+      "id": "needle-v4-14",
+      "question": "For ledger key MG-582, what is the assigned panel label?",
+      "answer": "Assigned panel label: PANEL C17.",
+      "source": "register-targets.md"
+    },
+    {
+      "id": "needle-v4-15",
+      "question": "For ledger key ZB-346, what is the assigned solvent?",
+      "answer": "Assigned solvent: isopropyl alcohol.",
+      "source": "register-targets.md"
+    },
+    {
+      "id": "needle-v4-16",
+      "question": "For ledger key FK-715, what is the assigned belt profile?",
+      "answer": "Assigned belt profile: SPZ 1000.",
+      "source": "register-targets.md"
+    },
+    {
+      "id": "needle-v4-17",
+      "question": "For ledger key PD-028, what is the assigned sensor range?",
+      "answer": "Assigned sensor range: minus 20 to 80 Celsius.",
+      "source": "register-targets.md"
+    },
+    {
+      "id": "needle-v4-18",
+      "question": "For ledger key CY-954, what is the assigned connector key?",
+      "answer": "Assigned connector key: keyway D.",
+      "source": "register-targets.md"
+    },
+    {
+      "id": "needle-v4-19",
+      "question": "For ledger key AL-683, what is the assigned packing type?",
+      "answer": "Assigned packing type: spiral wound graphite.",
+      "source": "register-targets.md"
+    },
+    {
+      "id": "needle-v4-20",
+      "question": "For ledger key RW-192, what is the assigned relay rating?",
+      "answer": "Assigned relay rating: 24 volt DC.",
+      "source": "register-targets.md"
+    },
+    {
+      "id": "needle-v4-21",
+      "question": "For ledger key ET-847, what is the assigned shelf location?",
+      "answer": "Assigned shelf location: aisle K shelf 12.",
+      "source": "register-targets.md"
+    },
+    {
+      "id": "needle-v4-22",
+      "question": "For ledger key OS-361, what is the assigned test pressure?",
+      "answer": "Assigned test pressure: 1.6 megapascal.",
+      "source": "register-targets.md"
+    },
+    {
+      "id": "needle-v4-23",
+      "question": "For ledger key GI-530, what is the assigned paint code?",
+      "answer": "Assigned paint code: RAL 5014.",
+      "source": "register-targets.md"
+    },
+    {
+      "id": "needle-v4-24",
+      "question": "For ledger key MK-276, what is the assigned fuse rating?",
+      "answer": "Assigned fuse rating: 2.5 ampere slow-blow.",
+      "source": "register-targets.md"
+    },
+    {
+      "id": "needle-v4-25",
+      "question": "For ledger key FV-619, what is the assigned pump rotation?",
+      "answer": "Assigned pump rotation: clockwise from drive end.",
+      "source": "register-targets.md"
+    },
+    {
+      "id": "needle-v4-26",
+      "question": "For ledger key BD-403, what is the assigned seal size?",
+      "answer": "Assigned seal size: 32 by 47 by 7 millimeter.",
+      "source": "register-targets.md"
+    },
+    {
+      "id": "needle-v4-27",
+      "question": "For ledger key KC-785, what is the assigned battery chemistry?",
+      "answer": "Assigned battery chemistry: lithium iron phosphate.",
+      "source": "register-targets.md"
+    },
+    {
+      "id": "needle-v4-28",
+      "question": "For ledger key SP-240, what is the assigned thread pitch?",
+      "answer": "Assigned thread pitch: 1.25 millimeter.",
+      "source": "register-targets.md"
+    },
+    {
+      "id": "needle-v4-29",
+      "question": "For ledger key YH-671, what is the assigned trigger threshold?",
+      "answer": "Assigned trigger threshold: 0.35 bar.",
+      "source": "register-targets.md"
+    },
+    {
+      "id": "needle-v4-30",
+      "question": "For ledger key NW-058, what is the assigned replacement element?",
+      "answer": "Assigned replacement element: cartridge XR-14.",
+      "source": "register-targets.md"
+    }
+  ]
+}

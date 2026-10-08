@@ -18,6 +18,10 @@ def supported_quote(quote, hits):
     return bool(quote.strip()) and any(quote in hit["text"] for hit in hits)
 
 
+def context_text(hit):
+    return hit.get("parent_text") or hit["text"]
+
+
 class Knowledge:
     def __init__(
         self,
@@ -37,7 +41,7 @@ class Knowledge:
             raise ValueError("document has no text")
         # Compute before publishing the new catalog version; failed inference
         # cannot remove the old document. Only live catalog IDs are searchable.
-        embeddings = self.embedder.embed([c["text"] for c in parsed])
+        embeddings = self.embedder.embed([context_text(c) for c in parsed])
         if len(embeddings) != len(parsed):
             raise ValueError("embedding count mismatch")
         document = self.catalog.put(
@@ -64,7 +68,7 @@ class Knowledge:
             return self.catalog.expand(user, workspace, dense[:k])
         lexical = self.catalog.lexical(user, workspace, query, 100)
         hits = self.catalog.expand(user, workspace, rrf([dense, lexical])[:20])
-        ranked = self.reranker.rank(query, [h["text"] for h in hits])
+        ranked = self.reranker.rank(query, [context_text(h) for h in hits])
         indices = [index for index, _ in ranked]
         if sorted(indices) != list(range(len(hits))):
             raise ValueError("reranker must return a permutation")
