@@ -24,6 +24,14 @@
       "source": "https://github.com/ggml-org/llama.cpp/releases/download/b11429/llama-b11429-bin-ubuntu-x64.tar.gz",
       "sha256": "f6d25dde8f51133143d1453da4fd5f73b145127177612a283bf7995957af3392",
       "size_bytes": 17693462
+    },
+    {
+      "id": "rerank-small-q8",
+      "kind": "model",
+      "filename": "qwen3-reranker-0.6b-q8_0.gguf",
+      "source": "https://huggingface.co/ggml-org/Qwen3-Reranker-0.6B-Q8_0-GGUF/resolve/a02f48bb4f057028298c21fa033da2b30d7742d5/qwen3-reranker-0.6b-q8_0.gguf",
+      "sha256": "22c9979ce4fbcdc5acdc310c6641c32797eff1aa980b8f7a2db8a8ea23429a48",
+      "size_bytes": 639153184
     }
   ]
 }

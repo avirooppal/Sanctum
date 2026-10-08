@@ -36,6 +36,8 @@ struct Config {
     engine_files: Vec<Artifact>,
     chat: Model,
     embedding: Model,
+    reranker: Option<Model>,
+    knowledge_python: Option<PathBuf>,
     threads: usize,
     context: usize,
     state_dir: PathBuf,
@@ -82,6 +84,7 @@ pub struct Chat {
     chat: LocalEngine,
     embedding: LocalEngine,
     _engines: Engines,
+    knowledge: Option<crate::knowledge::Knowledge>,
 }
 
 impl Chat {
@@ -101,6 +104,9 @@ impl Chat {
             .chain([&config.chat.artifact, &config.embedding.artifact])
         {
             verify(artifact)?;
+        }
+        if let Some(model) = &config.reranker {
+            verify(&model.artifact)?;
         }
         fs::create_dir_all(&config.state_dir)?;
         fs::set_permissions(&config.state_dir, fs::Permissions::from_mode(0o700))?;
@@ -127,7 +133,11 @@ impl Chat {
         let store = Store::open(&store_path)?;
         fs::set_permissions(&store_path, fs::Permissions::from_mode(0o600))?;
         let mut engines = Engines(Vec::new());
-        for (model, embedding) in [(&config.chat, false), (&config.embedding, true)] {
+        let mut engine_models = vec![(&config.chat, "chat"), (&config.embedding, "embedding")];
+        if let Some(model) = &config.reranker {
+            engine_models.push((model, "reranker"));
+        }
+        for (model, role) in engine_models {
             let mut command = Command::new(std::env::current_exe()?);
             command
                 .arg("--engine-child")
@@ -154,8 +164,10 @@ impl Chat {
                 .stdin(Stdio::null())
                 .stdout(Stdio::null())
                 .stderr(Stdio::null());
-            if embedding {
+            if role == "embedding" {
                 command.args(["--embedding", "--pooling", "last"]);
+            } else if role == "reranker" {
+                command.args(["--rerank", "--pooling", "rank"]);
             } else {
                 command.arg("--jinja");
             }
@@ -164,7 +176,15 @@ impl Chat {
         let chat = LocalEngine::new(&format!("http://127.0.0.1:{}", config.chat.port))?;
         let embedding = LocalEngine::new(&format!("http://127.0.0.1:{}", config.embedding.port))?;
         let deadline = Instant::now() + Duration::from_secs(120);
-        while !chat.healthy() || !embedding.healthy() {
+        let reranker = config
+            .reranker
+            .as_ref()
+            .map(|m| LocalEngine::new(&format!("http://127.0.0.1:{}", m.port)))
+            .transpose()?;
+        while !chat.healthy()
+            || !embedding.healthy()
+            || reranker.as_ref().is_some_and(|e| !e.healthy())
+        {
             for child in &mut engines.0 {
                 if child.try_wait()?.is_some() {
                     return Err("local engine exited during startup".into());
@@ -175,6 +195,24 @@ impl Chat {
             }
             std::thread::sleep(Duration::from_millis(100));
         }
+        let knowledge = if let Some(python) = &config.knowledge_python {
+            if config.reranker.is_none() {
+                return Err("knowledge requires a reranker".into());
+            }
+            let python = if let Some(relative) = python.to_str().and_then(|s| s.strip_prefix("~/"))
+            {
+                PathBuf::from(std::env::var("HOME")?).join(relative)
+            } else {
+                python.clone()
+            };
+            Some(crate::knowledge::Knowledge::start(
+                &python,
+                path,
+                &config.state_dir,
+            )?)
+        } else {
+            None
+        };
         Ok(Self {
             config,
             token,
@@ -182,6 +220,7 @@ impl Chat {
             chat,
             embedding,
             _engines: engines,
+            knowledge,
         })
     }
     pub fn token_path(&self) -> PathBuf {
@@ -211,6 +250,79 @@ impl Chat {
                 401,
                 json!({"error":{"message":"Invalid local API token","type":"authentication_error"}}),
             );
+        }
+        if path == "/v1/workspaces" || path.starts_with("/v1/workspaces/") {
+            let Some(worker) = &self.knowledge else {
+                return respond(
+                    request,
+                    503,
+                    json!({"error":{"message":"Knowledge is not configured"}}),
+                );
+            };
+            let parts: Vec<&str> = path.split('/').collect();
+            let (operation, workspace) = if path == "/v1/workspaces" {
+                (
+                    if request.method() == &tiny_http::Method::Get {
+                        "list"
+                    } else {
+                        "create"
+                    },
+                    None,
+                )
+            } else if parts.len() == 5 {
+                (
+                    match parts[4] {
+                        "documents" => "ingest",
+                        "search" => "search",
+                        "ask" => "ask",
+                        _ => "invalid",
+                    },
+                    Some(parts[3]),
+                )
+            } else {
+                ("invalid", None)
+            };
+            if operation == "invalid"
+                || (operation != "list" && request.method() != &tiny_http::Method::Post)
+            {
+                return respond(request, 404, json!({"error":{"message":"Not found"}}));
+            }
+            let mut bytes = Vec::new();
+            request
+                .as_reader()
+                .take(15 * 1024 * 1024 + 1)
+                .read_to_end(&mut bytes)?;
+            if bytes.len() > 15 * 1024 * 1024 {
+                return respond(
+                    request,
+                    413,
+                    json!({"error":{"message":"Upload too large"}}),
+                );
+            }
+            let payload: Value = if bytes.is_empty() {
+                json!({})
+            } else {
+                match serde_json::from_slice(&bytes) {
+                    Ok(v) => v,
+                    Err(_) => {
+                        return respond(request, 400, json!({"error":{"message":"Invalid JSON"}}))
+                    }
+                }
+            };
+            let result=worker.call(json!({"user":"local-owner","workspace":workspace,"operation":operation,"payload":payload}));
+            return match result {
+                Ok(value) if value["ok"] == true => respond(request, 200, value["result"].clone()),
+                Ok(value) => respond(
+                    request,
+                    value["status"].as_u64().unwrap_or(500) as u16,
+                    json!({"error":{"message":value["error"]}}),
+                ),
+                Err(_) => respond(
+                    request,
+                    503,
+                    json!({"error":{"message":"Knowledge worker unavailable"}}),
+                ),
+            };
         }
         if request.method() == &tiny_http::Method::Get {
             return match path.as_str() {

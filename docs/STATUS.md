@@ -1,6 +1,6 @@
 # Implementation status
 
-Updated: 2026-10-08. Source of truth: ../plan.md. Phase 0 complete; Phase 1 reference implemented.
+Updated: 2026-10-09. Source of truth: ../plan.md. Phase 0 complete; Phase 1 reference implemented.
 Phase 1 starts after the Phase 0 completion commit below. Placeholder service directories are not implementations.
 
 | Phase | State | Exit criteria / evidence |
@@ -142,6 +142,23 @@ This is a library slice, not an exposed Knowledge service or a completed RAG sys
 Parser and vector adapter deviations are recorded in ADRs 0009 and 0010 after
 transitive license checks rejected Docling/certifi and LanceDB/tqdm respectively.
 
-Remaining: confined worker/API, real embeddings/cross-encoder integration, upload
-and watch UX, grounded cited answer/highlight flow, frozen labeled evaluation and
-ablation, local judge/human faithfulness checks. Phase 3 remains gated.
+## Phase 2 slice 2
+
+Confined Knowledge worker is wired through the isolated Rust gateway. Its startup
+checks the Linux loopback-only namespace and inherited seccomp before opening its
+SQLite state or making requests to local OpenAI-compatible engines. Profile selects
+the model IDs, hashes, paths and ports. API contract includes authenticated workspace
+listing, upload, search and ask. The real integration smoke passed: upload, ACL-filtered
+retrieval, exact cited answer and empty-evidence abstention. Evidence:
+`evals/results/phase2-smoke.json`.
+
+Python source gate passed (38 tests total including 7 Knowledge tests), Ruff format,
+lint, typecheck, and 26 installed Python / 145 frontend reviewed license checks.
+Rust offline/locked check passed: 16 integration/unit tests, fmt/Clippy, 73 reviewed
+crate licenses, 22 two-process kernel denial checks, and 16 runtime/exec-child denial
+checks; the isolated HTTP health contract also passed.
+Full frozen 30-question retrieval/citation benchmark is running on WSL2 CPU; after
+~110 seconds it had checkpointed 1/30. That partial checkpoint is not a benchmark result.
+No recall or faithfulness metric is claimed. The frozen set is synthetic, so even a pass
+would be pipeline evidence only. Folder watch, local judge and human faithfulness review
+remain outstanding. Phase 3 remains gated on the complete Phase 2 exit criteria.

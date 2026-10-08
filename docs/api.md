@@ -377,6 +377,22 @@ Runtime HTTP: GET /healthz. Other contracts are foundation diagnostics.
   },
   "paths": {
     "/v1/workspaces": {
+      "get": {
+        "summary": "List caller workspaces",
+        "security": [
+          {
+            "localBearer": []
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Caller workspaces"
+          },
+          "400": {
+            "description": "Invalid request"
+          }
+        }
+      },
       "post": {
         "summary": "Create owner workspace",
         "security": [

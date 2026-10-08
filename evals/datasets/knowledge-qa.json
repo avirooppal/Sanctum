@@ -1,0 +1,235 @@
+{
+  "description": "Hand-authored synthetic pipeline fixture; not a representative domain corpus.",
+  "documents": [
+    {
+      "name": "harbor.md",
+      "content": "# Operations reference\n\n## Beacon Color\n\nThe lighthouse beacon color is amber.\n\n## Harbor Depth\n\nThe east harbor channel depth is 8 meters.\n\n## Ferry Time\n\nThe morning ferry departs at 06:40.\n\n## Dock Number\n\nResearch boats use dock 12.\n\n## Harbor Radio\n\nThe harbor master monitors channel 74.\n"
+    },
+    {
+      "name": "misc-harbor.md",
+      "content": "# Related reference\n\nAmber is used on the harbor warning buoy.\nEight vessels use the harbor each day.\nThe ferry passenger limit is forty.\nDock repairs begin on the twelfth of May.\nRadio maintenance takes seventy-four minutes."
+    },
+    {
+      "name": "garden.md",
+      "content": "# Operations reference\n\n## Soil Ph\n\nThe greenhouse soil target is pH 6.2.\n\n## Watering Hour\n\nSeedlings are watered at 05:15.\n\n## Orchid Temp\n\nThe orchid room temperature is 21 degrees Celsius.\n\n## Compost Bin\n\nCitrus compost goes in the blue bin.\n\n## Garden Voltage\n\nThe grow lights use 24 volts DC.\n"
+    },
+    {
+      "name": "misc-garden.md",
+      "content": "# Related reference\n\nSix greenhouses were inspected this year.\nThe seed catalog has fifteen pages.\nTwenty-one orchids bloomed in spring.\nThe citrus trees have blue labels.\nThe service corridor is 24 meters long."
+    },
+    {
+      "name": "clinic.md",
+      "content": "# Operations reference\n\n## Vaccine Temp\n\nVaccine stock is stored at 4 degrees Celsius.\n\n## Clinic Room\n\nBlood samples are logged in room 3.\n\n## Clinic Window\n\nThe clinic lab closes at 18:30.\n\n## Clinic Alarm\n\nThe backup alarm code is 4821.\n\n## Clinic Generator\n\nThe clinic generator runs on propane.\n"
+    },
+    {
+      "name": "misc-clinic.md",
+      "content": "# Related reference\n\nThe clinic has four vaccination rooms.\nThree samples arrived before lunch.\nThirty patients attended the clinic today.\n4821 is the clinic postal code.\nPropane delivery arrives on Friday."
+    },
+    {
+      "name": "workshop.md",
+      "content": "# Operations reference\n\n## Tool Torque\n\nSpindle bolts are tightened to 32 newton meters.\n\n## Lathe Oil\n\nThe lathe gearbox uses ISO VG 68 oil.\n\n## Safety Glasses\n\nWelding requires shade 11 lenses.\n\n## Workshop Filter\n\nReplace the extraction filter every 90 days.\n\n## Workshop Switch\n\nThe emergency stop is beside the south door.\n"
+    },
+    {
+      "name": "misc-workshop.md",
+      "content": "# Related reference\n\nThe spindle is 32 centimeters long.\nThe gearbox label shows serial 68.\nEleven welding booths are available.\nNinety filters are stored in the depot.\nThe south door opens onto the loading bay."
+    },
+    {
+      "name": "archive.md",
+      "content": "# Operations reference\n\n## Archive Shelf\n\nMaps from 1912 are stored on shelf B7.\n\n## Archive Humidity\n\nArchive storage humidity is 45 percent.\n\n## Archive Hours\n\nThe archive is closed on Mondays.\n\n## Archive Gloves\n\nUse nitrile gloves for photographs.\n\n## Archive Permit\n\nForm AR-9 grants reading-room access.\n"
+    },
+    {
+      "name": "misc-archive.md",
+      "content": "# Related reference\n\nThe archive box contains 1912 labeled cards.\nForty-five archive boxes need relabeling.\nThe Monday post contains archive notices.\nNitrile gloves are stocked near the photo desk.\nThe reading room has nine tables."
+    },
+    {
+      "name": "station.md",
+      "content": "# Operations reference\n\n## Station Platform\n\nThe northbound local leaves from platform 6.\n\n## Station Bicycle\n\nPark bicycles in the west courtyard rack.\n\n## Station Lost\n\nLost items are held for 30 days.\n\n## Station Water\n\nPotable water is available beside platform 2.\n\n## Station Gate\n\nGate C opens first on Sundays.\n"
+    },
+    {
+      "name": "misc-station.md",
+      "content": "# Related reference\n\nThe six northbound signs were repainted.\nThe west courtyard has bicycle warning signs.\nThirty lost umbrellas were collected.\nPlatform two has two water fountains.\nC gates are inspected every Sunday."
+    }
+  ],
+  "questions": [
+    {
+      "id": "beacon-color",
+      "question": "What color is the lighthouse beacon?",
+      "answer": "The lighthouse beacon color is amber.",
+      "source": "harbor.md"
+    },
+    {
+      "id": "harbor-depth",
+      "question": "How deep is the east harbor channel?",
+      "answer": "The east harbor channel depth is 8 meters.",
+      "source": "harbor.md"
+    },
+    {
+      "id": "ferry-time",
+      "question": "When does the morning ferry depart?",
+      "answer": "The morning ferry departs at 06:40.",
+      "source": "harbor.md"
+    },
+    {
+      "id": "dock-number",
+      "question": "Which dock handles research boats?",
+      "answer": "Research boats use dock 12.",
+      "source": "harbor.md"
+    },
+    {
+      "id": "harbor-radio",
+      "question": "What is the harbor radio channel?",
+      "answer": "The harbor master monitors channel 74.",
+      "source": "harbor.md"
+    },
+    {
+      "id": "soil-ph",
+      "question": "What soil pH does the greenhouse need?",
+      "answer": "The greenhouse soil target is pH 6.2.",
+      "source": "garden.md"
+    },
+    {
+      "id": "watering-hour",
+      "question": "At what time are seedlings watered?",
+      "answer": "Seedlings are watered at 05:15.",
+      "source": "garden.md"
+    },
+    {
+      "id": "orchid-temp",
+      "question": "What temperature suits the orchid room?",
+      "answer": "The orchid room temperature is 21 degrees Celsius.",
+      "source": "garden.md"
+    },
+    {
+      "id": "compost-bin",
+      "question": "Which bin receives citrus compost?",
+      "answer": "Citrus compost goes in the blue bin.",
+      "source": "garden.md"
+    },
+    {
+      "id": "garden-voltage",
+      "question": "What voltage powers the grow lights?",
+      "answer": "The grow lights use 24 volts DC.",
+      "source": "garden.md"
+    },
+    {
+      "id": "vaccine-temp",
+      "question": "At what temperature is vaccine stock kept?",
+      "answer": "Vaccine stock is stored at 4 degrees Celsius.",
+      "source": "clinic.md"
+    },
+    {
+      "id": "clinic-room",
+      "question": "Where are blood samples logged?",
+      "answer": "Blood samples are logged in room 3.",
+      "source": "clinic.md"
+    },
+    {
+      "id": "clinic-window",
+      "question": "When is the clinic lab closed?",
+      "answer": "The clinic lab closes at 18:30.",
+      "source": "clinic.md"
+    },
+    {
+      "id": "clinic-alarm",
+      "question": "What is the backup alarm code?",
+      "answer": "The backup alarm code is 4821.",
+      "source": "clinic.md"
+    },
+    {
+      "id": "clinic-generator",
+      "question": "Which fuel runs the backup generator?",
+      "answer": "The clinic generator runs on propane.",
+      "source": "clinic.md"
+    },
+    {
+      "id": "tool-torque",
+      "question": "What torque is used for the spindle bolts?",
+      "answer": "Spindle bolts are tightened to 32 newton meters.",
+      "source": "workshop.md"
+    },
+    {
+      "id": "lathe-oil",
+      "question": "Which oil goes in the lathe gearbox?",
+      "answer": "The lathe gearbox uses ISO VG 68 oil.",
+      "source": "workshop.md"
+    },
+    {
+      "id": "safety-glasses",
+      "question": "What lens shade is required for welding?",
+      "answer": "Welding requires shade 11 lenses.",
+      "source": "workshop.md"
+    },
+    {
+      "id": "workshop-filter",
+      "question": "When is the extraction filter replaced?",
+      "answer": "Replace the extraction filter every 90 days.",
+      "source": "workshop.md"
+    },
+    {
+      "id": "workshop-switch",
+      "question": "Where is the emergency stop?",
+      "answer": "The emergency stop is beside the south door.",
+      "source": "workshop.md"
+    },
+    {
+      "id": "archive-shelf",
+      "question": "Where are the maps from 1912 stored?",
+      "answer": "Maps from 1912 are stored on shelf B7.",
+      "source": "archive.md"
+    },
+    {
+      "id": "archive-humidity",
+      "question": "What humidity is maintained in storage?",
+      "answer": "Archive storage humidity is 45 percent.",
+      "source": "archive.md"
+    },
+    {
+      "id": "archive-hours",
+      "question": "On which day is the archive closed?",
+      "answer": "The archive is closed on Mondays.",
+      "source": "archive.md"
+    },
+    {
+      "id": "archive-gloves",
+      "question": "What gloves are used for photographs?",
+      "answer": "Use nitrile gloves for photographs.",
+      "source": "archive.md"
+    },
+    {
+      "id": "archive-permit",
+      "question": "Which form grants reading-room access?",
+      "answer": "Form AR-9 grants reading-room access.",
+      "source": "archive.md"
+    },
+    {
+      "id": "station-platform",
+      "question": "Which platform serves the northbound local?",
+      "answer": "The northbound local leaves from platform 6.",
+      "source": "station.md"
+    },
+    {
+      "id": "station-bicycle",
+      "question": "Where should bicycles be parked?",
+      "answer": "Park bicycles in the west courtyard rack.",
+      "source": "station.md"
+    },
+    {
+      "id": "station-lost",
+      "question": "How long are lost items retained?",
+      "answer": "Lost items are held for 30 days.",
+      "source": "station.md"
+    },
+    {
+      "id": "station-water",
+      "question": "Where is potable water available?",
+      "answer": "Potable water is available beside platform 2.",
+      "source": "station.md"
+    },
+    {
+      "id": "station-gate",
+      "question": "Which gate opens first on Sundays?",
+      "answer": "Gate C opens first on Sundays.",
+      "source": "station.md"
+    }
+  ]
+}

@@ -27,6 +27,19 @@
       ],
       "source": "https://huggingface.co/Qwen/Qwen3-Embedding-0.6B-GGUF/resolve/370f27d7550e0def9b39c1f16d3fbaa13aa67728/Qwen3-Embedding-0.6B-Q8_0.gguf",
       "revision": "370f27d7550e0def9b39c1f16d3fbaa13aa67728"
+    },
+    {
+      "id": "rerank-small-q8",
+      "license": "Apache-2.0",
+      "license_url": "https://huggingface.co/ggml-org/Qwen3-Reranker-0.6B-Q8_0-GGUF/blob/a02f48bb4f057028298c21fa033da2b30d7742d5/README.md",
+      "verified_at": "2026-10-08",
+      "sha256": "22c9979ce4fbcdc5acdc310c6641c32797eff1aa980b8f7a2db8a8ea23429a48",
+      "format": "gguf",
+      "capabilities": [
+        "rerank"
+      ],
+      "source": "https://huggingface.co/ggml-org/Qwen3-Reranker-0.6B-Q8_0-GGUF/resolve/a02f48bb4f057028298c21fa033da2b30d7742d5/qwen3-reranker-0.6b-q8_0.gguf",
+      "revision": "a02f48bb4f057028298c21fa033da2b30d7742d5"
     }
   ],
   "dependencies": [
