@@ -1,12 +1,12 @@
 # Implementation status
 
-Updated: 2026-10-08. Source of truth: ../plan.md. Phase 0, slices 1–2 implemented.
+Updated: 2026-10-08. Source of truth: ../plan.md. Phase 0 complete; Phase 1 reference implemented.
 Phase 1 starts after the Phase 0 completion commit below. Placeholder service directories are not implementations.
 
 | Phase | State | Exit criteria / evidence |
 |---|---|---|
 | 0 Foundations | done (Linux x86_64) | Doctor tier/profile passes; real isolated HTTP ingress, exec inheritance and egress startup probes pass. Other runtime platforms fail closed. |
-| 1 Chat | not started | Clean install to answer <5 min; official OpenAI SDK compatibility: unverified. |
+| 1 Chat | done (Linux reference) | Offline clean-rootfs install to answer 50.6005s; official SDK 8/8. Downloads/build excluded; native macOS/Windows unverified. |
 | 2 Knowledge | not started | Hybrid beats vector-only on recall and faithfulness: unverified; numerical margin pending. |
 | 3 Speech | not started | T1 voice latency <800 ms and WER target: unverified; WER target pending. |
 | 4 Vision | not started | Measurable visual QA lift: unverified; dataset/threshold pending. |
@@ -109,3 +109,26 @@ Phase 0 is complete for this support scope. Engine-specific real inference, mode
 licenses, auth, persistence, UI, SDK compatibility and clean-install timing are
 Phase 1 work; no Phase 1 exit claim is made. Historical slice limitations above
 remain as provenance, superseded only by this completion record and ADR 0006.
+
+## Phase 1 completion evidence
+
+- [x] Hash-verified official Apache-2.0 chat/embedding GGUFs and MIT llama.cpp.
+- [x] Explicit logged download/import; estimates report unmeasured speed honestly.
+- [x] Rust loopback-only adapter, OpenAI streaming/tools/schema/embeddings/models.
+- [x] Local bearer auth, SQLite history, React/Tailwind model picker and chat.
+- [x] Official SDK: 8/8 real tests; 0.4787s chat, 0.4714s streaming TTFT,
+  1024-dimensional embedding (single CPU run, not a quality/performance guarantee).
+- [x] Clean Linux rootfs offline bundle copy to first answer: 50.6005s <300s.
+- [x] 31 Python tests; 16 Rust tests; formatting, Clippy, typecheck, web build pass.
+- [x] 22 Python, 73 Rust and 145 frontend dependency license entries checked.
+- [x] Browser login, real streamed response, saved conversation restoration verified.
+- [x] Runtime/child denial probes 16/16; strict bootstrap probes 22/22.
+- [ ] Hosted CI, MLX/Apple and native Windows runtime: unverified.
+
+Evidence: evals/results/phase1-sdk.json, phase1-clean-install.json, phase1-web.png.
+The clean-rootfs harness requires Docker's default capabilities during namespace
+creation, then the application drops all capabilities and applies its own filter.
+Outer Docker seccomp must allow namespace setup; outer network is disabled. The
+first cap-drop-ALL attempt failed closed (EPERM). Docker is test-only, not required
+for solo operation. This is an unsigned local bundle, not the Phase 6 air-gap release.
+ADRs 0007–0008 document model/reference scope and reproducible frontend build pin.

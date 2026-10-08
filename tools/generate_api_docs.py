@@ -18,6 +18,8 @@ def render():
         lines.extend([f"## {name}", "", "```json", json.dumps(schema, indent=2), "```", ""])
     runtime = json.loads((ROOT / "docs/contracts/runtime.openapi.json").read_text())
     lines.extend(["## Runtime OpenAPI", "", "```json", json.dumps(runtime, indent=2), "```", ""])
+    chat = json.loads((ROOT / "docs/contracts/chat.openapi.json").read_text())
+    lines.extend(["## Chat OpenAPI", "", "```json", json.dumps(chat, indent=2), "```", ""])
     return "\n".join(lines)
 
 

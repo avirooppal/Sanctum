@@ -23,6 +23,7 @@ dev = [
     "setuptools==80.9.0",
     "ty==0.0.85",
     "rpds-py==0.30.0",
+    "openai==3.26.0",
 ]
 
 [tool.ruff]

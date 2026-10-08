@@ -24,7 +24,11 @@ def main():
             process.kill()
         process.wait()
     child = subprocess.run(
-        [binary, "--test-child"], capture_output=True, text=True, check=True, timeout=10
+        [binary, "--test-child", "--port", "0"],
+        capture_output=True,
+        text=True,
+        check=True,
+        timeout=10,
     )
     evidence = {"health": health, "exec_child_checks": json.loads(child.stdout)}
     for checks in [health["checks"], evidence["exec_child_checks"]]:

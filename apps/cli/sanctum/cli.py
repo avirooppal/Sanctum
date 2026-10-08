@@ -4,6 +4,7 @@ import sys
 from pathlib import Path
 
 from .doctor import collect, load_profiles, report
+from .provisioning import provision, estimate
 
 
 def main() -> int:
@@ -13,7 +14,30 @@ def main() -> int:
     doctor.add_argument("--json", action="store_true", help="Emit versioned JSON")
     doctor.add_argument("--mode", choices=["solo", "team"], default="solo")
     doctor.add_argument("--profiles", type=Path, default=Path("profiles/hardware.json"))
+    for name in ("pull", "estimate"):
+        command = commands.add_parser(name)
+        command.add_argument("id")
+        command.add_argument("--manifest", type=Path, default=Path("profiles/artifacts.json"))
+        if name == "pull":
+            command.add_argument("--allow-network", action="store_true")
+            command.add_argument("--from-file", type=Path)
+            command.add_argument("--store", type=Path, default=Path(".sanctum/artifacts"))
+        else:
+            command.add_argument("--ram-gib", type=float)
     args = parser.parse_args()
+    if args.command in ("pull", "estimate"):
+        try:
+            manifest = json.loads(args.manifest.read_text())
+            entry = next(a for a in manifest["artifacts"] if a["id"] == args.id)
+            if args.command == "pull":
+                print(provision(entry, args.store, args.from_file, args.allow_network))
+            else:
+                ram = int(args.ram_gib * 1024**3) if args.ram_gib else collect().ram_bytes
+                print(json.dumps(estimate(entry, ram), indent=2))
+            return 0
+        except (OSError, ValueError, StopIteration, KeyError) as exc:
+            print(f"sanctum {args.command}: {exc or 'unknown artifact'}", file=sys.stderr)
+            return 2
     try:
         profiles = load_profiles(args.profiles)
         result = report(collect(), profiles, args.mode)

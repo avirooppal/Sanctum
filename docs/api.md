@@ -213,3 +213,155 @@ Runtime HTTP: GET /healthz. Other contracts are foundation diagnostics.
   }
 }
 ```
+
+## Chat OpenAPI
+
+```json
+{
+  "openapi": "3.1.0",
+  "info": {
+    "title": "Sanctum chat core",
+    "version": "0.1.0"
+  },
+  "security": [
+    {
+      "localBearer": []
+    }
+  ],
+  "paths": {
+    "/v1/models": {
+      "get": {
+        "responses": {
+          "200": {
+            "description": "Configured local model IDs and capabilities"
+          },
+          "401": {
+            "description": "Missing/invalid local token"
+          }
+        }
+      }
+    },
+    "/v1/chat/completions": {
+      "post": {
+        "description": "OpenAI-compatible messages, tools/tool_choice, JSON schema response_format; stream=true returns SSE. X-Sanctum-Conversation selects a local conversation. Unknown model IDs rejected.",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "required": [
+                  "model",
+                  "messages"
+                ],
+                "properties": {
+                  "model": {
+                    "type": "string"
+                  },
+                  "messages": {
+                    "type": "array",
+                    "minItems": 1
+                  },
+                  "stream": {
+                    "type": "boolean"
+                  },
+                  "tools": {
+                    "type": "array"
+                  },
+                  "response_format": {
+                    "type": "object"
+                  }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Chat completion or SSE"
+          },
+          "400": {
+            "description": "Invalid request"
+          },
+          "401": {
+            "description": "Invalid token"
+          },
+          "502": {
+            "description": "Local engine unavailable"
+          }
+        }
+      }
+    },
+    "/v1/embeddings": {
+      "post": {
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "required": [
+                  "model",
+                  "input"
+                ],
+                "properties": {
+                  "model": {
+                    "type": "string"
+                  },
+                  "input": {
+                    "type": [
+                      "string",
+                      "array"
+                    ]
+                  }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "OpenAI-compatible embeddings"
+          }
+        }
+      }
+    },
+    "/v1/conversations": {
+      "get": {
+        "responses": {
+          "200": {
+            "description": "Authenticated owner's conversation IDs"
+          }
+        }
+      }
+    },
+    "/v1/conversations/{id}": {
+      "get": {
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Owner-scoped persisted turns"
+          }
+        }
+      }
+    }
+  },
+  "components": {
+    "securitySchemes": {
+      "localBearer": {
+        "type": "http",
+        "scheme": "bearer"
+      }
+    }
+  }
+}
+```

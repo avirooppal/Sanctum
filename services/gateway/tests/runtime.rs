@@ -43,7 +43,7 @@ fn host_can_read_health_from_isolated_gateway() {
 #[test]
 fn exec_child_rechecks_enforcement() {
     let output = Command::new(env!("CARGO_BIN_EXE_sanctum-runtime"))
-        .arg("--test-child")
+        .args(["--test-child", "--port", "0"])
         .output()
         .unwrap();
     assert!(

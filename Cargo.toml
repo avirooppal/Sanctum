@@ -1,5 +1,5 @@
 [workspace]
-members = ["services/gateway", "services/policy"]
+members = ["services/gateway", "services/policy", "services/inference"]
 resolver = "2"
 
 [workspace.package]

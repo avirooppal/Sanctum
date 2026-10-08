@@ -1,0 +1,8 @@
+{
+  "environment": "fresh python:3.12-slim-bookworm container + OS libgomp1",
+  "method": "offline development bundle copied into empty filesystem; new HOME, auth and SQLite",
+  "install_to_answer_seconds": 50.6005,
+  "threshold_seconds": 300,
+  "passed": true,
+  "answer": "Hello! How can I assist you today?"
+}

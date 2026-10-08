@@ -1,0 +1,265 @@
+{
+  "engine": ".sanctum/engines/llama-b11429/llama-server",
+  "engine_files": [
+    {
+      "path": ".sanctum/engines/llama-b11429/LICENSE",
+      "sha256": "94f29bbed6a22c35b992c5c6ebf0e7c92f13b836b90f36f461c9cf2f0f1d010d"
+    },
+    {
+      "path": ".sanctum/engines/llama-b11429/ggml-rpc-server",
+      "sha256": "b124141282ccf73695f6ce723c383fc4297eafcce8cb1e1f313b2d7898bbb2c1"
+    },
+    {
+      "path": ".sanctum/engines/llama-b11429/libggml-base.so",
+      "sha256": "35f4d050cae9cc55c9d1b3fc863763af975ee3a93b8eae2ec0e5d2b3874cf3c6"
+    },
+    {
+      "path": ".sanctum/engines/llama-b11429/libggml-base.so.0",
+      "sha256": "35f4d050cae9cc55c9d1b3fc863763af975ee3a93b8eae2ec0e5d2b3874cf3c6"
+    },
+    {
+      "path": ".sanctum/engines/llama-b11429/libggml-base.so.0.26.0",
+      "sha256": "35f4d050cae9cc55c9d1b3fc863763af975ee3a93b8eae2ec0e5d2b3874cf3c6"
+    },
+    {
+      "path": ".sanctum/engines/llama-b11429/libggml-cpu-alderlake.so",
+      "sha256": "d95ec54730283295bc7363ec842b5e1512dbae6523bf8106679a37f688ed367d"
+    },
+    {
+      "path": ".sanctum/engines/llama-b11429/libggml-cpu-cannonlake.so",
+      "sha256": "2bdf5f493bf9472112c4bd5e936cb0cd3f7235b1b4b3c636dea9d1a9489c1558"
+    },
+    {
+      "path": ".sanctum/engines/llama-b11429/libggml-cpu-cascadelake.so",
+      "sha256": "d8ecf1f83ed1a52f50f911853ac356047988d41cecf9121a8e0f3e94b6989c47"
+    },
+    {
+      "path": ".sanctum/engines/llama-b11429/libggml-cpu-cooperlake.so",
+      "sha256": "c43f344af8f30204e0cbecc51f4755f45eecaa56c723ee87ba35e4f887a36909"
+    },
+    {
+      "path": ".sanctum/engines/llama-b11429/libggml-cpu-haswell.so",
+      "sha256": "bd7740021e3cbce4b49270e8c12f6a3bc6eed8cec00e548276d84a298d5911fa"
+    },
+    {
+      "path": ".sanctum/engines/llama-b11429/libggml-cpu-icelake.so",
+      "sha256": "c6579106a5f0f1cfd76902218c247858ffc5098c4f2f099864df643aa1d03f62"
+    },
+    {
+      "path": ".sanctum/engines/llama-b11429/libggml-cpu-ivybridge.so",
+      "sha256": "02a7121ebdb06b07cc0b7cc449aa724b6270edf5314113a65f90bd3fb863df45"
+    },
+    {
+      "path": ".sanctum/engines/llama-b11429/libggml-cpu-piledriver.so",
+      "sha256": "8c7d57b1a5afc23f688cefd70a835ff76e9be5bdd6c73dcfc649433118ec2ec2"
+    },
+    {
+      "path": ".sanctum/engines/llama-b11429/libggml-cpu-sandybridge.so",
+      "sha256": "3e04318845d9a9d9c8133d79925331a36d185f19fc9153b672c5b35da5c2b614"
+    },
+    {
+      "path": ".sanctum/engines/llama-b11429/libggml-cpu-sapphirerapids.so",
+      "sha256": "357dea6e5099e87d547e49a1f101f3e7c2e4283e4cf9518a4c220c0dcbe07b5f"
+    },
+    {
+      "path": ".sanctum/engines/llama-b11429/libggml-cpu-skylakex.so",
+      "sha256": "e10d82e3c08f91397cc265e3a13199e92f994f1e6961cd1777a484175233ea7b"
+    },
+    {
+      "path": ".sanctum/engines/llama-b11429/libggml-cpu-sse42.so",
+      "sha256": "7012b4dcad03e5649cccda277fdeb1950872dd5bf5957680ad8d1a2d403898d0"
+    },
+    {
+      "path": ".sanctum/engines/llama-b11429/libggml-cpu-x64.so",
+      "sha256": "6f92125d03aa6041931e1fb576d735fe2104120dcd80785559ff7cb7440b60ea"
+    },
+    {
+      "path": ".sanctum/engines/llama-b11429/libggml-cpu-zen4.so",
+      "sha256": "16adc0bc91d85382b508430667415d4fc472221c5ac1d9ef6a88eb38db4ba50e"
+    },
+    {
+      "path": ".sanctum/engines/llama-b11429/libggml-rpc.so",
+      "sha256": "674f64cd4561acc0cb75043da84edc25a22a1aef1083ee963cb2879e4463c672"
+    },
+    {
+      "path": ".sanctum/engines/llama-b11429/libggml.so",
+      "sha256": "354c630e37df7982af7b2d032aafdb0548f8e2f3a255ff0778027e531a357b82"
+    },
+    {
+      "path": ".sanctum/engines/llama-b11429/libggml.so.0",
+      "sha256": "354c630e37df7982af7b2d032aafdb0548f8e2f3a255ff0778027e531a357b82"
+    },
+    {
+      "path": ".sanctum/engines/llama-b11429/libggml.so.0.26.0",
+      "sha256": "354c630e37df7982af7b2d032aafdb0548f8e2f3a255ff0778027e531a357b82"
+    },
+    {
+      "path": ".sanctum/engines/llama-b11429/libllama-batched-bench-impl.so",
+      "sha256": "1c1cafd745b82f93bb751303e9badf57c7f0124c4d8991a297d587a416e79959"
+    },
+    {
+      "path": ".sanctum/engines/llama-b11429/libllama-bench-impl.so",
+      "sha256": "00f537fd5e5e3ee44c897db17d93d0e6bcc338e985b02e9495cb9df106f1cfe6"
+    },
+    {
+      "path": ".sanctum/engines/llama-b11429/libllama-cli-impl.so",
+      "sha256": "66f2baf5560eb86020d6c750299bf312c5205883e6e51bcfe8ef6de585df0b28"
+    },
+    {
+      "path": ".sanctum/engines/llama-b11429/libllama-common.so",
+      "sha256": "9329f7b28a8c82ad02764b66ce038a2383c28043e2158f134a35c01ddb64cc7d"
+    },
+    {
+      "path": ".sanctum/engines/llama-b11429/libllama-common.so.0",
+      "sha256": "9329f7b28a8c82ad02764b66ce038a2383c28043e2158f134a35c01ddb64cc7d"
+    },
+    {
+      "path": ".sanctum/engines/llama-b11429/libllama-common.so.0.6.0",
+      "sha256": "9329f7b28a8c82ad02764b66ce038a2383c28043e2158f134a35c01ddb64cc7d"
+    },
+    {
+      "path": ".sanctum/engines/llama-b11429/libllama-completion-impl.so",
+      "sha256": "88a1e8962658d7f41364b0cf2398774e0a5a967d4876d7084870f494d3313cb7"
+    },
+    {
+      "path": ".sanctum/engines/llama-b11429/libllama-fit-params-impl.so",
+      "sha256": "55fe96d0e798fd750694c8de9c5235fa7600044abd46c8775d43755217add256"
+    },
+    {
+      "path": ".sanctum/engines/llama-b11429/libllama-perplexity-impl.so",
+      "sha256": "03a573a304074db8410e3b2f220fa7f7496c8bfbb651df82a89fda8ca6765a7a"
+    },
+    {
+      "path": ".sanctum/engines/llama-b11429/libllama-quantize-impl.so",
+      "sha256": "8dd43c1fb15f2e6096237a5cc3aa52694b04978c176f10db28c27d15d6c1adcc"
+    },
+    {
+      "path": ".sanctum/engines/llama-b11429/libllama-server-impl.so",
+      "sha256": "0cb1fd100e7f018ac9ac0c5a3fc12aeef4cbe7614bb7ca8c686ec7d01c30810f"
+    },
+    {
+      "path": ".sanctum/engines/llama-b11429/libllama.so",
+      "sha256": "32e7a219942cb1c3e4a4c5df96f6804cf7f6c133f0bbb96e6ceaa3fd758712ba"
+    },
+    {
+      "path": ".sanctum/engines/llama-b11429/libllama.so.0",
+      "sha256": "32e7a219942cb1c3e4a4c5df96f6804cf7f6c133f0bbb96e6ceaa3fd758712ba"
+    },
+    {
+      "path": ".sanctum/engines/llama-b11429/libllama.so.0.6.0",
+      "sha256": "32e7a219942cb1c3e4a4c5df96f6804cf7f6c133f0bbb96e6ceaa3fd758712ba"
+    },
+    {
+      "path": ".sanctum/engines/llama-b11429/libmtmd.so",
+      "sha256": "73018e85b4f11665025686dad28809777dcf0d1a7e65965e62f0b869d417dbea"
+    },
+    {
+      "path": ".sanctum/engines/llama-b11429/libmtmd.so.0",
+      "sha256": "73018e85b4f11665025686dad28809777dcf0d1a7e65965e62f0b869d417dbea"
+    },
+    {
+      "path": ".sanctum/engines/llama-b11429/libmtmd.so.0.6.0",
+      "sha256": "73018e85b4f11665025686dad28809777dcf0d1a7e65965e62f0b869d417dbea"
+    },
+    {
+      "path": ".sanctum/engines/llama-b11429/llama",
+      "sha256": "5f15f04d3318aeef9553882e2817f2586049eb106118b053d8cb33be7c2bae38"
+    },
+    {
+      "path": ".sanctum/engines/llama-b11429/llama-batched-bench",
+      "sha256": "3b70e62c5c5cf43c8c436622a845ad4b80c01837d6ba3a10c90e39b219bbd2ab"
+    },
+    {
+      "path": ".sanctum/engines/llama-b11429/llama-bench",
+      "sha256": "941e7454fc5ac8fcee86915e52bd48303934237a87043259e6068e9881088dbe"
+    },
+    {
+      "path": ".sanctum/engines/llama-b11429/llama-cli",
+      "sha256": "4bda8fbeae6171218425abc12321c243b5d778ffb8d22453d7658911c2936bf3"
+    },
+    {
+      "path": ".sanctum/engines/llama-b11429/llama-completion",
+      "sha256": "7119bef261611b26f326f7c4da4dc3fdeb7bb28e2faf1ec392bda7b21215ef52"
+    },
+    {
+      "path": ".sanctum/engines/llama-b11429/llama-fit-params",
+      "sha256": "b2ad073a0c093706e5dfdfe2c9864d199ed921e49ea0383a7d0013e2ad8a81c8"
+    },
+    {
+      "path": ".sanctum/engines/llama-b11429/llama-gemma3-cli",
+      "sha256": "053ff1b820407b8a1836b0b05d1ffcc91e56b6531f08d9b00b8dfb97a41de294"
+    },
+    {
+      "path": ".sanctum/engines/llama-b11429/llama-gguf-split",
+      "sha256": "d371cd59cb824765a02ba4e9eb2d4590f80d866e47558a3426778d66836f1d33"
+    },
+    {
+      "path": ".sanctum/engines/llama-b11429/llama-imatrix",
+      "sha256": "27b196782e7f5cccdb82d42ad4cc1943249a9f333af415b7691fe331a56832c1"
+    },
+    {
+      "path": ".sanctum/engines/llama-b11429/llama-llava-cli",
+      "sha256": "053ff1b820407b8a1836b0b05d1ffcc91e56b6531f08d9b00b8dfb97a41de294"
+    },
+    {
+      "path": ".sanctum/engines/llama-b11429/llama-minicpmv-cli",
+      "sha256": "053ff1b820407b8a1836b0b05d1ffcc91e56b6531f08d9b00b8dfb97a41de294"
+    },
+    {
+      "path": ".sanctum/engines/llama-b11429/llama-mtmd-cli",
+      "sha256": "c5dedf55581e2432111d75b8cbaf57ca72fbb45bd6394b0ed7ad6ba0f65feee2"
+    },
+    {
+      "path": ".sanctum/engines/llama-b11429/llama-mtmd-debug",
+      "sha256": "974896aa49d49cd9defc2533ae844722b74069bacf002cc35f358900cbfa7886"
+    },
+    {
+      "path": ".sanctum/engines/llama-b11429/llama-perplexity",
+      "sha256": "1c06240ed8594fd377d655aef2dab0865431e3e779c06638474c96b38e6d74a0"
+    },
+    {
+      "path": ".sanctum/engines/llama-b11429/llama-quantize",
+      "sha256": "07e632fb0bf559fab0c7a6eb1918f9e52318e521ed707a4d1d5476cfab9bbc8b"
+    },
+    {
+      "path": ".sanctum/engines/llama-b11429/llama-qwen2vl-cli",
+      "sha256": "053ff1b820407b8a1836b0b05d1ffcc91e56b6531f08d9b00b8dfb97a41de294"
+    },
+    {
+      "path": ".sanctum/engines/llama-b11429/llama-results",
+      "sha256": "0b7f1d678569d030c1503d7c7a10768ce3b57d239587cfef8fbf6815d5108912"
+    },
+    {
+      "path": ".sanctum/engines/llama-b11429/llama-server",
+      "sha256": "5faf410bbbc00a1b94b09ee01623699f255365628dfa73b1ee552d9e52a2231d"
+    },
+    {
+      "path": ".sanctum/engines/llama-b11429/llama-tokenize",
+      "sha256": "87bc2f547db1444bb90ffb7237b6851fc0f743830f7b068a5df2b7c410e73393"
+    },
+    {
+      "path": ".sanctum/engines/llama-b11429/llama-tts",
+      "sha256": "46ea70decc5a0300644d9e2b919648e0f4052749630a6750b8c88661b89360e4"
+    }
+  ],
+  "chat": {
+    "id": "chat-tiny-q8",
+    "artifact": {
+      "path": ".sanctum/artifacts/Qwen3-0.6B-Q8_0.gguf",
+      "sha256": "9465e63a22add5354d9bb4b99e90117043c7124007664907259bd16d043bb031"
+    },
+    "port": 18081
+  },
+  "embedding": {
+    "id": "embed-small-q8",
+    "artifact": {
+      "path": ".sanctum/artifacts/Qwen3-Embedding-0.6B-Q8_0.gguf",
+      "sha256": "06507c7b42688469c4e7298b0a1e16deff06caf291cf0a5b278c308249c3e439"
+    },
+    "port": 18082
+  },
+  "threads": 4,
+  "context": 2048,
+  "state_dir": "~/.local/share/sanctum",
+  "ui_dir": "apps/web/dist"
+}

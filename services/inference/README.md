@@ -1,13 +1,9 @@
-# inference
+# Inference adapter
+Rust Engine trait: send an OpenAI path and JSON body, receive status/content-type
+and streaming reader. LocalEngine accepts only numeric IPv4 loopback URLs with a
+port, disables environment proxies and redirects. Engine processes are launched
+and hash-verified by gateway inside its isolated network namespace.
 
-Planned: Rust router/scheduler with replaceable HTTP/gRPC engine adapters. Implementation: Phase 1.
-
-Contract: no executable service yet. Foundation request envelope is in
-`docs/contracts/diagnostics.openapi.json`; versioned service contracts must be added
-before tests and implementation.
-
-Config: cloud disabled; no listeners or service startup configured. Future adapters
-read model/engine profiles rather than hardcoded model names.
-
-Tests: no service tests exist yet; do not count this placeholder as coverage.
-Run foundation gates from repository root with `uv run --offline python tools/check.py`.
+Config: profiles/runtime-cpu.json. No remote provider fallback. MLX is unverified.
+Run `cargo test --locked --offline -p sanctum-inference`; full real-engine contract
+suite is `uv run --offline python evals/sdk_chat.py --token-file PATH`.

@@ -1,0 +1,9 @@
+[package]
+name = "sanctum-inference"
+version.workspace = true
+edition.workspace = true
+license.workspace = true
+
+[dependencies]
+serde_json.workspace = true
+ureq = { version = "=2.12.1", default-features = false, features = ["json"] }

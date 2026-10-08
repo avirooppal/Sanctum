@@ -1,6 +1,7 @@
 //! Foundation envelope and bounded IPC. No public API/authentication yet.
 use serde::{Deserialize, Serialize};
 use std::io::{self, Read, Write};
+pub mod storage;
 
 pub const MAX_FRAME: usize = 64 * 1024;
 

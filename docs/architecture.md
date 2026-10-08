@@ -21,3 +21,6 @@ supervisor and worker each close unused handles and install default-deny kernel
 filters before request processing. They communicate over an inherited Unix socket
 pair; no ports are opened. Host Unix sockets/file opens are denied. This bootstrap
 transport does not replace planned product HTTP/gRPC contracts (ADR 0005).
+
+## Phase 1 runtime
+The host listener is bound before user/network isolation. Rust gateway and both trusted llama.cpp processes share private loopback only. Engine requests use a replaceable Rust trait; clients see OpenAI HTTP/SSE. SQLite and the local key live in a private state directory; UI assets are same-origin. Explicit artifact provisioning happens outside runtime and is locally logged.

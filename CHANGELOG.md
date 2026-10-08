@@ -12,3 +12,6 @@
 - Add Linux network namespace prototype with fail-closed startup probes.
 - Add CI, contract/unit tests, license checks, generated API docs and evaluation baseline.
 - Document incomplete containment and all later phase gates; no inference or weights ship.
+
+## Phase 1 reference chat
+Added immutable artifact import/download and fit estimates, confined real llama.cpp chat and embeddings, OpenAI streaming/tools/schema compatibility, local auth, SQLite conversations, React/Tailwind UI, official SDK and offline clean-rootfs timing gates.

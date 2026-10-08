@@ -1,46 +1,68 @@
 # Sanctum
 
-A private local AI platform under construction. Architecture and phase gates: [plan.md](plan.md).
-Current slice: offline hardware diagnostics and contracts, **not a working chat platform**.
+Private local AI platform. Architecture and phase gates: [plan.md](plan.md).
+Working Linux x86_64 reference: confined llama.cpp chat/embeddings, local auth,
+SQLite history, React/Tailwind UI, verified offline artifact import.
 
-## Five-minute source quickstart
+## Five-minute offline bundle quickstart
 
-Install Python 3.10+ and uv, then from this checkout:
+Requires Linux x86_64 with user/network namespaces, glibc, libstdc++, libgomp,
+and libssl3. WSL Ubuntu 22.04 is verified. Native Windows/macOS runtime is unsupported.
+With the development bundle already available, copy its contents into an empty
+folder, then run from that folder:
+
+```sh
+bin/sanctum-runtime --config profiles/runtime-cpu.json
+```
+
+Open http://127.0.0.1:8765 and enter the key from the printed token-file path.
+The key is only held in browser memory. Runtime startup verifies all engine/model
+hashes and kernel egress denial; failures prevent startup. Cloud is disabled.
+
+Measured offline bundle copy through first answer: **50.6005 seconds** in a fresh
+Linux container. Downloads, compiling, and creating the bundle are excluded;
+this is an unsigned development artifact, not the Phase 6 signed release.
+
+## Source setup
+
+Install uv/Python 3.12, Rust 1.99.0, Node 20.19+; these developer setup commands
+explicitly access package registries. Runtime services never download anything.
 
 ```sh
 uv sync --locked
 uv run --offline sanctum doctor
-uv run --offline sanctum doctor --json
-uv run --offline sanctum doctor --mode team
+cargo fetch --locked
+npm ci --prefix apps/web
+npm run build --prefix apps/web
+uv run --offline sanctum estimate chat-tiny-q8
+uv run --offline sanctum pull chat-tiny-q8 --allow-network
+uv run --offline sanctum pull embed-small-q8 --allow-network
+uv run --offline sanctum pull llama-cpu-linux --allow-network
 ```
 
-The initial sync downloads development/build tools; it is an explicit developer setup
-step. Doctor has no runtime dependencies, telemetry, downloads or cloud calls.
-Privacy enforcement is reported unverified and product startup blocked.
+Artifact IDs and immutable URLs are in profiles/artifacts.json. Extract the engine
+archive into .sanctum/engines/llama-b11429, preserving its library layout, then:
+
+```sh
+python3 tools/configure_reference.py
+cargo build --locked --offline --bin sanctum-runtime
+target/debug/sanctum-runtime --config profiles/runtime-cpu.json
+```
+
+For a development bundle, run `python3 tools/build_dev_bundle.py` on Linux after
+building. Offline import uses `sanctum pull ID --from-file PATH` instead of network.
+
+## Validation
 
 ```sh
 uv run --offline python tools/check.py
-```
-
-On Linux, separately exercise the real network-denial startup test:
-
-```sh
-python3 tools/isolated_run.py -- python3 -c "print('isolated command started')"
-```
-
-This requires user/network namespace support and is not an untrusted-code sandbox.
-The stronger Rust foundation diagnostic also blocks host Unix sockets and file opens
-while allowing inherited local IPC. On Linux x86_64 with Rust 1.99.0 installed:
-
-```sh
-cargo fetch --locked
 bash tools/check_rust.sh
+npm run typecheck --prefix apps/web
+npm run build --prefix apps/web
+uv run --offline python evals/sdk_chat.py --token-file ~/.local/share/sanctum/local.token
 ```
 
-Fetch is explicit development setup; the check script builds/tests offline. This is
-an envelope/containment diagnostic, not the production HTTP gateway. Native Windows
-and macOS service startup remain unsupported. See services/gateway/README.md.
+SDK validation requires the running reference runtime. See [status](docs/STATUS.md),
+[architecture](docs/architecture.md), [threat model](docs/threat-model.md),
+[profiles](docs/profiles.md), and [API contracts](docs/api.md).
 
-See [status](docs/STATUS.md), [architecture](docs/architecture.md),
-[profiles](docs/profiles.md), [threat model](docs/threat-model.md), and
-[generated API contracts](docs/api.md). Later phases remain gated.

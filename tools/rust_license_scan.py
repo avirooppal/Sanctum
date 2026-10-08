@@ -7,6 +7,9 @@ from pathlib import Path
 
 ROOT = Path(__file__).resolve().parents[1]
 PERMISSIVE = {
+    "MIT/Apache-2.0",
+    "Unicode-3.0",
+    "BSD-2-Clause OR Apache-2.0 OR MIT",
     "MIT",
     "Apache-2.0",
     "MIT OR Apache-2.0",

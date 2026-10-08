@@ -19,7 +19,11 @@ ALLOW = {
 
 def scan():
     registry = json.loads((ROOT / "profiles/registry.json").read_text())
-    indexed = {entry["name"].lower().replace("_", "-"): entry for entry in registry["dependencies"]}
+    indexed = {
+        entry["name"].lower().replace("_", "-"): entry
+        for entry in registry["dependencies"]
+        if entry.get("scope") == "development"
+    }
     count = 0
     for dist in metadata.distributions():
         name = dist.metadata["Name"].lower().replace("_", "-")

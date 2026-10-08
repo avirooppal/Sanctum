@@ -17,6 +17,7 @@ def main():
         ["-m", "unittest", "discover", "-s", "apps/cli/tests", "-v"],
         ["-m", "unittest", "discover", "-s", "tools/tests", "-v"],
         ["tools/license_scan.py"],
+        ["tools/web_license_scan.py"],
         ["evals/run.py"],
     ]
     for args in commands:

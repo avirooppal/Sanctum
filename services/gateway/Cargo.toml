@@ -9,6 +9,9 @@ serde.workspace = true
 serde_json.workspace = true
 sanctum-policy = { path = "../policy" }
 tiny_http = "=0.12.0"
+sanctum-inference = { path = "../inference" }
+rusqlite = { version = "=0.32.1", features = ["bundled"] }
+sha2 = "=0.10.9"
 
 [target.'cfg(all(target_os = "linux", target_arch = "x86_64"))'.dependencies]
 libc.workspace = true
