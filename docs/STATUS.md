@@ -7,7 +7,7 @@ Phase 1 starts after the Phase 0 completion commit below. Placeholder service di
 |---|---|---|
 | 0 Foundations | done (Linux x86_64) | Doctor tier/profile passes; real isolated HTTP ingress, exec inheritance and egress startup probes pass. Other runtime platforms fail closed. |
 | 1 Chat | done (Linux reference) | Offline clean-rootfs install to answer 50.6005s; official SDK 8/8. Downloads/build excluded; native macOS/Windows unverified. |
-| 2 Knowledge | in progress | Hybrid beats vector-only on recall and faithfulness: unverified; numerical margin pending. |
+| 2 Knowledge | in progress (gate failed) | 30-question synthetic run: dense recall@5 1.00, hybrid 1.00, gain 0.00 (<0.05); exact citations 1.00; human/local judge pending. |
 | 3 Speech | not started | T1 voice latency <800 ms and WER target: unverified; WER target pending. |
 | 4 Vision | not started | Measurable visual QA lift: unverified; dataset/threshold pending. |
 | 5 Agents | not started | Red team passes and zero unexpected ledger egress: unverified. |
@@ -157,8 +157,12 @@ lint, typecheck, and 26 installed Python / 145 frontend reviewed license checks.
 Rust offline/locked check passed: 16 integration/unit tests, fmt/Clippy, 73 reviewed
 crate licenses, 22 two-process kernel denial checks, and 16 runtime/exec-child denial
 checks; the isolated HTTP health contract also passed.
-Full frozen 30-question retrieval/citation benchmark is running on WSL2 CPU; after
-~110 seconds it had checkpointed 1/30. That partial checkpoint is not a benchmark result.
-No recall or faithfulness metric is claimed. The frozen set is synthetic, so even a pass
-would be pipeline evidence only. Folder watch, local judge and human faithfulness review
-remain outstanding. Phase 3 remains gated on the complete Phase 2 exit criteria.
+Full frozen 30-question retrieval/citation benchmark completed on WSL2 CPU in 1759.045s.
+Dense recall@5 1.00, hybrid recall@5 1.00, absolute gain 0.00 (required >=0.05), MRR
+1.00 for both, exact citation support 1.00, expected-answer containment 1.00, and
+unsupported-query abstention passed. Because dense retrieval is saturated, the recall
+exit criterion failed; per the eval plan, a separately versioned harder set is required
+before tuning. The questions/corpus are synthetic, so this is pipeline evidence only.
+No no-faithfulness-regression result is available (only hybrid answers were judged).
+Folder watch, local judge and human faithfulness review remain outstanding. Phase 3
+remains gated on all Phase 2 exit criteria.

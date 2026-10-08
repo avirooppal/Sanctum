@@ -1,0 +1,682 @@
+{
+  "suite": "synthetic-frozen-knowledge-v1",
+  "dataset_sha256": "13e111b8355f56fa28e54f2518bf01316301764dcb0db991822c01158b4fc2b0",
+  "questions": 30,
+  "recall_at_5": {
+    "vector": 1.0,
+    "hybrid": 1.0,
+    "absolute_gain": 0.0
+  },
+  "mrr": {
+    "vector": 1.0,
+    "hybrid": 1.0
+  },
+  "exact_citation_support": 1.0,
+  "answers_contain_expected": 1.0,
+  "unsupported_query_abstained": true,
+  "seconds": 1759.045,
+  "human_spot_check": "pending",
+  "local_judge": "pending",
+  "records": [
+    {
+      "id": "beacon-color",
+      "vector_rank": 1,
+      "hybrid_rank": 1,
+      "answer": {
+        "abstained": false,
+        "answer": "The lighthouse beacon color is amber.",
+        "citations": [
+          {
+            "chunk_id": "2fc0d6c7f40c4ddca22f859b782fd63d",
+            "document_id": "e3f4132d61844f2893acd7dcca9819c4",
+            "end": 37,
+            "page": null,
+            "quote": "The lighthouse beacon color is amber.",
+            "source": "harbor.md",
+            "start": 0
+          }
+        ]
+      },
+      "citation_supported": true,
+      "answer_contains_expected": true
+    },
+    {
+      "id": "harbor-depth",
+      "vector_rank": 1,
+      "hybrid_rank": 1,
+      "answer": {
+        "abstained": false,
+        "answer": "The east harbor channel depth is 8 meters.",
+        "citations": [
+          {
+            "chunk_id": "79741ce659bb454eb1a5e83b4a45e0b6",
+            "document_id": "e3f4132d61844f2893acd7dcca9819c4",
+            "end": 42,
+            "page": null,
+            "quote": "The east harbor channel depth is 8 meters.",
+            "source": "harbor.md",
+            "start": 0
+          }
+        ]
+      },
+      "citation_supported": true,
+      "answer_contains_expected": true
+    },
+    {
+      "id": "ferry-time",
+      "vector_rank": 1,
+      "hybrid_rank": 1,
+      "answer": {
+        "abstained": false,
+        "answer": "The morning ferry departs at 06:40.",
+        "citations": [
+          {
+            "chunk_id": "83604e35ac1c4be88171f515292c34b9",
+            "document_id": "e3f4132d61844f2893acd7dcca9819c4",
+            "end": 35,
+            "page": null,
+            "quote": "The morning ferry departs at 06:40.",
+            "source": "harbor.md",
+            "start": 0
+          }
+        ]
+      },
+      "citation_supported": true,
+      "answer_contains_expected": true
+    },
+    {
+      "id": "dock-number",
+      "vector_rank": 1,
+      "hybrid_rank": 1,
+      "answer": {
+        "abstained": false,
+        "answer": "Research boats use dock 12.",
+        "citations": [
+          {
+            "chunk_id": "fc9c5ed65a0c4317ba294d399e84c19f",
+            "document_id": "e3f4132d61844f2893acd7dcca9819c4",
+            "end": 27,
+            "page": null,
+            "quote": "Research boats use dock 12.",
+            "source": "harbor.md",
+            "start": 0
+          }
+        ]
+      },
+      "citation_supported": true,
+      "answer_contains_expected": true
+    },
+    {
+      "id": "harbor-radio",
+      "vector_rank": 1,
+      "hybrid_rank": 1,
+      "answer": {
+        "abstained": false,
+        "answer": "The harbor master monitors channel 74.",
+        "citations": [
+          {
+            "chunk_id": "049eaff15a324e4ca6fb16111df2fa28",
+            "document_id": "e3f4132d61844f2893acd7dcca9819c4",
+            "end": 38,
+            "page": null,
+            "quote": "The harbor master monitors channel 74.",
+            "source": "harbor.md",
+            "start": 0
+          }
+        ]
+      },
+      "citation_supported": true,
+      "answer_contains_expected": true
+    },
+    {
+      "id": "soil-ph",
+      "vector_rank": 1,
+      "hybrid_rank": 1,
+      "answer": {
+        "abstained": false,
+        "answer": "The greenhouse soil target is pH 6.2.",
+        "citations": [
+          {
+            "chunk_id": "18673cbfd0a94b74a40a4dfb7f995791",
+            "document_id": "4445cfc5f5c840b691d8a6ff7cc41caa",
+            "end": 37,
+            "page": null,
+            "quote": "The greenhouse soil target is pH 6.2.",
+            "source": "garden.md",
+            "start": 0
+          }
+        ]
+      },
+      "citation_supported": true,
+      "answer_contains_expected": true
+    },
+    {
+      "id": "watering-hour",
+      "vector_rank": 1,
+      "hybrid_rank": 1,
+      "answer": {
+        "abstained": false,
+        "answer": "Seedlings are watered at 05:15.",
+        "citations": [
+          {
+            "chunk_id": "db2e5369868e435d90a8f7cd0f2bba61",
+            "document_id": "4445cfc5f5c840b691d8a6ff7cc41caa",
+            "end": 31,
+            "page": null,
+            "quote": "Seedlings are watered at 05:15.",
+            "source": "garden.md",
+            "start": 0
+          }
+        ]
+      },
+      "citation_supported": true,
+      "answer_contains_expected": true
+    },
+    {
+      "id": "orchid-temp",
+      "vector_rank": 1,
+      "hybrid_rank": 1,
+      "answer": {
+        "abstained": false,
+        "answer": "The orchid room temperature is 21 degrees Celsius.",
+        "citations": [
+          {
+            "chunk_id": "fc9cf5b5d8c64fe9b88530a07a21c498",
+            "document_id": "4445cfc5f5c840b691d8a6ff7cc41caa",
+            "end": 50,
+            "page": null,
+            "quote": "The orchid room temperature is 21 degrees Celsius.",
+            "source": "garden.md",
+            "start": 0
+          }
+        ]
+      },
+      "citation_supported": true,
+      "answer_contains_expected": true
+    },
+    {
+      "id": "compost-bin",
+      "vector_rank": 1,
+      "hybrid_rank": 1,
+      "answer": {
+        "abstained": false,
+        "answer": "Citrus compost goes in the blue bin.",
+        "citations": [
+          {
+            "chunk_id": "870a0b6aff7c4eaa90f286040056d974",
+            "document_id": "4445cfc5f5c840b691d8a6ff7cc41caa",
+            "end": 36,
+            "page": null,
+            "quote": "Citrus compost goes in the blue bin.",
+            "source": "garden.md",
+            "start": 0
+          }
+        ]
+      },
+      "citation_supported": true,
+      "answer_contains_expected": true
+    },
+    {
+      "id": "garden-voltage",
+      "vector_rank": 1,
+      "hybrid_rank": 1,
+      "answer": {
+        "abstained": false,
+        "answer": "The grow lights use 24 volts DC.",
+        "citations": [
+          {
+            "chunk_id": "fb690d5e35d146cb8a90e0178af5f472",
+            "document_id": "4445cfc5f5c840b691d8a6ff7cc41caa",
+            "end": 32,
+            "page": null,
+            "quote": "The grow lights use 24 volts DC.",
+            "source": "garden.md",
+            "start": 0
+          }
+        ]
+      },
+      "citation_supported": true,
+      "answer_contains_expected": true
+    },
+    {
+      "id": "vaccine-temp",
+      "vector_rank": 1,
+      "hybrid_rank": 1,
+      "answer": {
+        "abstained": false,
+        "answer": "Vaccine stock is stored at 4 degrees Celsius.",
+        "citations": [
+          {
+            "chunk_id": "b47e5957ad0c40aab001cf1a3487c34a",
+            "document_id": "efbe95e11d784cce88dc74879be363df",
+            "end": 45,
+            "page": null,
+            "quote": "Vaccine stock is stored at 4 degrees Celsius.",
+            "source": "clinic.md",
+            "start": 0
+          }
+        ]
+      },
+      "citation_supported": true,
+      "answer_contains_expected": true
+    },
+    {
+      "id": "clinic-room",
+      "vector_rank": 1,
+      "hybrid_rank": 1,
+      "answer": {
+        "abstained": false,
+        "answer": "Blood samples are logged in room 3.",
+        "citations": [
+          {
+            "chunk_id": "db7c7d7afb8848e19e82444fe2017f2d",
+            "document_id": "efbe95e11d784cce88dc74879be363df",
+            "end": 35,
+            "page": null,
+            "quote": "Blood samples are logged in room 3.",
+            "source": "clinic.md",
+            "start": 0
+          }
+        ]
+      },
+      "citation_supported": true,
+      "answer_contains_expected": true
+    },
+    {
+      "id": "clinic-window",
+      "vector_rank": 1,
+      "hybrid_rank": 1,
+      "answer": {
+        "abstained": false,
+        "answer": "The clinic lab closes at 18:30.",
+        "citations": [
+          {
+            "chunk_id": "9787d7a794444fe29e7968246ef77bed",
+            "document_id": "efbe95e11d784cce88dc74879be363df",
+            "end": 31,
+            "page": null,
+            "quote": "The clinic lab closes at 18:30.",
+            "source": "clinic.md",
+            "start": 0
+          }
+        ]
+      },
+      "citation_supported": true,
+      "answer_contains_expected": true
+    },
+    {
+      "id": "clinic-alarm",
+      "vector_rank": 1,
+      "hybrid_rank": 1,
+      "answer": {
+        "abstained": false,
+        "answer": "The backup alarm code is 4821.",
+        "citations": [
+          {
+            "chunk_id": "122c1baa131f47049cb9047b982e241a",
+            "document_id": "efbe95e11d784cce88dc74879be363df",
+            "end": 30,
+            "page": null,
+            "quote": "The backup alarm code is 4821.",
+            "source": "clinic.md",
+            "start": 0
+          }
+        ]
+      },
+      "citation_supported": true,
+      "answer_contains_expected": true
+    },
+    {
+      "id": "clinic-generator",
+      "vector_rank": 1,
+      "hybrid_rank": 1,
+      "answer": {
+        "abstained": false,
+        "answer": "The clinic generator runs on propane.",
+        "citations": [
+          {
+            "chunk_id": "ceafd06ea33140ec960b4cd56058a820",
+            "document_id": "efbe95e11d784cce88dc74879be363df",
+            "end": 37,
+            "page": null,
+            "quote": "The clinic generator runs on propane.",
+            "source": "clinic.md",
+            "start": 0
+          }
+        ]
+      },
+      "citation_supported": true,
+      "answer_contains_expected": true
+    },
+    {
+      "id": "tool-torque",
+      "vector_rank": 1,
+      "hybrid_rank": 1,
+      "answer": {
+        "abstained": false,
+        "answer": "Spindle bolts are tightened to 32 newton meters.",
+        "citations": [
+          {
+            "chunk_id": "9a6350fbebbd40a19e7f4d0ba0d1a8db",
+            "document_id": "22fd33a815b34d1a962721da5f48b996",
+            "end": 48,
+            "page": null,
+            "quote": "Spindle bolts are tightened to 32 newton meters.",
+            "source": "workshop.md",
+            "start": 0
+          }
+        ]
+      },
+      "citation_supported": true,
+      "answer_contains_expected": true
+    },
+    {
+      "id": "lathe-oil",
+      "vector_rank": 1,
+      "hybrid_rank": 1,
+      "answer": {
+        "abstained": false,
+        "answer": "The lathe gearbox uses ISO VG 68 oil.",
+        "citations": [
+          {
+            "chunk_id": "b0d2a14f20414b94836cee1baf0f213e",
+            "document_id": "22fd33a815b34d1a962721da5f48b996",
+            "end": 37,
+            "page": null,
+            "quote": "The lathe gearbox uses ISO VG 68 oil.",
+            "source": "workshop.md",
+            "start": 0
+          }
+        ]
+      },
+      "citation_supported": true,
+      "answer_contains_expected": true
+    },
+    {
+      "id": "safety-glasses",
+      "vector_rank": 1,
+      "hybrid_rank": 1,
+      "answer": {
+        "abstained": false,
+        "answer": "Welding requires shade 11 lenses.",
+        "citations": [
+          {
+            "chunk_id": "2b214513911c4b63a02190baf7c6b2ca",
+            "document_id": "22fd33a815b34d1a962721da5f48b996",
+            "end": 33,
+            "page": null,
+            "quote": "Welding requires shade 11 lenses.",
+            "source": "workshop.md",
+            "start": 0
+          }
+        ]
+      },
+      "citation_supported": true,
+      "answer_contains_expected": true
+    },
+    {
+      "id": "workshop-filter",
+      "vector_rank": 1,
+      "hybrid_rank": 1,
+      "answer": {
+        "abstained": false,
+        "answer": "Replace the extraction filter every 90 days.",
+        "citations": [
+          {
+            "chunk_id": "a539648a4761492f84a2fde0bbd803d1",
+            "document_id": "22fd33a815b34d1a962721da5f48b996",
+            "end": 44,
+            "page": null,
+            "quote": "Replace the extraction filter every 90 days.",
+            "source": "workshop.md",
+            "start": 0
+          }
+        ]
+      },
+      "citation_supported": true,
+      "answer_contains_expected": true
+    },
+    {
+      "id": "workshop-switch",
+      "vector_rank": 1,
+      "hybrid_rank": 1,
+      "answer": {
+        "abstained": false,
+        "answer": "The emergency stop is beside the south door.",
+        "citations": [
+          {
+            "chunk_id": "13862a7c6669420e9b206a19261e0907",
+            "document_id": "22fd33a815b34d1a962721da5f48b996",
+            "end": 44,
+            "page": null,
+            "quote": "The emergency stop is beside the south door.",
+            "source": "workshop.md",
+            "start": 0
+          }
+        ]
+      },
+      "citation_supported": true,
+      "answer_contains_expected": true
+    },
+    {
+      "id": "archive-shelf",
+      "vector_rank": 1,
+      "hybrid_rank": 1,
+      "answer": {
+        "abstained": false,
+        "answer": "Maps from 1912 are stored on shelf B7.",
+        "citations": [
+          {
+            "chunk_id": "ab6b7c0d5723417b9ad3976e33fad26a",
+            "document_id": "fa441e30ad1a4264bc793ef93c7f4ebc",
+            "end": 38,
+            "page": null,
+            "quote": "Maps from 1912 are stored on shelf B7.",
+            "source": "archive.md",
+            "start": 0
+          }
+        ]
+      },
+      "citation_supported": true,
+      "answer_contains_expected": true
+    },
+    {
+      "id": "archive-humidity",
+      "vector_rank": 1,
+      "hybrid_rank": 1,
+      "answer": {
+        "abstained": false,
+        "answer": "Archive storage humidity is 45 percent.",
+        "citations": [
+          {
+            "chunk_id": "2b68d28de4e641f78459f63b0815760a",
+            "document_id": "fa441e30ad1a4264bc793ef93c7f4ebc",
+            "end": 39,
+            "page": null,
+            "quote": "Archive storage humidity is 45 percent.",
+            "source": "archive.md",
+            "start": 0
+          }
+        ]
+      },
+      "citation_supported": true,
+      "answer_contains_expected": true
+    },
+    {
+      "id": "archive-hours",
+      "vector_rank": 1,
+      "hybrid_rank": 1,
+      "answer": {
+        "abstained": false,
+        "answer": "The archive is closed on Mondays.",
+        "citations": [
+          {
+            "chunk_id": "1f60f0134b0b45cab4165f834ffa00bf",
+            "document_id": "fa441e30ad1a4264bc793ef93c7f4ebc",
+            "end": 33,
+            "page": null,
+            "quote": "The archive is closed on Mondays.",
+            "source": "archive.md",
+            "start": 0
+          }
+        ]
+      },
+      "citation_supported": true,
+      "answer_contains_expected": true
+    },
+    {
+      "id": "archive-gloves",
+      "vector_rank": 1,
+      "hybrid_rank": 1,
+      "answer": {
+        "abstained": false,
+        "answer": "Use nitrile gloves for photographs.",
+        "citations": [
+          {
+            "chunk_id": "a8cbf46901d64dd49f7b662b48517801",
+            "document_id": "fa441e30ad1a4264bc793ef93c7f4ebc",
+            "end": 35,
+            "page": null,
+            "quote": "Use nitrile gloves for photographs.",
+            "source": "archive.md",
+            "start": 0
+          }
+        ]
+      },
+      "citation_supported": true,
+      "answer_contains_expected": true
+    },
+    {
+      "id": "archive-permit",
+      "vector_rank": 1,
+      "hybrid_rank": 1,
+      "answer": {
+        "abstained": false,
+        "answer": "Form AR-9 grants reading-room access.",
+        "citations": [
+          {
+            "chunk_id": "c63a9211490f4b828b301113e3d6b222",
+            "document_id": "fa441e30ad1a4264bc793ef93c7f4ebc",
+            "end": 37,
+            "page": null,
+            "quote": "Form AR-9 grants reading-room access.",
+            "source": "archive.md",
+            "start": 0
+          }
+        ]
+      },
+      "citation_supported": true,
+      "answer_contains_expected": true
+    },
+    {
+      "id": "station-platform",
+      "vector_rank": 1,
+      "hybrid_rank": 1,
+      "answer": {
+        "abstained": false,
+        "answer": "The northbound local leaves from platform 6.",
+        "citations": [
+          {
+            "chunk_id": "85a191c034cc4bd7be145c365233771a",
+            "document_id": "6db455a905c74e86b65254e1c91025a8",
+            "end": 44,
+            "page": null,
+            "quote": "The northbound local leaves from platform 6.",
+            "source": "station.md",
+            "start": 0
+          }
+        ]
+      },
+      "citation_supported": true,
+      "answer_contains_expected": true
+    },
+    {
+      "id": "station-bicycle",
+      "vector_rank": 1,
+      "hybrid_rank": 1,
+      "answer": {
+        "abstained": false,
+        "answer": "Park bicycles in the west courtyard rack.",
+        "citations": [
+          {
+            "chunk_id": "bf291b6d23814f15b9e5d0957b39e417",
+            "document_id": "6db455a905c74e86b65254e1c91025a8",
+            "end": 41,
+            "page": null,
+            "quote": "Park bicycles in the west courtyard rack.",
+            "source": "station.md",
+            "start": 0
+          }
+        ]
+      },
+      "citation_supported": true,
+      "answer_contains_expected": true
+    },
+    {
+      "id": "station-lost",
+      "vector_rank": 1,
+      "hybrid_rank": 1,
+      "answer": {
+        "abstained": false,
+        "answer": "Lost items are held for 30 days.",
+        "citations": [
+          {
+            "chunk_id": "8258922017ef473a85715f36b6bd001f",
+            "document_id": "6db455a905c74e86b65254e1c91025a8",
+            "end": 32,
+            "page": null,
+            "quote": "Lost items are held for 30 days.",
+            "source": "station.md",
+            "start": 0
+          }
+        ]
+      },
+      "citation_supported": true,
+      "answer_contains_expected": true
+    },
+    {
+      "id": "station-water",
+      "vector_rank": 1,
+      "hybrid_rank": 1,
+      "answer": {
+        "abstained": false,
+        "answer": "Potable water is available beside platform 2.",
+        "citations": [
+          {
+            "chunk_id": "ce9f9105a84a48cd98f4e86f3c7764aa",
+            "document_id": "6db455a905c74e86b65254e1c91025a8",
+            "end": 45,
+            "page": null,
+            "quote": "Potable water is available beside platform 2.",
+            "source": "station.md",
+            "start": 0
+          }
+        ]
+      },
+      "citation_supported": true,
+      "answer_contains_expected": true
+    },
+    {
+      "id": "station-gate",
+      "vector_rank": 1,
+      "hybrid_rank": 1,
+      "answer": {
+        "abstained": false,
+        "answer": "Gate C opens first on Sundays.",
+        "citations": [
+          {
+            "chunk_id": "568ac5c55ee741cbafc51ab48699e91f",
+            "document_id": "6db455a905c74e86b65254e1c91025a8",
+            "end": 30,
+            "page": null,
+            "quote": "Gate C opens first on Sundays.",
+            "source": "station.md",
+            "start": 0
+          }
+        ]
+      },
+      "citation_supported": true,
+      "answer_contains_expected": true
+    }
+  ]
+}
