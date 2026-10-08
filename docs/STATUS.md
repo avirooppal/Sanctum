@@ -7,7 +7,7 @@ Phase 1 starts after the Phase 0 completion commit below. Placeholder service di
 |---|---|---|
 | 0 Foundations | done (Linux x86_64) | Doctor tier/profile passes; real isolated HTTP ingress, exec inheritance and egress startup probes pass. Other runtime platforms fail closed. |
 | 1 Chat | done (Linux reference) | Offline clean-rootfs install to answer 50.6005s; official SDK 8/8. Downloads/build excluded; native macOS/Windows unverified. |
-| 2 Knowledge | not started | Hybrid beats vector-only on recall and faithfulness: unverified; numerical margin pending. |
+| 2 Knowledge | in progress | Hybrid beats vector-only on recall and faithfulness: unverified; numerical margin pending. |
 | 3 Speech | not started | T1 voice latency <800 ms and WER target: unverified; WER target pending. |
 | 4 Vision | not started | Measurable visual QA lift: unverified; dataset/threshold pending. |
 | 5 Agents | not started | Red team passes and zero unexpected ledger egress: unverified. |
@@ -132,3 +132,16 @@ Outer Docker seccomp must allow namespace setup; outer network is disabled. The
 first cap-drop-ALL attempt failed closed (EPERM). Docker is test-only, not required
 for solo operation. This is an unsigned local bundle, not the Phase 6 air-gap release.
 ADRs 0007–0008 document model/reference scope and reproducible frontend build pin.
+
+## Phase 2 slice 1
+
+Seven new tests pass for workspace membership, per-document ACL prefilters and
+revocation, dedup/versioning, stale-parent denial, structural Markdown chunks,
+real sqlite-vec prefiltering, RRF and exact quote validation. Total Python tests 38.
+This is a library slice, not an exposed Knowledge service or a completed RAG system.
+Parser and vector adapter deviations are recorded in ADRs 0009 and 0010 after
+transitive license checks rejected Docling/certifi and LanceDB/tqdm respectively.
+
+Remaining: confined worker/API, real embeddings/cross-encoder integration, upload
+and watch UX, grounded cited answer/highlight flow, frozen labeled evaluation and
+ablation, local judge/human faithfulness checks. Phase 3 remains gated.

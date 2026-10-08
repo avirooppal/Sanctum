@@ -16,6 +16,7 @@ def main():
         ["-m", "ty", "check", "apps/cli/sanctum"],
         ["-m", "unittest", "discover", "-s", "apps/cli/tests", "-v"],
         ["-m", "unittest", "discover", "-s", "tools/tests", "-v"],
+        ["-m", "unittest", "discover", "-s", "services/knowledge/tests", "-v"],
         ["tools/license_scan.py"],
         ["tools/web_license_scan.py"],
         ["evals/run.py"],

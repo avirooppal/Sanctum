@@ -15,3 +15,6 @@
 
 ## Phase 1 reference chat
 Added immutable artifact import/download and fit estimates, confined real llama.cpp chat and embeddings, OpenAI streaming/tools/schema compatibility, local auth, SQLite conversations, React/Tailwind UI, official SDK and offline clean-rootfs timing gates.
+
+## Phase 2: ACL and retrieval foundations
+Added workspace/document ACL catalog, upstream parser adapters, sqlite-vec prefiltering, RRF glue and seven adversarial/contract tests. Retrieval-quality exit remains unverified.

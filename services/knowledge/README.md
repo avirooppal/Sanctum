@@ -1,13 +1,15 @@
-# knowledge
+# Knowledge (Phase 2 in progress)
 
-Planned: Python ingestion and retrieval with ACL prefilters; embedded/team store adapters. Implementation: Phase 2.
+Contracts: docs/contracts/knowledge.openapi.json and knowledge.md. Library interfaces
+separate Parser, Embedder, VectorStore and Reranker. SQLite Catalog is authoritative
+for membership, per-document readers and current chunks; ACLs apply before candidate
+ranking and again on parent expansion. Only owners can ingest/change readers.
 
-Contract: no executable service yet. Foundation request envelope is in
-`docs/contracts/diagnostics.openapi.json`; versioned service contracts must be added
-before tests and implementation.
+Initial permissive parser adapters: markdown-it-py and pypdf (ADR 0009). Vector adapter:
+sqlite-vec (ADR 0010); LanceDB is not implemented. No model download or service
+listener exists in this library slice. Runtime service wiring is pending.
 
-Config: cloud disabled; no listeners or service startup configured. Future adapters
-read model/engine profiles rather than hardcoded model names.
-
-Tests: no service tests exist yet; do not count this placeholder as coverage.
-Run foundation gates from repository root with `uv run --offline python tools/check.py`.
+Run `uv sync --locked --group knowledge`, then
+`uv run --offline --group knowledge python -m unittest discover -s services/knowledge/tests -v`.
+Fixtures use actual local storage/vector kernels but stub-sized vectors; they do
+not count as RAG-quality or inference benchmarks.

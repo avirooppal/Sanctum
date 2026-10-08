@@ -25,6 +25,11 @@ dev = [
     "rpds-py==0.30.0",
     "openai==3.26.0",
 ]
+knowledge = [
+    "markdown-it-py==4.2.0",
+    "pypdf==6.19.0",
+    "sqlite-vec==0.1.9",
+]
 
 [tool.ruff]
 target-version = "py310"

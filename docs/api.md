@@ -365,3 +365,109 @@ Runtime HTTP: GET /healthz. Other contracts are foundation diagnostics.
   }
 }
 ```
+
+## Knowledge OpenAPI
+
+```json
+{
+  "openapi": "3.1.0",
+  "info": {
+    "title": "Sanctum Knowledge",
+    "version": "0.1.0"
+  },
+  "paths": {
+    "/v1/workspaces": {
+      "post": {
+        "summary": "Create owner workspace",
+        "security": [
+          {
+            "localBearer": []
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful operation"
+          },
+          "403": {
+            "description": "No membership or denied operation"
+          },
+          "400": {
+            "description": "Invalid request"
+          }
+        }
+      }
+    },
+    "/v1/workspaces/{id}/documents": {
+      "post": {
+        "summary": "Ingest ACL-protected document",
+        "security": [
+          {
+            "localBearer": []
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful operation"
+          },
+          "403": {
+            "description": "No membership or denied operation"
+          },
+          "400": {
+            "description": "Invalid request"
+          }
+        }
+      }
+    },
+    "/v1/workspaces/{id}/search": {
+      "post": {
+        "summary": "ACL-prefiltered hybrid retrieval",
+        "security": [
+          {
+            "localBearer": []
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful operation"
+          },
+          "403": {
+            "description": "No membership or denied operation"
+          },
+          "400": {
+            "description": "Invalid request"
+          }
+        }
+      }
+    },
+    "/v1/workspaces/{id}/ask": {
+      "post": {
+        "summary": "Grounded cited answer",
+        "security": [
+          {
+            "localBearer": []
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful operation"
+          },
+          "403": {
+            "description": "No membership or denied operation"
+          },
+          "400": {
+            "description": "Invalid request"
+          }
+        }
+      }
+    }
+  },
+  "components": {
+    "securitySchemes": {
+      "localBearer": {
+        "type": "http",
+        "scheme": "bearer"
+      }
+    }
+  }
+}
+```

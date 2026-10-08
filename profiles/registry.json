@@ -2222,6 +2222,42 @@
       "integrity": "sha512-3NxN8+78OdzbT7C/WjGsyfPAtJaN3FNDsWxv7Y7mcDsT/oOmgW8BpyQQFFBnvZE3j9Y2Sdz1ULFLezL7Eb2yFw==",
       "scope": "web",
       "verified_at": "2026-10-08"
+    },
+    {
+      "name": "markdown-it-py",
+      "version": "4.2.0",
+      "license": "MIT",
+      "license_source": "https://pypi.org/pypi/markdown-it-py/4.2.0/json",
+      "metadata_evidence": "License :: OSI Approved :: MIT License",
+      "verified_at": "2026-10-08",
+      "scope": "development"
+    },
+    {
+      "name": "mdurl",
+      "version": "0.1.2",
+      "license": "MIT",
+      "license_source": "https://pypi.org/pypi/mdurl/0.1.2/json",
+      "metadata_evidence": "License :: OSI Approved :: MIT License",
+      "verified_at": "2026-10-08",
+      "scope": "development"
+    },
+    {
+      "name": "pypdf",
+      "version": "6.19.0",
+      "license": "BSD-3-Clause",
+      "license_source": "https://pypi.org/pypi/pypdf/6.19.0/json",
+      "metadata_evidence": "BSD-3-Clause",
+      "verified_at": "2026-10-08",
+      "scope": "development"
+    },
+    {
+      "name": "sqlite-vec",
+      "version": "0.1.9",
+      "license": "MIT OR Apache-2.0",
+      "license_source": "https://pypi.org/pypi/sqlite-vec/0.1.9/json",
+      "metadata_evidence": "MIT License, Apache License, Version 2.0",
+      "verified_at": "2026-10-08",
+      "scope": "development"
     }
   ]
 }

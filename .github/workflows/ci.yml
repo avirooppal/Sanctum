@@ -13,8 +13,8 @@ jobs:
       - uses: astral-sh/setup-uv@d0d8abe699bfb85fec6de9f7adb5ae17292296ff
         with:
           version: "0.12.14"
-      - run: uv sync --locked --python 3.12
-      - run: uv run --offline python tools/check.py
+      - run: uv sync --locked --group knowledge --python 3.12
+      - run: uv run --offline --group knowledge python tools/check.py
       - if: runner.os == 'Linux'
         run: python3 tools/isolated_run.py -- python3 -c "print('isolated child started')"
   rust-foundation:
