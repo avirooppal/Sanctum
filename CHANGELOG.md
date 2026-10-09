@@ -18,3 +18,6 @@ Added immutable artifact import/download and fit estimates, confined real llama.
 
 ## Phase 2: ACL and retrieval foundations
 Added workspace/document ACL catalog, upstream parser adapters, sqlite-vec prefiltering, RRF glue and seven adversarial/contract tests. Retrieval-quality exit remains unverified.
+
+## Phase 2 evaluation update — 2026-10-09
+Recorded the completed frozen v4 challenge run. Recall improvement and exact citation thresholds failed; Phase 2 remains gated.

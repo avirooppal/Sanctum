@@ -27,3 +27,9 @@ vector-only, no answer-faithfulness regression, >=0.95 exact citation support ac
 at least 30 questions, local judge and human spot-check. These toy-set results cannot
 establish general RAG quality. If dense baseline is already saturated, add a separately
 versioned harder dataset before tuning; never silently tune on frozen cases.
+
+
+V4 completed on 2026-10-09: dense and hybrid recall@5 both 1.00 (gain 0.00), MRR
+1.000/0.983, citation support 0.867, expected-answer containment 0.867, abstention passed.
+The recall and citation targets fail. Do not advance Phase 3. The result records the resumed
+segment time only; it is not an end-to-end benchmark duration.

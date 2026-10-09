@@ -7,7 +7,7 @@ Phase 1 starts after the Phase 0 completion commit below. Placeholder service di
 |---|---|---|
 | 0 Foundations | done (Linux x86_64) | Doctor tier/profile passes; real isolated HTTP ingress, exec inheritance and egress startup probes pass. Other runtime platforms fail closed. |
 | 1 Chat | done (Linux reference) | Offline clean-rootfs install to answer 50.6005s; official SDK 8/8. Downloads/build excluded; native macOS/Windows unverified. |
-| 2 Knowledge | in progress (gate failed) | V1: recall gain 0.00, citations 1.00. V3: recall gain 0.00, citations 0.567. V4 tuned run in progress. Human/local judge pending. |
+| 2 Knowledge | in progress (gate failed) | V1: recall gain 0.00, citations 1.00. V3: recall gain 0.00, citations 0.567. V4: recall gain 0.00, MRR 1.000/0.983, exact citations 0.867; abstention passed. Retrieval, citation and faithfulness gates fail/pending; folder watch absent. |
 | 3 Speech | not started | T1 voice latency <800 ms and WER target: unverified; WER target pending. |
 | 4 Vision | not started | Measurable visual QA lift: unverified; dataset/threshold pending. |
 | 5 Agents | not started | Red team passes and zero unexpected ledger egress: unverified. |
@@ -181,5 +181,11 @@ reranks with parent context, and gives the answer model context while restrictin
 to child text. A recoverable SIGALRM deadline handler prevents slow inference from
 terminating the worker; the eval runner resumes only matching hash-verified checkpoints.
 Knowledge tests: 10/10; full Python source/license gate passes. V4 is an independent
-30-question/two-register challenge with 60 parsed passages, currently running on the
-confined WSL2 CPU runtime. It is not a customer-corpus benchmark. Phase 3 remains gated.
+30-question/two-register challenge with 60 parsed passages. It completed on the confined
+WSL2 CPU runtime (resumed segment 764.355s): dense/hybrid recall@5 1.00/1.00 (gain
+0.00; required >=0.05), MRR 1.000/0.983, exact citation support 0.867 (required >=0.95),
+expected-answer containment 0.867, and unsupported-query abstention passed. Raw evidence:
+`evals/results/knowledge-needle-v4.json`; suite SHA-256 is recorded there. Dense baseline remains
+saturated, so the retrieval gate fails. No faithfulness regression comparison, local judge, or
+human spot-check is available; folder watching is not implemented. V4 is synthetic pipeline
+evidence, not a customer-corpus benchmark. Phase 3 remains gated.
