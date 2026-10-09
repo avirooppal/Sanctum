@@ -17,6 +17,15 @@ def operation_deadline(_signum, _frame):
     raise TimeoutError("knowledge operation deadline exceeded")
 
 
+def answer_or_judge(models, payload, hits):
+    if "judge_answer" not in payload:
+        return models.answer(payload["query"], hits)
+    candidate = payload["judge_answer"]
+    if not isinstance(candidate, str) or len(candidate) > 12000:
+        raise ValueError("invalid judge answer")
+    return models.judge(payload["query"], hits, candidate)
+
+
 def main():
     # The Rust --engine-child entry repeats kernel probes before this interpreter.
     # Independently reject direct host startup, without making any network probe.
@@ -73,11 +82,10 @@ def main():
                     payload.get("k", 5),
                     payload.get("mode", "hybrid"),
                 )
-                result = (
-                    {"hits": hits}
-                    if operation == "search"
-                    else models.answer(payload["query"], hits)
-                )
+                if operation == "search":
+                    result = {"hits": hits}
+                else:
+                    result = answer_or_judge(models, payload, hits)
             else:
                 raise ValueError("unknown operation")
             response = {"ok": True, "result": result}

@@ -463,6 +463,46 @@ Runtime HTTP: GET /healthz. Other contracts are foundation diagnostics.
             "localBearer": []
           }
         ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "required": [
+                  "query"
+                ],
+                "properties": {
+                  "query": {
+                    "type": "string",
+                    "minLength": 1,
+                    "maxLength": 4000
+                  },
+                  "k": {
+                    "type": "integer",
+                    "minimum": 1,
+                    "maximum": 20,
+                    "default": 5
+                  },
+                  "mode": {
+                    "type": "string",
+                    "enum": [
+                      "hybrid",
+                      "vector"
+                    ],
+                    "default": "hybrid"
+                  },
+                  "judge_answer": {
+                    "type": "string",
+                    "maxLength": 12000,
+                    "description": "When present, run the configured local faithfulness judge against ACL-filtered retrieved evidence instead of generating an answer."
+                  }
+                },
+                "additionalProperties": false
+              }
+            }
+          }
+        },
         "responses": {
           "200": {
             "description": "Successful operation"
