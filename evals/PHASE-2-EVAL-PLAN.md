@@ -33,3 +33,19 @@ V4 completed on 2026-10-09: dense and hybrid recall@5 both 1.00 (gain 0.00), MRR
 1.000/0.983, citation support 0.867, expected-answer containment 0.867, abstention passed.
 The recall and citation targets fail. Do not advance Phase 3. The result records the resumed
 segment time only; it is not an end-to-end benchmark duration.
+
+
+V5 expands the corpus to 480 passages (30 targets, 450 decoys). Its retrieval-only pass
+still measured vector/hybrid recall@5 at 1.00/1.00 (gain 0.00); see
+`evals/results/knowledge-needle-v5-retrieval-only.json`. This independently confirms that
+the current metric is saturated even at higher corpus size. Do not tune the ranking metric
+or invent a lower dense baseline; keep improving grounded answers and use a measured
+customer-like corpus review to decide whether the gain threshold is a useful release gate.
+
+
+V5 citation run completed on the 480-passage workspace: exact citation support 1.00,
+expected-answer inclusion 1.00, and unsupported-query abstention passed. Dense/hybrid recall@5
+remained 1.00/1.00. This confirms the grounded citation fallback against this synthetic suite,
+but does not satisfy the hybrid-gain gate or establish no faithfulness regression. Local judge
+and human spot-check are pending; the review packet is
+`evals/results/knowledge-needle-v5-human-review.md`.

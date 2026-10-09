@@ -18,6 +18,7 @@ def main():
     parser.add_argument("--base-url", default="http://127.0.0.1:8765")
     parser.add_argument("--dataset", type=Path, default=DATASET)
     parser.add_argument("--resume", action="store_true")
+    parser.add_argument("--workspace-id", help="evaluate an already indexed workspace")
     args = parser.parse_args()
     sys.path.insert(0, str(ROOT / "services/knowledge"))
     from sanctum_knowledge.parsing import StructuralParser, chunks
@@ -60,19 +61,21 @@ def main():
         expected_ids = [case["id"] for case in dataset["questions"][: len(records)]]
         if [record.get("id") for record in records] != expected_ids:
             raise ValueError("checkpoint records are not a prefix of the dataset")
-    workspace = call("/v1/workspaces", {"name": "Frozen Phase 2 eval"})["id"]
-    for document in dataset["documents"]:
-        call(
-            f"/v1/workspaces/{workspace}/documents",
-            {
-                "name": document["name"],
-                "content_base64": __import__("base64")
-                .b64encode(document["content"].encode())
-                .decode(),
-                "readers": [],
-                "data_class": "internal",
-            },
-        )
+    workspace = args.workspace_id
+    if workspace is None:
+        workspace = call("/v1/workspaces", {"name": "Frozen Phase 2 eval"})["id"]
+        for document in dataset["documents"]:
+            call(
+                f"/v1/workspaces/{workspace}/documents",
+                {
+                    "name": document["name"],
+                    "content_base64": __import__("base64")
+                    .b64encode(document["content"].encode())
+                    .decode(),
+                    "readers": [],
+                    "data_class": "internal",
+                },
+            )
     vector_hits = sum(record["vector_rank"] is not None for record in records)
     hybrid_hits = sum(record["hybrid_rank"] is not None for record in records)
     reciprocal_vector = sum(
