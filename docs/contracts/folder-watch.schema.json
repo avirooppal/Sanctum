@@ -1,0 +1,23 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "Sanctum local folder watcher configuration",
+  "type": "object",
+  "required": ["root", "workspace_id", "token_file", "state_file"],
+  "properties": {
+    "root": { "type": "string", "minLength": 1 },
+    "workspace_id": { "type": "string", "pattern": "^[0-9a-f]{32}$" },
+    "token_file": { "type": "string", "minLength": 1 },
+    "state_file": { "type": "string", "minLength": 1 },
+    "gateway": {
+      "type": "string",
+      "enum": ["http://127.0.0.1:8765", "http://localhost:8765", "http://[::1]:8765"]
+    },
+    "interval_seconds": { "type": "integer", "minimum": 5, "maximum": 3600, "default": 30 },
+    "data_class": {
+      "type": "string",
+      "enum": ["public", "internal", "confidential", "restricted"],
+      "default": "internal"
+    }
+  },
+  "additionalProperties": false
+}

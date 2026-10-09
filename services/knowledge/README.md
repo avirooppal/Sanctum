@@ -15,12 +15,32 @@ through `profiles/runtime-knowledge.json`; no cloud fallback is provided. Knowle
 endpoints and bearer requirements are specified in
 `docs/contracts/knowledge.openapi.json`.
 
+An optional standalone poller imports changed Markdown and text-based PDF files through
+the owner-authenticated upload endpoint. Its configuration contract is
+`docs/contracts/folder-watch.schema.json`; see ADR 0011 for root confinement, limits,
+and deletion behavior. Keep `token_file` outside the watched directory and readable only
+by the local account. Start one watcher per workspace with:
+
+```powershell
+uv run --offline --group dev --group knowledge python services/knowledge/watch.py --config PATH
+```
+
+Pass `--once` to perform one scan and exit. The watcher accepts only loopback HTTP, does
+not follow symlinks, skips hidden files, and never follows gateway redirects.
+
 Run `uv sync --locked --group knowledge`, then
 `uv run --offline --group knowledge python -m unittest discover -s services/knowledge/tests -v`.
 Run the real upload/retrieve/citation smoke test against a confined Linux runtime with
 `python evals/knowledge_smoke.py --token-file PATH`. The frozen 30-question ablation is
 `python evals/knowledge_retrieval.py --token-file PATH`; use `--dataset PATH` for a
-versioned alternative and `--resume` to continue a matching partial checkpoint. Outputs
+versioned alternative, `--workspace-id ID` for an already indexed workspace, and `--resume`
+to continue a matching partial checkpoint. `evals/knowledge_retrieval_ablation.py` runs a
+retrieval-only pass against an existing workspace; `evals/knowledge_watch_smoke.py` checks
+change detection and retrieval through the local API. After a completed answer run, use
+`python evals/knowledge_judge.py --token-file PATH --dataset PATH --answers PATH --workspace-id ID`
+to score faithfulness with the configured local judge against ACL-filtered evidence;
+`--resume` continues a hash-checked checkpoint. Outputs
 are written to suite-named files in `evals/results/`. Synthetic results do not establish
-quality on representative customer corpora. Folder watching, a local faithfulness judge,
-human review, and the full exit gate remain outstanding.
+quality on representative customer corpora. Folder watching is implemented; the large
+v5 challenge still saturates dense recall, and local faithfulness judge and human review
+remain outstanding.

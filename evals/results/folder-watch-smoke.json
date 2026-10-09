@@ -1,0 +1,10 @@
+{
+  "suite": "folder-watch-smoke",
+  "passed": [
+    "initial_upload",
+    "unchanged_skip",
+    "changed_upload",
+    "retrievable_update"
+  ],
+  "workspace_id": "3e878fd1e6d844bea9d3e62eb6870abd"
+}
