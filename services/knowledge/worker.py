@@ -55,7 +55,7 @@ def main():
         if len(line) > 16 * 1024 * 1024:
             raise ValueError("request too large")
         try:
-            signal.alarm(120)
+            signal.alarm(300)
             request = json.loads(line)
             user = request["user"]
             operation = request["operation"]

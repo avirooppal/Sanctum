@@ -26,7 +26,7 @@ class LocalModels:
             data=json.dumps(payload).encode(),
             headers={"Content-Type": "application/json"},
         )
-        with self.opener.open(request, timeout=120) as response:
+        with self.opener.open(request, timeout=240) as response:
             data = response.read(16 * 1024 * 1024 + 1)
             if len(data) > 16 * 1024 * 1024:
                 raise ValueError("oversized engine response")
