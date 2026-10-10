@@ -39,8 +39,8 @@ retrieval-only pass against an existing workspace; `evals/knowledge_watch_smoke.
 change detection and retrieval through the local API. After a completed answer run, use
 `python evals/knowledge_judge.py --token-file PATH --dataset PATH --answers PATH --workspace-id ID`
 to score faithfulness with the configured local judge against ACL-filtered evidence;
-`--mode vector` evaluates the vector-only comparison; `--resume` continues a
-hash-checked checkpoint. Outputs
+`--mode vector` evaluates the vector-only comparison; `--run-tag entity-v2` preserves
+a calibrated rerun separately; `--resume` continues a hash-checked checkpoint. Outputs
 are written to suite-named files in `evals/results/`. Synthetic results do not establish
 quality on representative customer corpora. Run
 `python evals/knowledge_answer_eval.py --token-file PATH --dataset PATH --retrieval-results PATH --workspace-id ID --mode vector`

@@ -7,7 +7,7 @@ Phase 1 starts after the Phase 0 completion commit below. Placeholder service di
 |---|---|---|
 | 0 Foundations | done (Linux x86_64) | Doctor tier/profile passes; real isolated HTTP ingress, exec inheritance and egress startup probes pass. Other runtime platforms fail closed. |
 | 1 Chat | done (Linux reference) | Offline clean-rootfs install to answer 50.6005s; official SDK 8/8. Downloads/build excluded; native macOS/Windows unverified. |
-| 2 Knowledge | in progress (judge recheck pending) | v6 exact-key challenge: vector/hybrid recall@5 0.60/1.00 (gain +0.40; target >=0.05); MRR 0.60/1.00. Hybrid answers: citation and expected-answer inclusion 1.00; abstention passed. Vector-only answers: citation and expected-answer inclusion 0.60; abstention passed. Manual spot-check found three sampled vector answers cited decoy identifiers although the prior judge marked all supported; ADR 0013 adds an exact-entity evidence check. Re-run both judges before accepting no-regression gate. Phase 3 remains gated. |
+| 2 Knowledge | in progress (hybrid judge recheck) | v6 exact-key challenge: vector/hybrid recall@5 0.60/1.00 (gain +0.40; target >=0.05); MRR 0.60/1.00. Hybrid answers: citation and expected-answer inclusion 1.00; abstention passed. Vector-only answers and calibrated judge: citation, expected-answer inclusion, and judge support all 0.60. Codex's user-directed spot-check verified 4/4 hybrid cases. Calibrated hybrid judge is running; Phase 3 remains gated. |
 | 3 Speech | not started | T1 voice latency <800 ms and WER target: unverified; WER target pending. |
 | 4 Vision | not started | Measurable visual QA lift: unverified; dataset/threshold pending. |
 | 5 Agents | not started | Red team passes and zero unexpected ledger egress: unverified. |
@@ -232,12 +232,14 @@ is unique in retrieved evidence, avoiding small-model confusion between near-dup
 records; citations retain heading context. The previous v6 answer run is retained as
 diagnostic evidence of 28/30 before this fix.
 
-The first local judge pass marked both suites 30/30 supported. A reviewer spot-check of
-the four hybrid packet examples found all four supported by the expected source/quote.
-The same inspection found three of four sampled vector-only answers cited decoy facts
-for different identifiers, despite the prior judge marking all supported. ADR 0013
-adds a deterministic exact-entity check before local entailment judgment; calibrated
-hybrid and vector judge reruns are pending. The original evidence is
+The first local judge pass marked both suites 30/30 supported. At the user's direction,
+Codex checked the four hybrid packet examples against the frozen source and answer
+artifacts; all four are supported by the expected source/quote. The same inspection
+found three of four sampled vector-only answers cited decoy facts for different
+identifiers, despite the prior judge marking all supported. ADR 0013 adds a
+deterministic exact-entity check before local entailment judgment. The calibrated
+vector judge supports 18/30 (0.60), matching vector answer containment/citation
+metrics. Calibrated hybrid judging is running. The original evidence is
 `evals/results/knowledge-needle-v6-judge.json`,
 `evals/results/knowledge-needle-v6-vector-grounded-answers.json`, and
 `evals/results/knowledge-needle-v6-vector-judge.json`. Review packet:
