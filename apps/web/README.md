@@ -12,6 +12,13 @@ a new conversation, restore the prior conversation. Verified against real infere
 Local speech expands optional file dictation and playback controls. Enter configured
 ASR/TTS/voice IDs, choose a mono PCM16 16 kHz WAV, review the draft, then send.
 Read answer synthesizes the last response; Stop audio cancels browser delivery/playback.
-Microphone capture and server-side cancellation are not yet provided. Contract:
+Start microphone requests device access only on click. Finish dictation closes the
+device and transcribes up to 30 seconds; Stop audio discards capture. The worklet
+and capture buffer enforce the limit independently. Unsupported device/browser
+formats fail explicitly. Server-side cancellation is not yet provided. Contract:
 `docs/contracts/web-speech-v1.md`. Run `evals/browser_speech.mjs` against a configured
 gateway for real integration; CLI arguments are documented at the top of the script.
+
+`evals/browser_microphone.mjs` runs Chromium's emulated microphone through the real
+capture worklet and ASR. It needs full Chromium headless (`channel: chromium`), not
+headless-shell. Physical microphone and speaker verification remains a separate check.

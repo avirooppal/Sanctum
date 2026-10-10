@@ -1,5 +1,6 @@
 import React, {useEffect, useMemo, useRef, useState} from 'react';
 import {SpeechController} from './speech';
+import {MicrophoneCapture} from './microphone';
 
 export function SpeechPanel({token, answer, conversation, onTranscript}: {
   token: string; answer: string; conversation: string; onTranscript: (text: string) => void;
@@ -9,6 +10,8 @@ export function SpeechPanel({token, answer, conversation, onTranscript}: {
   const [voice, setVoice] = useState('');
   const [status, setStatus] = useState('');
   const [busy, setBusy] = useState(false);
+  const [recording, setRecording] = useState(false);
+  const microphone = useMemo(() => new MicrophoneCapture(), []);
   const generation = useRef(0);
   const controller = useMemo(() => new SpeechController(token, {
     fetch: (...args) => fetch(...args),
@@ -25,9 +28,26 @@ export function SpeechPanel({token, answer, conversation, onTranscript}: {
     },
   }), [token]);
   useEffect(() => {
-    generation.current++; controller.stop(); setBusy(false); setStatus('');
-    return () => { generation.current++; controller.stop(); };
-  }, [controller, conversation]);
+    generation.current++; controller.stop(); microphone.cancel(); setRecording(false); setBusy(false); setStatus('');
+    return () => { generation.current++; controller.stop(); microphone.cancel(); };
+  }, [controller, conversation, microphone]);
+  async function startMicrophone() {
+    const operation = ++generation.current;
+    controller.stop(); setBusy(true); setStatus('Requesting microphone access…');
+    try {
+      const started = await microphone.start(
+        () => { if (operation === generation.current) setStatus('30-second limit reached. Finish dictation to transcribe.'); },
+        error => { if (operation === generation.current) { setStatus(error); setRecording(false); } },
+      );
+      if (started && operation === generation.current) { setRecording(true); setStatus('Recording locally. Maximum 30 seconds.'); }
+    } catch (error) { if (operation === generation.current) setStatus(`Microphone unavailable: ${String(error)}`); }
+    finally { if (operation === generation.current) setBusy(false); }
+  }
+  async function finishMicrophone() {
+    setRecording(false);
+    try { await transcribe(microphone.finish()); }
+    catch (error) { setStatus(String(error)); }
+  }
   async function transcribe(file: File | undefined) {
     if (!file) return;
     const operation = ++generation.current;
@@ -56,9 +76,10 @@ export function SpeechPanel({token, answer, conversation, onTranscript}: {
       <label>Voice <input aria-label="Voice" className="border rounded p-2" value={voice} onChange={e => setVoice(e.target.value)} /></label>
     </div>
     <div className="flex gap-3 flex-wrap mt-3 text-sm">
-      <label>Dictate from WAV <input aria-label="Dictate from WAV" type="file" accept=".wav,audio/wav" disabled={busy || !asr.trim()} onChange={e => { void transcribe(e.target.files?.[0]); e.target.value = ''; }} /></label>
-      <button type="button" disabled={busy || !answer || !tts.trim() || !voice.trim()} onClick={speak} className="border rounded px-3 py-1">Read answer</button>
-      <button type="button" onClick={() => { generation.current++; controller.stop(); setBusy(false); setStatus('Stopped.'); }} className="border rounded px-3 py-1">Stop audio</button>
+      <label>Dictate from WAV <input aria-label="Dictate from WAV" type="file" accept=".wav,audio/wav" disabled={busy || recording || !asr.trim()} onChange={e => { void transcribe(e.target.files?.[0]); e.target.value = ''; }} /></label>
+      <button type="button" disabled={busy || !asr.trim()} onClick={recording ? finishMicrophone : startMicrophone} className="border rounded px-3 py-1">{recording ? 'Finish dictation' : 'Start microphone'}</button>
+      <button type="button" disabled={busy || recording || !answer || !tts.trim() || !voice.trim()} onClick={speak} className="border rounded px-3 py-1">Read answer</button>
+      <button type="button" onClick={() => { generation.current++; controller.stop(); microphone.cancel(); setRecording(false); setBusy(false); setStatus('Stopped.'); }} className="border rounded px-3 py-1">Stop audio</button>
     </div>
     <p role="status" className="text-sm mt-2">{status}</p>
   </details>;

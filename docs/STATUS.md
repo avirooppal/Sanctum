@@ -2,6 +2,36 @@
 
 ## Active autonomous mission — 2026-10-10
 
+### Latest slice: Phase 3 bounded microphone dictation
+
+Last green commit: `354d993`. Explicit Start microphone / Finish dictation uses a
+same-origin AudioWorklet, mono 16 kHz PCM16 WAV, and the existing local ASR route.
+Worklet and main-thread buffer both cap capture at 480,000 samples; a wall-clock
+30-second limit closes devices as well. Stop/navigation/unmount discard audio and
+close tracks/context. Late permission grants after cancel are discarded and closed.
+Contract added before tests/implementation in `docs/contracts/web-speech-v1.md`.
+
+Verification: baseline web typecheck/build and 4 controller tests were green from
+`354d993`; new PCM tests failed missing implementation before code. Final `npm test
+--prefix apps/web`: 8/8, covering PCM headers/clamping/nonfinite input/overflow and
+worklet's own 30-second bound. `npm run typecheck --prefix apps/web`, production
+build and `node --check apps/web/src/capture-worklet.js`: PASS. Worklet is emitted
+as a local asset, not an inline data URL. Full `tools/check.py`: PASS, 123 tests +
+1 Windows privilege skip and existing lint/type/format/license/eval gates.
+
+`node evals/browser_microphone.mjs <playwright-package> <token-file>
+.sanctum/speech-smoke/jfk.wav asr-parakeet-q4k-reference`: PASS 4/4 with real worklet
+and local ASR, using Chromium's emulated microphone. Fixture loops after 11 seconds;
+12-second capture includes its repeated beginning, not an ASR quality benchmark.
+Default headless-shell runs failed getUserMedia with NotSupportedError; full Chromium
+headless passed. [Playwright documents this browser-mode distinction](https://playwright.dev/docs/browsers).
+Evidence: `evals/results/speech-microphone.json`, zero page errors. Browser file
+dictation/playback regression also rerun. Physical microphone/speaker and T1 SLO
+remain UNVERIFIED. No hardware success is inferred from device emulation.
+
+Next three steps: streaming ASR; cancellable server execution; meeting/diarization.
+Phase 3 remains in progress, no phase tag. Phase 4–6 implementation remains outstanding.
+
 ### Latest slice: Phase 3 browser file dictation and playback
 
 Last green commit: `555caa4`. Added opt-in Local speech panel, draft-only file

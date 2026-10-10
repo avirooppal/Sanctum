@@ -1,5 +1,10 @@
 # Plan coverage audit
 
+Microphone update (2026-10-10): bounded start/finish capture now exists in
+`apps/web/src/microphone.ts`, `capture-worklet.js` and `pcm.ts`. Real worklet to
+local ASR tested with an emulated device: `speech-microphone.json` 4/4. Physical
+microphone UNVERIFIED; this is final-on-commit dictation, not partial streaming ASR.
+
 Browser speech update (2026-10-10): file dictation to draft, WAV playback and client
 stop now exist in `apps/web/src/SpeechPanel.tsx` / `speech.ts`. Real browser 6/6 in
 `speech-browser.json`; warm ASR-chat-TTS full-WAV latency 5.120009s in

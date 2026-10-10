@@ -1,5 +1,12 @@
 # Changelog
 
+## 2026-10-10 — Bounded local microphone dictation
+
+- Capture mono PCM locally with explicit start/finish controls, a 30-second cap,
+  and track cleanup on cancellation/navigation. No browser speech/cloud fallback.
+- Emulated microphone passes real worklet-to-ASR integration and cleanup checks;
+  physical audio devices and streaming ASR remain unverified or incomplete.
+
 ## 2026-10-10 — Browser file speech
 
 - Add local WAV dictation to draft, response playback and cancellation with stale
