@@ -1212,6 +1212,12 @@ Runtime HTTP: GET /healthz. Other contracts are foundation diagnostics.
       "items": {
         "$ref": "#/$defs/record"
       }
+    },
+    "voice_turns": {
+      "type": "array",
+      "items": {
+        "$ref": "#/$defs/voiceTurn"
+      }
     }
   },
   "additionalProperties": false,
@@ -1225,9 +1231,7 @@ Runtime HTTP: GET /healthz. Other contracts are foundation diagnostics.
         "reference",
         "hypothesis",
         "audio_seconds",
-        "asr_seconds",
-        "first_audio_ms",
-        "barge_in_success"
+        "asr_seconds"
       ],
       "properties": {
         "id": {
@@ -1255,6 +1259,26 @@ Runtime HTTP: GET /healthz. Other contracts are foundation diagnostics.
         "asr_seconds": {
           "type": "number",
           "exclusiveMinimum": 0
+        }
+      },
+      "additionalProperties": false
+    },
+    "voiceTurn": {
+      "type": "object",
+      "required": [
+        "id",
+        "audio_sha256",
+        "first_audio_ms",
+        "barge_in_success"
+      ],
+      "properties": {
+        "id": {
+          "type": "string",
+          "minLength": 1
+        },
+        "audio_sha256": {
+          "type": "string",
+          "pattern": "^[0-9a-f]{64}$"
         },
         "first_audio_ms": {
           "type": "number",
@@ -1361,5 +1385,88 @@ Runtime HTTP: GET /healthz. Other contracts are foundation diagnostics.
       "const": "denied"
     }
   }
+}
+```
+
+## Local speech benchmark manifest
+
+```json
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://sanctum.local/contracts/speech-benchmark.schema.json",
+  "title": "Sanctum local speech benchmark manifest",
+  "description": "A local, hash-pinned ASR suite. Paths are relative to the manifest and remain within its directory.",
+  "type": "object",
+  "required": [
+    "suite",
+    "dataset_license",
+    "profile_id",
+    "hardware_tier",
+    "wer_target",
+    "records"
+  ],
+  "properties": {
+    "suite": {
+      "type": "string",
+      "minLength": 1
+    },
+    "dataset_license": {
+      "type": "string",
+      "minLength": 1
+    },
+    "profile_id": {
+      "type": "string",
+      "minLength": 1
+    },
+    "hardware_tier": {
+      "enum": [
+        "T0",
+        "T1",
+        "T2"
+      ]
+    },
+    "wer_target": {
+      "type": "number",
+      "minimum": 0,
+      "maximum": 1
+    },
+    "records": {
+      "type": "array",
+      "minItems": 1,
+      "items": {
+        "type": "object",
+        "required": [
+          "id",
+          "audio_path",
+          "audio_sha256",
+          "language",
+          "reference"
+        ],
+        "properties": {
+          "id": {
+            "type": "string",
+            "minLength": 1
+          },
+          "audio_path": {
+            "type": "string",
+            "minLength": 1
+          },
+          "audio_sha256": {
+            "type": "string",
+            "pattern": "^[0-9a-f]{64}$"
+          },
+          "language": {
+            "type": "string",
+            "minLength": 2
+          },
+          "reference": {
+            "type": "string"
+          }
+        },
+        "additionalProperties": false
+      }
+    }
+  },
+  "additionalProperties": false
 }
 ```

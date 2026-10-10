@@ -1,5 +1,12 @@
 # Changelog
 
+## 2026-10-10 — Phase 3 local ASR benchmark runner
+
+- Added a schema-validated, offline manifest runner for hash-pinned local PCM WAV
+  inputs and profiles, with strict directory containment and a 64 MiB audio bound.
+- Split voice-turn measurements from ASR records so file transcription cannot imply
+  a passing streaming-latency or barge-in gate. Real inference remains unverified.
+
 ## 2026-10-10 — Phase 2 gate closed; Phase 3 contract planning started
 
 - Calibrated exact-entity faithfulness judging: hybrid 30/30 supported (1.00),

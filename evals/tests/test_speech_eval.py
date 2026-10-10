@@ -37,8 +37,6 @@ class SpeechEvaluationTests(unittest.TestCase):
                     "hypothesis": "one too three",
                     "audio_seconds": 4,
                     "asr_seconds": 2,
-                    "first_audio_ms": 700,
-                    "barge_in_success": True,
                 },
                 {
                     "id": "two",
@@ -48,6 +46,18 @@ class SpeechEvaluationTests(unittest.TestCase):
                     "hypothesis": "four five",
                     "audio_seconds": 2,
                     "asr_seconds": 1,
+                },
+            ],
+            "voice_turns": [
+                {
+                    "id": "one",
+                    "audio_sha256": "a" * 64,
+                    "first_audio_ms": 700,
+                    "barge_in_success": True,
+                },
+                {
+                    "id": "two",
+                    "audio_sha256": "b" * 64,
                     "first_audio_ms": 900,
                     "barge_in_success": False,
                 },
@@ -65,6 +75,34 @@ class SpeechEvaluationTests(unittest.TestCase):
         self.assertEqual(result["barge_in_success_rate"], 0.5)
         self.assertTrue(result["wer_pass"])
         self.assertFalse(result["latency_pass"])
+
+    def test_asr_only_does_not_claim_voice_metrics_or_phase_slo(self):
+        payload = {
+            "suite": "asr-only",
+            "dataset_license": "CC0-1.0",
+            "profile_id": "cpu",
+            "hardware_tier": "T1",
+            "wer_target": 0.2,
+            "records": [
+                {
+                    "id": "one",
+                    "audio_sha256": "a" * 64,
+                    "language": "en-US",
+                    "reference": "hello",
+                    "hypothesis": "hello",
+                    "audio_seconds": 1,
+                    "asr_seconds": 0.5,
+                }
+            ],
+        }
+        with tempfile.TemporaryDirectory() as temp:
+            path = Path(temp) / "input.json"
+            path.write_text(json.dumps(payload))
+            result = evaluate(path)
+        self.assertIsNone(result["voice_first_audio_p95_ms"])
+        self.assertIsNone(result["latency_pass"])
+        self.assertIsNone(result["barge_in_success_rate"])
+        self.assertFalse(result["phase3_slo_verified"])
 
 
 if __name__ == "__main__":

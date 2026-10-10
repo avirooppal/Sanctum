@@ -15,6 +15,9 @@ class SpeechContractTests(unittest.TestCase):
         cls.openapi = json.loads((ROOT / "docs/contracts/speech.openapi.json").read_text())
         cls.stream = json.loads((ROOT / "docs/contracts/speech-stream.schema.json").read_text())
         cls.evaluation = json.loads((ROOT / "docs/contracts/speech-eval.schema.json").read_text())
+        cls.benchmark = json.loads(
+            (ROOT / "docs/contracts/speech-benchmark.schema.json").read_text()
+        )
 
     def test_openai_audio_routes_are_local_and_authenticated(self):
         self.assertIn("localBearer", self.openapi["components"]["securitySchemes"])
@@ -98,8 +101,6 @@ class SpeechContractTests(unittest.TestCase):
             "hypothesis": "hello",
             "audio_seconds": 1,
             "asr_seconds": 0.4,
-            "first_audio_ms": 500,
-            "barge_in_success": True,
         }
         payload = {
             "suite": "speech-fixture-v1",
@@ -109,6 +110,19 @@ class SpeechContractTests(unittest.TestCase):
             "records": [record],
         }
         Draft202012Validator(self.evaluation).validate(payload)
+        Draft202012Validator(self.evaluation).validate(
+            {
+                **payload,
+                "voice_turns": [
+                    {
+                        "id": "turn-1",
+                        "audio_sha256": "d" * 64,
+                        "first_audio_ms": 500,
+                        "barge_in_success": True,
+                    }
+                ],
+            }
+        )
         for invalid in (
             {**payload, "records": [{**record, "audio_sha256": "unknown"}]},
             {**payload, "hardware_tier": "unknown"},
@@ -116,6 +130,30 @@ class SpeechContractTests(unittest.TestCase):
         ):
             with self.assertRaises(ValidationError):
                 Draft202012Validator(self.evaluation).validate(invalid)
+
+    def test_local_benchmark_manifest_contract(self):
+        Draft202012Validator.check_schema(self.benchmark)
+        valid = {
+            "suite": "local",
+            "dataset_license": "CC-BY-4.0",
+            "profile_id": "cpu",
+            "hardware_tier": "T0",
+            "wer_target": 0.1,
+            "records": [
+                {
+                    "id": "one",
+                    "audio_path": "audio/one.wav",
+                    "audio_sha256": "e" * 64,
+                    "language": "en-US",
+                    "reference": "hello",
+                }
+            ],
+        }
+        Draft202012Validator(self.benchmark).validate(valid)
+        with self.assertRaises(ValidationError):
+            Draft202012Validator(self.benchmark).validate(
+                {**valid, "records": [{**valid["records"][0], "extra": "forbidden"}]}
+            )
 
 
 if __name__ == "__main__":

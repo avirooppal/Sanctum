@@ -38,6 +38,19 @@ def render():
     lines.extend(
         ["## Speech engine profile", "", "```json", json.dumps(speech_profile, indent=2), "```", ""]
     )
+    speech_benchmark = json.loads(
+        (ROOT / "docs/contracts/speech-benchmark.schema.json").read_text()
+    )
+    lines.extend(
+        [
+            "## Local speech benchmark manifest",
+            "",
+            "```json",
+            json.dumps(speech_benchmark, indent=2),
+            "```",
+            "",
+        ]
+    )
     return "\n".join(lines)
 
 

@@ -8,7 +8,7 @@ Phase 1 starts after the Phase 0 completion commit below. Placeholder service di
 | 0 Foundations | done (Linux x86_64) | Doctor tier/profile passes; real isolated HTTP ingress, exec inheritance and egress startup probes pass. Other runtime platforms fail closed. |
 | 1 Chat | done (Linux reference) | Offline clean-rootfs install to answer 50.6005s; official SDK 8/8. Downloads/build excluded; native macOS/Windows unverified. |
 | 2 Knowledge | done (v6, user-directed reviewer) | Vector/hybrid recall@5 0.60/1.00 (gain +0.40); MRR 0.60/1.00. Hybrid exact citation and expected-answer inclusion 1.00; abstention passed; calibrated local judge 30/30 supported. Vector-only answer/citation/judge rates 0.60. Codex checked 4/4 hybrid cases against frozen sources at the user's direction (ADR 0014); no independent human audit. |
-| 3 Speech | in progress (contracts, evaluator, ASR adapter) | T1 first audio p95 <800 ms; LibriSpeech test-clean WER <=0.10 and test-other <=0.20 (ADR 0018). Host is T0; measurements unverified. |
+| 3 Speech | in progress (local benchmark runner, ASR adapter) | T1 first audio p95 <800 ms; LibriSpeech test-clean WER <=0.10 and test-other <=0.20 (ADR 0018). Host is T0; measurements unverified. |
 | 4 Vision | not started | Measurable visual QA lift: unverified; dataset/threshold pending. |
 | 5 Agents | not started | Red team passes and zero unexpected ledger egress: unverified. |
 | 6 Team | not started | 20 concurrent users meet reference SLO; verified air-gapped install: unverified. |
@@ -276,6 +276,7 @@ as a default.
 - [x] Local whisper.cpp file-ASR adapter with profile hash verification and no shell/network fallback.
 - [x] Speech engine profile contract requires explicit egress denial and SHA-256 pins.
 - [x] Offline speech evaluation schema and WER/latency/RTF/barge-in report; evaluator tests pass.
+- [x] Local manifest-based PCM WAV ASR benchmark runner with manifest-root path checks, 64 MiB bound, and audio hash verification; ASR-only results cannot claim voice-loop success.
 - [x] Generated API documentation updated; all speech tests included in `tools/check.py`.
 - [ ] Integrate a locally licensed streaming ASR backend, VAD backend, TTS, and audio capture/output.
 - [ ] Implement push-to-talk, file transcription with diarization, barge-in voice loop, and meeting-to-Knowledge integration.
@@ -288,15 +289,15 @@ as a default.
 | Foundation tests | 22/22 pass |
 | Isolation/evaluation tests | 9/9 pass |
 | Knowledge tests | 21 pass, 1 Windows symlink privilege skip |
-| Speech contract/interface tests | 11/11 pass |
+| Speech contract/interface tests | 16/16 pass |
 | Speech profile and whisper.cpp adapter tests | 4/4 pass |
-| Speech evaluation tests | 4/4 pass |
+| Speech evaluation/runner tests | 8/8 pass |
 | Ruff lint/format, type checks, Python/frontend license scans | PASS |
 | T1 WER and voice latency | Unverified; no whisper.cpp artifact/model or benchmark data available locally; host is T0; WER thresholds set by ADR 0018 |
 
 Phase 3 remains in progress and Phase 4 has not started because the Phase 3 exit gate
-has not been verified. `evals/speech_eval.py` is the reproducible offline runner for
-licensed T1 records when those inputs are available.
+has not been verified. `evals/run_speech_asr.py` creates measured local ASR records;
+`evals/speech_eval.py` scores them. Neither can substitute for a real T1 voice-loop run.
 
 ### Phase 3 ASR adapter slice
 

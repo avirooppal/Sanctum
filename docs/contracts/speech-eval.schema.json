@@ -11,13 +11,14 @@
     "profile_id": { "type": "string", "minLength": 1 },
     "hardware_tier": { "enum": ["T0", "T1", "T2"] },
     "wer_target": { "type": "number", "minimum": 0, "maximum": 1, "description": "Optional explicit acceptance threshold. Omit to report WER without claiming a pass." },
-    "records": { "type": "array", "minItems": 1, "items": { "$ref": "#/$defs/record" } }
+    "records": { "type": "array", "minItems": 1, "items": { "$ref": "#/$defs/record" } },
+    "voice_turns": { "type": "array", "items": { "$ref": "#/$defs/voiceTurn" } }
   },
   "additionalProperties": false,
   "$defs": {
     "record": {
       "type": "object",
-      "required": ["id", "audio_sha256", "language", "reference", "hypothesis", "audio_seconds", "asr_seconds", "first_audio_ms", "barge_in_success"],
+      "required": ["id", "audio_sha256", "language", "reference", "hypothesis", "audio_seconds", "asr_seconds"],
       "properties": {
         "id": { "type": "string", "minLength": 1 },
         "audio_sha256": { "type": "string", "pattern": "^[0-9a-f]{64}$" },
@@ -25,7 +26,16 @@
         "reference": { "type": "string" },
         "hypothesis": { "type": "string" },
         "audio_seconds": { "type": "number", "exclusiveMinimum": 0 },
-        "asr_seconds": { "type": "number", "exclusiveMinimum": 0 },
+        "asr_seconds": { "type": "number", "exclusiveMinimum": 0 }
+      },
+      "additionalProperties": false
+    },
+    "voiceTurn": {
+      "type": "object",
+      "required": ["id", "audio_sha256", "first_audio_ms", "barge_in_success"],
+      "properties": {
+        "id": { "type": "string", "minLength": 1 },
+        "audio_sha256": { "type": "string", "pattern": "^[0-9a-f]{64}$" },
         "first_audio_ms": { "type": "number", "minimum": 0 },
         "barge_in_success": { "type": "boolean" }
       },

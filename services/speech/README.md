@@ -44,8 +44,26 @@ Evaluate a licensed, schema-conforming local dataset without network access:
 uv run --offline --group dev --group knowledge python evals/speech_eval.py --input path/to/suite.json --output evals/results/speech.json
 ```
 
-The evaluator reports corpus and per-language WER, real-time factor, p50/p95/max
-first-audio latency, and barge-in success. Phase 3 latency is gated at p95 <800 ms on
+Run actual file transcription from a local manifest and profile (the profile's
+whisper.cpp executable and model must already exist locally and match their pinned
+SHA-256 values):
+
+```powershell
+uv run --offline --group dev --group knowledge python evals/run_speech_asr.py --manifest path/to/manifest.json --profile profiles/speech/cpu.json --output evals/results/speech-asr.json
+uv run --offline --group dev --group knowledge python evals/speech_eval.py --input evals/results/speech-asr.json --output evals/results/speech-metrics.json
+```
+
+The benchmark manifest uses `docs/contracts/speech-benchmark.schema.json`. Audio must
+be locally staged, hash-pinned, mono 16 kHz PCM16 WAV, at most 64 MiB per record, and
+resolve within the manifest directory. The runner has no dataset download behavior.
+Use locally staged LibriSpeech `test-clean` or `test-other` WAVs with their
+`CC-BY-4.0` attribution and record provenance; it reports measured results only when
+the local runtime and data exist. ASR-only runs do not report voice-loop metrics or
+claim the Phase 3 latency gate.
+
+The evaluator reports corpus and per-language WER and real-time factor. When separate
+voice-turn measurements are supplied, it also reports p50/p95/max first-audio latency
+and barge-in success. Phase 3 latency is gated at p95 <800 ms on
 T1 hardware (ADR 0016). ADR 0018 sets initial English WER gates for LibriSpeech
 test-clean (<=0.10) and test-other (<=0.20); the suite must pass its explicit
 `wer_target`. No hardware measurement is claimed by this initial slice.

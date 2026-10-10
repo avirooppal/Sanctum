@@ -79,7 +79,10 @@ def evaluate(input_path: Path, output_path: Path | None = None) -> dict:
 
     wer = total_edits / total_words
     target = payload.get("wer_target")
-    latency_p95 = percentile([record["first_audio_ms"] for record in records], 0.95)
+    voice_turns = payload.get("voice_turns", [])
+    latency_p95 = (
+        percentile([turn["first_audio_ms"] for turn in voice_turns], 0.95) if voice_turns else None
+    )
     is_t1 = payload["hardware_tier"] == "T1"
     result = {
         "suite": payload["suite"],
@@ -97,16 +100,27 @@ def evaluate(input_path: Path, output_path: Path | None = None) -> dict:
         },
         "asr_real_time_factor": asr_seconds / audio_seconds,
         "voice_first_audio_p50_ms": percentile(
-            [record["first_audio_ms"] for record in records], 0.50
-        ),
+            [turn["first_audio_ms"] for turn in voice_turns], 0.50
+        )
+        if voice_turns
+        else None,
         "voice_first_audio_p95_ms": latency_p95,
-        "voice_first_audio_max_ms": max(record["first_audio_ms"] for record in records),
+        "voice_first_audio_max_ms": max(
+            (turn["first_audio_ms"] for turn in voice_turns), default=None
+        ),
         "voice_latency_target_ms": 800,
-        "latency_pass": None if not is_t1 else latency_p95 < 800,
-        "barge_in_success_rate": sum(record["barge_in_success"] for record in records)
-        / len(records),
+        "latency_pass": None if not is_t1 or not voice_turns else latency_p95 < 800,
+        "barge_in_success_rate": (
+            sum(turn["barge_in_success"] for turn in voice_turns) / len(voice_turns)
+        )
+        if voice_turns
+        else None,
         "phase3_slo_verified": bool(
-            is_t1 and target is not None and wer <= target and latency_p95 < 800
+            is_t1
+            and target is not None
+            and wer <= target
+            and latency_p95 is not None
+            and latency_p95 < 800
         ),
     }
     if output_path is not None:
