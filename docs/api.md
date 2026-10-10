@@ -616,3 +616,550 @@ Runtime HTTP: GET /healthz. Other contracts are foundation diagnostics.
   }
 }
 ```
+
+## Speech OpenAPI
+
+```json
+{
+  "openapi": "3.1.0",
+  "info": {
+    "title": "Sanctum Speech",
+    "version": "0.1.0",
+    "description": "Local-only OpenAI-compatible audio APIs. Audio and transcript data never use cloud fallback."
+  },
+  "security": [
+    {
+      "localBearer": []
+    }
+  ],
+  "paths": {
+    "/v1/audio/transcriptions": {
+      "post": {
+        "summary": "Transcribe a local audio file",
+        "operationId": "createTranscription",
+        "x-egress": "denied",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "multipart/form-data": {
+              "schema": {
+                "$ref": "#/components/schemas/TranscriptionRequest"
+              },
+              "encoding": {
+                "file": {
+                  "contentType": "audio/wav, audio/mpeg, audio/mp4, audio/webm, audio/ogg"
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "OpenAI-compatible transcription or detailed segments",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/TranscriptionResponse"
+                }
+              },
+              "text/plain": {
+                "schema": {
+                  "type": "string"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Invalid or unsupported audio"
+          },
+          "413": {
+            "description": "Audio exceeds the configured byte limit"
+          },
+          "422": {
+            "description": "Invalid request context"
+          },
+          "503": {
+            "description": "No configured local ASR engine is available"
+          }
+        }
+      }
+    },
+    "/v1/audio/speech": {
+      "post": {
+        "summary": "Synthesize speech using a configured local voice",
+        "operationId": "createSpeech",
+        "x-egress": "denied",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/SpeechRequest"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Generated audio",
+            "content": {
+              "audio/wav": {
+                "schema": {
+                  "type": "string",
+                  "format": "binary"
+                }
+              },
+              "audio/pcm": {
+                "schema": {
+                  "type": "string",
+                  "format": "binary"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Invalid text or unsupported output format"
+          },
+          "413": {
+            "description": "Text exceeds configured limit"
+          },
+          "503": {
+            "description": "No configured local TTS engine is available"
+          }
+        }
+      }
+    }
+  },
+  "components": {
+    "securitySchemes": {
+      "localBearer": {
+        "type": "http",
+        "scheme": "bearer"
+      }
+    },
+    "schemas": {
+      "RequestContext": {
+        "type": "object",
+        "required": [
+          "workspace_id",
+          "data_class",
+          "trace_id",
+          "policy_context"
+        ],
+        "properties": {
+          "workspace_id": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 128
+          },
+          "data_class": {
+            "enum": [
+              "public",
+              "internal",
+              "sensitive",
+              "restricted"
+            ]
+          },
+          "trace_id": {
+            "type": "string",
+            "pattern": "^[0-9a-f]{32}$"
+          },
+          "policy_context": {
+            "type": "object",
+            "additionalProperties": false,
+            "properties": {
+              "cloud_enabled": {
+                "const": false
+              }
+            }
+          }
+        },
+        "additionalProperties": false
+      },
+      "TranscriptionRequest": {
+        "type": "object",
+        "required": [
+          "file",
+          "context"
+        ],
+        "properties": {
+          "file": {
+            "type": "string",
+            "format": "binary",
+            "description": "Accepted MIME types are constrained by the request encoding. Runtime byte limit is profile-configured."
+          },
+          "model": {
+            "type": "string",
+            "description": "Configured local profile/model ID; no remote model names are accepted."
+          },
+          "language": {
+            "type": "string",
+            "pattern": "^[a-z]{2,3}(-[A-Z]{2})?$"
+          },
+          "prompt": {
+            "type": "string",
+            "maxLength": 2000
+          },
+          "response_format": {
+            "enum": [
+              "json",
+              "text",
+              "verbose_json",
+              "vtt"
+            ]
+          },
+          "diarize": {
+            "type": "boolean",
+            "default": false
+          },
+          "context": {
+            "$ref": "#/components/schemas/RequestContext"
+          }
+        },
+        "additionalProperties": false
+      },
+      "TranscriptionSegment": {
+        "type": "object",
+        "required": [
+          "start",
+          "end",
+          "text"
+        ],
+        "properties": {
+          "start": {
+            "type": "number",
+            "minimum": 0
+          },
+          "end": {
+            "type": "number",
+            "exclusiveMinimum": 0
+          },
+          "text": {
+            "type": "string"
+          },
+          "speaker_id": {
+            "type": [
+              "string",
+              "null"
+            ]
+          }
+        },
+        "additionalProperties": false
+      },
+      "TranscriptionResponse": {
+        "type": "object",
+        "required": [
+          "text"
+        ],
+        "properties": {
+          "text": {
+            "type": "string"
+          },
+          "language": {
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "duration": {
+            "type": [
+              "number",
+              "null"
+            ],
+            "minimum": 0
+          },
+          "segments": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/TranscriptionSegment"
+            }
+          }
+        },
+        "additionalProperties": false
+      },
+      "SpeechRequest": {
+        "type": "object",
+        "required": [
+          "model",
+          "input",
+          "voice",
+          "context"
+        ],
+        "properties": {
+          "model": {
+            "type": "string",
+            "description": "Configured local profile/model ID."
+          },
+          "input": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 10000
+          },
+          "voice": {
+            "type": "string",
+            "description": "Configured voice ID with a verified permissive license."
+          },
+          "response_format": {
+            "enum": [
+              "wav",
+              "pcm"
+            ],
+            "default": "wav"
+          },
+          "speed": {
+            "type": "number",
+            "minimum": 0.5,
+            "maximum": 2,
+            "default": 1
+          },
+          "context": {
+            "$ref": "#/components/schemas/RequestContext"
+          }
+        },
+        "additionalProperties": false
+      }
+    }
+  }
+}
+```
+
+## Speech WebSocket messages
+
+```json
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://sanctum.local/contracts/speech-stream.schema.json",
+  "title": "Sanctum local speech WebSocket messages",
+  "description": "Each WebSocket JSON message must match one of these local-only events.",
+  "oneOf": [
+    {
+      "$ref": "#/$defs/audioAppend"
+    },
+    {
+      "$ref": "#/$defs/audioCommit"
+    },
+    {
+      "$ref": "#/$defs/responseCreate"
+    },
+    {
+      "$ref": "#/$defs/responseCancel"
+    },
+    {
+      "$ref": "#/$defs/transcriptDelta"
+    },
+    {
+      "$ref": "#/$defs/audioDelta"
+    },
+    {
+      "$ref": "#/$defs/speechBoundary"
+    },
+    {
+      "$ref": "#/$defs/responseDone"
+    },
+    {
+      "$ref": "#/$defs/error"
+    }
+  ],
+  "$defs": {
+    "audioAppend": {
+      "type": "object",
+      "required": [
+        "type",
+        "audio",
+        "sample_rate"
+      ],
+      "properties": {
+        "type": {
+          "const": "input_audio_buffer.append"
+        },
+        "audio": {
+          "type": "string",
+          "contentEncoding": "base64",
+          "maxLength": 1398104
+        },
+        "sample_rate": {
+          "type": "integer",
+          "minimum": 8000,
+          "maximum": 48000
+        },
+        "channels": {
+          "type": "integer",
+          "minimum": 1,
+          "maximum": 2
+        }
+      },
+      "additionalProperties": false
+    },
+    "audioCommit": {
+      "type": "object",
+      "required": [
+        "type"
+      ],
+      "properties": {
+        "type": {
+          "const": "input_audio_buffer.commit"
+        }
+      },
+      "additionalProperties": false
+    },
+    "responseCreate": {
+      "type": "object",
+      "required": [
+        "type"
+      ],
+      "properties": {
+        "type": {
+          "const": "response.create"
+        },
+        "text": {
+          "type": "string",
+          "maxLength": 10000
+        }
+      },
+      "additionalProperties": false
+    },
+    "responseCancel": {
+      "type": "object",
+      "required": [
+        "type"
+      ],
+      "properties": {
+        "type": {
+          "const": "response.cancel"
+        },
+        "reason": {
+          "enum": [
+            "barge_in",
+            "user_cancel",
+            "disconnect"
+          ]
+        }
+      },
+      "additionalProperties": false
+    },
+    "transcriptDelta": {
+      "type": "object",
+      "required": [
+        "type",
+        "text",
+        "final"
+      ],
+      "properties": {
+        "type": {
+          "const": "transcript.delta"
+        },
+        "text": {
+          "type": "string"
+        },
+        "final": {
+          "type": "boolean"
+        },
+        "start": {
+          "type": "number",
+          "minimum": 0
+        },
+        "end": {
+          "type": "number",
+          "minimum": 0
+        }
+      },
+      "additionalProperties": false
+    },
+    "audioDelta": {
+      "type": "object",
+      "required": [
+        "type",
+        "audio",
+        "sample_rate",
+        "sequence"
+      ],
+      "properties": {
+        "type": {
+          "const": "response.audio.delta"
+        },
+        "audio": {
+          "type": "string",
+          "contentEncoding": "base64",
+          "maxLength": 1398104
+        },
+        "sample_rate": {
+          "type": "integer",
+          "minimum": 8000,
+          "maximum": 48000
+        },
+        "sequence": {
+          "type": "integer",
+          "minimum": 0
+        }
+      },
+      "additionalProperties": false
+    },
+    "speechBoundary": {
+      "type": "object",
+      "required": [
+        "type",
+        "timestamp_ms"
+      ],
+      "properties": {
+        "type": {
+          "enum": [
+            "input_audio.speech_started",
+            "input_audio.speech_stopped"
+          ]
+        },
+        "timestamp_ms": {
+          "type": "integer",
+          "minimum": 0
+        }
+      },
+      "additionalProperties": false
+    },
+    "responseDone": {
+      "type": "object",
+      "required": [
+        "type",
+        "response_id",
+        "status"
+      ],
+      "properties": {
+        "type": {
+          "const": "response.done"
+        },
+        "response_id": {
+          "type": "string",
+          "minLength": 1
+        },
+        "status": {
+          "enum": [
+            "completed",
+            "cancelled",
+            "failed"
+          ]
+        }
+      },
+      "additionalProperties": false
+    },
+    "error": {
+      "type": "object",
+      "required": [
+        "type",
+        "code",
+        "message"
+      ],
+      "properties": {
+        "type": {
+          "const": "error"
+        },
+        "code": {
+          "type": "string"
+        },
+        "message": {
+          "type": "string",
+          "maxLength": 512
+        }
+      },
+      "additionalProperties": false
+    }
+  }
+}
+```

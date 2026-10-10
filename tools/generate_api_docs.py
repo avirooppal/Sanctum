@@ -24,6 +24,12 @@ def render():
     lines.extend(
         ["## Knowledge OpenAPI", "", "```json", json.dumps(knowledge, indent=2), "```", ""]
     )
+    speech = json.loads((ROOT / "docs/contracts/speech.openapi.json").read_text())
+    lines.extend(["## Speech OpenAPI", "", "```json", json.dumps(speech, indent=2), "```", ""])
+    stream = json.loads((ROOT / "docs/contracts/speech-stream.schema.json").read_text())
+    lines.extend(
+        ["## Speech WebSocket messages", "", "```json", json.dumps(stream, indent=2), "```", ""]
+    )
     return "\n".join(lines)
 
 

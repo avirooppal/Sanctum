@@ -1,0 +1,32 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://sanctum.local/contracts/speech-stream.schema.json",
+  "title": "Sanctum local speech WebSocket messages",
+  "description": "Each WebSocket JSON message must match one of these local-only events.",
+  "oneOf": [
+    { "$ref": "#/$defs/audioAppend" },
+    { "$ref": "#/$defs/audioCommit" },
+    { "$ref": "#/$defs/responseCreate" },
+    { "$ref": "#/$defs/responseCancel" },
+    { "$ref": "#/$defs/transcriptDelta" },
+    { "$ref": "#/$defs/audioDelta" },
+    { "$ref": "#/$defs/speechBoundary" },
+    { "$ref": "#/$defs/responseDone" },
+    { "$ref": "#/$defs/error" }
+  ],
+  "$defs": {
+    "audioAppend": {
+      "type": "object", "required": ["type", "audio", "sample_rate"],
+      "properties": { "type": { "const": "input_audio_buffer.append" }, "audio": { "type": "string", "contentEncoding": "base64", "maxLength": 1398104 }, "sample_rate": { "type": "integer", "minimum": 8000, "maximum": 48000 }, "channels": { "type": "integer", "minimum": 1, "maximum": 2 } },
+      "additionalProperties": false
+    },
+    "audioCommit": { "type": "object", "required": ["type"], "properties": { "type": { "const": "input_audio_buffer.commit" } }, "additionalProperties": false },
+    "responseCreate": { "type": "object", "required": ["type"], "properties": { "type": { "const": "response.create" }, "text": { "type": "string", "maxLength": 10000 } }, "additionalProperties": false },
+    "responseCancel": { "type": "object", "required": ["type"], "properties": { "type": { "const": "response.cancel" }, "reason": { "enum": ["barge_in", "user_cancel", "disconnect"] } }, "additionalProperties": false },
+    "transcriptDelta": { "type": "object", "required": ["type", "text", "final"], "properties": { "type": { "const": "transcript.delta" }, "text": { "type": "string" }, "final": { "type": "boolean" }, "start": { "type": "number", "minimum": 0 }, "end": { "type": "number", "minimum": 0 } }, "additionalProperties": false },
+    "audioDelta": { "type": "object", "required": ["type", "audio", "sample_rate", "sequence"], "properties": { "type": { "const": "response.audio.delta" }, "audio": { "type": "string", "contentEncoding": "base64", "maxLength": 1398104 }, "sample_rate": { "type": "integer", "minimum": 8000, "maximum": 48000 }, "sequence": { "type": "integer", "minimum": 0 } }, "additionalProperties": false },
+    "speechBoundary": { "type": "object", "required": ["type", "timestamp_ms"], "properties": { "type": { "enum": ["input_audio.speech_started", "input_audio.speech_stopped"] }, "timestamp_ms": { "type": "integer", "minimum": 0 } }, "additionalProperties": false },
+    "responseDone": { "type": "object", "required": ["type", "response_id", "status"], "properties": { "type": { "const": "response.done" }, "response_id": { "type": "string", "minLength": 1 }, "status": { "enum": ["completed", "cancelled", "failed"] } }, "additionalProperties": false },
+    "error": { "type": "object", "required": ["type", "code", "message"], "properties": { "type": { "const": "error" }, "code": { "type": "string" }, "message": { "type": "string", "maxLength": 512 } }, "additionalProperties": false }
+  }
+}
