@@ -1,0 +1,208 @@
+{
+  "mode": "knowledge",
+  "samples": [
+    {
+      "slot_release_seconds": 0.21056164699257351,
+      "owned_processes_at_cancel": 8
+    },
+    {
+      "slot_release_seconds": 0.19326637597987428,
+      "owned_processes_at_cancel": 8
+    },
+    {
+      "slot_release_seconds": 0.17722760399919935,
+      "owned_processes_at_cancel": 8
+    },
+    {
+      "slot_release_seconds": 0.2242260889906902,
+      "owned_processes_at_cancel": 8
+    },
+    {
+      "slot_release_seconds": 0.22831642898381688,
+      "owned_processes_at_cancel": 8
+    },
+    {
+      "slot_release_seconds": 0.19400110899005085,
+      "owned_processes_at_cancel": 8
+    },
+    {
+      "slot_release_seconds": 0.2250938219949603,
+      "owned_processes_at_cancel": 8
+    },
+    {
+      "slot_release_seconds": 0.21240176301216707,
+      "owned_processes_at_cancel": 8
+    },
+    {
+      "slot_release_seconds": 0.21031473798211664,
+      "owned_processes_at_cancel": 8
+    },
+    {
+      "slot_release_seconds": 0.230390897981124,
+      "owned_processes_at_cancel": 8
+    },
+    {
+      "slot_release_seconds": 0.21007306600222364,
+      "owned_processes_at_cancel": 8
+    },
+    {
+      "slot_release_seconds": 0.21288626099703833,
+      "owned_processes_at_cancel": 8
+    },
+    {
+      "slot_release_seconds": 0.21452976000728086,
+      "owned_processes_at_cancel": 8
+    },
+    {
+      "slot_release_seconds": 0.21162058599293232,
+      "owned_processes_at_cancel": 8
+    },
+    {
+      "slot_release_seconds": 0.21320071301306598,
+      "owned_processes_at_cancel": 8
+    },
+    {
+      "slot_release_seconds": 0.22515650899731554,
+      "owned_processes_at_cancel": 8
+    },
+    {
+      "slot_release_seconds": 0.21420784000656568,
+      "owned_processes_at_cancel": 8
+    },
+    {
+      "slot_release_seconds": 0.19545462398673408,
+      "owned_processes_at_cancel": 8
+    },
+    {
+      "slot_release_seconds": 0.21163797701592557,
+      "owned_processes_at_cancel": 8
+    },
+    {
+      "slot_release_seconds": 0.24920796797960065,
+      "owned_processes_at_cancel": 8
+    },
+    {
+      "slot_release_seconds": 0.20813049798016436,
+      "owned_processes_at_cancel": 8
+    },
+    {
+      "slot_release_seconds": 0.19406694200006314,
+      "owned_processes_at_cancel": 8
+    },
+    {
+      "slot_release_seconds": 0.2474265320051927,
+      "owned_processes_at_cancel": 8
+    },
+    {
+      "slot_release_seconds": 0.21115568198729306,
+      "owned_processes_at_cancel": 8
+    },
+    {
+      "slot_release_seconds": 0.22892387898173183,
+      "owned_processes_at_cancel": 8
+    },
+    {
+      "slot_release_seconds": 0.21146071702241898,
+      "owned_processes_at_cancel": 8
+    },
+    {
+      "slot_release_seconds": 0.20844723700429313,
+      "owned_processes_at_cancel": 8
+    },
+    {
+      "slot_release_seconds": 0.20951420100755058,
+      "owned_processes_at_cancel": 8
+    },
+    {
+      "slot_release_seconds": 0.22758970299037173,
+      "owned_processes_at_cancel": 8
+    },
+    {
+      "slot_release_seconds": 0.2087292580108624,
+      "owned_processes_at_cancel": 8
+    },
+    {
+      "slot_release_seconds": 0.23948625900084153,
+      "owned_processes_at_cancel": 8
+    },
+    {
+      "slot_release_seconds": 0.20817431001341902,
+      "owned_processes_at_cancel": 8
+    },
+    {
+      "slot_release_seconds": 0.21306496698525734,
+      "owned_processes_at_cancel": 8
+    },
+    {
+      "slot_release_seconds": 0.2139259930117987,
+      "owned_processes_at_cancel": 8
+    },
+    {
+      "slot_release_seconds": 0.21398935400065966,
+      "owned_processes_at_cancel": 8
+    },
+    {
+      "slot_release_seconds": 0.21086266200290993,
+      "owned_processes_at_cancel": 8
+    },
+    {
+      "slot_release_seconds": 0.19459111901232973,
+      "owned_processes_at_cancel": 8
+    },
+    {
+      "slot_release_seconds": 0.21349889901466668,
+      "owned_processes_at_cancel": 8
+    },
+    {
+      "slot_release_seconds": 0.21812413801671937,
+      "owned_processes_at_cancel": 8
+    },
+    {
+      "slot_release_seconds": 0.2089941200101748,
+      "owned_processes_at_cancel": 8
+    },
+    {
+      "slot_release_seconds": 0.21232456201687455,
+      "owned_processes_at_cancel": 8
+    },
+    {
+      "slot_release_seconds": 0.21322124899597839,
+      "owned_processes_at_cancel": 8
+    },
+    {
+      "slot_release_seconds": 0.18421174498507753,
+      "owned_processes_at_cancel": 8
+    },
+    {
+      "slot_release_seconds": 0.19523954100441188,
+      "owned_processes_at_cancel": 8
+    },
+    {
+      "slot_release_seconds": 0.21120381899527274,
+      "owned_processes_at_cancel": 8
+    },
+    {
+      "slot_release_seconds": 0.22601249400759116,
+      "owned_processes_at_cancel": 8
+    },
+    {
+      "slot_release_seconds": 0.19395179199636914,
+      "owned_processes_at_cancel": 8
+    },
+    {
+      "slot_release_seconds": 0.21239014499587938,
+      "owned_processes_at_cancel": 8
+    },
+    {
+      "slot_release_seconds": 0.21008461999008432,
+      "owned_processes_at_cancel": 8
+    },
+    {
+      "slot_release_seconds": 0.19396060597500764,
+      "owned_processes_at_cancel": 8
+    }
+  ],
+  "scope": "Gateway lane release and worker/recovery checks; NOT full leak/overload/compute-stop gate",
+  "p95_seconds": 0.23948625900084153,
+  "max_seconds": 0.24920796797960065
+}

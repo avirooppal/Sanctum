@@ -1,0 +1,26 @@
+{
+  "mode": "reranker",
+  "cancel_method": "disconnect",
+  "samples": [
+    {
+      "slot_release_seconds": 0.13166633297805674,
+      "owned_processes_at_cancel": 8,
+      "compute_release_seconds": 1.0657005249813665
+    },
+    {
+      "slot_release_seconds": 0.1920955520181451,
+      "owned_processes_at_cancel": 8,
+      "compute_release_seconds": 0.8904646729934029
+    },
+    {
+      "slot_release_seconds": 0.17555435100803152,
+      "owned_processes_at_cancel": 8,
+      "compute_release_seconds": 0.9449693349888548
+    }
+  ],
+  "scope": "Gateway release, real model slot idle or speech PID absence, recovery; not full leak/overload gate",
+  "p95_seconds": 0.1920955520181451,
+  "max_seconds": 0.1920955520181451,
+  "compute_p95_seconds": 1.0657005249813665,
+  "compute_max_seconds": 1.0657005249813665
+}

@@ -9,7 +9,10 @@ fn run() -> Result<(), Box<dyn std::error::Error + Send + Sync>> {
     use sanctum_policy::{close_extra_fds, local_stdio, runtime};
     use std::{io::Write, net::TcpListener, process::Command};
     let args: Vec<String> = std::env::args().collect();
-    if let Some(index) = args.iter().position(|a| a == "--engine-child") {
+    if let Some(index) = args
+        .iter()
+        .position(|a| a == "--engine-child" || a == "--resident-engine")
+    {
         use std::os::unix::process::ExitStatusExt;
         // SAFETY: handlers only update the lock-free STOP atomic.
         unsafe {
@@ -32,9 +35,22 @@ fn run() -> Result<(), Box<dyn std::error::Error + Send + Sync>> {
         }
         runtime::checks()?;
         let executable = args.get(index + 1).ok_or("missing engine executable")?;
-        let mut command = Command::new(executable);
-        command.args(&args[index + 2..]).env_clear();
-        let status = sanctum_gateway::supervision::run(&mut command, &STOP)?;
+        let make_command = || {
+            let mut command = Command::new(executable);
+            command.args(&args[index + 2..]).env_clear();
+            if args[index] == "--resident-engine" {
+                command
+                    .env("MALLOC_ARENA_MAX", "1")
+                    .env("MALLOC_TRIM_THRESHOLD_", "65536")
+                    .env("MALLOC_MMAP_THRESHOLD_", "65536");
+            }
+            command
+        };
+        let status = if args[index] == "--resident-engine" {
+            sanctum_gateway::supervision::run_resident(make_command, &STOP)?
+        } else {
+            sanctum_gateway::supervision::run(&mut make_command(), &STOP)?
+        };
         std::process::exit(status.code().unwrap_or(128 + status.signal().unwrap_or(1)));
     }
     if let Some(index) = args.iter().position(|a| a == "--inference-request") {
@@ -51,7 +67,15 @@ fn run() -> Result<(), Box<dyn std::error::Error + Send + Sync>> {
             return Err("inference input exceeds limit".into());
         }
         let payload = serde_json::from_slice(&input)?;
-        let mut reply = LocalEngine::new(base)?.send(path, &payload)?;
+        let engine = LocalEngine::new(base)?;
+        let deadline = std::time::Instant::now() + std::time::Duration::from_secs(120);
+        while !engine.healthy() {
+            if std::time::Instant::now() >= deadline {
+                return Err("engine recovery deadline".into());
+            }
+            std::thread::sleep(std::time::Duration::from_millis(20));
+        }
+        let mut reply = sanctum_inference::bounded_send(&engine, path, &payload)?;
         println!(
             "{}",
             serde_json::json!({"status": reply.status, "content_type": reply.content_type})
@@ -146,14 +170,48 @@ fn run() -> Result<(), Box<dyn std::error::Error + Send + Sync>> {
     )>::new(8, [2, 1, 2, 1]);
     let chat = std::sync::Arc::new(chat);
     let health = serde_json::json!({"status":"ok","cloud_connectors":"disabled","isolation":"linux-user-netns-seccomp","checks":checks});
+    let cancellation_control = ingress.cancellation_control();
     let mut workers = Vec::new();
     for _ in 0..6 {
         let (queue, chat, health) = (queue.clone(), chat.clone(), health.clone());
+        let cancellation_control = cancellation_control.clone();
         workers.push(std::thread::spawn(move || {
             while let Some(job) = queue.take() {
                 let (request, context) = job.value;
                 if job.expired || context.check().is_err() {
                     overload(request);
+                    continue;
+                }
+                if request.url() == "/v1/cancel" {
+                    let (code, value) = match chat.as_ref() {
+                        Some(chat) if !chat.authorized(&request) => {
+                            (401, serde_json::json!({"error":"authentication_required"}))
+                        }
+                        Some(_) if request.method() != &tiny_http::Method::Post => {
+                            (405, serde_json::json!({"error":"POST_required"}))
+                        }
+                        Some(_) => {
+                            let targeted = cancellation_control.cancel_engines();
+                            eprintln!("explicit owner cancellation count={targeted}");
+                            (
+                                200,
+                                serde_json::json!({"cancelled":targeted,"reason":"explicit"}),
+                            )
+                        }
+                        None => (503, serde_json::json!({"error":"runtime_not_configured"})),
+                    };
+                    let mut response = tiny_http::Response::from_string(value.to_string())
+                        .with_status_code(code)
+                        .with_header(
+                            tiny_http::Header::from_bytes("Content-Type", "application/json")
+                                .unwrap(),
+                        );
+                    if code == 503 {
+                        response = response.with_header(
+                            tiny_http::Header::from_bytes("Retry-After", "1").unwrap(),
+                        );
+                    }
+                    let _ = request.respond(response);
                     continue;
                 }
                 if !matches!(request.url(), "/healthz" | "/healthz/dispatch") {

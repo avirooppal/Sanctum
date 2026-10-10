@@ -143,7 +143,7 @@ impl Chat {
         for (model, role) in engine_models {
             let mut command = Command::new(std::env::current_exe()?);
             command
-                .arg("--engine-child")
+                .arg("--resident-engine")
                 .arg(&config.engine)
                 .args([
                     "--offline",
@@ -162,7 +162,7 @@ impl Chat {
                 .arg(config.threads.to_string())
                 .arg("--ctx-size")
                 .arg(config.context.to_string())
-                .args(["--parallel", "1"])
+                .args(["--parallel", "1", "--cache-ram", "0", "--no-cache-prompt"])
                 .env_clear()
                 .stdin(Stdio::null())
                 .stdout(Stdio::null())
@@ -237,6 +237,21 @@ impl Chat {
     pub fn token_path(&self) -> PathBuf {
         self.config.state_dir.join("local.token")
     }
+    pub fn authorized(&self, request: &tiny_http::Request) -> bool {
+        let given = request
+            .headers()
+            .iter()
+            .find(|h| h.field.equiv("Authorization"))
+            .map(|h| h.value.as_str())
+            .unwrap_or("");
+        let expected = format!("Bearer {}", self.token);
+        given.len() == expected.len()
+            && given
+                .bytes()
+                .zip(expected.bytes())
+                .fold(0u8, |diff, (a, b)| diff | (a ^ b))
+                == 0
+    }
     pub fn handle(
         &self,
         mut request: tiny_http::Request,
@@ -247,19 +262,7 @@ impl Chat {
         if !path.starts_with("/v1/") {
             return self.static_file(request);
         }
-        let given = request
-            .headers()
-            .iter()
-            .find(|h| h.field.equiv("Authorization"))
-            .map(|h| h.value.as_str())
-            .unwrap_or("");
-        let expected = format!("Bearer {}", self.token);
-        let authorized = given.len() == expected.len()
-            && given
-                .bytes()
-                .zip(expected.bytes())
-                .fold(0u8, |diff, (a, b)| diff | (a ^ b))
-                == 0;
+        let authorized = self.authorized(&request);
         if !authorized {
             return respond(
                 request,
@@ -559,23 +562,28 @@ impl Chat {
             }
         };
         let captured = Arc::new(Mutex::new(Vec::new()));
+        let complete = Arc::new(std::sync::atomic::AtomicBool::new(false));
+        let mut headers = vec![
+            tiny_http::Header::from_bytes("Content-Type", reply.content_type.as_str()).unwrap(),
+            tiny_http::Header::from_bytes("X-Sanctum-Conversation", conversation.as_str()).unwrap(),
+            tiny_http::Header::from_bytes("Cache-Control", "no-store").unwrap(),
+        ];
+        if reply.status == 503 {
+            headers.push(tiny_http::Header::from_bytes("Retry-After", "1").unwrap());
+        }
         let response = tiny_http::Response::new(
             tiny_http::StatusCode(reply.status),
-            vec![
-                tiny_http::Header::from_bytes("Content-Type", reply.content_type.as_str()).unwrap(),
-                tiny_http::Header::from_bytes("X-Sanctum-Conversation", conversation.as_str())
-                    .unwrap(),
-                tiny_http::Header::from_bytes("Cache-Control", "no-store").unwrap(),
-            ],
+            headers,
             Capture {
                 inner: reply.body,
                 captured: captured.clone(),
+                complete: complete.clone(),
             },
             None,
             None,
         );
         request.respond(response)?;
-        if is_chat && reply.status == 200 {
+        if is_chat && reply.status == 200 && complete.load(std::sync::atomic::Ordering::Acquire) {
             let bytes = captured.lock().map_err(|_| "capture poisoned")?;
             self.store.lock().map_err(|_| "store lock poisoned")?.save(
                 "local-owner",
@@ -616,10 +624,15 @@ impl Chat {
 struct Capture {
     inner: Box<dyn Read + Send + Sync>,
     captured: Arc<Mutex<Vec<u8>>>,
+    complete: Arc<std::sync::atomic::AtomicBool>,
 }
 impl Read for Capture {
     fn read(&mut self, buffer: &mut [u8]) -> io::Result<usize> {
         let count = self.inner.read(buffer)?;
+        if count == 0 && !buffer.is_empty() {
+            self.complete
+                .store(true, std::sync::atomic::Ordering::Release);
+        }
         let mut bytes = self
             .captured
             .lock()

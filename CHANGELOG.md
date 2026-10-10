@@ -1,5 +1,14 @@
 # Changelog
 
+## 2026-10-10 — Engine cancellation and crash hardening
+
+- Add bounded resident engine restart, cancellable execution admission and readiness waits.
+- Bound embedding and rerank subrequests; preserve embedding indices, usage and pair ranking.
+- Add authenticated owner cancellation and completion-verified conversation persistence.
+- Disable optional prompt RAM caching and bound resident allocator retention.
+- Extend real engine/cancellation/resource/crash/overload harnesses; preserve failed evidence
+  and explicit setup exceptions. Step 0 gate verification remains in progress.
+
 ## 2026-10-10 — Shared engine admission
 
 - Bound engine admission across Rust and Python callers with shared lifetime leases

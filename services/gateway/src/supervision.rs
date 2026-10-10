@@ -124,3 +124,36 @@ pub fn terminate(child: &mut Child) -> io::Result<()> {
         "guardian failed its cleanup deadline",
     ))
 }
+
+/// Restart only resident workers after reaping their failed group; never replay jobs.
+pub fn run_resident<F: FnMut() -> Command>(
+    mut command: F,
+    stop: &AtomicBool,
+) -> io::Result<ExitStatus> {
+    let mut failures = std::collections::VecDeque::new();
+    loop {
+        let status = run(&mut command(), stop)?;
+        if stop.load(Ordering::Acquire) {
+            return Ok(status);
+        }
+        let now = Instant::now();
+        while failures
+            .front()
+            .is_some_and(|time: &Instant| now.duration_since(*time) >= Duration::from_secs(60))
+        {
+            failures.pop_front();
+        }
+        if failures.len() >= 3 {
+            return Err(io::Error::other("resident engine restart budget exhausted"));
+        }
+        let delay = [100, 500, 2000][failures.len()];
+        failures.push_back(now);
+        let until = now + Duration::from_millis(delay);
+        while Instant::now() < until {
+            if stop.load(Ordering::Acquire) {
+                return Ok(status);
+            }
+            thread::sleep(Duration::from_millis(10));
+        }
+    }
+}

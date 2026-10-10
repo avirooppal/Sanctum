@@ -8,3 +8,12 @@ embedding, one for reranking/ASR/TTS. With two slots, background can only use ze
 interactive tries one then zero. Exhaustion is a retryable busy error, not waiting.
 Rust runtime and Python Knowledge worker share this contract. No client-supplied
 path, key, capacity or priority. HTTP 503 includes Retry-After: 1.
+
+Execution refinement: two admissions do not mean two HTTP generation requests.
+A shared one-slot `execute-port-N` lease serializes actual engine work outside the
+engine's opaque queue. Rust waits poll caller cancellation every 10ms; Python waits
+stay inside the owned worker and its operation deadline. Keep admission held while
+waiting, so the external queue is bounded by the original admission capacity.
+Retain execution through helper/body cleanup. After a crash, pending callers wait
+for readiness before sending their generation POST once. This limits the crashed
+model's in-flight request fault domain to the one executing request.

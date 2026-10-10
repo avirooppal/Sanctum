@@ -75,7 +75,11 @@ impl Engine for LocalEngine {
     fn healthy(&self) -> bool {
         self.agent
             .get(&format!("{}/health", self.base))
+            .timeout(Duration::from_millis(250))
             .call()
             .is_ok()
     }
 }
+
+mod batching;
+pub use batching::bounded_send;

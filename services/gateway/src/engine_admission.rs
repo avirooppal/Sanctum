@@ -55,3 +55,23 @@ pub fn acquire(root: &Path, key: &str, capacity: usize, background: bool) -> io:
         "engine busy; retry later",
     ))
 }
+
+/// Callers already own admission; keep the single actual engine job outside opaque queues.
+pub fn wait_execution(
+    root: &Path,
+    key: &str,
+    context: &sanctum_inference::cancellation::Cancellation,
+) -> io::Result<File> {
+    loop {
+        context
+            .check()
+            .map_err(|error| io::Error::new(io::ErrorKind::ConnectionAborted, error))?;
+        match acquire(root, &format!("execute-{key}"), 1, false) {
+            Ok(lease) => return Ok(lease),
+            Err(error) if error.kind() == io::ErrorKind::WouldBlock => {
+                std::thread::sleep(std::time::Duration::from_millis(10))
+            }
+            Err(error) => return Err(error),
+        }
+    }
+}

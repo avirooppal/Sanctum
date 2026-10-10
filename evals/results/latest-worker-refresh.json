@@ -1,0 +1,16 @@
+{
+  "mode": "knowledge",
+  "cancel_method": "disconnect",
+  "samples": [
+    {
+      "slot_release_seconds": 0.20955290697747841,
+      "owned_processes_at_cancel": 8,
+      "compute_release_seconds": 1.1252195260021836
+    }
+  ],
+  "scope": "Gateway release, real model slot idle or speech PID absence, recovery; not full leak/overload gate",
+  "p95_seconds": 0.20955290697747841,
+  "max_seconds": 0.20955290697747841,
+  "compute_p95_seconds": 1.1252195260021836,
+  "compute_max_seconds": 1.1252195260021836
+}

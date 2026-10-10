@@ -1,269 +1,174 @@
 # Current state
 
-- Current step: Step 0, S0-6 shared engine admission verified locally; Step 1 blocked by the Step 0 gate.
-- Last locally/hosted green commit: `765e9bc`; H1/H2 commit `0cc3859`.
-- Open blockers: full
-  engine storm/shutdown/overload gates are unmeasured. Hosted CI blocker resolved.
-- Next three steps: commit shared engine admission; implement engine crash recovery and real storms; run mixed overload.
+- Current step: Step 0, S0-7 S0-7 cancellation/storm/repeated-shutdown gate passed; S0-8 next; Step 1 blocked by the Step 0 gate.
+- Last locally/hosted green commit: `6eeed8b`; H1/H2 commit `0cc3859`.
+- Open blockers: three-minute mixed-engine overload remains to verify.
+  Held authenticated WebSocket remains explicitly deferred to Step 1a.
+  Repeated active shutdown and sustained mixed overload remain unverified. Hosted CI is green.
+- Next three steps: commit/push S0-7; run mixed-engine overload; full final regression and egress checks.
 
 | Step 0 gate | Current result |
 |---|---|
-| Disconnect -> slot release p95 by engine | PASS gateway slot release: 50 samples each chat/Knowledge/ASR/TTS, p95 151/208/178/178ms; shared-engine compute stop not established |
-| Process/FD/thread/socket/RSS storm cleanup | Partial: no-engine ingress only; real-engine storms pending |
-| Active-engine bounded shutdown | PASS 0.772s active; 1.019s active + queued; zero surviving owned PIDs |
+| Disconnect -> slot/compute release p95 by engine | PASS 50 per mode/method; chat 156ms, Knowledge 1327ms, reranker 1177ms, ASR 230ms, TTS 233ms actual compute p95; explicit sets also pass |
+| Process/FD/thread/socket/RSS storm cleanup | PASS all five engine paths, disconnect/explicit and floods; exact role/FD/socket restoration, thread tolerance, worst RSS +13248KiB |
+| Active-engine bounded shutdown | PASS latest 0.976377s active + queued; listener 0.169111s, zero survivors; three repeated cycles PASS (max 1.199s) |
 | Minutes of mixed-engine overload with bounded queues | NOT MEASURED; upload-only ingress flood is insufficient |
 | Held authenticated WebSocket | PENDING: re-run against the real authenticated WebSocket in Step 1a |
 
 No Step 0 completion claim or phase tag. Step 1 has not started.
 
-## This session: baseline and housekeeping
+## Earlier slices this session
 
-2026-10-10, baseline `c94ab89` already checked out, three unrelated untracked paths
-preserved. Re-read plan.md and status before editing. Commands/results observed:
+[Baseline, housekeeping and S0-1 through S0-6, verbatim](status-archive/2026-10-10-foundations-through-admission.md).
 
-| Command (repository root unless noted) | Result |
-|---|---|
-| Linux dev-venv `python tools/check.py` | PASS 132 tests, lint/format/type/license/eval checks |
-| Linux `bash tools/check_rust.sh` | PASS 26 tests, 74 crate licenses, 22 bootstrap + 16 runtime/child kernel denial probes |
-| `npm test` in apps/web | PASS 12/12 |
-| `npm run typecheck`; `npm run build` in apps/web | PASS |
-| `npm audit --audit-level=low` in apps/web | PASS, zero vulnerabilities |
-| `uv run --offline --group knowledge python evals/sdk_chat.py --base-url http://127.0.0.1:8769/v1 --token-file <state>/local.token` | PASS 8/8; chat 0.2139s; streaming TTFT 0.2652s; embedding dims 1024 |
+## S0-7 work in progress (not a gate pass)
 
-Logs: `.sanctum/finish0-baseline-{source,rust}.log`; SDK JSON:
-`evals/results/phase1-sdk.json`. These local checks do not imply hosted CI success.
+S0-6 committed/pushed `6eeed8b`; hosted run 38056305199 completed successfully.
+Resident engine restart contract ADR 0036 and failing missing-function test preceded
+implementation. Bounded restart/backoff test passed. Initial real crash command
+`python evals/engine_crash.py --pid 5655 --token-file <state>/local.token --output
+evals/results/engine-crash-first.json` FAILED: killed stream released in 0.050995s,
+but the immediate subsequent chat got 502 during reload. Kept the failed evidence.
+A separate stalled-health socket test also FAILED its <500ms bound before adding
+250ms health-probe deadlines. Fix under verification: new requests wait on bounded
+health GETs under existing cancellation/permits, then send generation POST once.
+Never replay an affected request. Independent engine continuity still needs rerun.
+Crash rerun `python evals/engine_crash.py --pid 8306 --token-file <state>/local.token
+--output evals/results/engine-crash.json`: PASS affected stream released 0.050580s,
+independent embeddings succeeded, next chat status 200 after 7.043043s recovery,
+old worker PID absent. A shared model crash can still affect every request already
+inside that model process; no zero-downtime or single-request fault isolation claim.
+Full storm and Step 0 gates remain open.
+Stronger queued crash rerun `engine-crash-queued.json` PASS: affected stream
+0.044796s, queued and next status 200, recovery 7.445975s; all role FD/socket/thread
+counts returned, maximum positive RSS delta 3664KiB. Exact resources retained in JSON.
 
-H1: archived the entire preceding STATUS.md verbatim, including every measurement
-and historical phase row. Verified byte-identical SHA256
-`e8209abbfab681fc737ffd20c1a6f8074ea773a9ee08c4bf933b06715084489c` before replacement.
-[Historical narratives, 2026-10-06 through 2026-10-10](status-archive/2026-10-06-through-10.md).
-Historical records are provenance, not claims of tests rerun this session.
-Git-object verification also confirms the archived blob is byte-identical to
-`c94ab89:docs/STATUS.md` (SHA256
-`1f09b8f8eb2762c49d0e04a24ffbbb2c0863d00245f305153eb12ef57c60e1ba`).
-The preceding working-file hash includes Windows line endings.
+Post-fix full Rust gate: PASS 43 tests, fmt/clippy, 74 licenses, 38 denial probes,
+three supervision scenarios (`.sanctum/resident-recovery-rust.log`). Source gate
+PASS 134 tests/all checks after adding the resource-gate regression (a later
+harness-only warmup refinement passed ruff). First real storm FAILED after 50 chat disconnect attempts: chat RSS 942100 ->
+981908KiB (+39808KiB), above +16384KiB; other resource counts returned. Evidence
+`evals/results/engine-storms-cache-failure.json`, `.sanctum/engine-storms.log`.
+Pinned llama-b11429 help, executed via `unshare --user --map-root-user --net`,
+reports default RAM prompt cache 8192MiB. Disable this optional cache explicitly;
+rerun the unchanged resource thresholds. No failed run counted as green.
+Cache-disabled first warmup timed out before a complete response header; preserved
+`.sanctum/engine-storms-bounded.log` (no pass). Single-request SDK 8/8 and three
+chat cancellation checks passed afterward. Diagnostic rerun with tracing passed
+chat resource comparisons, then FAILED embedding RSS 982292 -> 1038228KiB
+(+55936KiB). Evidence `evals/results/engine-storms-embedding-rss-failure.json`.
+Resident allocator settings are under verification; unchanged resource thresholds.
+The allocator/execution refinement warmup FAILED its incidental large-embedding
+header setup wait: 30.031s, zero bytes. Preserved `.sanctum/engine-storms-setup-timeout.log`.
+ADR 0037 explicitly extends only this 128-input embedding setup wait to 120s;
+all resource, delivery, cancellation, chat and shutdown bounds remain unchanged.
+The complete Knowledge warmup then FAILED its original 60-second client setup
+wait before recording a baseline. ADR 0038 adds a 240-second warmup-only setup
+exception within existing worker/caller bounds; restart before rerun. No gate
+threshold or storm case removed. Failed setup log preserved. First immediate
+restart failed with EADDRINUSE because prior shutdown was still completing;
+confirmed no old gateway remained and retried only the launch. Failure log:
+`.sanctum/full-warmup-start-failure.log`; no WSL reset or flaked pass counted.
+Latest storm passed chat/embedding disconnect, slow-reader and overload resource
+checks (50/16/100 attempts, real engine starts 6/6/4; shed/refused attempts counted
+separately). It then FAILED after 50 Knowledge cancellations: embedding RSS
+931460 -> 1085324KiB (+153864KiB). Preserved `engine-storms-knowledge-rss-failure.json`.
+ADR 0038 corrects the omitted Knowledge warmup with exactly one complete reference
+ingestion, not repeated warmup until a result passes. All tolerances unchanged.
+This threshold exception needs review; no workload/test removed.
+The stronger `evals/engine_crash.py --pid 690 ... --queued --output
+engine-crash-queued-first.json` FAILED: second admitted request also got 502.
+New contract/test for a cancellable one-slot execution lease failed on missing
+function before implementation. Pending work will remain outside the model's
+opaque queue under the existing two-request admission bound. Fix awaiting rerun.
+Cache-disabled crash rerun passed: affected stream 0.060385s, next request 200,
+recovery 7.421056s, old PID reaped (`engine-crash-cache-bounded.json`).
 
-H3 initial hosted result: [run 38051628648](https://github.com/avirooppal/Sanctum/actions/runs/38051628648),
-commit `c94ab89`: Linux source PASS, Rust PASS, web PASS; macOS FAIL (two Knowledge
-retrieval tests: `sqlite3.Connection` lacks `enable_load_extension`); Windows
-CANCELLED by matrix fail-fast. Full macOS log retrieved as authenticated account
-`avirooppal`, saved at `.sanctum/ci-macos-failure.log`. Repair pending; no checks skipped.
+Fresh-runtime complete-workload storm run PASS: chat disconnect/slow-reader/overload
+and 50 cancellations each Knowledge/ASR/TTS; exact role/FD/socket counts returned,
+threads within allowance, worst retained RSS +10404KiB (<16384KiB).
+`evals/results/engine-storms.json` preserves every per-role snapshot and outcomes.
+Direct observer smoke: chat 3/3 PASS, compute p95 0.157115s. Knowledge FAILED actual
+model idle maximum >3s after gateway release (`compute-knowledge-smoke.json`).
+ADR 0040 bounds embedding HTTP batches across Rust/Python; eight-input compute smoke FAILED >3s, so tighten to one input while keeping timing bounds. Failed evidence `bounded-eight-compute-failure.json`. Tests first failed
+(missing Rust adapter and Python 17-input call), implementation awaiting checks.
 
-H3 repair `24c7874`: require uv-managed Python 3.12; disable matrix fail-fast so all
-platforms report results. No checks weakened. [Hosted run 38051917489](https://github.com/avirooppal/Sanctum/actions/runs/38051917489)
-completed with **all five jobs PASS**: source Linux, source Windows, source macOS,
-Rust foundation and web. Observed through the GitHub jobs API this session.
+One-input real compute smoke PASS: Knowledge disconnect 3/3, compute p95
+1.086652s; explicit cancel 3/3, compute p95 1.127434s; all below unchanged two-second
+bound. Owner API unauthorized/method/body/idle checks passed in the explicit run.
+Crash/storage extension FAILED: failed stream saved one turn (`engine-crash-storage-first.json`).
+Add verified helper exit and complete-capture persistence guard; rerun before commit.
 
-## S0-1 context foundation slice — partial propagation
+Storage fix real rerun PASS (`engine-crash-storage.json`): affected stream
+0.057408s, queued/next both 200, recovery 11.590765s, failed request saved zero turns,
+all per-role resource comparisons passed. `evals/conversation_completion.py` PASS:
+normal nonstream/stream each saved one completed turn. Official SDK multi-input
+embedding check PASS: 17 inputs, 1024 dimensions, 1.643507s, scalar max difference
+0.0, prompt/total token usage 126. No inference retry or fabricated completion.
+Reranker pair-score equivalence (private namespace, three candidates) PASS max
+difference 0.0. Bound its candidate subrequests too; unit test first failed on a
+three-candidate request, then implemented stable descending global pair ranking.
 
-Contract `cancellation-v1.md` and ADR 0031 precede implementation; tests first failed
-on absent cancellation module and ingress context lookup. Four context/compatibility
-tests and one real TCP disconnect/association-cleanup test now pass. Context clones
-flow through ingress, dispatch, inference, Knowledge/ingestion and speech Rust entry
-points. Legacy send remains compatible. In-flight blocking calls and nested Python
-engine work still need S0-2/S0-3; this is NOT measured engine cancellation.
+## S0-7 measured cancellation and resource gate
 
-Fresh final `bash tools/check_rust.sh`: PASS 31 tests, 74 licenses, 38 denial probes;
-log `.sanctum/cancellation-context-rust-final.log`. Linux `python tools/check.py`:
-PASS 132 tests plus formatting/lint/types/licenses/evals, log
-`.sanctum/cancellation-context-source.log`. `python evals/ingress_limits.py --binary
-target/debug/sanctum-runtime --output evals/results/ingress-limits.json`: PASS,
-100 disconnects; header/body release 1.878433/1.875964s, FDs 5->5, threads 13->13,
-RSS 5120->5248 KiB; health-only shutdown 0.015968s. No engine-release claim.
+Command: Linux `python evals/engine_storms.py --pid 689 --token-file
+/home/aviroop/.local/share/sanctum-dispatch-smoke/local.token --runtime-config
+.sanctum/runtime-dispatch.json --output evals/results/engine-storms-verified.json`.
+PASS, exit 0, 500 real cancellations total; each engine/method 50 samples. Model
+slot counters verify chat/embedding/reranker computation idle; speech CLI PID absence
+verifies speech job cleanup. Every stage returned exact persistent process-role,
+FD and socket counts; threads within +2, retained RSS worst +13248KiB (<16384).
+No vanished/malformed counter treated as idle. Logs `.sanctum/engine-storms-verified.log`.
 
-Updated runtime reached readiness before real tests. Initial restart command failed
-shell parsing; corrected separate TERM/start commands succeeded. No WSL recovery or
-test exemption needed. SDK command from baseline: PASS 8/8, chat 0.4126s, TTFT
-0.4872s, dims 1024. Browser command `SANCTUM_BASE_URL=http://127.0.0.1:8769 node
-evals/browser_speech.mjs <playwright-package> <token-file> .sanctum/speech-smoke/jfk.wav
-asr-parakeet-q4k-reference tts-flite-slt-reference tts-flite-slt-reference`: PASS 7/7,
-zero page errors; physical audio/microphone unverified. `python evals/gateway_dispatch.py
---token-file <state>/local.token --output evals/results/gateway-dispatch.json`: PASS,
-two real chat streams plus ingestion; health/models p95 25.527/28.627ms; overload
-503 in 17.683ms. Initial held HTTP upload times out; no held-session claim.
+| Engine path / cancellation | Gateway p95 s | Compute p95 s | Compute max s |
+|---|---:|---:|---:|
+| chat disconnect | 0.135734 | 0.156058 | 0.159783 |
+| chat explicit | 0.047779 | 0.072492 | 0.082843 |
+| Knowledge disconnect | 0.194241 | 1.326519 | 1.379578 |
+| Knowledge explicit | 0.123515 | 1.292092 | 1.405114 |
+| reranker disconnect | 0.214538 | 1.177047 | 2.566670 |
+| reranker explicit | 0.137529 | 1.098733 | 1.299330 |
+| ASR disconnect | 0.224239 | 0.230192 | 0.268458 |
+| ASR explicit | 0.156287 | 0.165230 | 0.168652 |
+| TTS disconnect | 0.227064 | 0.232941 | 0.245985 |
+| TTS explicit | 0.149767 | 0.157321 | 0.165192 |
 
-ADR 0032 proposes resident speech workers for Step 1b/1c, with bounded confined IPC,
-health/restart/cancel behavior and proposed T0/T1 residency budgets. Budgets are
-design limits, not measured model footprints; implementation deferred as requested.
+All meet unchanged ADR 0031 p95 <=2s/max <3s. JSON
+`engine-storms-verified-<mode>-<method>.json` preserves every sample.
+Flood cases: 50 disconnect attempts (6 started, 44 shed), 16 slow readers
+(7 started, 9 shed), 100 overload attempts (4 started, 67 shed, 29 connection
+refusals). Refusals counted separately, never as HTTP 503. Per-stage maximum
+retained RSS deltas 128/9728/10368KiB, all within the original tolerance.
 
-## S0-2 guardian verification
+Latest `python evals/active_shutdown.py --pid 689 --token-file <state>/local.token
+--output evals/results/final-active-shutdown.json`: PASS active [1,1,2,1], queued
+[0,0,1,0], actual Parakeet job and slow upload; listener closure 0.169111s,
+shutdown 0.976377s, all 13 child PIDs plus gateway absent. Repeated-cycle script
+is running; no pass claim for it or S0-8 yet. No Step 1 or phase tags.
 
-Confined guardians now own worker process groups, receive parent-death signals,
-escalate INT/TERM/KILL, and reap adopted descendants. First supervision test failed
-on missing module before implementation. `tools/verify_supervision.py` exercises
-real confined uncooperative processes. First harness prototype received the old
-runtime's health record instead of fixture PIDs and failed; added strict PID-schema
-validation and the confined fixture entry before rerunning. No failed run counted.
+Current code gates: full Rust 48 tests + fmt/clippy + 74 licenses + 38 denial
+probes/supervision PASS; Linux source 138 tests + all source gates PASS. Further
+harness/doc changes will be checked before commit.
 
-Pre-transport-fix full Rust gate: 33 tests, 74 licenses, 38 denial probes PASS;
-Linux source gate 132 tests plus lint/format/types/licenses PASS. Confined fixtures
-TERM/parent-death/natural exit all left zero surviving PIDs in approximately
-0.57/0.54/0.57s. Final rerun numbers will be recorded before commit.
+## S0-7 repeated start/stop and regression completion
 
-Real SDK 8/8 and browser speech 7/7 passed. Repeated mixed-dispatch verification
-exposed two existing ingress close races: response lacked Connection: close (new
-socket test failed before fix); overload rejected with unread body could reset TCP
-before 503 was observed (Windows WinError 10053). Linux replay passed but does not
-excuse the Windows failure. Response headers now explicitly forbid reuse, and
-rejection half-closes then drains at most 50ms/64KiB. Reverification pending.
-No retries, test deletion, skips or threshold relaxations were added.
+`python evals/repeated_shutdown.py --binary target/debug/sanctum-runtime --config
+.sanctum/runtime-dispatch.json --output evals/results/repeated-shutdown.json`:
+PASS three independent start/active-stop cycles, exit 0. Each had actual engine
+work, active lanes [1,1,2,1], queued [0,0,1,0], and slow upload. Shutdown times
+**1.198612/0.805526/0.854771s**; listener closures
+**0.184407/0.184068/0.177636s**. Zero surviving owned PIDs; launchers reaped gateways.
+Every process and its FD/thread/socket/RSS resources vanished at each stop.
+Evidence in repeated-shutdown.json and the three numbered result files.
 
-Final `bash tools/check_rust.sh` PASS: 33 tests, 74 crate licenses, 38 kernel
-denial probes, plus three process-tree scenarios (now mandatory in this script).
-Log `.sanctum/supervision-close-rust.log`. `python tools/verify_supervision.py
-target/debug/sanctum-runtime` measured TERM **0.565680s**, parent-death **0.528694s**,
-natural exit **0.565877s**, zero surviving/zombie fixture PIDs in every scenario.
-Evidence: `evals/results/process-supervision.json`. This is not a real-engine storm.
+Fresh web `npm test`: PASS 12/12, no skips. `npm run typecheck`; `npm run build`:
+PASS. `npm audit --audit-level=low`: PASS, zero vulnerabilities. Full source/Rust commands
+remain 138/48 passing tests plus licenses/denial probes. S0-8 remains unmeasured,
+so the aggregate Step 0 gate is NOT complete and Step 1 has not started.
 
-Final ingress scripts from ADR 0029: PASS 100 disconnects; header/body stalls
-**1.878264/1.876041s**, FDs 5->5, threads 13->13, RSS 5120->5376KiB; health-only
-shutdown 0.214233s. Three-minute upload flood: **3413 health samples**, p95
-**6.473ms**, max **15.953ms**; FDs 5->5, threads 13->13, RSS 5376->14392KiB,
-peak 14440KiB (within +16MiB). These remain no-engine ingress measurements.
-
-Five consecutive final `evals/gateway_dispatch.py` runs passed two chat streams
-plus ingestion and 12 overload attempts each. Across runs: health p95 <=25.686ms,
-models p95 <=27.717ms, first 503 <=15.646ms. All commands used the existing
-`--token-file <state>/local.token --output evals/results/supervision-dispatch-N.json`.
-**Remaining transport concern:** one Windows WinError 10053 recurred after bounded
-rejection draining and before these five passes. It was not counted as a pass or
-silently retried. Linux replay passed. Control-packet capture of the five passing
-runs found no RST; the intermittent Windows failure remains a full-storm investigation
-item. No claim that five successes establish the complete S0-7/S0-8 gate.
-
-Final real SDK: PASS 8/8, chat 0.3103s, TTFT 0.2827s, embeddings 1024. Browser speech
-on supervised workers: PASS 7/7, zero page errors; physical playback unverified.
-All real requests waited for runtime readiness. S0-3 onward remains incomplete.
-
-## S0-3 cancellable engine I/O
-
-Based on `c38ab2a`, whose hosted [run 38053769682](https://github.com/avirooppal/Sanctum/actions/runs/38053769682) passed all five jobs.
-Nonblocking context-aware pipes now interrupt Knowledge reads/writes; cancelled
-Knowledge workers restart on the next request without replaying mutations. Speech
-cancellation terminates its owned process tree. A confined request-specific HTTP
-bridge closes inference connections on cancellation without killing resident models
-(ADR 0033). Additive dispatch counters expose queued/active lane counts for measurement.
-
-Tests first: missing ContextIo/dispatch counters failed before implementation; three
-real socket-pair tests cover blocked read, blocked write and partial-frame delivery.
-Initial ASR harness failed to observe its engine because it scanned only the main
-thread's children. Added a failing-then-passing descendant-enumeration regression
-and scan all task child lists; no failed run counted as a pass.
-
-Commands/results observed this session:
-
-| Command | Result |
-|---|---|
-| Linux `bash tools/check_rust.sh` | PASS 37 tests, format/clippy, 74 licenses, 38 denial probes, three supervision scenarios |
-| Linux `python tools/check.py` | PASS 133 tests, lint/format/types/licenses/evals/API docs |
-| `cargo build --locked --offline -p sanctum-gateway --bin sanctum-runtime` | PASS; real configured runtime reached readiness |
-| SDK command recorded above | PASS 8/8, chat 0.3443s, TTFT 0.3716s, dimensions 1024 |
-| Browser speech command recorded above, after cancellation runs | PASS 7/7, zero page errors; physical playback/microphone unverified |
-| `python evals/gateway_dispatch.py --token-file <state>/local.token --output evals/results/cancellable-dispatch.json` | PASS two chat streams + ingestion; health/models p95 28.551/26.778ms; first 503 15.872ms |
-
-Linux command `python evals/cancellation_release.py --pid 55195 --token-file
-/home/aviroop/.local/share/sanctum-dispatch-smoke/local.token --mode MODE --output
-evals/results/cancel-MODE.json` ran 50 samples for EACH mode, sequentially, exit 0.
-
-| Real engine mode | Disconnect -> gateway slot p95 | Maximum |
-|---|---:|---:|
-| chat (resident llama.cpp) | 0.151116s | 0.162824s |
-| Knowledge ingestion (nested embedding/rerank) | 0.207841s | 0.210524s |
-| ASR (Parakeet CLI) | 0.178409s | 0.192204s |
-| TTS (Flite CLI) | 0.178116s | 0.194712s |
-
-All meet ADR 0031 p95 <=2s/max <3s. Chat/Knowledge recovery requests succeeded;
-speech CLI PIDs were absent after cancellation. This measures gateway slot release,
-not complete resource-baseline recovery or proof of shared model compute cessation.
-Full real-engine leak/storm, active shutdown and minutes of mixed overload remain
-UNVERIFIED. Held authenticated WebSocket remains PENDING Step 1a.
-Logs: `.sanctum/cancellable-final-rust.log`, `.sanctum/cancellable-source-final.log`,
-`.sanctum/cancel-{chat,knowledge,asr,tts}.log`; committed JSON preserves all 200 samples.
-
-## S0-4 response backpressure
-
-S0-3 committed/pushed `4fd4109`; [hosted run 38055235469](https://github.com/avirooppal/Sanctum/actions/runs/38055235469)
-completed all five jobs successfully (observed jobs API).
-
-Contract/ADR 0034 and tests preceded implementation. Initial missing-module test
-failed as expected. First socket test then exceeded two seconds because brief
-kernel progress reset idle time. Kept the test unchanged; added a stricter 1800ms
-absolute bound per output block as well as idle/cancellation checks. No threshold
-relaxed. Final fixed/chunked non-reading-client socket tests pass. Uploads now use
-rolling two-second throughput windows rather than lifetime averaging.
-
-`bash tools/check_rust.sh`: PASS 40 tests, fmt/clippy, 74 licenses, 38 denial probes,
-three supervision scenarios; `.sanctum/response-flow-rust.log`. Linux
-`python tools/check.py`: PASS 133 tests plus all source gates;
-`.sanctum/response-flow-source.log`. Runtime rebuilt and reached readiness.
-
-`python evals/response_backpressure.py --token-file <state>/local.token --output
-evals/results/response-backpressure.json`: PASS real embeddings and SSE responses.
-Header-to-slot-release: fixed **1.819566s**, streaming **2.770852s**. These include
-socket-buffer filling and model generation, NOT last-send idle time. The two-second
-pending-write bound is separately tested with real socket pairs. Burst-then-trickle
-upload closed after **4.008985s**, proving an initial burst cannot subsidize the
-subsequent slow window.
-
-`python evals/ingress_limits.py --binary target/debug/sanctum-runtime --output
-evals/results/response-ingress.json`: PASS 100 disconnects, header/body release
-1.876457/1.880110s, FDs 5->5, threads 13->13, RSS 5120->5376KiB; health-only
-shutdown 0.214930s. This still does not prove active-engine shutdown/storm cleanup.
-
-## S0-5 active-engine shutdown
-
-S0-4 commit `4e12418`, followed by status whitespace correction `1154400`, pushed.
-Hosted runs 38055640585 and 38055653258 completed successfully. No runtime code
-change was required for this slice: prior cancellation/supervision now satisfies
-the active shutdown experiment. Contract and executable assertion harness added.
-
-`python evals/active_shutdown.py --pid 68621 --token-file <state>/local.token
---output evals/results/active-shutdown.json`: PASS real streaming chat, Knowledge
-ingestion, confirmed Parakeet CLI, and slow upload; listener closed **0.182430s**,
-shutdown **0.772163s**, all 13 observed child PIDs plus gateway gone.
-
-Expanded harness to require a queued chat too. Restarted runtime to readiness;
-`python evals/active_shutdown.py --pid 690 --token-file <state>/local.token --output
-evals/results/active-queued-shutdown.json`: PASS active lanes [1,1,2,1], queued
-[0,0,1,0], slow upload; listener closed **0.171963s**, shutdown **1.019047s**;
-all 15 observed child PIDs plus gateway gone. Both meet five-second bound, with
-listener closure below 250ms. Runtime launch sessions exited successfully.
-These are two measured shutdowns, not the repeated storm/resource-baseline gate.
-
-Fresh Linux `python tools/check.py`: PASS 133 tests and all source checks;
-`.sanctum/active-shutdown-source.log`. Rust runtime unchanged since S0-4's full
-40-test/probe gate. `ruff format`/`ruff check evals/active_shutdown.py`: PASS.
-S0-6 global engine admission and S0-7/S0-8 remain incomplete; no Step 1 or tags.
-
-## S0-6 shared engine admission
-
-S0-5 pushed as `765e9bc`; hosted run 38055842276 completed successfully.
-ADR 0035/engine-admission-v1 contract and failing missing-module test preceded
-implementation. Rust/Python now share nonblocking flock leases keyed by engine
-port. Chat/embedding admit two requests total, one capacity reserved from background;
-reranking/ASR/TTS admit one each. This bounds requests admitted to a single-slot
-model server, not two simultaneous inference computations. No extra waiting queue.
-Knowledge/meeting/ingestion nested inference uses the same leases; body cleanup
-retains the lease until helper termination. 503 responses include Retry-After: 1.
-
-`bash tools/check_rust.sh`: PASS 41 tests, fmt/clippy, 74 licenses, 38 denial probes,
-three supervision scenarios; `.sanctum/engine-admission-rust.log`. Additional final
-`cargo test --locked --offline -p sanctum-gateway --test engine_admission`: PASS
-cross-process Rust/Python ownership, reserved capacity, one-slot speech limit and
-symlink rejection. Linux `python tools/check.py`: PASS 133 tests/all source gates;
-`.sanctum/engine-admission-source.log`. No new dependencies or relaxed confinement.
-
-`python evals/engine_admission.py --config .sanctum/runtime-dispatch.json --output
-evals/results/engine-admission.json`: PASS real HTTP 503 + Retry-After under held
-shared leases: chat 9.659ms, embeddings 7.029ms, Knowledge embedding 14.920ms,
-Knowledge reranker 86.127ms, TTS 6.497ms, ASR 16.212ms. Interactive embeddings
-succeeded while the background permit was held; requests succeeded after release.
-This controlled permit saturation is NOT the sustained mixed-engine overload gate.
-
-Final real SDK command above: PASS 8/8, chat 0.3405s, TTFT 0.3923s, dimensions 1024.
-Browser speech command above: PASS 7/7, zero page errors, physical playback/mic
-unverified. Mixed dispatch rerun (`evals/results/admission-dispatch.json`) PASS: two streams + ingestion, health/models p95 27.078/19.919ms, first 503 12.811ms. Full real-engine crash/storm/resource-baseline tests remain S0-7;
-minutes of mixed-engine overload remain S0-8. Step 1 remains blocked.
+Earlier same-session narratives archived verbatim with SHA256
+`dc43f9838ed19ddd92550680be4536b83f4523736baa75b8c5df4f97319768ee`;
+all previous measurements and failures retained.
 
 ## Phase table (scope and historical evidence)
 

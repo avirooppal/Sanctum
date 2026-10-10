@@ -1,0 +1,137 @@
+{
+  "before": {
+    "gateway": {
+      "pid": 1144,
+      "fds": 12,
+      "sockets": 4,
+      "threads": 13,
+      "rss_kib": 7808
+    },
+    "sanctum-runtime:chat-tiny-q8": {
+      "pid": 1162,
+      "fds": 3,
+      "sockets": 0,
+      "threads": 1,
+      "rss_kib": 3968
+    },
+    "sanctum-runtime:embed-small-q8": {
+      "pid": 1163,
+      "fds": 3,
+      "sockets": 0,
+      "threads": 1,
+      "rss_kib": 4096
+    },
+    "llama-server:chat-tiny-q8": {
+      "pid": 1164,
+      "fds": 4,
+      "sockets": 1,
+      "threads": 18,
+      "rss_kib": 920932
+    },
+    "sanctum-runtime:rerank-small-q8": {
+      "pid": 1165,
+      "fds": 3,
+      "sockets": 0,
+      "threads": 1,
+      "rss_kib": 3968
+    },
+    "llama-server:embed-small-q8": {
+      "pid": 1166,
+      "fds": 4,
+      "sockets": 1,
+      "threads": 18,
+      "rss_kib": 924920
+    },
+    "llama-server:rerank-small-q8": {
+      "pid": 1167,
+      "fds": 4,
+      "sockets": 1,
+      "threads": 18,
+      "rss_kib": 920264
+    },
+    "sanctum-runtime:knowledge": {
+      "pid": 1237,
+      "fds": 3,
+      "sockets": 0,
+      "threads": 1,
+      "rss_kib": 3968
+    },
+    "python:knowledge": {
+      "pid": 1238,
+      "fds": 8,
+      "sockets": 0,
+      "threads": 1,
+      "rss_kib": 33180
+    }
+  },
+  "affected_stream_release_seconds": 0.04479556801379658,
+  "queued_request_status": 200,
+  "next_request_status": 200,
+  "recovery_seconds": 7.44597518601222,
+  "surviving_old_pid": false,
+  "after": {
+    "gateway": {
+      "pid": 1144,
+      "fds": 12,
+      "sockets": 4,
+      "threads": 13,
+      "rss_kib": 8192
+    },
+    "sanctum-runtime:chat-tiny-q8": {
+      "pid": 1162,
+      "fds": 3,
+      "sockets": 0,
+      "threads": 1,
+      "rss_kib": 4096
+    },
+    "sanctum-runtime:embed-small-q8": {
+      "pid": 1163,
+      "fds": 3,
+      "sockets": 0,
+      "threads": 1,
+      "rss_kib": 4096
+    },
+    "sanctum-runtime:rerank-small-q8": {
+      "pid": 1165,
+      "fds": 3,
+      "sockets": 0,
+      "threads": 1,
+      "rss_kib": 3968
+    },
+    "llama-server:embed-small-q8": {
+      "pid": 1166,
+      "fds": 4,
+      "sockets": 1,
+      "threads": 18,
+      "rss_kib": 928584
+    },
+    "llama-server:rerank-small-q8": {
+      "pid": 1167,
+      "fds": 4,
+      "sockets": 1,
+      "threads": 18,
+      "rss_kib": 920264
+    },
+    "sanctum-runtime:knowledge": {
+      "pid": 1237,
+      "fds": 3,
+      "sockets": 0,
+      "threads": 1,
+      "rss_kib": 3968
+    },
+    "python:knowledge": {
+      "pid": 1238,
+      "fds": 8,
+      "sockets": 0,
+      "threads": 1,
+      "rss_kib": 33180
+    },
+    "llama-server:chat-tiny-q8": {
+      "pid": 1444,
+      "fds": 4,
+      "sockets": 1,
+      "threads": 18,
+      "rss_kib": 916408
+    }
+  }
+}

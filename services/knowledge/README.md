@@ -55,3 +55,9 @@ The runtime worker receives the private engine-admission directory and shares
 nonblocking per-port leases with direct Rust requests. Nested Knowledge, meeting
 and ingestion inference uses background admission; exhaustion becomes HTTP 503
 with Retry-After. See `docs/contracts/engine-admission-v1.md` and ADR 0035.
+
+Embedding and cross-encoder calls use one input/pair per HTTP subrequest, shared
+execution leases and cancellation through the owned worker. Pair scores retain
+global indices and descending ranking; background batches yield to interactive
+admission. This prevents bulk result flow from delaying upstream cancellation.
+See ADR 0040 and `docs/contracts/bounded-embeddings-v1.md`.

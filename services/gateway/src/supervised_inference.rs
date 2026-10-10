@@ -29,10 +29,33 @@ struct Body {
     reader: BufReader<ContextIo<std::process::ChildStdout>>,
     _child: OwnedChild,
     _lease: std::fs::File,
+    _execution: std::fs::File,
+    context: Cancellation,
 }
 impl Read for Body {
     fn read(&mut self, buffer: &mut [u8]) -> std::io::Result<usize> {
-        self.reader.read(buffer)
+        let count = self.reader.read(buffer)?;
+        if count == 0 && !buffer.is_empty() {
+            let until = std::time::Instant::now() + std::time::Duration::from_millis(250);
+            loop {
+                self.context.check().map_err(|error| {
+                    std::io::Error::new(std::io::ErrorKind::ConnectionAborted, error)
+                })?;
+                if let Some(status) = self._child.try_wait()? {
+                    if !status.success() {
+                        return Err(std::io::Error::other("inference helper failed"));
+                    }
+                    break;
+                }
+                if std::time::Instant::now() >= until {
+                    return Err(std::io::Error::other(
+                        "inference helper did not acknowledge completion",
+                    ));
+                }
+                std::thread::sleep(std::time::Duration::from_millis(5));
+            }
+        }
+        Ok(count)
     }
 }
 #[derive(Deserialize)]
@@ -69,6 +92,11 @@ impl Engine for SupervisedEngine {
             if payload.len() > 1024 * 1024 {
                 return Err("inference request exceeds limit".into());
             }
+            let execution = sanctum_gateway::engine_admission::wait_execution(
+                &self.admission_root,
+                &self.admission_key,
+                context,
+            )?;
             let executable = std::env::current_exe()?;
             let mut child = OwnedChild(
                 Command::new(&executable)
@@ -112,6 +140,8 @@ impl Engine for SupervisedEngine {
                     reader,
                     _child: child,
                     _lease: lease,
+                    _execution: execution,
+                    context: context.clone(),
                 }),
             })
         };

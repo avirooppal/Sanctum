@@ -1,0 +1,116 @@
+[
+  {
+    "cycle": 0,
+    "seconds_including_job_setup": 4.48906966301729,
+    "evidence": "evals/results/repeated-shutdown-0.json",
+    "result": {
+      "active_lanes": [
+        1,
+        1,
+        2,
+        1
+      ],
+      "queued_lanes": [
+        0,
+        0,
+        1,
+        0
+      ],
+      "owned_pids": [
+        21236,
+        21237,
+        21238,
+        21239,
+        21240,
+        21241,
+        21301,
+        21302,
+        21318,
+        21319,
+        21325,
+        21328,
+        21387
+      ],
+      "slow_upload": true,
+      "shutdown_seconds": 1.198612393985968,
+      "listener_closed_seconds": 0.18440732097951695,
+      "surviving_pids": []
+    }
+  },
+  {
+    "cycle": 1,
+    "seconds_including_job_setup": 3.8993778110016137,
+    "evidence": "evals/results/repeated-shutdown-1.json",
+    "result": {
+      "active_lanes": [
+        1,
+        1,
+        2,
+        1
+      ],
+      "queued_lanes": [
+        0,
+        0,
+        1,
+        0
+      ],
+      "owned_pids": [
+        21411,
+        21412,
+        21413,
+        21414,
+        21415,
+        21416,
+        21476,
+        21477,
+        21493,
+        21494,
+        21500,
+        21503,
+        21557
+      ],
+      "slow_upload": true,
+      "shutdown_seconds": 0.8055262629932258,
+      "listener_closed_seconds": 0.18406818501534872,
+      "surviving_pids": []
+    }
+  },
+  {
+    "cycle": 2,
+    "seconds_including_job_setup": 4.463431775016943,
+    "evidence": "evals/results/repeated-shutdown-2.json",
+    "result": {
+      "active_lanes": [
+        1,
+        1,
+        2,
+        1
+      ],
+      "queued_lanes": [
+        0,
+        0,
+        1,
+        0
+      ],
+      "owned_pids": [
+        21582,
+        21583,
+        21584,
+        21585,
+        21586,
+        21587,
+        21645,
+        21646,
+        21662,
+        21663,
+        21668,
+        21672,
+        21736
+      ],
+      "slow_upload": true,
+      "shutdown_seconds": 0.8547713149746414,
+      "listener_closed_seconds": 0.17763588498928584,
+      "surviving_pids": []
+    }
+  }
+]

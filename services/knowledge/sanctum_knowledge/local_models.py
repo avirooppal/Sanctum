@@ -2,12 +2,14 @@
 
 from contextlib import nullcontext
 
-from .engine_admission import acquire
+from .engine_admission import acquire, wait_execution
 
 import json
 import math
 import re
 import urllib.request
+import urllib.error
+import time
 
 
 class NoRedirect(urllib.request.HTTPRedirectHandler):
@@ -37,36 +39,71 @@ class LocalModels:
             if self.admission_root is not None
             else nullcontext()
         )
-        with lease, self.opener.open(request, timeout=240) as response:
+        deadline = time.monotonic() + 120
+        execution = (
+            wait_execution(
+                self.admission_root, f"port-{port}", deadline, background=role != "reranker"
+            )
+            if self.admission_root is not None
+            else nullcontext()
+        )
+        with lease, execution:
+            if self.admission_root is not None:
+                while True:
+                    try:
+                        with self.opener.open(
+                            f"http://127.0.0.1:{port}/health", timeout=0.25
+                        ) as health:
+                            if health.status == 200:
+                                break
+                    except (OSError, urllib.error.URLError):
+                        pass
+                    if time.monotonic() >= deadline:
+                        raise TimeoutError("engine recovery deadline")
+                    time.sleep(0.02)
+            return self._send(request)
+
+    def _send(self, request):
+        with self.opener.open(request, timeout=240) as response:
             data = response.read(16 * 1024 * 1024 + 1)
             if len(data) > 16 * 1024 * 1024:
                 raise ValueError("oversized engine response")
             return json.loads(data)
 
     def embed(self, texts):
-        if not texts:
-            return []
-        data = self.call(
-            "embedding", "/v1/embeddings", {"input": texts, "encoding_format": "float"}
-        )
-        rows = sorted(data["data"], key=lambda row: row["index"])
-        if [row["index"] for row in rows] != list(range(len(texts))):
-            raise ValueError("embedding indices are incomplete or duplicated")
-        vectors = [row["embedding"] for row in rows]
-        if any(not vector or not all(math.isfinite(x) for x in vector) for vector in vectors):
-            raise ValueError("invalid embedding vector")
+        vectors = []
+        for offset in range(0, len(texts), 1):
+            batch = texts[offset : offset + 1]
+            data = self.call(
+                "embedding", "/v1/embeddings", {"input": batch, "encoding_format": "float"}
+            )
+            rows = sorted(data["data"], key=lambda row: row["index"])
+            if [row["index"] for row in rows] != list(range(len(batch))):
+                raise ValueError("embedding indices are incomplete or duplicated")
+            chunk = [row["embedding"] for row in rows]
+            if any(not vector or not all(math.isfinite(x) for x in vector) for vector in chunk):
+                raise ValueError("invalid embedding vector")
+            vectors.extend(chunk)
         return vectors
 
     def rank(self, query, texts):
-        if not texts:
-            return []
-        data = self.call(
-            "reranker", "/v1/rerank", {"query": query, "documents": texts, "top_n": len(texts)}
-        )
-        ranked = [(r["index"], r["relevance_score"]) for r in data["results"]]
-        if any(not math.isfinite(score) for _, score in ranked):
-            raise ValueError("invalid reranker score")
-        return ranked
+        ranked = []
+        for index, text in enumerate(texts):
+            data = self.call(
+                "reranker", "/v1/rerank", {"query": query, "documents": [text], "top_n": 1}
+            )
+            results = data["results"]
+            if (
+                len(results) != 1
+                or type(results[0].get("index")) is not int
+                or results[0]["index"] != 0
+            ):
+                raise ValueError("invalid reranker index")
+            score = results[0]["relevance_score"]
+            if not math.isfinite(score):
+                raise ValueError("invalid reranker score")
+            ranked.append((index, score))
+        return sorted(ranked, key=lambda pair: (-pair[1], pair[0]))
 
     def answer(self, query, hits):
         if not hits:

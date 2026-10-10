@@ -1,0 +1,6 @@
+{
+  "mode": "knowledge",
+  "cancel_method": "disconnect",
+  "samples": [],
+  "scope": "Gateway lane release and worker/recovery checks; NOT full leak/overload/compute-stop gate"
+}

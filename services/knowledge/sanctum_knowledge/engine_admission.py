@@ -1,8 +1,9 @@
 """Shared nonblocking engine leases; see engine-admission-v1.md."""
 
-from contextlib import contextmanager
+from contextlib import ExitStack, contextmanager
 import os
 import stat
+import time
 
 
 @contextmanager
@@ -38,3 +39,26 @@ def acquire(root, key, capacity, background):
         finally:
             os.close(descriptor)
     raise TimeoutError("engine busy; retry later")
+
+
+@contextmanager
+def wait_execution(root, key, deadline, background=False):
+    with ExitStack() as stack:
+        while True:
+            if time.monotonic() >= deadline:
+                raise TimeoutError("engine execution deadline")
+            if background:
+                try:
+                    with acquire(root, key, 2, False):
+                        pass
+                except TimeoutError:
+                    time.sleep(0.01)
+                    continue
+            try:
+                stack.enter_context(acquire(root, f"execute-{key}", 1, False))
+                break
+            except TimeoutError:
+                if time.monotonic() >= deadline:
+                    raise TimeoutError("engine execution deadline") from None
+                time.sleep(0.01)
+        yield

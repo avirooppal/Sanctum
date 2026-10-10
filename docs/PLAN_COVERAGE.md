@@ -209,3 +209,17 @@ in `services/gateway/tests/cancellable_io.rs`, `tools/verify_supervision.py`, an
 `evals/cancellation_release.py`. `evals/results/cancel-{chat,knowledge,asr,tts}.json`
 records 50 actual samples per engine. This does not establish response-throughput,
 engine-wide admission, full resource storm, active shutdown or mixed overload gates.
+
+## Step 0 hardening progress
+
+| Requirement | State | Current evidence |
+|---|---|---|
+| Shared context and owned process cleanup | Implemented for HTTP reference paths | cancellation-v1/process-supervision-v1 contracts; Rust tests and 38 denial probes |
+| Cancellable engine I/O | Partial | 50 samples each in cancel-{chat,knowledge,asr,tts}.json; gateway release measured, shared compute stop needs confirmation |
+| Response/upload throughput | Implemented reference | response-flow tests and response-backpressure.json actual embedding/SSE/upload probes |
+| Active/queued bounded shutdown | Partial | active-queued-shutdown.json 1.019047s, zero survivors; repeated-cycle gate pending |
+| Cross-caller engine limits | Implemented reference | engine_admission Rust/Python interoperability and engine-admission.json actual 503/Retry-After |
+| Real engine crash recovery | Implemented reference | engine-crash-storage.json: queued/next requests succeed, affected turn not saved, old PID absent and resources restored |
+| Resource storms | Implemented reference | engine-storms-verified.json and 500 per-engine/method samples; exact restoration and worst retained RSS +13248KiB |
+| Mixed-engine sustained overload | Not done | No qualifying minutes-long run yet |
+| Held authenticated WebSocket | PENDING Step 1a | No authenticated WebSocket implemented yet |

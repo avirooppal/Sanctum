@@ -157,8 +157,8 @@ Runtime HTTP: GET /healthz. Other contracts are foundation diagnostics.
 {
   "openapi": "3.1.0",
   "info": {
-    "title": "Sanctum runtime health",
-    "version": "0.2.0"
+    "title": "Sanctum runtime control",
+    "version": "0.3.0"
   },
   "paths": {
     "/healthz": {
@@ -219,6 +219,51 @@ Runtime HTTP: GET /healthz. Other contracts are foundation diagnostics.
           }
         }
       }
+    },
+    "/v1/cancel": {
+      "post": {
+        "operationId": "cancelOwnerEngineRequests",
+        "security": [
+          {
+            "localBearer": []
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Engine contexts targeted for explicit cancellation",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "required": [
+                    "cancelled",
+                    "reason"
+                  ],
+                  "additionalProperties": false,
+                  "properties": {
+                    "cancelled": {
+                      "type": "integer",
+                      "minimum": 0
+                    },
+                    "reason": {
+                      "const": "explicit"
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Invalid local owner token"
+          },
+          "405": {
+            "description": "POST required"
+          },
+          "503": {
+            "description": "Configured owner runtime unavailable"
+          }
+        }
+      }
     }
   },
   "components": {
@@ -250,6 +295,12 @@ Runtime HTTP: GET /healthz. Other contracts are foundation diagnostics.
             }
           }
         }
+      }
+    },
+    "securitySchemes": {
+      "localBearer": {
+        "type": "http",
+        "scheme": "bearer"
       }
     }
   }

@@ -1,0 +1,10 @@
+{
+  "nonstreaming": {
+    "status": 200,
+    "saved_turns": 1
+  },
+  "streaming": {
+    "status": 200,
+    "saved_turns": 1
+  }
+}

@@ -13,7 +13,26 @@ use std::{
     thread::{self, JoinHandle},
     time::{Duration, Instant},
 };
-type Contexts = Arc<Mutex<HashMap<SocketAddr, Cancellation>>>;
+struct ContextEntry {
+    context: Cancellation,
+    lane: usize,
+}
+type Contexts = Arc<Mutex<HashMap<SocketAddr, ContextEntry>>>;
+#[derive(Clone)]
+pub struct CancellationControl {
+    contexts: Contexts,
+}
+impl CancellationControl {
+    pub fn cancel_engines(&self) -> usize {
+        let contexts = self.contexts.lock().unwrap();
+        let mut targeted = 0;
+        for entry in contexts.values().filter(|entry| entry.lane > 0) {
+            entry.context.cancel(Reason::Explicit);
+            targeted += 1;
+        }
+        targeted
+    }
+}
 struct Registration {
     contexts: Contexts,
     peer: SocketAddr,
@@ -282,7 +301,13 @@ fn relay(
     }
     let mut engine = TcpStream::connect_timeout(&backend, Duration::from_secs(1))?;
     let peer = engine.local_addr()?;
-    contexts.lock().unwrap().insert(peer, context.clone());
+    contexts.lock().unwrap().insert(
+        peer,
+        ContextEntry {
+            context: context.clone(),
+            lane: head.lane,
+        },
+    );
     let _registration = Registration {
         contexts,
         peer,
@@ -441,7 +466,16 @@ impl Ingress {
         })
     }
     pub fn context(&self, peer: SocketAddr) -> Option<Cancellation> {
-        self.contexts.lock().unwrap().get(&peer).cloned()
+        self.contexts
+            .lock()
+            .unwrap()
+            .get(&peer)
+            .map(|entry| entry.context.clone())
+    }
+    pub fn cancellation_control(&self) -> CancellationControl {
+        CancellationControl {
+            contexts: self.contexts.clone(),
+        }
     }
     pub fn drain(&self, timeout: Duration) {
         let until = Instant::now() + timeout;
@@ -453,7 +487,7 @@ impl Ingress {
 impl Drop for Ingress {
     fn drop(&mut self) {
         for context in self.contexts.lock().unwrap().values() {
-            context.cancel(Reason::Shutdown);
+            context.context.cancel(Reason::Shutdown);
         }
         self.stop.store(true, Ordering::Relaxed);
         if let Some(task) = self.thread.take() {

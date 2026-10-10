@@ -58,3 +58,13 @@ Engine-wide limits use `docs/contracts/engine-admission-v1.md`. Run
 `python evals/engine_admission.py --config <runtime-config> --output <result.json>`
 against the ready runtime; it holds shared leases to verify actual overload replies
 and interactive reservation. Do not run this alongside latency benchmarks.
+
+Owner cancellation: authenticated `POST /v1/cancel` with no body targets forwarded
+voice/chat/background jobs and preserves control traffic. See `explicit-cancel-v1.md`.
+Resident model restart and completion verification: `resident-recovery-v1.md`.
+
+Run the full real engine storm harness against a ready reference runtime:
+`python evals/engine_storms.py --pid <pid> --token-file <state>/local.token
+--runtime-config <config> --output <result.json>`. It warms representative work,
+then tests floods and 50 disconnect/explicit cancellations per engine with real
+slot observation and resource comparisons. The >=180-second mixed-overload gate and real WebSocket criterion are separate.

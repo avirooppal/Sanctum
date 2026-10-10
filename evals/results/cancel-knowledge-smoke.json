@@ -1,0 +1,20 @@
+{
+  "mode": "knowledge",
+  "samples": [
+    {
+      "slot_release_seconds": 0.1453302449954208,
+      "owned_processes_at_cancel": 8
+    },
+    {
+      "slot_release_seconds": 0.19212116400012746,
+      "owned_processes_at_cancel": 6
+    },
+    {
+      "slot_release_seconds": 0.18445372499991208,
+      "owned_processes_at_cancel": 6
+    }
+  ],
+  "scope": "Gateway lane release and worker/recovery checks; NOT full leak/overload/compute-stop gate",
+  "p95_seconds": 0.19212116400012746,
+  "max_seconds": 0.19212116400012746
+}

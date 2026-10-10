@@ -140,3 +140,48 @@ class LocalModelTests(unittest.TestCase):
 
 if __name__ == "__main__":
     unittest.main()
+
+
+class EmbeddingBatchTests(unittest.TestCase):
+    def test_large_embedding_input_preserves_order_with_bounded_batches(self):
+        models = LocalModels({})
+        counts = []
+
+        def call(_role, _endpoint, payload):
+            texts = payload["input"]
+            counts.append(len(texts))
+            return {
+                "data": [
+                    {"index": index, "embedding": [float(text)]}
+                    for index, text in reversed(list(enumerate(texts)))
+                ]
+            }
+
+        models.call = call
+        self.assertEqual(
+            models.embed([str(index) for index in range(17)]),
+            [[float(index)] for index in range(17)],
+        )
+        self.assertEqual(counts, [1] * 17)
+
+
+class RerankBatchTests(unittest.TestCase):
+    def test_pair_scores_keep_global_indices_without_opaque_candidate_queues(self):
+        models = LocalModels({})
+        counts = []
+
+        def call(_role, _endpoint, payload):
+            documents = payload["documents"]
+            counts.append(len(documents))
+            return {
+                "results": [
+                    {"index": index, "relevance_score": float(text)}
+                    for index, text in enumerate(documents)
+                ]
+            }
+
+        models.call = call
+        self.assertEqual(
+            models.rank("query", ["0.7", "0.2", "0.9"]), [(2, 0.9), (0, 0.7), (1, 0.2)]
+        )
+        self.assertEqual(counts, [1, 1, 1])
