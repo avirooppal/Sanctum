@@ -80,8 +80,7 @@ impl Config {
                     std::thread::sleep(Duration::from_millis(10));
                 }
                 _ => {
-                    let _ = child.kill();
-                    let _ = child.wait();
+                    let _ = sanctum_gateway::supervision::terminate(&mut child);
                     break Err("speech worker deadline or process failure");
                 }
             }

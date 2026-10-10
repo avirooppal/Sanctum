@@ -63,7 +63,8 @@ impl Knowledge {
 }
 impl Drop for Knowledge {
     fn drop(&mut self) {
-        let _ = self.child.get_mut().kill();
-        let _ = self.child.get_mut().wait();
+        if let Err(error) = sanctum_gateway::supervision::terminate(self.child.get_mut()) {
+            eprintln!("knowledge cleanup failed: {error}");
+        }
     }
 }

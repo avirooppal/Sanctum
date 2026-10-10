@@ -31,3 +31,9 @@ evals/results/ingress-limits.json` and the same arguments with
 `evals/ingress_overload.py` (180 seconds). These tests use a real isolated listener
 without engines; they do not prove engine cancellation or full graceful shutdown.
 Browser speech/meeting harnesses accept `SANCTUM_BASE_URL` for the tested listener.
+
+`--engine-child` is a confined guardian that supervises a separate worker process
+group and reaps descendants. See `docs/contracts/process-supervision-v1.md`.
+The full Rust check includes `python tools/verify_supervision.py
+target/debug/sanctum-runtime`: actual TERM, gateway parent death and natural-exit
+fixtures. These are process-ownership tests, not real-engine cancellation latency.

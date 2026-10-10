@@ -10,7 +10,18 @@ fn run() -> Result<(), Box<dyn std::error::Error + Send + Sync>> {
     use std::{io::Write, net::TcpListener, process::Command};
     let args: Vec<String> = std::env::args().collect();
     if let Some(index) = args.iter().position(|a| a == "--engine-child") {
-        use std::os::unix::process::CommandExt;
+        use std::os::unix::process::ExitStatusExt;
+        // SAFETY: handlers only update the lock-free STOP atomic.
+        unsafe {
+            let mut action: libc::sigaction = std::mem::zeroed();
+            action.sa_sigaction = stop as *const () as usize;
+            libc::sigemptyset(&mut action.sa_mask);
+            if libc::sigaction(libc::SIGTERM, &action, std::ptr::null_mut()) != 0
+                || libc::sigaction(libc::SIGINT, &action, std::ptr::null_mut()) != 0
+            {
+                return Err(std::io::Error::last_os_error().into());
+            }
+        }
         // The engine must not outlive its supervisor, including abrupt crashes.
         let parent = unsafe { libc::getppid() };
         if parent == 1 || unsafe { libc::prctl(libc::PR_SET_PDEATHSIG, libc::SIGTERM) } != 0 {
@@ -21,11 +32,10 @@ fn run() -> Result<(), Box<dyn std::error::Error + Send + Sync>> {
         }
         runtime::checks()?;
         let executable = args.get(index + 1).ok_or("missing engine executable")?;
-        let error = Command::new(executable)
-            .args(&args[index + 2..])
-            .env_clear()
-            .exec();
-        return Err(error.into());
+        let mut command = Command::new(executable);
+        command.args(&args[index + 2..]).env_clear();
+        let status = sanctum_gateway::supervision::run(&mut command, &STOP)?;
+        std::process::exit(status.code().unwrap_or(128 + status.signal().unwrap_or(1)));
     }
     if args.iter().any(|a| a == "--probe-child") {
         println!("{}", serde_json::to_string(&runtime::checks()?)?);
@@ -56,6 +66,29 @@ fn run() -> Result<(), Box<dyn std::error::Error + Send + Sync>> {
     let address = listener.local_addr()?;
     runtime::enter()?;
     let checks = runtime::checks()?;
+    if args.iter().any(|a| a == "--supervision-probe") {
+        let mut command = Command::new(std::env::current_exe()?);
+        command.args([
+            "--engine-child",
+            "/usr/bin/python3",
+            "tools/supervision_fixture.py",
+        ]);
+        if args.iter().any(|a| a == "--natural") {
+            command.arg("--natural");
+        }
+        let mut child = command.env_clear().spawn()?;
+        loop {
+            if child.try_wait()?.is_some() {
+                break;
+            }
+            if STOP.load(std::sync::atomic::Ordering::Acquire) {
+                sanctum_gateway::supervision::terminate(&mut child)?;
+                break;
+            }
+            std::thread::sleep(std::time::Duration::from_millis(10));
+        }
+        return Ok(());
+    }
     if args.iter().any(|a| a == "--test-child") {
         let child = Command::new(std::env::current_exe()?)
             .arg("--probe-child")

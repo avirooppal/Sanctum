@@ -5,6 +5,8 @@ pub mod dispatch;
 #[cfg(all(target_os = "linux", target_arch = "x86_64"))]
 pub mod ingress;
 pub mod storage;
+#[cfg(all(target_os = "linux", target_arch = "x86_64"))]
+pub mod supervision;
 
 pub const MAX_FRAME: usize = 64 * 1024;
 

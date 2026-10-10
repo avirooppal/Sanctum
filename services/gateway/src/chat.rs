@@ -72,8 +72,9 @@ struct Engines(Vec<Child>);
 impl Drop for Engines {
     fn drop(&mut self) {
         for child in &mut self.0 {
-            let _ = child.kill();
-            let _ = child.wait();
+            if let Err(error) = sanctum_gateway::supervision::terminate(child) {
+                eprintln!("engine cleanup failed: {error}");
+            }
         }
     }
 }

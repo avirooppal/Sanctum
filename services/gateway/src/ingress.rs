@@ -132,7 +132,25 @@ fn reject(stream: &mut TcpStream, code: u16) {
     log_rejection(code);
     let _ = stream.set_write_timeout(Some(Duration::from_millis(100)));
     let _ = write!(stream, "HTTP/1.1 {code} Rejected\r\nContent-Length: 0\r\nConnection: close\r\nRetry-After: 1\r\n\r\n");
-    let _ = stream.shutdown(Shutdown::Both);
+    // Send FIN after the response, then briefly drain incoming body bytes. Closing
+    // a socket with unread input can send RST and erase the observable 503.
+    let _ = stream.shutdown(Shutdown::Write);
+    let _ = stream.set_read_timeout(Some(Duration::from_millis(5)));
+    let until = Instant::now() + Duration::from_millis(50);
+    let mut drained = 0;
+    let mut buffer = [0u8; 1024];
+    while Instant::now() < until && drained < 65536 {
+        match stream.read(&mut buffer) {
+            Ok(0) => break,
+            Ok(count) => drained += count,
+            Err(error)
+                if matches!(
+                    error.kind(),
+                    io::ErrorKind::WouldBlock | io::ErrorKind::TimedOut
+                ) => {}
+            Err(_) => break,
+        }
+    }
 }
 fn log_rejection(code: u16) {
     static REJECTED: AtomicUsize = AtomicUsize::new(0);
@@ -262,6 +280,8 @@ fn relay(
     engine.write_all(&body)?;
     drop(body);
     let mut bytes = [0u8; 16384];
+    let mut response_head = Vec::new();
+    let mut sent_head = false;
     let result = loop {
         if stop.load(Ordering::Relaxed) {
             context.cancel(Reason::Shutdown);
@@ -275,7 +295,46 @@ fn relay(
         match engine.read(&mut bytes) {
             Ok(0) => break Ok(()),
             Ok(count) => {
-                if let Err(error) = client.write_all(&bytes[..count]) {
+                let output = if sent_head {
+                    bytes[..count].to_vec()
+                } else {
+                    response_head.extend_from_slice(&bytes[..count]);
+                    let mut headers = [httparse::EMPTY_HEADER; 64];
+                    let mut response = httparse::Response::new(&mut headers);
+                    let length = match response.parse(&response_head) {
+                        Ok(httparse::Status::Complete(length)) if length <= 16384 => length,
+                        Ok(httparse::Status::Partial) if response_head.len() <= 16384 => continue,
+                        _ => {
+                            break Err(io::Error::new(
+                                io::ErrorKind::InvalidData,
+                                "invalid upstream response headers",
+                            ))
+                        }
+                    };
+                    let mut output = format!(
+                        "HTTP/1.1 {} {}\r\n",
+                        response.code.unwrap_or(502),
+                        response.reason.unwrap_or("Response")
+                    )
+                    .into_bytes();
+                    for header in response.headers.iter() {
+                        if header.name.eq_ignore_ascii_case("Connection")
+                            || header.name.eq_ignore_ascii_case("Keep-Alive")
+                        {
+                            continue;
+                        }
+                        output.extend_from_slice(header.name.as_bytes());
+                        output.extend_from_slice(b": ");
+                        output.extend_from_slice(header.value);
+                        output.extend_from_slice(b"\r\n");
+                    }
+                    output.extend_from_slice(b"Connection: close\r\n\r\n");
+                    output.extend_from_slice(&response_head[length..]);
+                    response_head.clear();
+                    sent_head = true;
+                    output
+                };
+                if let Err(error) = client.write_all(&output) {
                     break Err(error);
                 }
             }

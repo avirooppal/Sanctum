@@ -60,3 +60,45 @@ fn private_peer_context_observes_client_disconnect_and_is_removed() {
     assert_eq!(context.check(), Err(Reason::Disconnect));
     assert!(ingress.context(peer).is_none());
 }
+
+#[cfg(target_os = "linux")]
+#[test]
+fn advertises_close_before_a_pooled_client_can_reuse_the_connection() {
+    use sanctum_gateway::ingress::Ingress;
+    use std::{
+        io::{Read, Write},
+        net::{TcpListener, TcpStream},
+        time::Duration,
+    };
+    let backend = TcpListener::bind("127.0.0.1:0").unwrap();
+    let listener = TcpListener::bind("127.0.0.1:0").unwrap();
+    let address = listener.local_addr().unwrap();
+    let _ingress = Ingress::start(listener, backend.local_addr().unwrap()).unwrap();
+    let worker = std::thread::spawn(move || {
+        let (mut stream, _) = backend.accept().unwrap();
+        let mut head = Vec::new();
+        while !head.ends_with(b"\r\n\r\n") {
+            let mut byte = [0];
+            stream.read_exact(&mut byte).unwrap();
+            head.push(byte[0]);
+        }
+        stream
+            .write_all(b"HTTP/1.1 200 OK\r\nContent-Length: 2\r\n\r\n{}")
+            .unwrap();
+    });
+    let mut client = TcpStream::connect(address).unwrap();
+    client
+        .set_read_timeout(Some(Duration::from_secs(2)))
+        .unwrap();
+    client
+        .write_all(b"GET /healthz HTTP/1.1\r\nHost: local\r\n\r\n")
+        .unwrap();
+    let mut response = String::new();
+    client.read_to_string(&mut response).unwrap();
+    worker.join().unwrap();
+    assert!(
+        response.contains("Connection: close\r\n"),
+        "response must prohibit reuse before FIN arrives: {response}"
+    );
+    assert!(response.ends_with("\r\n\r\n{}"));
+}

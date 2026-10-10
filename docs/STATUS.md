@@ -1,11 +1,11 @@
 # Current state
 
-- Current step: Step 0, S0-1 cancellation contract; Step 1 blocked by the Step 0 gate.
-- Last locally/hosted green commit: `24c7874`; H1/H2 commit `0cc3859`.
-- Open blockers: cancellation and process supervision are unimplemented; full
+- Current step: Step 0, S0-2 owned supervision verification; Step 1 blocked by the Step 0 gate.
+- Last locally/hosted green commit: `55631ed`; H1/H2 commit `0cc3859`.
+- Open blockers: in-flight engine cancellation is unimplemented; full
   engine storm/shutdown/overload gates are unmeasured. Hosted CI blocker resolved.
-- Next three steps: implement the common cancellation contract/context; implement
-  owned process supervision; implement cancellable engine I/O.
+- Next three steps: finish supervision/transport regressions; implement cancellable
+  engine I/O; response throughput and active-engine shutdown gates.
 
 | Step 0 gate | Current result |
 |---|---|
@@ -55,8 +55,6 @@ platforms report results. No checks weakened. [Hosted run 38051917489](https://g
 completed with **all five jobs PASS**: source Linux, source Windows, source macOS,
 Rust foundation and web. Observed through the GitHub jobs API this session.
 
-## Phase table
-
 ## S0-1 context foundation slice — partial propagation
 
 Contract `cancellation-v1.md` and ADR 0031 precede implementation; tests first failed
@@ -88,6 +86,55 @@ two real chat streams plus ingestion; health/models p95 25.527/28.627ms; overloa
 ADR 0032 proposes resident speech workers for Step 1b/1c, with bounded confined IPC,
 health/restart/cancel behavior and proposed T0/T1 residency budgets. Budgets are
 design limits, not measured model footprints; implementation deferred as requested.
+
+## S0-2 guardian verification
+
+Confined guardians now own worker process groups, receive parent-death signals,
+escalate INT/TERM/KILL, and reap adopted descendants. First supervision test failed
+on missing module before implementation. `tools/verify_supervision.py` exercises
+real confined uncooperative processes. First harness prototype received the old
+runtime's health record instead of fixture PIDs and failed; added strict PID-schema
+validation and the confined fixture entry before rerunning. No failed run counted.
+
+Pre-transport-fix full Rust gate: 33 tests, 74 licenses, 38 denial probes PASS;
+Linux source gate 132 tests plus lint/format/types/licenses PASS. Confined fixtures
+TERM/parent-death/natural exit all left zero surviving PIDs in approximately
+0.57/0.54/0.57s. Final rerun numbers will be recorded before commit.
+
+Real SDK 8/8 and browser speech 7/7 passed. Repeated mixed-dispatch verification
+exposed two existing ingress close races: response lacked Connection: close (new
+socket test failed before fix); overload rejected with unread body could reset TCP
+before 503 was observed (Windows WinError 10053). Linux replay passed but does not
+excuse the Windows failure. Response headers now explicitly forbid reuse, and
+rejection half-closes then drains at most 50ms/64KiB. Reverification pending.
+No retries, test deletion, skips or threshold relaxations were added.
+
+Final `bash tools/check_rust.sh` PASS: 33 tests, 74 crate licenses, 38 kernel
+denial probes, plus three process-tree scenarios (now mandatory in this script).
+Log `.sanctum/supervision-close-rust.log`. `python tools/verify_supervision.py
+target/debug/sanctum-runtime` measured TERM **0.565680s**, parent-death **0.528694s**,
+natural exit **0.565877s**, zero surviving/zombie fixture PIDs in every scenario.
+Evidence: `evals/results/process-supervision.json`. This is not a real-engine storm.
+
+Final ingress scripts from ADR 0029: PASS 100 disconnects; header/body stalls
+**1.878264/1.876041s**, FDs 5->5, threads 13->13, RSS 5120->5376KiB; health-only
+shutdown 0.214233s. Three-minute upload flood: **3413 health samples**, p95
+**6.473ms**, max **15.953ms**; FDs 5->5, threads 13->13, RSS 5376->14392KiB,
+peak 14440KiB (within +16MiB). These remain no-engine ingress measurements.
+
+Five consecutive final `evals/gateway_dispatch.py` runs passed two chat streams
+plus ingestion and 12 overload attempts each. Across runs: health p95 <=25.686ms,
+models p95 <=27.717ms, first 503 <=15.646ms. All commands used the existing
+`--token-file <state>/local.token --output evals/results/supervision-dispatch-N.json`.
+**Remaining transport concern:** one Windows WinError 10053 recurred after bounded
+rejection draining and before these five passes. It was not counted as a pass or
+silently retried. Linux replay passed. Control-packet capture of the five passing
+runs found no RST; the intermittent Windows failure remains a full-storm investigation
+item. No claim that five successes establish the complete S0-7/S0-8 gate.
+
+Final real SDK: PASS 8/8, chat 0.3103s, TTFT 0.2827s, embeddings 1024. Browser speech
+on supervised workers: PASS 7/7, zero page errors; physical playback unverified.
+All real requests waited for runtime readiness. S0-3 onward remains incomplete.
 
 ## Phase table (scope and historical evidence)
 

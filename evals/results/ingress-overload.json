@@ -1,22 +1,22 @@
 {
   "duration_seconds": 180,
-  "health_samples": 3344,
-  "health_p95_seconds": 0.006386010994901881,
-  "health_max_seconds": 0.039269807981327176,
+  "health_samples": 3413,
+  "health_p95_seconds": 0.006472683016909286,
+  "health_max_seconds": 0.015953361988067627,
   "before": {
     "fds": 5,
     "threads": 13,
-    "rss_kib": 5120
+    "rss_kib": 5376
   },
   "after": {
     "fds": 5,
     "threads": 13,
-    "rss_kib": 13696
+    "rss_kib": 14392
   },
   "peak": {
-    "fds": 8,
-    "threads": 16,
-    "rss_kib": 13696
+    "fds": 12,
+    "threads": 20,
+    "rss_kib": 14440
   },
   "scope": "Ingress background-upload flood only; no engine jobs, voice or chat latency measurement"
 }

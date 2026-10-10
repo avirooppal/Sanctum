@@ -9,6 +9,13 @@ Limits: OS accept backlog 32; at most 24 admitted TCP connections, at most 8 par
 headers; header completion 2 seconds, 16 KiB, 64 fields. Lane connections:
 control 4, voice 2, chat 4, background 2. One HTTP request per connection, explicit
 Connection: close (HTTP keep-alive is disabled; idle keep-alive count is zero).
+The ingress must also explicitly emit Connection: close on the response. A real
+pooled-client regression exposed that tiny_http did not emit it from the forwarded
+request alone; clients could reuse the socket before FIN arrived. A socket test
+now requires the response header, with no retry or threshold relaxation.
+Overload response delivery also half-closes output and drains at most 50ms/64KiB
+of unread input, avoiding an immediate RST erasing the 503. The existing <1s
+rejection gate is unchanged; this cleanup is bounded within an admitted relay.
 HTTP framing ambiguity is rejected. Fixed-length body maxima: voice upload 8 MiB,
 TTS/chat 1 MiB, background 15 MiB, control zero. Transfer-Encoding requests are
 rejected with 411 in this first transport slice; this is a documented transport

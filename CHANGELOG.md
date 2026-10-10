@@ -1,5 +1,13 @@
 # Changelog
 
+## 2026-10-10 — Owned process guardians
+
+- Keep a confined guardian around each engine/worker, with a separate worker group,
+  parent-death handling, cooperative/terminate/kill escalation and descendant reaping.
+- Add real confined process-tree cleanup tests to the Rust gate.
+- Fix an ingress connection-reuse race by explicitly advertising Connection: close
+  in responses; retain strict limits and add a failing-then-passing socket regression.
+
 ## 2026-10-10 — Status housekeeping and cancellation context
 
 - Archive status history verbatim and surface current Step 0 gates; correct Phase 6

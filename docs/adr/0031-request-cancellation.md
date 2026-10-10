@@ -33,3 +33,8 @@ and RSS. No results or threshold exemptions are implied by this ADR.
 Implementation order: context and propagation, owned process supervision, polling
 engine I/O, response throughput, shutdown, shared engine admission, real storms
 and soak. Intermediate green slices do not satisfy the aggregate Step 0 gate.
+
+S0-2 implementation detail: the guardian gets up to 1250ms from its gateway owner
+to finish the above <=1000ms worker-tree escalation and acknowledgement. A guardian
+timeout is an error, never counted as cleanup success. This fits, and does not change,
+the predeclared 2s p95 request-release and 5s active-shutdown gates.
