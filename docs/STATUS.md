@@ -2,6 +2,39 @@
 
 ## Active autonomous mission — 2026-10-10
 
+### Latest slice: Phase 3 hosted TTS
+
+Last green commit: `6972cf8`. Optional `speech.tts` adds authenticated bounded
+`/v1/audio/speech`; context derives from the solo session. Same kernel-confined worker
+path as ASR; WAV/PCM responses are decoded with a strict type and size limit.
+Contract/test first: missing worker adapter and Rust decoder failed before implementation.
+
+Verification in this slice:
+- `uv run --offline --group dev --group knowledge python tools/check.py`: PASS,
+  123 passed + 1 Windows privilege skip; format, lint, typing, 26 Python and 145
+  frontend dependency licenses, 8 profile fixtures and generated docs passed.
+- WSL equivalent with `VIRTUAL_ENV` set and `PYTHONPATH` unset: PASS, 124 tests,
+  including the symlink case. First attempt selected the Windows venv; next attempt
+  found inherited Python 3.10 user packages (`cloudpickle`) through PYTHONPATH.
+  Neither gate was bypassed; explicit clean environment resolved both failures.
+- `cargo build --locked --offline -p sanctum-gateway --bin sanctum-runtime` and
+  `bash tools/check_rust.sh`: PASS, 21 Rust tests, 73 crate licenses,
+  22 bootstrap + 16 runtime/exec-child kernel denial probes.
+- Restarted real gateway on 127.0.0.1:8766 with optional TTS profile.
+  `python evals/sdk_tts.py --token-file <local.token> --model tts-flite-slt-reference
+  --voice tts-flite-slt-reference --output evals/results/speech-sdk-tts.json`: 8/8.
+  WAV and PCM matched; 3.31s audio. First request 36.655314s overlapped gateway
+  startup. This does NOT satisfy the voice SLO; physical playback UNVERIFIED.
+- `python evals/sdk_speech.py --token-file <local.token> --audio .sanctum/speech-smoke/jfk.wav
+  --model asr-parakeet-q4k-reference --output evals/results/speech-sdk-parakeet.json`:
+  8/8, first request 4.130616s. `python evals/sdk_chat.py --base-url
+  http://127.0.0.1:8766/v1 --token-file <local.token>`: 8/8, chat 0.3812s,
+  streaming TTFT 0.4572s, embeddings 1024 dimensions.
+
+No phase gate/tag: streaming speech, device playback, diarization and T1 corpus/SLO
+remain incomplete or UNVERIFIED. Next three steps: cancellable voice orchestration;
+browser audio UI; real voice-turn evaluation. Full mission coverage remains partial.
+
 ### Latest slice: Phase 3 real CPU TTS adapter
 
 Last green commit: `1c2fcd4`. Added opt-in Flite 2.2 TTSEngine, versioned TTS profile,

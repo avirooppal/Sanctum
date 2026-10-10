@@ -1,12 +1,10 @@
 # Speech service
 
-Phase 3 currently provides the versioned API and streaming event contracts, an
-engine-neutral Python pipeline, and a tested whisper.cpp file-ASR adapter. The adapter
-requires local executable/model files with SHA-256 values pinned in the speech profile.
-No engine binary, model weights, VAD, diarizer, TTS voice, network listener, or
-microphone integration is provisioned or started yet. Cloud processing is disabled by
-contract; service execution remains subject to the foundation's fail-closed runtime
-policy.
+Phase 3 provides authenticated file ASR and TTS through the confined Linux gateway,
+with interchangeable Whisper/Parakeet ASR, optional Silero VAD and Flite synthesis.
+Provision local executables and models with the registry's verified hashes before
+enabling these optional routes. Microphone integration, streaming recognition and
+diarization remain incomplete. Cloud processing is disabled.
 
 ## Contract and configuration
 
@@ -23,8 +21,7 @@ policy.
 - `services/speech/sanctum_speech/service.py`: validates upload requests against the
   OpenAPI contract, enforces the configured local profile, then composes decode,
   transcription, and response formatting. It also validates local TTS requests against
-  a configured profile/voice and packages engine audio as WAV or PCM. It is not yet
-  mounted on a network listener. Voice definitions must validate against the model
+  a configured profile/voice and packages engine audio as WAV or PCM. Voice definitions must validate against the model
   registry schema, including license, source, revision, and artifact hash.
 - `services/speech/sanctum_speech/realtime_session.py`: schema-validates authenticated
   session context and realtime events, buffers push-to-talk audio until commit, invokes
@@ -69,8 +66,24 @@ python evals/sdk_speech.py --base-url http://127.0.0.1:8766/v1 --token-file /abs
 ```
 
 Contract: `docs/contracts/speech-worker-v1.md`. Test modules: `test_multipart.py`,
-`test_worker.py` and Rust `speech::tests`. TTS and realtime HTTP/WebSocket
-hosting remain unavailable. A whole-file response is not streaming ASR or voice chat.
+`test_worker.py` and Rust `speech::tests`. Realtime WebSocket hosting remains
+unavailable. A whole-file response is not streaming ASR or voice chat.
+
+To enable authenticated `POST /v1/audio/speech`, add `tts` inside `speech`:
+
+```json
+{"tts":{"profile":"/absolute/tts-profile.json","model_id":"tts-flite-slt-reference"}}
+```
+
+The profile follows `tts-profile-v1.schema.json`. The SDK accepts `model`, `voice`,
+`input`, optional `speed` and `response_format` (`wav` or `pcm`). Gateway injects
+the solo context. Requests are capped at 64 KiB; generated audio at 1 MiB. PCM is
+mono signed 16-bit little-endian at 16 kHz for this reference voice. This is a local
+format subset, not full OpenAI audio-format compatibility. MP3 fails explicitly.
+
+```bash
+python evals/sdk_tts.py --token-file /absolute/local.token --model tts-flite-slt-reference --voice tts-flite-slt-reference --output evals/results/local-tts-sdk.json
+```
 
 ## Tests and evaluation
 

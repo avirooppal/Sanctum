@@ -252,7 +252,8 @@ impl Chat {
                 json!({"error":{"message":"Invalid local API token","type":"authentication_error"}}),
             );
         }
-        if path == "/v1/audio/transcriptions" {
+        if path == "/v1/audio/transcriptions" || path == "/v1/audio/speech" {
+            let synthesize = path == "/v1/audio/speech";
             if request.method() != &tiny_http::Method::Post {
                 return respond(request, 405, json!({"error":{"message":"POST required"}}));
             }
@@ -270,11 +271,12 @@ impl Chat {
                 .map(|h| h.value.as_str().to_owned())
                 .unwrap_or_default();
             let mut bytes = Vec::new();
+            let limit = if synthesize { 65536 } else { 8 * 1024 * 1024 };
             request
                 .as_reader()
-                .take(8 * 1024 * 1024 + 1)
+                .take(limit + 1)
                 .read_to_end(&mut bytes)?;
-            if bytes.len() > 8 * 1024 * 1024 {
+            if bytes.len() as u64 > limit {
                 return respond(
                     request,
                     413,
@@ -282,10 +284,27 @@ impl Chat {
                 );
             }
             let trace = random_id()?[..32].to_owned();
-            return match speech.call(content_type, bytes, trace) {
+            return match speech.call(content_type, bytes, trace, synthesize) {
                 Ok(value) if value["ok"] == true => {
                     let kind = value["content_type"].as_str().unwrap_or("");
-                    if kind == "application/json" {
+                    if synthesize {
+                        match crate::speech::decode_audio(&value) {
+                            Ok(audio) => {
+                                request.respond(
+                                    tiny_http::Response::from_data(audio).with_header(
+                                        tiny_http::Header::from_bytes("Content-Type", kind)
+                                            .unwrap(),
+                                    ),
+                                )?;
+                                Ok(())
+                            }
+                            Err(_) => respond(
+                                request,
+                                503,
+                                json!({"error":{"message":"Invalid local audio response"}}),
+                            ),
+                        }
+                    } else if kind == "application/json" {
                         respond(request, 200, value["result"].clone())
                     } else if crate::speech::is_text_response(kind) && value["result"].is_string() {
                         request.respond(
@@ -313,7 +332,7 @@ impl Chat {
                     respond(
                         request,
                         status,
-                        json!({"error":{"message":"Local transcription failed"}}),
+                        json!({"error":{"message":"Local speech request failed"}}),
                     )
                 }
                 Err(_) => respond(

@@ -1,5 +1,11 @@
 # Changelog
 
+## 2026-10-10 — Authenticated local TTS API
+
+- Host opt-in WAV/PCM synthesis under inherited kernel containment with bounded
+  requests, responses and execution deadlines. Reject forged workspace context.
+- Verify real official-SDK TTS, transcription and chat requests (8 checks each).
+
 ## 2026-10-10 — Real permissive CPU TTS reference
 
 - Added a pinned Flite TTSEngine/profile with registered built-in voices, bounded

@@ -1,5 +1,6 @@
 import importlib.util
 import json
+import base64
 from pathlib import Path
 import subprocess
 import sys
@@ -12,9 +13,28 @@ spec = importlib.util.spec_from_file_location("speech_worker", ROOT / "services/
 worker = importlib.util.module_from_spec(spec)
 spec.loader.exec_module(worker)
 from test_multipart import body  # noqa: E402
+from sanctum_speech.types import AudioBuffer  # noqa: E402
 
 
 class SpeechWorkerTests(unittest.TestCase):
+    def test_synthesis_preserves_audio_and_rejects_forged_context(self):
+        voice = "tts-flite-slt-reference"
+        profile = {"id": voice, "voices": {voice: "slt"}}
+        request = {"model": voice, "voice": voice, "input": "hello", "response_format": "pcm"}
+        with patch.object(worker.FliteTTS, "from_profile") as factory:
+            factory.return_value.synthesize.return_value = AudioBuffer(b"\1\0" * 1600, 16000)
+            result = worker.process_synthesis(
+                profile, voice, "application/json", "a" * 32, json.dumps(request).encode()
+            )
+            self.assertEqual(base64.b64decode(result["audio_base64"]), b"\1\0" * 1600)
+            factory.reset_mock()
+            request["context"] = {"workspace_id": "other"}
+            with self.assertRaises(ValueError):
+                worker.process_synthesis(
+                    profile, voice, "application/json", "a" * 32, json.dumps(request).encode()
+                )
+            factory.assert_not_called()
+
     def test_direct_host_startup_refuses_before_processing(self):
         result = subprocess.run(
             [sys.executable, str(ROOT / "services/speech/worker.py")],

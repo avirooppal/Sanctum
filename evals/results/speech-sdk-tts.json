@@ -1,0 +1,20 @@
+{
+  "suite": "real-openai-sdk-tts",
+  "passed": [
+    "wav",
+    "pcm",
+    "unknown_model",
+    "unknown_voice",
+    "workspace_spoof",
+    "unsupported_format",
+    "body_limit",
+    "authentication"
+  ],
+  "model": "tts-flite-slt-reference",
+  "voice": "tts-flite-slt-reference",
+  "audio_seconds": 3.31,
+  "first_request_seconds": 36.65531381199253,
+  "wav_sha256": "446c51b8be3f5c42b814cfdfe09cec57d36bc1fddefebd0941bda4091df6fd55",
+  "physical_playback_verified": false,
+  "voice_turn_slo_verified": false
+}

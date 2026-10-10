@@ -920,7 +920,9 @@ Runtime HTTP: GET /healthz. Other contracts are foundation diagnostics.
             "default": 1
           },
           "context": {
-            "$ref": "#/components/schemas/RequestContext"
+            "$ref": "#/components/schemas/RequestContext",
+            "readOnly": true,
+            "description": "Injected by the authenticated gateway; internal service calls require context."
           }
         },
         "additionalProperties": false

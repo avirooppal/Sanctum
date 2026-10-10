@@ -104,7 +104,7 @@
           "voice": { "type": "string", "description": "Configured voice ID with a verified permissive license." },
           "response_format": { "enum": ["wav", "pcm"], "default": "wav" },
           "speed": { "type": "number", "minimum": 0.5, "maximum": 2, "default": 1 },
-          "context": { "$ref": "#/components/schemas/RequestContext" }
+            "context": { "$ref": "#/components/schemas/RequestContext", "readOnly": true, "description": "Injected by the authenticated gateway; internal service calls require context." }
         },
         "additionalProperties": false
       }

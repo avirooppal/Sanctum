@@ -28,4 +28,14 @@ The backend uses explicit `vad.engine=none` whole-file mode or additive `silero.
 profiles with registry/model/binary verification (ADR 0022). Whole-file mode does not
 label all audio as detected speech. Both reject diarization without an engine.
 VAD has a 20s timeout; the 150s worker deadline covers VAD and all ASR segments.
-Only JSON/text/verbose_json/VTT responses are implemented. TTS/realtime stay disabled.
+Transcription supports JSON/text/verbose_json/VTT. Realtime stays disabled.
+
+Additive synthesis operation: optional `speech.tts: {profile, model_id}` in runtime
+configuration. Gateway accepts authenticated `POST /v1/audio/speech` JSON at most
+64 KiB and supplies the same private solo context. Worker argv may append `synthesize`
+(omission preserves transcription behavior). The selected v1 TTS profile pins the
+executable and registered built-in voices. Unknown model/voice/fields fail closed.
+Output is `{ok:true, content_type:audio/wav|audio/pcm, audio_base64}` internally;
+gateway validates the type, decodes and returns raw audio. Output audio is capped at
+1 MiB and worker JSON at 2 MiB. The existing process deadlines still apply.
+This is bounded file synthesis, not streaming device playback. Realtime stays disabled.

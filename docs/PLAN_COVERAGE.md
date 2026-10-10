@@ -1,5 +1,11 @@
 # Plan coverage audit
 
+Hosted TTS update (2026-10-10): authenticated `/v1/audio/speech` now returns real
+WAV/PCM through the confined worker (`services/gateway/src/speech.rs`,
+`services/speech/worker.py`). `evals/results/speech-sdk-tts.json` records 8/8 SDK
+checks. This implements file synthesis only; streaming output, physical playback,
+barge-in and end-to-end voice SLO remain Partial/UNVERIFIED.
+
 Audit begun 2026-10-10 at `303d16e`; this is a live audit, not final acceptance.
 
 Latest evidence superseding pending cells below: Linux recovered; Rust containment
