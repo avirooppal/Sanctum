@@ -1,0 +1,52 @@
+/** Real browser meeting capture. Arguments: PLAYWRIGHT_PACKAGE TOKEN_FILE. Gateway: localhost:8768. */
+import {createRequire} from 'node:module';
+import {readFileSync, writeFileSync} from 'node:fs';
+import assert from 'node:assert/strict';
+const [packagePath, tokenFile] = process.argv.slice(2);
+const {chromium} = createRequire(import.meta.url)(packagePath);
+const browser = await chromium.launch({headless:true});
+const page = await browser.newPage();
+const errors = [];
+page.on('pageerror', error => errors.push(error.message));
+const passed = [];
+try {
+  await page.goto('http://127.0.0.1:8768');
+  await page.getByLabel('Local access key').fill(readFileSync(tokenFile,'utf8').trim());
+  await page.getByRole('button',{name:'Open workspace',exact:true}).click();
+  await page.getByText('Meeting notes',{exact:true}).click();
+  const name = `Browser meeting ${Date.now()}`;
+  await page.getByLabel('New workspace name').fill(name);
+  await page.getByRole('button',{name:'Create workspace',exact:true}).click();
+  await page.waitForFunction(name => document.querySelector('select[aria-label="Meeting workspace"]')?.selectedOptions[0]?.textContent===name,name);
+  passed.push('workspace_created_and_selected');
+  await page.getByLabel('Meeting title',{exact:true}).fill('Kennedy public-domain speech');
+  const transcript = JSON.parse(readFileSync('evals/results/speech-sdk-parakeet.json','utf8')).transcript;
+  await page.getByLabel('Reviewed transcript',{exact:true}).fill(transcript);
+  await page.getByRole('button',{name:'Save meeting',exact:true}).click();
+  await page.getByRole('region',{name:'Saved meeting'}).waitFor({timeout:310000});
+  const notes = await page.getByRole('region',{name:'Saved meeting'}).innerText();
+  assert(notes.includes('Document:'));
+  passed.push('real_local_summary_saved_and_displayed');
+  assert.equal(await page.getByLabel('Reviewed transcript',{exact:true}).inputValue(),transcript);
+  passed.push('reviewed_transcript_preserved');
+  await page.getByLabel('Reviewed transcript',{exact:true}).fill('x'.repeat(6001));
+  await page.getByRole('button',{name:'Save meeting',exact:true}).click();
+  await page.getByRole('alert').filter({hasText:'1–6000'}).waitFor();
+  passed.push('oversized_transcript_rejected_visibly');
+  await page.getByLabel('Reviewed transcript',{exact:true}).fill(transcript);
+  await page.getByRole('button',{name:'Save meeting',exact:true}).click();
+  await page.getByRole('region',{name:'Saved meeting'}).waitFor({timeout:310000});
+  await page.screenshot({path:'.sanctum/browser-meeting.png',fullPage:true});
+  await page.setViewportSize({width:390,height:844});
+  assert(await page.evaluate(()=>document.documentElement.scrollWidth<=innerWidth));
+  passed.push('mobile_no_horizontal_overflow');
+  assert.deepEqual(errors,[]);
+  const result={suite:'real-browser-meeting',passed,page_errors:errors,semantic_quality_verified:false};
+  writeFileSync('evals/results/meeting-browser.json',JSON.stringify(result,null,2)+'\n');
+  console.log(JSON.stringify(result,null,2));
+} catch(error) {
+  await page.screenshot({path:'.sanctum/browser-meeting-failure.png',fullPage:true});
+  console.error(await page.locator('main').innerText());
+  console.error(errors);
+  throw error;
+} finally {await browser.close();}

@@ -1,5 +1,10 @@
 # Plan coverage audit
 
+Browser meeting update: `apps/web/src/MeetingPanel.tsx` offers explicit reviewed
+transcript save and plain-text generated notes. `meeting-browser.json` records
+5/5 real browser checks. This supersedes the missing meeting UI note below;
+diarization and semantic summary quality remain incomplete.
+
 Meeting update (2026-10-10): `services/speech/sanctum_speech/hosted_meeting.py`
 connects the authenticated workspace meetings route to local inference and ACL
 ingestion. `evals/results/speech-meeting.json`: 7/7 real API checks, 2.053715s

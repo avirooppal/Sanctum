@@ -1,5 +1,11 @@
 # Changelog
 
+## 2026-10-10 — Browser meeting capture
+
+- Add workspace selection/creation and explicit reviewed transcript save to Knowledge.
+- Display generated summaries/action evidence as plain text; preserve drafts on errors.
+- Verify 12 web tests and five real browser integration checks.
+
 ## 2026-10-10 — Hosted local meeting notes
 
 - Add authenticated meeting transcript summarization into Knowledge, with workspace

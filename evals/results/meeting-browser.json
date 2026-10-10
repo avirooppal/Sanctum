@@ -1,0 +1,12 @@
+{
+  "suite": "real-browser-meeting",
+  "passed": [
+    "workspace_created_and_selected",
+    "real_local_summary_saved_and_displayed",
+    "reviewed_transcript_preserved",
+    "oversized_transcript_rejected_visibly",
+    "mobile_no_horizontal_overflow"
+  ],
+  "page_errors": [],
+  "semantic_quality_verified": false
+}

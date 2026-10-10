@@ -1,5 +1,10 @@
 # Speech service
 
+The web Meeting notes panel now supports workspace creation/selection, reviewed
+transcript capture and plain-text notes. Run `node evals/browser_meeting.mjs
+<playwright-package> <token-file>` against the configured port 8768 runtime for
+browser integration. The fixture uses an actual ASR transcript, not diarization.
+
 Hosted meeting notes: `POST /v1/workspaces/{id}/meetings` accepts `meeting_id`,
 `title`, `transcript` (up to 6000 characters), optional `readers` and `data_class`
 (default restricted). Requires local bearer auth and configured Knowledge worker.
