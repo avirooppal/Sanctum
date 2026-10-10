@@ -156,6 +156,18 @@ class LocalModels:
     def judge(self, query, hits, answer):
         if not hits:
             return {"supported": answer.strip() == "I could not find supporting evidence."}
+        requested_ids = re.findall(r"\b[A-Z0-9]{12,}\b", query.upper())
+        evidence_text = "\n".join(
+            f"{hit.get('parent_text') or ''}\n{hit['text']}" for hit in hits
+        ).upper()
+        missing_ids = [
+            identifier for identifier in requested_ids if identifier not in evidence_text
+        ]
+        if missing_ids:
+            return {
+                "supported": False,
+                "rationale": "Retrieved evidence does not identify the exact entity asked about.",
+            }
         evidence = [
             {
                 "context": h.get("parent_text") or h["text"],

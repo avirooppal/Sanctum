@@ -92,6 +92,20 @@ class LocalModelTests(unittest.TestCase):
             True,
         )
 
+    def test_judge_rejects_evidence_for_a_different_exact_identifier(self):
+        models = LocalModels({})
+        models.call = lambda *_args: self.fail("decoy entity must fail before model judging")
+        hit = {
+            "text": "Assigned sealant: variant 2, reference 102.",
+            "parent_text": "Batch token ID00000000000000000000\nAssigned sealant: variant 2, reference 102.",
+        }
+        result = models.judge(
+            "For batch token IDA17F0385D8B44A108DDB, what is the assigned sealant?",
+            [hit],
+            "Assigned sealant: variant 2, reference 102.",
+        )
+        self.assertFalse(result["supported"])
+
     def test_exact_identifier_in_heading_filters_near_duplicate_evidence(self):
         models = LocalModels({})
         models.call = lambda *_args: self.fail("exact identifier path should be extractive")

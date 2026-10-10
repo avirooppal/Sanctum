@@ -59,14 +59,17 @@ expected-answer inclusion 1.00, and passed unsupported-query abstention. Artifac
 `evals/results/knowledge-needle-v6-retrieval-only.json` and
 `evals/results/knowledge-needle-v6-grounded-answers.json`.
 
-The v6 hybrid local faithfulness judge completed with 30/30 answers supported (1.00),
-in `evals/results/knowledge-needle-v6-judge.json`. A matched vector-only answer replay
-measured exact citation support and expected-answer inclusion of 0.60, versus 1.00 for
-hybrid, and passed unsupported-query abstention. The vector-only local judge also
-supported 30/30 (1.00), matching hybrid. This satisfies the no-regression criterion
-under the configured judge for this synthetic suite; it does not replace human review.
-Artifacts are `evals/results/knowledge-needle-v6-vector-grounded-answers.json` and
-`evals/results/knowledge-needle-v6-vector-judge.json`.
+The v6 hybrid and vector-only local judge runs initially both reported 30/30 supported,
+but reviewer spot-check found three sampled vector-only answers cited values for
+different identifiers. The judge therefore produced false positives on this challenge.
+Codex performed the four-case hybrid review at the user's direction; all four were
+supported by the exact source and quote. See
+`evals/results/knowledge-needle-v6-human-review.md` and ADR 0013. Calibrated judge
+reruns are required before treating the no-regression criterion as measured.
+Vector-only answer metrics remain 0.60 exact citation support and expected-answer
+inclusion versus hybrid 1.00, with abstention passing. Artifacts are
+`evals/results/knowledge-needle-v6-vector-grounded-answers.json` and the original
+uncalibrated `evals/results/knowledge-needle-v6-vector-judge.json`.
 Human spot-check remains pending in
 `evals/results/knowledge-needle-v6-human-review.md`. Keep Phase 3 gated until these
 checks complete and the human review has been recorded.

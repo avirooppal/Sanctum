@@ -3,6 +3,7 @@
 import argparse
 import hashlib
 import json
+import re
 import time
 import urllib.request
 from pathlib import Path
@@ -17,6 +18,7 @@ def main():
     parser.add_argument("--answers", type=Path, required=True)
     parser.add_argument("--workspace-id", required=True)
     parser.add_argument("--mode", choices=("hybrid", "vector"), default="hybrid")
+    parser.add_argument("--run-tag", default="")
     parser.add_argument("--resume", action="store_true")
     parser.add_argument("--base-url", default="http://127.0.0.1:8765")
     args = parser.parse_args()
@@ -37,7 +39,11 @@ def main():
     digest = hashlib.sha256(args.dataset.read_bytes()).hexdigest()
     if answers.get("dataset_sha256") != digest or not answers.get("complete"):
         raise ValueError("answer result must be complete and match the dataset hash")
+    if args.run_tag and not re.fullmatch(r"[A-Za-z0-9_-]{1,32}", args.run_tag):
+        raise ValueError("run tag must be 1-32 letters, digits, underscores, or hyphens")
     suffix = "-judge" if args.mode == "hybrid" else "-vector-judge"
+    if args.run_tag:
+        suffix += f"-{args.run_tag}"
     output = ROOT / f"evals/results/{dataset['suite']}{suffix}.json"
     if answers.get("retrieval_mode", "hybrid") != args.mode:
         raise ValueError("answer result retrieval mode does not match requested judge mode")
