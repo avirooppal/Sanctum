@@ -30,6 +30,10 @@ def render():
     lines.extend(
         ["## Speech WebSocket messages", "", "```json", json.dumps(stream, indent=2), "```", ""]
     )
+    speech_eval = json.loads((ROOT / "docs/contracts/speech-eval.schema.json").read_text())
+    lines.extend(
+        ["## Speech evaluation input", "", "```json", json.dumps(speech_eval, indent=2), "```", ""]
+    )
     return "\n".join(lines)
 
 

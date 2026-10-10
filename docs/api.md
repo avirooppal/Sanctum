@@ -1163,3 +1163,109 @@ Runtime HTTP: GET /healthz. Other contracts are foundation diagnostics.
   }
 }
 ```
+
+## Speech evaluation input
+
+```json
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://sanctum.local/contracts/speech-eval.schema.json",
+  "title": "Sanctum speech evaluation input",
+  "description": "Locally collected, hash-identified labeled examples and measured voice-loop outcomes.",
+  "type": "object",
+  "required": [
+    "suite",
+    "dataset_license",
+    "profile_id",
+    "hardware_tier",
+    "records"
+  ],
+  "properties": {
+    "suite": {
+      "type": "string",
+      "minLength": 1
+    },
+    "dataset_license": {
+      "type": "string",
+      "minLength": 1
+    },
+    "profile_id": {
+      "type": "string",
+      "minLength": 1
+    },
+    "hardware_tier": {
+      "enum": [
+        "T0",
+        "T1",
+        "T2"
+      ]
+    },
+    "wer_target": {
+      "type": "number",
+      "minimum": 0,
+      "maximum": 1,
+      "description": "Optional explicit acceptance threshold. Omit to report WER without claiming a pass."
+    },
+    "records": {
+      "type": "array",
+      "minItems": 1,
+      "items": {
+        "$ref": "#/$defs/record"
+      }
+    }
+  },
+  "additionalProperties": false,
+  "$defs": {
+    "record": {
+      "type": "object",
+      "required": [
+        "id",
+        "audio_sha256",
+        "language",
+        "reference",
+        "hypothesis",
+        "audio_seconds",
+        "asr_seconds",
+        "first_audio_ms",
+        "barge_in_success"
+      ],
+      "properties": {
+        "id": {
+          "type": "string",
+          "minLength": 1
+        },
+        "audio_sha256": {
+          "type": "string",
+          "pattern": "^[0-9a-f]{64}$"
+        },
+        "language": {
+          "type": "string",
+          "minLength": 2
+        },
+        "reference": {
+          "type": "string"
+        },
+        "hypothesis": {
+          "type": "string"
+        },
+        "audio_seconds": {
+          "type": "number",
+          "exclusiveMinimum": 0
+        },
+        "asr_seconds": {
+          "type": "number",
+          "exclusiveMinimum": 0
+        },
+        "first_audio_ms": {
+          "type": "number",
+          "minimum": 0
+        },
+        "barge_in_success": {
+          "type": "boolean"
+        }
+      },
+      "additionalProperties": false
+    }
+  }
+}
+```

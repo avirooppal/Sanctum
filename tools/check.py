@@ -18,6 +18,7 @@ def main():
         ["-m", "unittest", "discover", "-s", "tools/tests", "-v"],
         ["-m", "unittest", "discover", "-s", "services/knowledge/tests", "-v"],
         ["-m", "unittest", "discover", "-s", "services/speech/tests", "-v"],
+        ["-m", "unittest", "discover", "-s", "evals/tests", "-v"],
         ["tools/license_scan.py"],
         ["tools/web_license_scan.py"],
         ["evals/run.py"],

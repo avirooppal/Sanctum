@@ -256,3 +256,13 @@ VAD segmentation, transcription timing, and barge-in cancellation. Risks: no num
 WER threshold is stated in plan.md, this machine is T0 rather than T1, audio hardware is
 unavailable, and each weight/voice has its own license. No T1 performance result will be
 claimed here.
+## Phase 3 implementation update
+
+Phase 3 contract/evaluation slice is implemented: OpenAPI and realtime event contracts,
+Python engine protocols, VAD-to-ASR composition with optional diarization, and an
+offline WER/voice-loop evaluator. Speech contracts and evaluator are wired into the
+normal repository check. No audio backend, model weights, voice, listener, or hardware
+benchmark has been added. T1 latency and WER remain unverified; Phase 3 is in progress.
+ADR 0015 records the missing numeric WER target; ADR 0016 defines p95 aggregation for
+the plan's <800 ms first-audio SLO. Candidate licensing review is documented in
+`docs/PHASE-3-PLAN.md`; no model is pinned as a default.

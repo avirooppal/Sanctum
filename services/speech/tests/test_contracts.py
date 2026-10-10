@@ -14,6 +14,7 @@ class SpeechContractTests(unittest.TestCase):
     def setUpClass(cls):
         cls.openapi = json.loads((ROOT / "docs/contracts/speech.openapi.json").read_text())
         cls.stream = json.loads((ROOT / "docs/contracts/speech-stream.schema.json").read_text())
+        cls.evaluation = json.loads((ROOT / "docs/contracts/speech-eval.schema.json").read_text())
 
     def test_openai_audio_routes_are_local_and_authenticated(self):
         self.assertIn("localBearer", self.openapi["components"]["securitySchemes"])
@@ -86,6 +87,35 @@ class SpeechContractTests(unittest.TestCase):
         ):
             with self.assertRaises(ValidationError):
                 Draft202012Validator(self.stream).validate(invalid)
+
+    def test_speech_evaluation_requires_audio_hash_license_and_hardware_tier(self):
+        Draft202012Validator.check_schema(self.evaluation)
+        record = {
+            "id": "sample-1",
+            "audio_sha256": "c" * 64,
+            "language": "en-US",
+            "reference": "hello",
+            "hypothesis": "hello",
+            "audio_seconds": 1,
+            "asr_seconds": 0.4,
+            "first_audio_ms": 500,
+            "barge_in_success": True,
+        }
+        payload = {
+            "suite": "speech-fixture-v1",
+            "dataset_license": "CC0-1.0",
+            "profile_id": "cpu-test",
+            "hardware_tier": "T0",
+            "records": [record],
+        }
+        Draft202012Validator(self.evaluation).validate(payload)
+        for invalid in (
+            {**payload, "records": [{**record, "audio_sha256": "unknown"}]},
+            {**payload, "hardware_tier": "unknown"},
+            {**payload, "untracked": True},
+        ):
+            with self.assertRaises(ValidationError):
+                Draft202012Validator(self.evaluation).validate(invalid)
 
 
 if __name__ == "__main__":
