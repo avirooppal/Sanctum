@@ -1,0 +1,252 @@
+{
+  "suite": "knowledge-needle-v5",
+  "description": "Frozen opaque-key lookup with 30 targets and 450 near-duplicate register passages; synthetic retrieval stress test.",
+  "documents": [
+    {
+      "name": "register-targets.md",
+      "content": "# Target register\n\n## Ledger key QX-417\nAssigned sealant: sodium silicate.\n\n## Ledger key LM-082\nAssigned coolant: propylene glycol.\n\n## Ledger key VR-639\nAssigned filter grade: nominal 14 micron.\n\n## Ledger key BK-251\nAssigned lubricant: ISO VG 46.\n\n## Ledger key TN-908\nAssigned insulation: mica sheet.\n\n## Ledger key CP-134\nAssigned fastener: M8 by 30 millimeter.\n\n## Ledger key WY-763\nAssigned calibration gas: zero air.\n\n## Ledger key DF-520\nAssigned gasket material: EPDM.\n\n## Ledger key HS-396\nAssigned storage bin: blue compartment 7.\n\n## Ledger key JG-641\nAssigned inspection interval: 120 operating hours.\n\n## Ledger key RA-275\nAssigned cable jacket: halogen-free LSZH.\n\n## Ledger key NE-834\nAssigned bearing grease: NLGI grade 1.\n\n## Ledger key UX-109\nAssigned valve position: normally closed.\n\n## Ledger key MG-582\nAssigned panel label: PANEL C17.\n\n## Ledger key ZB-346\nAssigned solvent: isopropyl alcohol.\n\n## Ledger key FK-715\nAssigned belt profile: SPZ 1000.\n\n## Ledger key PD-028\nAssigned sensor range: minus 20 to 80 Celsius.\n\n## Ledger key CY-954\nAssigned connector key: keyway D.\n\n## Ledger key AL-683\nAssigned packing type: spiral wound graphite.\n\n## Ledger key RW-192\nAssigned relay rating: 24 volt DC.\n\n## Ledger key ET-847\nAssigned shelf location: aisle K shelf 12.\n\n## Ledger key OS-361\nAssigned test pressure: 1.6 megapascal.\n\n## Ledger key GI-530\nAssigned paint code: RAL 5014.\n\n## Ledger key MK-276\nAssigned fuse rating: 2.5 ampere slow-blow.\n\n## Ledger key FV-619\nAssigned pump rotation: clockwise from drive end.\n\n## Ledger key BD-403\nAssigned seal size: 32 by 47 by 7 millimeter.\n\n## Ledger key KC-785\nAssigned battery chemistry: lithium iron phosphate.\n\n## Ledger key SP-240\nAssigned thread pitch: 1.25 millimeter.\n\n## Ledger key YH-671\nAssigned trigger threshold: 0.35 bar.\n\n## Ledger key NW-058\nAssigned replacement element: cartridge XR-14.\n"
+    },
+    {
+      "name": "register-decoys-01.md",
+      "content": "# Matched decoy register 1\n\n## Ledger key R000-113\nAssigned sealant: potassium silicate.\n\n## Ledger key R001-150\nAssigned sealant: variant 2, reference 102.\n\n## Ledger key R002-187\nAssigned sealant: variant 3, reference 103.\n\n## Ledger key R003-224\nAssigned sealant: variant 4, reference 104.\n\n## Ledger key R004-261\nAssigned sealant: variant 5, reference 105.\n\n## Ledger key R005-298\nAssigned sealant: variant 6, reference 106.\n\n## Ledger key R006-335\nAssigned sealant: variant 7, reference 107.\n\n## Ledger key R007-372\nAssigned sealant: variant 8, reference 108.\n\n## Ledger key R008-409\nAssigned sealant: variant 9, reference 109.\n\n## Ledger key R009-446\nAssigned sealant: variant 10, reference 110.\n\n## Ledger key R010-483\nAssigned sealant: variant 11, reference 111.\n\n## Ledger key R011-520\nAssigned sealant: variant 12, reference 112.\n\n## Ledger key R012-557\nAssigned sealant: variant 13, reference 113.\n\n## Ledger key R013-594\nAssigned sealant: variant 14, reference 114.\n\n## Ledger key R014-631\nAssigned sealant: variant 15, reference 115.\n\n## Ledger key R015-668\nAssigned coolant: ethylene glycol.\n\n## Ledger key R016-705\nAssigned coolant: variant 2, reference 117.\n\n## Ledger key R017-742\nAssigned coolant: variant 3, reference 118.\n\n## Ledger key R018-779\nAssigned coolant: variant 4, reference 119.\n\n## Ledger key R019-816\nAssigned coolant: variant 5, reference 120.\n\n## Ledger key R020-853\nAssigned coolant: variant 6, reference 121.\n\n## Ledger key R021-890\nAssigned coolant: variant 7, reference 122.\n\n## Ledger key R022-927\nAssigned coolant: variant 8, reference 123.\n\n## Ledger key R023-964\nAssigned coolant: variant 9, reference 124.\n\n## Ledger key R024-004\nAssigned coolant: variant 10, reference 125.\n\n## Ledger key R025-041\nAssigned coolant: variant 11, reference 126.\n\n## Ledger key R026-078\nAssigned coolant: variant 12, reference 127.\n\n## Ledger key R027-115\nAssigned coolant: variant 13, reference 128.\n\n## Ledger key R028-152\nAssigned coolant: variant 14, reference 129.\n\n## Ledger key R029-189\nAssigned coolant: variant 15, reference 130.\n"
+    },
+    {
+      "name": "register-decoys-02.md",
+      "content": "# Matched decoy register 2\n\n## Ledger key R030-226\nAssigned filter grade: nominal 40 micron.\n\n## Ledger key R031-263\nAssigned filter grade: variant 2, reference 132.\n\n## Ledger key R032-300\nAssigned filter grade: variant 3, reference 133.\n\n## Ledger key R033-337\nAssigned filter grade: variant 4, reference 134.\n\n## Ledger key R034-374\nAssigned filter grade: variant 5, reference 135.\n\n## Ledger key R035-411\nAssigned filter grade: variant 6, reference 136.\n\n## Ledger key R036-448\nAssigned filter grade: variant 7, reference 137.\n\n## Ledger key R037-485\nAssigned filter grade: variant 8, reference 138.\n\n## Ledger key R038-522\nAssigned filter grade: variant 9, reference 139.\n\n## Ledger key R039-559\nAssigned filter grade: variant 10, reference 140.\n\n## Ledger key R040-596\nAssigned filter grade: variant 11, reference 141.\n\n## Ledger key R041-633\nAssigned filter grade: variant 12, reference 142.\n\n## Ledger key R042-670\nAssigned filter grade: variant 13, reference 143.\n\n## Ledger key R043-707\nAssigned filter grade: variant 14, reference 144.\n\n## Ledger key R044-744\nAssigned filter grade: variant 15, reference 145.\n\n## Ledger key R045-781\nAssigned lubricant: ISO VG 68.\n\n## Ledger key R046-818\nAssigned lubricant: variant 2, reference 147.\n\n## Ledger key R047-855\nAssigned lubricant: variant 3, reference 148.\n\n## Ledger key R048-892\nAssigned lubricant: variant 4, reference 149.\n\n## Ledger key R049-929\nAssigned lubricant: variant 5, reference 150.\n\n## Ledger key R050-966\nAssigned lubricant: variant 6, reference 151.\n\n## Ledger key R051-006\nAssigned lubricant: variant 7, reference 152.\n\n## Ledger key R052-043\nAssigned lubricant: variant 8, reference 153.\n\n## Ledger key R053-080\nAssigned lubricant: variant 9, reference 154.\n\n## Ledger key R054-117\nAssigned lubricant: variant 10, reference 155.\n\n## Ledger key R055-154\nAssigned lubricant: variant 11, reference 156.\n\n## Ledger key R056-191\nAssigned lubricant: variant 12, reference 157.\n\n## Ledger key R057-228\nAssigned lubricant: variant 13, reference 158.\n\n## Ledger key R058-265\nAssigned lubricant: variant 14, reference 159.\n\n## Ledger key R059-302\nAssigned lubricant: variant 15, reference 160.\n"
+    },
+    {
+      "name": "register-decoys-03.md",
+      "content": "# Matched decoy register 3\n\n## Ledger key R060-339\nAssigned insulation: ceramic fiber.\n\n## Ledger key R061-376\nAssigned insulation: variant 2, reference 162.\n\n## Ledger key R062-413\nAssigned insulation: variant 3, reference 163.\n\n## Ledger key R063-450\nAssigned insulation: variant 4, reference 164.\n\n## Ledger key R064-487\nAssigned insulation: variant 5, reference 165.\n\n## Ledger key R065-524\nAssigned insulation: variant 6, reference 166.\n\n## Ledger key R066-561\nAssigned insulation: variant 7, reference 167.\n\n## Ledger key R067-598\nAssigned insulation: variant 8, reference 168.\n\n## Ledger key R068-635\nAssigned insulation: variant 9, reference 169.\n\n## Ledger key R069-672\nAssigned insulation: variant 10, reference 170.\n\n## Ledger key R070-709\nAssigned insulation: variant 11, reference 171.\n\n## Ledger key R071-746\nAssigned insulation: variant 12, reference 172.\n\n## Ledger key R072-783\nAssigned insulation: variant 13, reference 173.\n\n## Ledger key R073-820\nAssigned insulation: variant 14, reference 174.\n\n## Ledger key R074-857\nAssigned insulation: variant 15, reference 175.\n\n## Ledger key R075-894\nAssigned fastener: M8 by 40 millimeter.\n\n## Ledger key R076-931\nAssigned fastener: variant 2, reference 177.\n\n## Ledger key R077-968\nAssigned fastener: variant 3, reference 178.\n\n## Ledger key R078-008\nAssigned fastener: variant 4, reference 179.\n\n## Ledger key R079-045\nAssigned fastener: variant 5, reference 180.\n\n## Ledger key R080-082\nAssigned fastener: variant 6, reference 181.\n\n## Ledger key R081-119\nAssigned fastener: variant 7, reference 182.\n\n## Ledger key R082-156\nAssigned fastener: variant 8, reference 183.\n\n## Ledger key R083-193\nAssigned fastener: variant 9, reference 184.\n\n## Ledger key R084-230\nAssigned fastener: variant 10, reference 185.\n\n## Ledger key R085-267\nAssigned fastener: variant 11, reference 186.\n\n## Ledger key R086-304\nAssigned fastener: variant 12, reference 187.\n\n## Ledger key R087-341\nAssigned fastener: variant 13, reference 188.\n\n## Ledger key R088-378\nAssigned fastener: variant 14, reference 189.\n\n## Ledger key R089-415\nAssigned fastener: variant 15, reference 190.\n"
+    },
+    {
+      "name": "register-decoys-04.md",
+      "content": "# Matched decoy register 4\n\n## Ledger key R090-452\nAssigned calibration gas: span air.\n\n## Ledger key R091-489\nAssigned calibration gas: variant 2, reference 192.\n\n## Ledger key R092-526\nAssigned calibration gas: variant 3, reference 193.\n\n## Ledger key R093-563\nAssigned calibration gas: variant 4, reference 194.\n\n## Ledger key R094-600\nAssigned calibration gas: variant 5, reference 195.\n\n## Ledger key R095-637\nAssigned calibration gas: variant 6, reference 196.\n\n## Ledger key R096-674\nAssigned calibration gas: variant 7, reference 197.\n\n## Ledger key R097-711\nAssigned calibration gas: variant 8, reference 198.\n\n## Ledger key R098-748\nAssigned calibration gas: variant 9, reference 199.\n\n## Ledger key R099-785\nAssigned calibration gas: variant 10, reference 200.\n\n## Ledger key R100-822\nAssigned calibration gas: variant 11, reference 201.\n\n## Ledger key R101-859\nAssigned calibration gas: variant 12, reference 202.\n\n## Ledger key R102-896\nAssigned calibration gas: variant 13, reference 203.\n\n## Ledger key R103-933\nAssigned calibration gas: variant 14, reference 204.\n\n## Ledger key R104-970\nAssigned calibration gas: variant 15, reference 205.\n\n## Ledger key R105-010\nAssigned gasket material: FKM.\n\n## Ledger key R106-047\nAssigned gasket material: variant 2, reference 207.\n\n## Ledger key R107-084\nAssigned gasket material: variant 3, reference 208.\n\n## Ledger key R108-121\nAssigned gasket material: variant 4, reference 209.\n\n## Ledger key R109-158\nAssigned gasket material: variant 5, reference 210.\n\n## Ledger key R110-195\nAssigned gasket material: variant 6, reference 211.\n\n## Ledger key R111-232\nAssigned gasket material: variant 7, reference 212.\n\n## Ledger key R112-269\nAssigned gasket material: variant 8, reference 213.\n\n## Ledger key R113-306\nAssigned gasket material: variant 9, reference 214.\n\n## Ledger key R114-343\nAssigned gasket material: variant 10, reference 215.\n\n## Ledger key R115-380\nAssigned gasket material: variant 11, reference 216.\n\n## Ledger key R116-417\nAssigned gasket material: variant 12, reference 217.\n\n## Ledger key R117-454\nAssigned gasket material: variant 13, reference 218.\n\n## Ledger key R118-491\nAssigned gasket material: variant 14, reference 219.\n\n## Ledger key R119-528\nAssigned gasket material: variant 15, reference 220.\n"
+    },
+    {
+      "name": "register-decoys-05.md",
+      "content": "# Matched decoy register 5\n\n## Ledger key R120-565\nAssigned storage bin: blue compartment 9.\n\n## Ledger key R121-602\nAssigned storage bin: variant 2, reference 222.\n\n## Ledger key R122-639\nAssigned storage bin: variant 3, reference 223.\n\n## Ledger key R123-676\nAssigned storage bin: variant 4, reference 224.\n\n## Ledger key R124-713\nAssigned storage bin: variant 5, reference 225.\n\n## Ledger key R125-750\nAssigned storage bin: variant 6, reference 226.\n\n## Ledger key R126-787\nAssigned storage bin: variant 7, reference 227.\n\n## Ledger key R127-824\nAssigned storage bin: variant 8, reference 228.\n\n## Ledger key R128-861\nAssigned storage bin: variant 9, reference 229.\n\n## Ledger key R129-898\nAssigned storage bin: variant 10, reference 230.\n\n## Ledger key R130-935\nAssigned storage bin: variant 11, reference 231.\n\n## Ledger key R131-972\nAssigned storage bin: variant 12, reference 232.\n\n## Ledger key R132-012\nAssigned storage bin: variant 13, reference 233.\n\n## Ledger key R133-049\nAssigned storage bin: variant 14, reference 234.\n\n## Ledger key R134-086\nAssigned storage bin: variant 15, reference 235.\n\n## Ledger key R135-123\nAssigned inspection interval: 210 operating hours.\n\n## Ledger key R136-160\nAssigned inspection interval: variant 2, reference 237.\n\n## Ledger key R137-197\nAssigned inspection interval: variant 3, reference 238.\n\n## Ledger key R138-234\nAssigned inspection interval: variant 4, reference 239.\n\n## Ledger key R139-271\nAssigned inspection interval: variant 5, reference 240.\n\n## Ledger key R140-308\nAssigned inspection interval: variant 6, reference 241.\n\n## Ledger key R141-345\nAssigned inspection interval: variant 7, reference 242.\n\n## Ledger key R142-382\nAssigned inspection interval: variant 8, reference 243.\n\n## Ledger key R143-419\nAssigned inspection interval: variant 9, reference 244.\n\n## Ledger key R144-456\nAssigned inspection interval: variant 10, reference 245.\n\n## Ledger key R145-493\nAssigned inspection interval: variant 11, reference 246.\n\n## Ledger key R146-530\nAssigned inspection interval: variant 12, reference 247.\n\n## Ledger key R147-567\nAssigned inspection interval: variant 13, reference 248.\n\n## Ledger key R148-604\nAssigned inspection interval: variant 14, reference 249.\n\n## Ledger key R149-641\nAssigned inspection interval: variant 15, reference 250.\n"
+    },
+    {
+      "name": "register-decoys-06.md",
+      "content": "# Matched decoy register 6\n\n## Ledger key R150-678\nAssigned cable jacket: PVC.\n\n## Ledger key R151-715\nAssigned cable jacket: variant 2, reference 252.\n\n## Ledger key R152-752\nAssigned cable jacket: variant 3, reference 253.\n\n## Ledger key R153-789\nAssigned cable jacket: variant 4, reference 254.\n\n## Ledger key R154-826\nAssigned cable jacket: variant 5, reference 255.\n\n## Ledger key R155-863\nAssigned cable jacket: variant 6, reference 256.\n\n## Ledger key R156-900\nAssigned cable jacket: variant 7, reference 257.\n\n## Ledger key R157-937\nAssigned cable jacket: variant 8, reference 258.\n\n## Ledger key R158-974\nAssigned cable jacket: variant 9, reference 259.\n\n## Ledger key R159-014\nAssigned cable jacket: variant 10, reference 260.\n\n## Ledger key R160-051\nAssigned cable jacket: variant 11, reference 261.\n\n## Ledger key R161-088\nAssigned cable jacket: variant 12, reference 262.\n\n## Ledger key R162-125\nAssigned cable jacket: variant 13, reference 263.\n\n## Ledger key R163-162\nAssigned cable jacket: variant 14, reference 264.\n\n## Ledger key R164-199\nAssigned cable jacket: variant 15, reference 265.\n\n## Ledger key R165-236\nAssigned bearing grease: NLGI grade 2.\n\n## Ledger key R166-273\nAssigned bearing grease: variant 2, reference 267.\n\n## Ledger key R167-310\nAssigned bearing grease: variant 3, reference 268.\n\n## Ledger key R168-347\nAssigned bearing grease: variant 4, reference 269.\n\n## Ledger key R169-384\nAssigned bearing grease: variant 5, reference 270.\n\n## Ledger key R170-421\nAssigned bearing grease: variant 6, reference 271.\n\n## Ledger key R171-458\nAssigned bearing grease: variant 7, reference 272.\n\n## Ledger key R172-495\nAssigned bearing grease: variant 8, reference 273.\n\n## Ledger key R173-532\nAssigned bearing grease: variant 9, reference 274.\n\n## Ledger key R174-569\nAssigned bearing grease: variant 10, reference 275.\n\n## Ledger key R175-606\nAssigned bearing grease: variant 11, reference 276.\n\n## Ledger key R176-643\nAssigned bearing grease: variant 12, reference 277.\n\n## Ledger key R177-680\nAssigned bearing grease: variant 13, reference 278.\n\n## Ledger key R178-717\nAssigned bearing grease: variant 14, reference 279.\n\n## Ledger key R179-754\nAssigned bearing grease: variant 15, reference 280.\n"
+    },
+    {
+      "name": "register-decoys-07.md",
+      "content": "# Matched decoy register 7\n\n## Ledger key R180-791\nAssigned valve position: normally open.\n\n## Ledger key R181-828\nAssigned valve position: variant 2, reference 282.\n\n## Ledger key R182-865\nAssigned valve position: variant 3, reference 283.\n\n## Ledger key R183-902\nAssigned valve position: variant 4, reference 284.\n\n## Ledger key R184-939\nAssigned valve position: variant 5, reference 285.\n\n## Ledger key R185-976\nAssigned valve position: variant 6, reference 286.\n\n## Ledger key R186-016\nAssigned valve position: variant 7, reference 287.\n\n## Ledger key R187-053\nAssigned valve position: variant 8, reference 288.\n\n## Ledger key R188-090\nAssigned valve position: variant 9, reference 289.\n\n## Ledger key R189-127\nAssigned valve position: variant 10, reference 290.\n\n## Ledger key R190-164\nAssigned valve position: variant 11, reference 291.\n\n## Ledger key R191-201\nAssigned valve position: variant 12, reference 292.\n\n## Ledger key R192-238\nAssigned valve position: variant 13, reference 293.\n\n## Ledger key R193-275\nAssigned valve position: variant 14, reference 294.\n\n## Ledger key R194-312\nAssigned valve position: variant 15, reference 295.\n\n## Ledger key R195-349\nAssigned panel label: PANEL C71.\n\n## Ledger key R196-386\nAssigned panel label: variant 2, reference 297.\n\n## Ledger key R197-423\nAssigned panel label: variant 3, reference 298.\n\n## Ledger key R198-460\nAssigned panel label: variant 4, reference 299.\n\n## Ledger key R199-497\nAssigned panel label: variant 5, reference 300.\n\n## Ledger key R200-534\nAssigned panel label: variant 6, reference 301.\n\n## Ledger key R201-571\nAssigned panel label: variant 7, reference 302.\n\n## Ledger key R202-608\nAssigned panel label: variant 8, reference 303.\n\n## Ledger key R203-645\nAssigned panel label: variant 9, reference 304.\n\n## Ledger key R204-682\nAssigned panel label: variant 10, reference 305.\n\n## Ledger key R205-719\nAssigned panel label: variant 11, reference 306.\n\n## Ledger key R206-756\nAssigned panel label: variant 12, reference 307.\n\n## Ledger key R207-793\nAssigned panel label: variant 13, reference 308.\n\n## Ledger key R208-830\nAssigned panel label: variant 14, reference 309.\n\n## Ledger key R209-867\nAssigned panel label: variant 15, reference 310.\n"
+    },
+    {
+      "name": "register-decoys-08.md",
+      "content": "# Matched decoy register 8\n\n## Ledger key R210-904\nAssigned solvent: ethyl alcohol.\n\n## Ledger key R211-941\nAssigned solvent: variant 2, reference 312.\n\n## Ledger key R212-978\nAssigned solvent: variant 3, reference 313.\n\n## Ledger key R213-018\nAssigned solvent: variant 4, reference 314.\n\n## Ledger key R214-055\nAssigned solvent: variant 5, reference 315.\n\n## Ledger key R215-092\nAssigned solvent: variant 6, reference 316.\n\n## Ledger key R216-129\nAssigned solvent: variant 7, reference 317.\n\n## Ledger key R217-166\nAssigned solvent: variant 8, reference 318.\n\n## Ledger key R218-203\nAssigned solvent: variant 9, reference 319.\n\n## Ledger key R219-240\nAssigned solvent: variant 10, reference 320.\n\n## Ledger key R220-277\nAssigned solvent: variant 11, reference 321.\n\n## Ledger key R221-314\nAssigned solvent: variant 12, reference 322.\n\n## Ledger key R222-351\nAssigned solvent: variant 13, reference 323.\n\n## Ledger key R223-388\nAssigned solvent: variant 14, reference 324.\n\n## Ledger key R224-425\nAssigned solvent: variant 15, reference 325.\n\n## Ledger key R225-462\nAssigned belt profile: SPA 1000.\n\n## Ledger key R226-499\nAssigned belt profile: variant 2, reference 327.\n\n## Ledger key R227-536\nAssigned belt profile: variant 3, reference 328.\n\n## Ledger key R228-573\nAssigned belt profile: variant 4, reference 329.\n\n## Ledger key R229-610\nAssigned belt profile: variant 5, reference 330.\n\n## Ledger key R230-647\nAssigned belt profile: variant 6, reference 331.\n\n## Ledger key R231-684\nAssigned belt profile: variant 7, reference 332.\n\n## Ledger key R232-721\nAssigned belt profile: variant 8, reference 333.\n\n## Ledger key R233-758\nAssigned belt profile: variant 9, reference 334.\n\n## Ledger key R234-795\nAssigned belt profile: variant 10, reference 335.\n\n## Ledger key R235-832\nAssigned belt profile: variant 11, reference 336.\n\n## Ledger key R236-869\nAssigned belt profile: variant 12, reference 337.\n\n## Ledger key R237-906\nAssigned belt profile: variant 13, reference 338.\n\n## Ledger key R238-943\nAssigned belt profile: variant 14, reference 339.\n\n## Ledger key R239-980\nAssigned belt profile: variant 15, reference 340.\n"
+    },
+    {
+      "name": "register-decoys-09.md",
+      "content": "# Matched decoy register 9\n\n## Ledger key R240-020\nAssigned sensor range: minus 40 to 80 Celsius.\n\n## Ledger key R241-057\nAssigned sensor range: variant 2, reference 342.\n\n## Ledger key R242-094\nAssigned sensor range: variant 3, reference 343.\n\n## Ledger key R243-131\nAssigned sensor range: variant 4, reference 344.\n\n## Ledger key R244-168\nAssigned sensor range: variant 5, reference 345.\n\n## Ledger key R245-205\nAssigned sensor range: variant 6, reference 346.\n\n## Ledger key R246-242\nAssigned sensor range: variant 7, reference 347.\n\n## Ledger key R247-279\nAssigned sensor range: variant 8, reference 348.\n\n## Ledger key R248-316\nAssigned sensor range: variant 9, reference 349.\n\n## Ledger key R249-353\nAssigned sensor range: variant 10, reference 350.\n\n## Ledger key R250-390\nAssigned sensor range: variant 11, reference 351.\n\n## Ledger key R251-427\nAssigned sensor range: variant 12, reference 352.\n\n## Ledger key R252-464\nAssigned sensor range: variant 13, reference 353.\n\n## Ledger key R253-501\nAssigned sensor range: variant 14, reference 354.\n\n## Ledger key R254-538\nAssigned sensor range: variant 15, reference 355.\n\n## Ledger key R255-575\nAssigned connector key: keyway B.\n\n## Ledger key R256-612\nAssigned connector key: variant 2, reference 357.\n\n## Ledger key R257-649\nAssigned connector key: variant 3, reference 358.\n\n## Ledger key R258-686\nAssigned connector key: variant 4, reference 359.\n\n## Ledger key R259-723\nAssigned connector key: variant 5, reference 360.\n\n## Ledger key R260-760\nAssigned connector key: variant 6, reference 361.\n\n## Ledger key R261-797\nAssigned connector key: variant 7, reference 362.\n\n## Ledger key R262-834\nAssigned connector key: variant 8, reference 363.\n\n## Ledger key R263-871\nAssigned connector key: variant 9, reference 364.\n\n## Ledger key R264-908\nAssigned connector key: variant 10, reference 365.\n\n## Ledger key R265-945\nAssigned connector key: variant 11, reference 366.\n\n## Ledger key R266-982\nAssigned connector key: variant 12, reference 367.\n\n## Ledger key R267-022\nAssigned connector key: variant 13, reference 368.\n\n## Ledger key R268-059\nAssigned connector key: variant 14, reference 369.\n\n## Ledger key R269-096\nAssigned connector key: variant 15, reference 370.\n"
+    },
+    {
+      "name": "register-decoys-10.md",
+      "content": "# Matched decoy register 10\n\n## Ledger key R270-133\nAssigned packing type: spiral wound PTFE.\n\n## Ledger key R271-170\nAssigned packing type: variant 2, reference 372.\n\n## Ledger key R272-207\nAssigned packing type: variant 3, reference 373.\n\n## Ledger key R273-244\nAssigned packing type: variant 4, reference 374.\n\n## Ledger key R274-281\nAssigned packing type: variant 5, reference 375.\n\n## Ledger key R275-318\nAssigned packing type: variant 6, reference 376.\n\n## Ledger key R276-355\nAssigned packing type: variant 7, reference 377.\n\n## Ledger key R277-392\nAssigned packing type: variant 8, reference 378.\n\n## Ledger key R278-429\nAssigned packing type: variant 9, reference 379.\n\n## Ledger key R279-466\nAssigned packing type: variant 10, reference 380.\n\n## Ledger key R280-503\nAssigned packing type: variant 11, reference 381.\n\n## Ledger key R281-540\nAssigned packing type: variant 12, reference 382.\n\n## Ledger key R282-577\nAssigned packing type: variant 13, reference 383.\n\n## Ledger key R283-614\nAssigned packing type: variant 14, reference 384.\n\n## Ledger key R284-651\nAssigned packing type: variant 15, reference 385.\n\n## Ledger key R285-688\nAssigned relay rating: 24 volt AC.\n\n## Ledger key R286-725\nAssigned relay rating: variant 2, reference 387.\n\n## Ledger key R287-762\nAssigned relay rating: variant 3, reference 388.\n\n## Ledger key R288-799\nAssigned relay rating: variant 4, reference 389.\n\n## Ledger key R289-836\nAssigned relay rating: variant 5, reference 390.\n\n## Ledger key R290-873\nAssigned relay rating: variant 6, reference 391.\n\n## Ledger key R291-910\nAssigned relay rating: variant 7, reference 392.\n\n## Ledger key R292-947\nAssigned relay rating: variant 8, reference 393.\n\n## Ledger key R293-984\nAssigned relay rating: variant 9, reference 394.\n\n## Ledger key R294-024\nAssigned relay rating: variant 10, reference 395.\n\n## Ledger key R295-061\nAssigned relay rating: variant 11, reference 396.\n\n## Ledger key R296-098\nAssigned relay rating: variant 12, reference 397.\n\n## Ledger key R297-135\nAssigned relay rating: variant 13, reference 398.\n\n## Ledger key R298-172\nAssigned relay rating: variant 14, reference 399.\n\n## Ledger key R299-209\nAssigned relay rating: variant 15, reference 400.\n"
+    },
+    {
+      "name": "register-decoys-11.md",
+      "content": "# Matched decoy register 11\n\n## Ledger key R300-246\nAssigned shelf location: aisle K shelf 21.\n\n## Ledger key R301-283\nAssigned shelf location: variant 2, reference 402.\n\n## Ledger key R302-320\nAssigned shelf location: variant 3, reference 403.\n\n## Ledger key R303-357\nAssigned shelf location: variant 4, reference 404.\n\n## Ledger key R304-394\nAssigned shelf location: variant 5, reference 405.\n\n## Ledger key R305-431\nAssigned shelf location: variant 6, reference 406.\n\n## Ledger key R306-468\nAssigned shelf location: variant 7, reference 407.\n\n## Ledger key R307-505\nAssigned shelf location: variant 8, reference 408.\n\n## Ledger key R308-542\nAssigned shelf location: variant 9, reference 409.\n\n## Ledger key R309-579\nAssigned shelf location: variant 10, reference 410.\n\n## Ledger key R310-616\nAssigned shelf location: variant 11, reference 411.\n\n## Ledger key R311-653\nAssigned shelf location: variant 12, reference 412.\n\n## Ledger key R312-690\nAssigned shelf location: variant 13, reference 413.\n\n## Ledger key R313-727\nAssigned shelf location: variant 14, reference 414.\n\n## Ledger key R314-764\nAssigned shelf location: variant 15, reference 415.\n\n## Ledger key R315-801\nAssigned test pressure: 1.8 megapascal.\n\n## Ledger key R316-838\nAssigned test pressure: variant 2, reference 417.\n\n## Ledger key R317-875\nAssigned test pressure: variant 3, reference 418.\n\n## Ledger key R318-912\nAssigned test pressure: variant 4, reference 419.\n\n## Ledger key R319-949\nAssigned test pressure: variant 5, reference 420.\n\n## Ledger key R320-986\nAssigned test pressure: variant 6, reference 421.\n\n## Ledger key R321-026\nAssigned test pressure: variant 7, reference 422.\n\n## Ledger key R322-063\nAssigned test pressure: variant 8, reference 423.\n\n## Ledger key R323-100\nAssigned test pressure: variant 9, reference 424.\n\n## Ledger key R324-137\nAssigned test pressure: variant 10, reference 425.\n\n## Ledger key R325-174\nAssigned test pressure: variant 11, reference 426.\n\n## Ledger key R326-211\nAssigned test pressure: variant 12, reference 427.\n\n## Ledger key R327-248\nAssigned test pressure: variant 13, reference 428.\n\n## Ledger key R328-285\nAssigned test pressure: variant 14, reference 429.\n\n## Ledger key R329-322\nAssigned test pressure: variant 15, reference 430.\n"
+    },
+    {
+      "name": "register-decoys-12.md",
+      "content": "# Matched decoy register 12\n\n## Ledger key R330-359\nAssigned paint code: RAL 5041.\n\n## Ledger key R331-396\nAssigned paint code: variant 2, reference 432.\n\n## Ledger key R332-433\nAssigned paint code: variant 3, reference 433.\n\n## Ledger key R333-470\nAssigned paint code: variant 4, reference 434.\n\n## Ledger key R334-507\nAssigned paint code: variant 5, reference 435.\n\n## Ledger key R335-544\nAssigned paint code: variant 6, reference 436.\n\n## Ledger key R336-581\nAssigned paint code: variant 7, reference 437.\n\n## Ledger key R337-618\nAssigned paint code: variant 8, reference 438.\n\n## Ledger key R338-655\nAssigned paint code: variant 9, reference 439.\n\n## Ledger key R339-692\nAssigned paint code: variant 10, reference 440.\n\n## Ledger key R340-729\nAssigned paint code: variant 11, reference 441.\n\n## Ledger key R341-766\nAssigned paint code: variant 12, reference 442.\n\n## Ledger key R342-803\nAssigned paint code: variant 13, reference 443.\n\n## Ledger key R343-840\nAssigned paint code: variant 14, reference 444.\n\n## Ledger key R344-877\nAssigned paint code: variant 15, reference 445.\n\n## Ledger key R345-914\nAssigned fuse rating: 2.5 ampere fast-blow.\n\n## Ledger key R346-951\nAssigned fuse rating: variant 2, reference 447.\n\n## Ledger key R347-988\nAssigned fuse rating: variant 3, reference 448.\n\n## Ledger key R348-028\nAssigned fuse rating: variant 4, reference 449.\n\n## Ledger key R349-065\nAssigned fuse rating: variant 5, reference 450.\n\n## Ledger key R350-102\nAssigned fuse rating: variant 6, reference 451.\n\n## Ledger key R351-139\nAssigned fuse rating: variant 7, reference 452.\n\n## Ledger key R352-176\nAssigned fuse rating: variant 8, reference 453.\n\n## Ledger key R353-213\nAssigned fuse rating: variant 9, reference 454.\n\n## Ledger key R354-250\nAssigned fuse rating: variant 10, reference 455.\n\n## Ledger key R355-287\nAssigned fuse rating: variant 11, reference 456.\n\n## Ledger key R356-324\nAssigned fuse rating: variant 12, reference 457.\n\n## Ledger key R357-361\nAssigned fuse rating: variant 13, reference 458.\n\n## Ledger key R358-398\nAssigned fuse rating: variant 14, reference 459.\n\n## Ledger key R359-435\nAssigned fuse rating: variant 15, reference 460.\n"
+    },
+    {
+      "name": "register-decoys-13.md",
+      "content": "# Matched decoy register 13\n\n## Ledger key R360-472\nAssigned pump rotation: counterclockwise from drive end.\n\n## Ledger key R361-509\nAssigned pump rotation: variant 2, reference 462.\n\n## Ledger key R362-546\nAssigned pump rotation: variant 3, reference 463.\n\n## Ledger key R363-583\nAssigned pump rotation: variant 4, reference 464.\n\n## Ledger key R364-620\nAssigned pump rotation: variant 5, reference 465.\n\n## Ledger key R365-657\nAssigned pump rotation: variant 6, reference 466.\n\n## Ledger key R366-694\nAssigned pump rotation: variant 7, reference 467.\n\n## Ledger key R367-731\nAssigned pump rotation: variant 8, reference 468.\n\n## Ledger key R368-768\nAssigned pump rotation: variant 9, reference 469.\n\n## Ledger key R369-805\nAssigned pump rotation: variant 10, reference 470.\n\n## Ledger key R370-842\nAssigned pump rotation: variant 11, reference 471.\n\n## Ledger key R371-879\nAssigned pump rotation: variant 12, reference 472.\n\n## Ledger key R372-916\nAssigned pump rotation: variant 13, reference 473.\n\n## Ledger key R373-953\nAssigned pump rotation: variant 14, reference 474.\n\n## Ledger key R374-990\nAssigned pump rotation: variant 15, reference 475.\n\n## Ledger key R375-030\nAssigned seal size: 32 by 47 by 9 millimeter.\n\n## Ledger key R376-067\nAssigned seal size: variant 2, reference 477.\n\n## Ledger key R377-104\nAssigned seal size: variant 3, reference 478.\n\n## Ledger key R378-141\nAssigned seal size: variant 4, reference 479.\n\n## Ledger key R379-178\nAssigned seal size: variant 5, reference 480.\n\n## Ledger key R380-215\nAssigned seal size: variant 6, reference 481.\n\n## Ledger key R381-252\nAssigned seal size: variant 7, reference 482.\n\n## Ledger key R382-289\nAssigned seal size: variant 8, reference 483.\n\n## Ledger key R383-326\nAssigned seal size: variant 9, reference 484.\n\n## Ledger key R384-363\nAssigned seal size: variant 10, reference 485.\n\n## Ledger key R385-400\nAssigned seal size: variant 11, reference 486.\n\n## Ledger key R386-437\nAssigned seal size: variant 12, reference 487.\n\n## Ledger key R387-474\nAssigned seal size: variant 13, reference 488.\n\n## Ledger key R388-511\nAssigned seal size: variant 14, reference 489.\n\n## Ledger key R389-548\nAssigned seal size: variant 15, reference 490.\n"
+    },
+    {
+      "name": "register-decoys-14.md",
+      "content": "# Matched decoy register 14\n\n## Ledger key R390-585\nAssigned battery chemistry: lithium cobalt oxide.\n\n## Ledger key R391-622\nAssigned battery chemistry: variant 2, reference 492.\n\n## Ledger key R392-659\nAssigned battery chemistry: variant 3, reference 493.\n\n## Ledger key R393-696\nAssigned battery chemistry: variant 4, reference 494.\n\n## Ledger key R394-733\nAssigned battery chemistry: variant 5, reference 495.\n\n## Ledger key R395-770\nAssigned battery chemistry: variant 6, reference 496.\n\n## Ledger key R396-807\nAssigned battery chemistry: variant 7, reference 497.\n\n## Ledger key R397-844\nAssigned battery chemistry: variant 8, reference 498.\n\n## Ledger key R398-881\nAssigned battery chemistry: variant 9, reference 499.\n\n## Ledger key R399-918\nAssigned battery chemistry: variant 10, reference 500.\n\n## Ledger key R400-955\nAssigned battery chemistry: variant 11, reference 501.\n\n## Ledger key R401-992\nAssigned battery chemistry: variant 12, reference 502.\n\n## Ledger key R402-032\nAssigned battery chemistry: variant 13, reference 503.\n\n## Ledger key R403-069\nAssigned battery chemistry: variant 14, reference 504.\n\n## Ledger key R404-106\nAssigned battery chemistry: variant 15, reference 505.\n\n## Ledger key R405-143\nAssigned thread pitch: 1.5 millimeter.\n\n## Ledger key R406-180\nAssigned thread pitch: variant 2, reference 507.\n\n## Ledger key R407-217\nAssigned thread pitch: variant 3, reference 508.\n\n## Ledger key R408-254\nAssigned thread pitch: variant 4, reference 509.\n\n## Ledger key R409-291\nAssigned thread pitch: variant 5, reference 510.\n\n## Ledger key R410-328\nAssigned thread pitch: variant 6, reference 511.\n\n## Ledger key R411-365\nAssigned thread pitch: variant 7, reference 512.\n\n## Ledger key R412-402\nAssigned thread pitch: variant 8, reference 513.\n\n## Ledger key R413-439\nAssigned thread pitch: variant 9, reference 514.\n\n## Ledger key R414-476\nAssigned thread pitch: variant 10, reference 515.\n\n## Ledger key R415-513\nAssigned thread pitch: variant 11, reference 516.\n\n## Ledger key R416-550\nAssigned thread pitch: variant 12, reference 517.\n\n## Ledger key R417-587\nAssigned thread pitch: variant 13, reference 518.\n\n## Ledger key R418-624\nAssigned thread pitch: variant 14, reference 519.\n\n## Ledger key R419-661\nAssigned thread pitch: variant 15, reference 520.\n"
+    },
+    {
+      "name": "register-decoys-15.md",
+      "content": "# Matched decoy register 15\n\n## Ledger key R420-698\nAssigned trigger threshold: 0.53 bar.\n\n## Ledger key R421-735\nAssigned trigger threshold: variant 2, reference 522.\n\n## Ledger key R422-772\nAssigned trigger threshold: variant 3, reference 523.\n\n## Ledger key R423-809\nAssigned trigger threshold: variant 4, reference 524.\n\n## Ledger key R424-846\nAssigned trigger threshold: variant 5, reference 525.\n\n## Ledger key R425-883\nAssigned trigger threshold: variant 6, reference 526.\n\n## Ledger key R426-920\nAssigned trigger threshold: variant 7, reference 527.\n\n## Ledger key R427-957\nAssigned trigger threshold: variant 8, reference 528.\n\n## Ledger key R428-994\nAssigned trigger threshold: variant 9, reference 529.\n\n## Ledger key R429-034\nAssigned trigger threshold: variant 10, reference 530.\n\n## Ledger key R430-071\nAssigned trigger threshold: variant 11, reference 531.\n\n## Ledger key R431-108\nAssigned trigger threshold: variant 12, reference 532.\n\n## Ledger key R432-145\nAssigned trigger threshold: variant 13, reference 533.\n\n## Ledger key R433-182\nAssigned trigger threshold: variant 14, reference 534.\n\n## Ledger key R434-219\nAssigned trigger threshold: variant 15, reference 535.\n\n## Ledger key R435-256\nAssigned replacement element: cartridge XR-41.\n\n## Ledger key R436-293\nAssigned replacement element: variant 2, reference 537.\n\n## Ledger key R437-330\nAssigned replacement element: variant 3, reference 538.\n\n## Ledger key R438-367\nAssigned replacement element: variant 4, reference 539.\n\n## Ledger key R439-404\nAssigned replacement element: variant 5, reference 540.\n\n## Ledger key R440-441\nAssigned replacement element: variant 6, reference 541.\n\n## Ledger key R441-478\nAssigned replacement element: variant 7, reference 542.\n\n## Ledger key R442-515\nAssigned replacement element: variant 8, reference 543.\n\n## Ledger key R443-552\nAssigned replacement element: variant 9, reference 544.\n\n## Ledger key R444-589\nAssigned replacement element: variant 10, reference 545.\n\n## Ledger key R445-626\nAssigned replacement element: variant 11, reference 546.\n\n## Ledger key R446-663\nAssigned replacement element: variant 12, reference 547.\n\n## Ledger key R447-700\nAssigned replacement element: variant 13, reference 548.\n\n## Ledger key R448-737\nAssigned replacement element: variant 14, reference 549.\n\n## Ledger key R449-774\nAssigned replacement element: variant 15, reference 550.\n"
+    }
+  ],
+  "questions": [
+    {
+      "id": "needle-v5-01",
+      "question": "For ledger key QX-417, what is the assigned sealant?",
+      "answer": "Assigned sealant: sodium silicate.",
+      "source": "register-targets.md"
+    },
+    {
+      "id": "needle-v5-02",
+      "question": "For ledger key LM-082, what is the assigned coolant?",
+      "answer": "Assigned coolant: propylene glycol.",
+      "source": "register-targets.md"
+    },
+    {
+      "id": "needle-v5-03",
+      "question": "For ledger key VR-639, what is the assigned filter grade?",
+      "answer": "Assigned filter grade: nominal 14 micron.",
+      "source": "register-targets.md"
+    },
+    {
+      "id": "needle-v5-04",
+      "question": "For ledger key BK-251, what is the assigned lubricant?",
+      "answer": "Assigned lubricant: ISO VG 46.",
+      "source": "register-targets.md"
+    },
+    {
+      "id": "needle-v5-05",
+      "question": "For ledger key TN-908, what is the assigned insulation?",
+      "answer": "Assigned insulation: mica sheet.",
+      "source": "register-targets.md"
+    },
+    {
+      "id": "needle-v5-06",
+      "question": "For ledger key CP-134, what is the assigned fastener?",
+      "answer": "Assigned fastener: M8 by 30 millimeter.",
+      "source": "register-targets.md"
+    },
+    {
+      "id": "needle-v5-07",
+      "question": "For ledger key WY-763, what is the assigned calibration gas?",
+      "answer": "Assigned calibration gas: zero air.",
+      "source": "register-targets.md"
+    },
+    {
+      "id": "needle-v5-08",
+      "question": "For ledger key DF-520, what is the assigned gasket material?",
+      "answer": "Assigned gasket material: EPDM.",
+      "source": "register-targets.md"
+    },
+    {
+      "id": "needle-v5-09",
+      "question": "For ledger key HS-396, what is the assigned storage bin?",
+      "answer": "Assigned storage bin: blue compartment 7.",
+      "source": "register-targets.md"
+    },
+    {
+      "id": "needle-v5-10",
+      "question": "For ledger key JG-641, what is the assigned inspection interval?",
+      "answer": "Assigned inspection interval: 120 operating hours.",
+      "source": "register-targets.md"
+    },
+    {
+      "id": "needle-v5-11",
+      "question": "For ledger key RA-275, what is the assigned cable jacket?",
+      "answer": "Assigned cable jacket: halogen-free LSZH.",
+      "source": "register-targets.md"
+    },
+    {
+      "id": "needle-v5-12",
+      "question": "For ledger key NE-834, what is the assigned bearing grease?",
+      "answer": "Assigned bearing grease: NLGI grade 1.",
+      "source": "register-targets.md"
+    },
+    {
+      "id": "needle-v5-13",
+      "question": "For ledger key UX-109, what is the assigned valve position?",
+      "answer": "Assigned valve position: normally closed.",
+      "source": "register-targets.md"
+    },
+    {
+      "id": "needle-v5-14",
+      "question": "For ledger key MG-582, what is the assigned panel label?",
+      "answer": "Assigned panel label: PANEL C17.",
+      "source": "register-targets.md"
+    },
+    {
+      "id": "needle-v5-15",
+      "question": "For ledger key ZB-346, what is the assigned solvent?",
+      "answer": "Assigned solvent: isopropyl alcohol.",
+      "source": "register-targets.md"
+    },
+    {
+      "id": "needle-v5-16",
+      "question": "For ledger key FK-715, what is the assigned belt profile?",
+      "answer": "Assigned belt profile: SPZ 1000.",
+      "source": "register-targets.md"
+    },
+    {
+      "id": "needle-v5-17",
+      "question": "For ledger key PD-028, what is the assigned sensor range?",
+      "answer": "Assigned sensor range: minus 20 to 80 Celsius.",
+      "source": "register-targets.md"
+    },
+    {
+      "id": "needle-v5-18",
+      "question": "For ledger key CY-954, what is the assigned connector key?",
+      "answer": "Assigned connector key: keyway D.",
+      "source": "register-targets.md"
+    },
+    {
+      "id": "needle-v5-19",
+      "question": "For ledger key AL-683, what is the assigned packing type?",
+      "answer": "Assigned packing type: spiral wound graphite.",
+      "source": "register-targets.md"
+    },
+    {
+      "id": "needle-v5-20",
+      "question": "For ledger key RW-192, what is the assigned relay rating?",
+      "answer": "Assigned relay rating: 24 volt DC.",
+      "source": "register-targets.md"
+    },
+    {
+      "id": "needle-v5-21",
+      "question": "For ledger key ET-847, what is the assigned shelf location?",
+      "answer": "Assigned shelf location: aisle K shelf 12.",
+      "source": "register-targets.md"
+    },
+    {
+      "id": "needle-v5-22",
+      "question": "For ledger key OS-361, what is the assigned test pressure?",
+      "answer": "Assigned test pressure: 1.6 megapascal.",
+      "source": "register-targets.md"
+    },
+    {
+      "id": "needle-v5-23",
+      "question": "For ledger key GI-530, what is the assigned paint code?",
+      "answer": "Assigned paint code: RAL 5014.",
+      "source": "register-targets.md"
+    },
+    {
+      "id": "needle-v5-24",
+      "question": "For ledger key MK-276, what is the assigned fuse rating?",
+      "answer": "Assigned fuse rating: 2.5 ampere slow-blow.",
+      "source": "register-targets.md"
+    },
+    {
+      "id": "needle-v5-25",
+      "question": "For ledger key FV-619, what is the assigned pump rotation?",
+      "answer": "Assigned pump rotation: clockwise from drive end.",
+      "source": "register-targets.md"
+    },
+    {
+      "id": "needle-v5-26",
+      "question": "For ledger key BD-403, what is the assigned seal size?",
+      "answer": "Assigned seal size: 32 by 47 by 7 millimeter.",
+      "source": "register-targets.md"
+    },
+    {
+      "id": "needle-v5-27",
+      "question": "For ledger key KC-785, what is the assigned battery chemistry?",
+      "answer": "Assigned battery chemistry: lithium iron phosphate.",
+      "source": "register-targets.md"
+    },
+    {
+      "id": "needle-v5-28",
+      "question": "For ledger key SP-240, what is the assigned thread pitch?",
+      "answer": "Assigned thread pitch: 1.25 millimeter.",
+      "source": "register-targets.md"
+    },
+    {
+      "id": "needle-v5-29",
+      "question": "For ledger key YH-671, what is the assigned trigger threshold?",
+      "answer": "Assigned trigger threshold: 0.35 bar.",
+      "source": "register-targets.md"
+    },
+    {
+      "id": "needle-v5-30",
+      "question": "For ledger key NW-058, what is the assigned replacement element?",
+      "answer": "Assigned replacement element: cartridge XR-14.",
+      "source": "register-targets.md"
+    }
+  ]
+}

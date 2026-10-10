@@ -2,6 +2,7 @@
 
 import json
 import math
+import re
 import urllib.request
 
 
@@ -64,6 +65,17 @@ class LocalModels:
                 "citations": [],
                 "abstained": True,
             }
+        identifiers = re.findall(r"(?<![A-Za-z0-9])[A-Z0-9]{8,}(?![A-Za-z0-9])", query)
+        identifiers.extend(re.findall(r"\b[A-Z]{1,4}-\d{3,}\b", query))
+        if len(identifiers) == 1:
+            pattern = re.compile(
+                rf"(?<![A-Za-z0-9]){re.escape(identifiers[0])}(?![A-Za-z0-9])", re.IGNORECASE
+            )
+            matched = [hit for hit in hits if pattern.search(hit.get("parent_text") or "")]
+            if len(matched) == 1:
+                # Exact identifiers in structural headings disambiguate near-
+                # duplicate records more reliably than a tiny local generator.
+                return self._citation(matched[0], matched[0]["text"])
         evidence = [
             {
                 "id": h["chunk_id"],
@@ -120,6 +132,10 @@ class LocalModels:
         # back to that selected child chunk verbatim; never cite generated text.
         if not quote.strip() or quote not in source["text"]:
             quote = source["text"]
+        return self._citation(source, quote)
+
+    @staticmethod
+    def _citation(source, quote):
         return {
             "answer": quote,
             "abstained": False,
@@ -129,6 +145,7 @@ class LocalModels:
                     "chunk_id": source["chunk_id"],
                     "source": source["source"],
                     "page": source["page"],
+                    "context": source.get("parent_text") or source["text"],
                     "quote": quote,
                     "start": source["text"].index(quote),
                     "end": source["text"].index(quote) + len(quote),

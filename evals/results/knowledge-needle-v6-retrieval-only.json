@@ -1,0 +1,164 @@
+{
+  "suite": "knowledge-needle-v6-retrieval-only",
+  "dataset_sha256": "bd2c1f62b08284eb62fbc8781969ffc1c530f93b38d5e00942b9569d4039247e",
+  "workspace_id": "855080e8c20b45f4965a39f293829b62",
+  "questions": 30,
+  "recall_at_5": {
+    "vector": 0.6,
+    "hybrid": 1.0,
+    "absolute_gain": 0.4
+  },
+  "records": [
+    {
+      "id": "needle-v6-01",
+      "vector": null,
+      "hybrid": 1
+    },
+    {
+      "id": "needle-v6-02",
+      "vector": 1,
+      "hybrid": 1
+    },
+    {
+      "id": "needle-v6-03",
+      "vector": 2,
+      "hybrid": 1
+    },
+    {
+      "id": "needle-v6-04",
+      "vector": 2,
+      "hybrid": 1
+    },
+    {
+      "id": "needle-v6-05",
+      "vector": null,
+      "hybrid": 1
+    },
+    {
+      "id": "needle-v6-06",
+      "vector": null,
+      "hybrid": 1
+    },
+    {
+      "id": "needle-v6-07",
+      "vector": null,
+      "hybrid": 1
+    },
+    {
+      "id": "needle-v6-08",
+      "vector": null,
+      "hybrid": 1
+    },
+    {
+      "id": "needle-v6-09",
+      "vector": 1,
+      "hybrid": 1
+    },
+    {
+      "id": "needle-v6-10",
+      "vector": 2,
+      "hybrid": 1
+    },
+    {
+      "id": "needle-v6-11",
+      "vector": null,
+      "hybrid": 1
+    },
+    {
+      "id": "needle-v6-12",
+      "vector": 2,
+      "hybrid": 1
+    },
+    {
+      "id": "needle-v6-13",
+      "vector": 3,
+      "hybrid": 1
+    },
+    {
+      "id": "needle-v6-14",
+      "vector": null,
+      "hybrid": 1
+    },
+    {
+      "id": "needle-v6-15",
+      "vector": 1,
+      "hybrid": 1
+    },
+    {
+      "id": "needle-v6-16",
+      "vector": 3,
+      "hybrid": 1
+    },
+    {
+      "id": "needle-v6-17",
+      "vector": null,
+      "hybrid": 1
+    },
+    {
+      "id": "needle-v6-18",
+      "vector": 1,
+      "hybrid": 2
+    },
+    {
+      "id": "needle-v6-19",
+      "vector": 3,
+      "hybrid": 1
+    },
+    {
+      "id": "needle-v6-20",
+      "vector": null,
+      "hybrid": 1
+    },
+    {
+      "id": "needle-v6-21",
+      "vector": 1,
+      "hybrid": 1
+    },
+    {
+      "id": "needle-v6-22",
+      "vector": 1,
+      "hybrid": 1
+    },
+    {
+      "id": "needle-v6-23",
+      "vector": null,
+      "hybrid": 1
+    },
+    {
+      "id": "needle-v6-24",
+      "vector": 4,
+      "hybrid": 1
+    },
+    {
+      "id": "needle-v6-25",
+      "vector": null,
+      "hybrid": 2
+    },
+    {
+      "id": "needle-v6-26",
+      "vector": 4,
+      "hybrid": 1
+    },
+    {
+      "id": "needle-v6-27",
+      "vector": 1,
+      "hybrid": 1
+    },
+    {
+      "id": "needle-v6-28",
+      "vector": 1,
+      "hybrid": 1
+    },
+    {
+      "id": "needle-v6-29",
+      "vector": 3,
+      "hybrid": 1
+    },
+    {
+      "id": "needle-v6-30",
+      "vector": null,
+      "hybrid": 1
+    }
+  ],
+  "answers_evaluated": false
+}

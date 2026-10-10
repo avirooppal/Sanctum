@@ -49,3 +49,18 @@ remained 1.00/1.00. This confirms the grounded citation fallback against this sy
 but does not satisfy the hybrid-gain gate or establish no faithfulness regression. Local judge
 and human spot-check are pending; the review packet is
 `evals/results/knowledge-needle-v5-human-review.md`.
+
+V6 is a separately versioned exact machine-identifier challenge over the same 480
+passages (30 targets, 450 near-duplicate decoys). Dataset SHA-256:
+`bd2c1f62b08284eb62fbc8781969ffc1c530f93b38d5e00942b9569d4039247e`. On one indexed
+workspace, vector/hybrid recall@5 measured 0.60/1.00 (gain +0.40) and MRR 0.60/1.00.
+The completed ACL-filtered hybrid answer replay measured exact citation support 1.00,
+expected-answer inclusion 1.00, and passed unsupported-query abstention. Artifacts:
+`evals/results/knowledge-needle-v6-retrieval-only.json` and
+`evals/results/knowledge-needle-v6-grounded-answers.json`.
+
+The v6 local faithfulness judge is underway: the latest checkpoint has 9/30 cases,
+all 9 supported. No vector-only answer faithfulness comparison is complete yet; do not
+infer no regression from retrieval alone. Human spot-check remains pending in
+`evals/results/knowledge-needle-v6-human-review.md`. Keep Phase 3 gated until these
+checks complete and the human review has been recorded.

@@ -1,0 +1,684 @@
+{
+  "suite": "knowledge-needle-v5-citation",
+  "dataset_sha256": "80127d69de19e4b0cdcf837e86b6d164dc496d576e1b02d1fd0ce64ea300eb92",
+  "questions": 30,
+  "complete": true,
+  "recall_at_5": {
+    "vector": 1.0,
+    "hybrid": 1.0,
+    "absolute_gain": 0.0
+  },
+  "mrr": {
+    "vector": 1.0,
+    "hybrid": 1.0
+  },
+  "exact_citation_support": 1.0,
+  "answers_contain_expected": 1.0,
+  "unsupported_query_abstained": true,
+  "seconds": 1027.896,
+  "seconds_scope": "resumed_segment_only",
+  "human_spot_check": "pending",
+  "local_judge": "pending",
+  "records": [
+    {
+      "id": "needle-v5-01",
+      "vector_rank": 1,
+      "hybrid_rank": 1,
+      "answer": {
+        "abstained": false,
+        "answer": "Assigned sealant: sodium silicate.",
+        "citations": [
+          {
+            "chunk_id": "68c9027147274b67aaf04f819212f5c0",
+            "document_id": "1cb1f1243bc749ec8b56f65f862e0daf",
+            "end": 34,
+            "page": null,
+            "quote": "Assigned sealant: sodium silicate.",
+            "source": "register-targets.md",
+            "start": 0
+          }
+        ]
+      },
+      "citation_supported": true,
+      "answer_contains_expected": true
+    },
+    {
+      "id": "needle-v5-02",
+      "vector_rank": 1,
+      "hybrid_rank": 1,
+      "answer": {
+        "abstained": false,
+        "answer": "Assigned coolant: propylene glycol.",
+        "citations": [
+          {
+            "chunk_id": "67b1b4bc27b9486eaaeaf10cc01f13b2",
+            "document_id": "1cb1f1243bc749ec8b56f65f862e0daf",
+            "end": 35,
+            "page": null,
+            "quote": "Assigned coolant: propylene glycol.",
+            "source": "register-targets.md",
+            "start": 0
+          }
+        ]
+      },
+      "citation_supported": true,
+      "answer_contains_expected": true
+    },
+    {
+      "id": "needle-v5-03",
+      "vector_rank": 1,
+      "hybrid_rank": 1,
+      "answer": {
+        "abstained": false,
+        "answer": "Assigned filter grade: nominal 14 micron.",
+        "citations": [
+          {
+            "chunk_id": "08227d31b4484a2d9972ed0cc2899627",
+            "document_id": "1cb1f1243bc749ec8b56f65f862e0daf",
+            "end": 41,
+            "page": null,
+            "quote": "Assigned filter grade: nominal 14 micron.",
+            "source": "register-targets.md",
+            "start": 0
+          }
+        ]
+      },
+      "citation_supported": true,
+      "answer_contains_expected": true
+    },
+    {
+      "id": "needle-v5-04",
+      "vector_rank": 1,
+      "hybrid_rank": 1,
+      "answer": {
+        "abstained": false,
+        "answer": "Assigned lubricant: ISO VG 46.",
+        "citations": [
+          {
+            "chunk_id": "d2107ae0ae8e4bc9bb8bbe156af11204",
+            "document_id": "1cb1f1243bc749ec8b56f65f862e0daf",
+            "end": 30,
+            "page": null,
+            "quote": "Assigned lubricant: ISO VG 46.",
+            "source": "register-targets.md",
+            "start": 0
+          }
+        ]
+      },
+      "citation_supported": true,
+      "answer_contains_expected": true
+    },
+    {
+      "id": "needle-v5-05",
+      "vector_rank": 1,
+      "hybrid_rank": 1,
+      "answer": {
+        "abstained": false,
+        "answer": "Assigned insulation: mica sheet.",
+        "citations": [
+          {
+            "chunk_id": "4c071393565d44d696674e3be9652115",
+            "document_id": "1cb1f1243bc749ec8b56f65f862e0daf",
+            "end": 32,
+            "page": null,
+            "quote": "Assigned insulation: mica sheet.",
+            "source": "register-targets.md",
+            "start": 0
+          }
+        ]
+      },
+      "citation_supported": true,
+      "answer_contains_expected": true
+    },
+    {
+      "id": "needle-v5-06",
+      "vector_rank": 1,
+      "hybrid_rank": 1,
+      "answer": {
+        "abstained": false,
+        "answer": "Assigned fastener: M8 by 30 millimeter.",
+        "citations": [
+          {
+            "chunk_id": "ccea61b5792a4779afd9dedd6eaadbca",
+            "document_id": "1cb1f1243bc749ec8b56f65f862e0daf",
+            "end": 39,
+            "page": null,
+            "quote": "Assigned fastener: M8 by 30 millimeter.",
+            "source": "register-targets.md",
+            "start": 0
+          }
+        ]
+      },
+      "citation_supported": true,
+      "answer_contains_expected": true
+    },
+    {
+      "id": "needle-v5-07",
+      "vector_rank": 1,
+      "hybrid_rank": 1,
+      "answer": {
+        "abstained": false,
+        "answer": "Assigned calibration gas: zero air.",
+        "citations": [
+          {
+            "chunk_id": "f51ffe407040498a830fc3fd3dca9f75",
+            "document_id": "1cb1f1243bc749ec8b56f65f862e0daf",
+            "end": 35,
+            "page": null,
+            "quote": "Assigned calibration gas: zero air.",
+            "source": "register-targets.md",
+            "start": 0
+          }
+        ]
+      },
+      "citation_supported": true,
+      "answer_contains_expected": true
+    },
+    {
+      "id": "needle-v5-08",
+      "vector_rank": 1,
+      "hybrid_rank": 1,
+      "answer": {
+        "abstained": false,
+        "answer": "Assigned gasket material: EPDM.",
+        "citations": [
+          {
+            "chunk_id": "f156506863a643d6973c58041eb5c879",
+            "document_id": "1cb1f1243bc749ec8b56f65f862e0daf",
+            "end": 31,
+            "page": null,
+            "quote": "Assigned gasket material: EPDM.",
+            "source": "register-targets.md",
+            "start": 0
+          }
+        ]
+      },
+      "citation_supported": true,
+      "answer_contains_expected": true
+    },
+    {
+      "id": "needle-v5-09",
+      "vector_rank": 1,
+      "hybrid_rank": 1,
+      "answer": {
+        "abstained": false,
+        "answer": "Assigned storage bin: blue compartment 7.",
+        "citations": [
+          {
+            "chunk_id": "2b1ad35efa194c42af474266de2d63ea",
+            "document_id": "1cb1f1243bc749ec8b56f65f862e0daf",
+            "end": 41,
+            "page": null,
+            "quote": "Assigned storage bin: blue compartment 7.",
+            "source": "register-targets.md",
+            "start": 0
+          }
+        ]
+      },
+      "citation_supported": true,
+      "answer_contains_expected": true
+    },
+    {
+      "id": "needle-v5-10",
+      "vector_rank": 1,
+      "hybrid_rank": 1,
+      "answer": {
+        "abstained": false,
+        "answer": "Assigned inspection interval: 120 operating hours.",
+        "citations": [
+          {
+            "chunk_id": "9b256e35b99a4958b7b63a11e49e687d",
+            "document_id": "1cb1f1243bc749ec8b56f65f862e0daf",
+            "end": 50,
+            "page": null,
+            "quote": "Assigned inspection interval: 120 operating hours.",
+            "source": "register-targets.md",
+            "start": 0
+          }
+        ]
+      },
+      "citation_supported": true,
+      "answer_contains_expected": true
+    },
+    {
+      "id": "needle-v5-11",
+      "vector_rank": 1,
+      "hybrid_rank": 1,
+      "answer": {
+        "abstained": false,
+        "answer": "Assigned cable jacket: halogen-free LSZH.",
+        "citations": [
+          {
+            "chunk_id": "9ef3e36807074cccb6fa1436c8d3bda3",
+            "document_id": "1cb1f1243bc749ec8b56f65f862e0daf",
+            "end": 41,
+            "page": null,
+            "quote": "Assigned cable jacket: halogen-free LSZH.",
+            "source": "register-targets.md",
+            "start": 0
+          }
+        ]
+      },
+      "citation_supported": true,
+      "answer_contains_expected": true
+    },
+    {
+      "id": "needle-v5-12",
+      "vector_rank": 1,
+      "hybrid_rank": 1,
+      "answer": {
+        "abstained": false,
+        "answer": "Assigned bearing grease: NLGI grade 1.",
+        "citations": [
+          {
+            "chunk_id": "55e58efa715a45c7b1c391d0257e5dc1",
+            "document_id": "1cb1f1243bc749ec8b56f65f862e0daf",
+            "end": 38,
+            "page": null,
+            "quote": "Assigned bearing grease: NLGI grade 1.",
+            "source": "register-targets.md",
+            "start": 0
+          }
+        ]
+      },
+      "citation_supported": true,
+      "answer_contains_expected": true
+    },
+    {
+      "id": "needle-v5-13",
+      "vector_rank": 1,
+      "hybrid_rank": 1,
+      "answer": {
+        "abstained": false,
+        "answer": "Assigned valve position: normally closed.",
+        "citations": [
+          {
+            "chunk_id": "15cf6f44cb21425790f269cd9e822f8b",
+            "document_id": "1cb1f1243bc749ec8b56f65f862e0daf",
+            "end": 41,
+            "page": null,
+            "quote": "Assigned valve position: normally closed.",
+            "source": "register-targets.md",
+            "start": 0
+          }
+        ]
+      },
+      "citation_supported": true,
+      "answer_contains_expected": true
+    },
+    {
+      "id": "needle-v5-14",
+      "vector_rank": 1,
+      "hybrid_rank": 1,
+      "answer": {
+        "abstained": false,
+        "answer": "Assigned panel label: PANEL C17.",
+        "citations": [
+          {
+            "chunk_id": "94ba4b7a5c3f4512b7cac3f69cecc0e3",
+            "document_id": "1cb1f1243bc749ec8b56f65f862e0daf",
+            "end": 32,
+            "page": null,
+            "quote": "Assigned panel label: PANEL C17.",
+            "source": "register-targets.md",
+            "start": 0
+          }
+        ]
+      },
+      "citation_supported": true,
+      "answer_contains_expected": true
+    },
+    {
+      "id": "needle-v5-15",
+      "vector_rank": 1,
+      "hybrid_rank": 1,
+      "answer": {
+        "abstained": false,
+        "answer": "Assigned solvent: isopropyl alcohol.",
+        "citations": [
+          {
+            "chunk_id": "31ba85159e644507b5d727b0a33d4e3e",
+            "document_id": "1cb1f1243bc749ec8b56f65f862e0daf",
+            "end": 36,
+            "page": null,
+            "quote": "Assigned solvent: isopropyl alcohol.",
+            "source": "register-targets.md",
+            "start": 0
+          }
+        ]
+      },
+      "citation_supported": true,
+      "answer_contains_expected": true
+    },
+    {
+      "id": "needle-v5-16",
+      "vector_rank": 1,
+      "hybrid_rank": 1,
+      "answer": {
+        "abstained": false,
+        "answer": "Assigned belt profile: SPZ 1000.",
+        "citations": [
+          {
+            "chunk_id": "0905dda8e1024dfa95c46a4d89b741fc",
+            "document_id": "1cb1f1243bc749ec8b56f65f862e0daf",
+            "end": 32,
+            "page": null,
+            "quote": "Assigned belt profile: SPZ 1000.",
+            "source": "register-targets.md",
+            "start": 0
+          }
+        ]
+      },
+      "citation_supported": true,
+      "answer_contains_expected": true
+    },
+    {
+      "id": "needle-v5-17",
+      "vector_rank": 1,
+      "hybrid_rank": 1,
+      "answer": {
+        "abstained": false,
+        "answer": "Assigned sensor range: minus 20 to 80 Celsius.",
+        "citations": [
+          {
+            "chunk_id": "f5827009b9724d6188504e8f75d5c30d",
+            "document_id": "1cb1f1243bc749ec8b56f65f862e0daf",
+            "end": 46,
+            "page": null,
+            "quote": "Assigned sensor range: minus 20 to 80 Celsius.",
+            "source": "register-targets.md",
+            "start": 0
+          }
+        ]
+      },
+      "citation_supported": true,
+      "answer_contains_expected": true
+    },
+    {
+      "id": "needle-v5-18",
+      "vector_rank": 1,
+      "hybrid_rank": 1,
+      "answer": {
+        "abstained": false,
+        "answer": "Assigned connector key: keyway D.",
+        "citations": [
+          {
+            "chunk_id": "2d048138d4fd473c9a7dc39afba11cc6",
+            "document_id": "1cb1f1243bc749ec8b56f65f862e0daf",
+            "end": 33,
+            "page": null,
+            "quote": "Assigned connector key: keyway D.",
+            "source": "register-targets.md",
+            "start": 0
+          }
+        ]
+      },
+      "citation_supported": true,
+      "answer_contains_expected": true
+    },
+    {
+      "id": "needle-v5-19",
+      "vector_rank": 1,
+      "hybrid_rank": 1,
+      "answer": {
+        "abstained": false,
+        "answer": "Assigned packing type: spiral wound graphite.",
+        "citations": [
+          {
+            "chunk_id": "d67a622ef4374b9fa68f79c4d704cde9",
+            "document_id": "1cb1f1243bc749ec8b56f65f862e0daf",
+            "end": 45,
+            "page": null,
+            "quote": "Assigned packing type: spiral wound graphite.",
+            "source": "register-targets.md",
+            "start": 0
+          }
+        ]
+      },
+      "citation_supported": true,
+      "answer_contains_expected": true
+    },
+    {
+      "id": "needle-v5-20",
+      "vector_rank": 1,
+      "hybrid_rank": 1,
+      "answer": {
+        "abstained": false,
+        "answer": "Assigned relay rating: 24 volt DC.",
+        "citations": [
+          {
+            "chunk_id": "45c4317697714187ae117f18677f40de",
+            "document_id": "1cb1f1243bc749ec8b56f65f862e0daf",
+            "end": 34,
+            "page": null,
+            "quote": "Assigned relay rating: 24 volt DC.",
+            "source": "register-targets.md",
+            "start": 0
+          }
+        ]
+      },
+      "citation_supported": true,
+      "answer_contains_expected": true
+    },
+    {
+      "id": "needle-v5-21",
+      "vector_rank": 1,
+      "hybrid_rank": 1,
+      "answer": {
+        "abstained": false,
+        "answer": "Assigned shelf location: aisle K shelf 12.",
+        "citations": [
+          {
+            "chunk_id": "54be12bd03d8414ab68f0b464ca5234a",
+            "document_id": "1cb1f1243bc749ec8b56f65f862e0daf",
+            "end": 42,
+            "page": null,
+            "quote": "Assigned shelf location: aisle K shelf 12.",
+            "source": "register-targets.md",
+            "start": 0
+          }
+        ]
+      },
+      "citation_supported": true,
+      "answer_contains_expected": true
+    },
+    {
+      "id": "needle-v5-22",
+      "vector_rank": 1,
+      "hybrid_rank": 1,
+      "answer": {
+        "abstained": false,
+        "answer": "Assigned test pressure: 1.6 megapascal.",
+        "citations": [
+          {
+            "chunk_id": "a8da15d96c3940b393e0f13c9fab92f0",
+            "document_id": "1cb1f1243bc749ec8b56f65f862e0daf",
+            "end": 39,
+            "page": null,
+            "quote": "Assigned test pressure: 1.6 megapascal.",
+            "source": "register-targets.md",
+            "start": 0
+          }
+        ]
+      },
+      "citation_supported": true,
+      "answer_contains_expected": true
+    },
+    {
+      "id": "needle-v5-23",
+      "vector_rank": 1,
+      "hybrid_rank": 1,
+      "answer": {
+        "abstained": false,
+        "answer": "Assigned paint code: RAL 5014.",
+        "citations": [
+          {
+            "chunk_id": "9785672f93e54d8e9ee3dd379dc61c0e",
+            "document_id": "1cb1f1243bc749ec8b56f65f862e0daf",
+            "end": 30,
+            "page": null,
+            "quote": "Assigned paint code: RAL 5014.",
+            "source": "register-targets.md",
+            "start": 0
+          }
+        ]
+      },
+      "citation_supported": true,
+      "answer_contains_expected": true
+    },
+    {
+      "id": "needle-v5-24",
+      "vector_rank": 1,
+      "hybrid_rank": 1,
+      "answer": {
+        "abstained": false,
+        "answer": "Assigned fuse rating: 2.5 ampere slow-blow.",
+        "citations": [
+          {
+            "chunk_id": "7b40fbfb597b4deb98a9a657da327b01",
+            "document_id": "1cb1f1243bc749ec8b56f65f862e0daf",
+            "end": 43,
+            "page": null,
+            "quote": "Assigned fuse rating: 2.5 ampere slow-blow.",
+            "source": "register-targets.md",
+            "start": 0
+          }
+        ]
+      },
+      "citation_supported": true,
+      "answer_contains_expected": true
+    },
+    {
+      "id": "needle-v5-25",
+      "vector_rank": 1,
+      "hybrid_rank": 1,
+      "answer": {
+        "abstained": false,
+        "answer": "Assigned pump rotation: clockwise from drive end.",
+        "citations": [
+          {
+            "chunk_id": "bd2754dc69304a268ee685f29f4152eb",
+            "document_id": "1cb1f1243bc749ec8b56f65f862e0daf",
+            "end": 49,
+            "page": null,
+            "quote": "Assigned pump rotation: clockwise from drive end.",
+            "source": "register-targets.md",
+            "start": 0
+          }
+        ]
+      },
+      "citation_supported": true,
+      "answer_contains_expected": true
+    },
+    {
+      "id": "needle-v5-26",
+      "vector_rank": 1,
+      "hybrid_rank": 1,
+      "answer": {
+        "abstained": false,
+        "answer": "Assigned seal size: 32 by 47 by 7 millimeter.",
+        "citations": [
+          {
+            "chunk_id": "c9309e739f2e404d93ec2adf42e934ce",
+            "document_id": "1cb1f1243bc749ec8b56f65f862e0daf",
+            "end": 45,
+            "page": null,
+            "quote": "Assigned seal size: 32 by 47 by 7 millimeter.",
+            "source": "register-targets.md",
+            "start": 0
+          }
+        ]
+      },
+      "citation_supported": true,
+      "answer_contains_expected": true
+    },
+    {
+      "id": "needle-v5-27",
+      "vector_rank": 1,
+      "hybrid_rank": 1,
+      "answer": {
+        "abstained": false,
+        "answer": "Assigned battery chemistry: lithium iron phosphate.",
+        "citations": [
+          {
+            "chunk_id": "2ba741ecbc574ada93afbb6cb0ba87a2",
+            "document_id": "1cb1f1243bc749ec8b56f65f862e0daf",
+            "end": 51,
+            "page": null,
+            "quote": "Assigned battery chemistry: lithium iron phosphate.",
+            "source": "register-targets.md",
+            "start": 0
+          }
+        ]
+      },
+      "citation_supported": true,
+      "answer_contains_expected": true
+    },
+    {
+      "id": "needle-v5-28",
+      "vector_rank": 1,
+      "hybrid_rank": 1,
+      "answer": {
+        "abstained": false,
+        "answer": "Assigned thread pitch: 1.25 millimeter.",
+        "citations": [
+          {
+            "chunk_id": "1bd2ea9744254e6a8aec4b10bd3818d9",
+            "document_id": "1cb1f1243bc749ec8b56f65f862e0daf",
+            "end": 39,
+            "page": null,
+            "quote": "Assigned thread pitch: 1.25 millimeter.",
+            "source": "register-targets.md",
+            "start": 0
+          }
+        ]
+      },
+      "citation_supported": true,
+      "answer_contains_expected": true
+    },
+    {
+      "id": "needle-v5-29",
+      "vector_rank": 1,
+      "hybrid_rank": 1,
+      "answer": {
+        "abstained": false,
+        "answer": "Assigned trigger threshold: 0.35 bar.",
+        "citations": [
+          {
+            "chunk_id": "b22692a03fe34e27bdeebf015812c492",
+            "document_id": "1cb1f1243bc749ec8b56f65f862e0daf",
+            "end": 37,
+            "page": null,
+            "quote": "Assigned trigger threshold: 0.35 bar.",
+            "source": "register-targets.md",
+            "start": 0
+          }
+        ]
+      },
+      "citation_supported": true,
+      "answer_contains_expected": true
+    },
+    {
+      "id": "needle-v5-30",
+      "vector_rank": 1,
+      "hybrid_rank": 1,
+      "answer": {
+        "abstained": false,
+        "answer": "Assigned replacement element: cartridge XR-14.",
+        "citations": [
+          {
+            "chunk_id": "35b4531333d44392b8a15f74bda8771a",
+            "document_id": "1cb1f1243bc749ec8b56f65f862e0daf",
+            "end": 46,
+            "page": null,
+            "quote": "Assigned replacement element: cartridge XR-14.",
+            "source": "register-targets.md",
+            "start": 0
+          }
+        ]
+      },
+      "citation_supported": true,
+      "answer_contains_expected": true
+    }
+  ]
+}

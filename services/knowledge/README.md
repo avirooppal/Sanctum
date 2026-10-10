@@ -41,6 +41,9 @@ change detection and retrieval through the local API. After a completed answer r
 to score faithfulness with the configured local judge against ACL-filtered evidence;
 `--resume` continues a hash-checked checkpoint. Outputs
 are written to suite-named files in `evals/results/`. Synthetic results do not establish
-quality on representative customer corpora. Folder watching is implemented; the large
-v5 challenge still saturates dense recall, and local faithfulness judge and human review
-remain outstanding.
+quality on representative customer corpora. Run
+`python evals/knowledge_answer_eval.py --token-file PATH --dataset PATH --retrieval-results PATH --workspace-id ID`
+to replay a frozen hybrid answer suite against its existing indexed workspace. Folder
+watching is implemented. The v6 exact-key challenge passes the hybrid-gain target;
+local judge, vector-only answer comparison, and human review are still required before
+Phase 2 can exit.

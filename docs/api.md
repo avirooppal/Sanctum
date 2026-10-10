@@ -505,7 +505,96 @@ Runtime HTTP: GET /healthz. Other contracts are foundation diagnostics.
         },
         "responses": {
           "200": {
-            "description": "Successful operation"
+            "description": "Cited answer, abstention, or local faithfulness judgment",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "oneOf": [
+                    {
+                      "type": "object",
+                      "required": [
+                        "answer",
+                        "abstained",
+                        "citations"
+                      ],
+                      "properties": {
+                        "answer": {
+                          "type": "string"
+                        },
+                        "abstained": {
+                          "type": "boolean"
+                        },
+                        "citations": {
+                          "type": "array",
+                          "items": {
+                            "type": "object",
+                            "required": [
+                              "document_id",
+                              "chunk_id",
+                              "source",
+                              "page",
+                              "context",
+                              "quote",
+                              "start",
+                              "end"
+                            ],
+                            "properties": {
+                              "document_id": {
+                                "type": "string"
+                              },
+                              "chunk_id": {
+                                "type": "string"
+                              },
+                              "source": {
+                                "type": "string"
+                              },
+                              "page": {
+                                "type": [
+                                  "integer",
+                                  "null"
+                                ]
+                              },
+                              "context": {
+                                "type": "string",
+                                "description": "Section and parent context for this child passage."
+                              },
+                              "quote": {
+                                "type": "string"
+                              },
+                              "start": {
+                                "type": "integer",
+                                "minimum": 0
+                              },
+                              "end": {
+                                "type": "integer",
+                                "minimum": 0
+                              }
+                            },
+                            "additionalProperties": false
+                          }
+                        }
+                      },
+                      "additionalProperties": false
+                    },
+                    {
+                      "type": "object",
+                      "required": [
+                        "supported"
+                      ],
+                      "properties": {
+                        "supported": {
+                          "type": "boolean"
+                        },
+                        "rationale": {
+                          "type": "string"
+                        }
+                      },
+                      "additionalProperties": false
+                    }
+                  ]
+                }
+              }
+            }
           },
           "403": {
             "description": "No membership or denied operation"

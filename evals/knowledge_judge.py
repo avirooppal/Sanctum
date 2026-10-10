@@ -28,7 +28,7 @@ def main():
             data=json.dumps(body).encode(),
             headers={"Authorization": f"Bearer {token}", "Content-Type": "application/json"},
         )
-        with opener.open(request, timeout=180) as response:
+        with opener.open(request, timeout=360) as response:
             return json.load(response)
 
     dataset = json.loads(args.dataset.read_text(encoding="utf-8"))

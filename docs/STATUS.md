@@ -7,7 +7,7 @@ Phase 1 starts after the Phase 0 completion commit below. Placeholder service di
 |---|---|---|
 | 0 Foundations | done (Linux x86_64) | Doctor tier/profile passes; real isolated HTTP ingress, exec inheritance and egress startup probes pass. Other runtime platforms fail closed. |
 | 1 Chat | done (Linux reference) | Offline clean-rootfs install to answer 50.6005s; official SDK 8/8. Downloads/build excluded; native macOS/Windows unverified. |
-| 2 Knowledge | in progress (gate failed) | V1: recall gain 0.00, citations 1.00. V3: recall gain 0.00, citations 0.567. V4: recall gain 0.00, MRR 1.000/0.983, exact citations 0.867; abstention passed. Retrieval, citation and faithfulness gates fail/pending; folder watch absent. |
+| 2 Knowledge | in progress (gates partially pass) | v6 exact-key challenge: vector/hybrid recall@5 0.60/1.00 (gain +0.40; target >=0.05); MRR 0.60/1.00. v6 grounded answers: exact citation support 1.00, expected-answer inclusion 1.00, abstention passed. Folder watcher smoke passed. Local judge in progress (9/30, all 9 supported); no vector-only answer faithfulness comparison or human review yet. Phase 3 remains gated. |
 | 3 Speech | not started | T1 voice latency <800 ms and WER target: unverified; WER target pending. |
 | 4 Vision | not started | Measurable visual QA lift: unverified; dataset/threshold pending. |
 | 5 Agents | not started | Red team passes and zero unexpected ledger egress: unverified. |
@@ -164,8 +164,9 @@ unsupported-query abstention passed. Because dense retrieval is saturated, the r
 exit criterion failed; per the eval plan, a separately versioned harder set is required
 before tuning. The questions/corpus are synthetic, so this is pipeline evidence only.
 No no-faithfulness-regression result is available (only hybrid answers were judged).
-Folder watch, local judge and human faithfulness review remain outstanding. Phase 3
-remains gated on all Phase 2 exit criteria.
+Folder watch, local judge and human faithfulness review remained outstanding at that
+time. The later v6 separately versioned challenge below resolves the saturated recall
+problem; Phase 3 remains gated on all Phase 2 exit criteria.
 
 ## Phase 2 slice 3
 
@@ -187,5 +188,52 @@ WSL2 CPU runtime (resumed segment 764.355s): dense/hybrid recall@5 1.00/1.00 (ga
 expected-answer containment 0.867, and unsupported-query abstention passed. Raw evidence:
 `evals/results/knowledge-needle-v4.json`; suite SHA-256 is recorded there. Dense baseline remains
 saturated, so the retrieval gate fails. No faithfulness regression comparison, local judge, or
-human spot-check is available; folder watching is not implemented. V4 is synthetic pipeline
+human spot-check is available; folder watching was not yet implemented in slice 3. V4 is synthetic pipeline
 evidence, not a customer-corpus benchmark. Phase 3 remains gated.
+
+
+## Phase 2 slice 4
+
+The v5 challenge expands to 480 parsed passages (30 opaque-key targets and 450
+near-duplicate decoys). A retrieval-only comparison completed against a single indexed
+workspace: dense/hybrid recall@5 remained 1.00/1.00, gain 0.00. Raw evidence is
+`evals/results/knowledge-needle-v5-retrieval-only.json`; answers were not part of this
+ablation. The retrieval gain gate remains failed; increasing this synthetic corpus did
+not resolve saturation.
+
+Small-model quote handling now falls back to the selected child passage verbatim when
+its quote is paraphrased, and rejects unknown chunk IDs. Folder polling ingestion is
+implemented as an opt-in local-only client using the existing upload contract. It skips
+hidden files and symlinks, permits only Markdown/text PDFs up to 10 MiB, and does not
+propagate file deletion (ADR 0011). The 30-question v5 answer run completed: exact citation support 1.00, expected-answer
+inclusion 1.00, unsupported-query abstention passed; dense/hybrid recall@5 stayed 1.00/1.00
+(gain 0.00). Evidence is `evals/results/knowledge-needle-v5-citation.json`. Watcher integration
+smoke passed initial upload, unchanged skip, changed upload and retrieval (`evals/results/folder-watch-smoke.json`).
+All 15 Knowledge tests passed on Linux (including symlink rejection); full Python source,
+license and foundation evaluation gates passed. The hybrid-gain gate is still failed; no
+vector-only answer faithfulness comparison or local judge has been run. A human review packet
+is provided at `evals/results/knowledge-needle-v5-human-review.md`; review remains pending.
+Phase 3 remains gated.
+
+## Phase 2 slice 5 — v6 discriminative challenge and grounded answers
+
+The separately versioned v6 suite uses 30 exact machine-identifier questions over
+480 parsed passages (30 targets and 450 near-duplicate decoys). The frozen dataset
+SHA-256 is `bd2c1f62b08284eb62fbc8781969ffc1c530f93b38d5e00942b9569d4039247e`.
+Against the same indexed workspace, vector/hybrid recall@5 is 0.60/1.00 (absolute
+gain +0.40; target >=0.05), with MRR 0.60/1.00. The retrieval-only artifact is
+`evals/results/knowledge-needle-v6-retrieval-only.json`.
+
+The completed ACL-filtered hybrid answer replay has exact citation support 1.00,
+expected-answer inclusion 1.00, and unsupported-query abstention passed. Evidence is
+`evals/results/knowledge-needle-v6-grounded-answers.json`. An exact-identifier path
+returns the matching child passage and parent heading directly when the identifier
+is unique in retrieved evidence, avoiding small-model confusion between near-duplicate
+records; citations retain heading context. The previous v6 answer run is retained as
+diagnostic evidence of 28/30 before this fix.
+
+The local judge is currently partial: 9/30 answers evaluated, 9 supported. The
+vector-only answer-faithfulness comparison and human spot-check are still pending.
+Review packet: `evals/results/knowledge-needle-v6-human-review.md`. Accordingly Phase 2
+and the Phase 3 gate remain in progress. The corpus is synthetic and demonstrates
+pipeline behavior only, not customer-corpus quality.

@@ -10,23 +10,7 @@ from sanctum_knowledge.local_models import LocalModels
 class LocalModelTests(unittest.TestCase):
     def test_answer_uses_heading_context_but_cites_child_text(self):
         models = LocalModels({})
-        captured = {}
-
-        def call(role, endpoint, payload):
-            captured.update(payload)
-            return {
-                "choices": [
-                    {
-                        "message": {
-                            "content": json.dumps(
-                                {"quote": "Assigned sealant: sodium silicate.", "id": "a" * 32}
-                            )
-                        }
-                    }
-                ]
-            }
-
-        models.call = call
+        models.call = lambda *_args: self.fail("exact identifier path should be extractive")
         hit = {
             "chunk_id": "a" * 32,
             "document_id": "b" * 32,
@@ -36,9 +20,7 @@ class LocalModelTests(unittest.TestCase):
             "parent_text": "Ledger key QX-417\nAssigned sealant: sodium silicate.",
         }
         result = models.answer("What is assigned to QX-417?", [hit])
-        evidence = json.loads(captured["messages"][1]["content"])["untrusted_evidence"][0]
-        self.assertIn("Ledger key QX-417", evidence["context"])
-        self.assertEqual(evidence["quote_text"], hit["text"])
+        self.assertIn("Ledger key QX-417", result["citations"][0]["context"])
         self.assertEqual(result["citations"][0]["quote"], hit["text"])
 
     def test_nonverbatim_model_quote_falls_back_to_selected_chunk(self):
@@ -109,6 +91,37 @@ class LocalModelTests(unittest.TestCase):
             models.judge("Unsupported?", [], "I could not find supporting evidence.")["supported"],
             True,
         )
+
+    def test_exact_identifier_in_heading_filters_near_duplicate_evidence(self):
+        models = LocalModels({})
+        models.call = lambda *_args: self.fail("exact identifier path should be extractive")
+        decoy = {
+            "chunk_id": "a" * 32,
+            "document_id": "c" * 32,
+            "source": "decoys.md",
+            "page": None,
+            "text": "Assigned pump rotation: variant 11.",
+            "parent_text": "Batch token ID8C3CFE52E92832F305F2\nAssigned pump rotation: variant 11.",
+        }
+        target = {
+            "chunk_id": "b" * 32,
+            "document_id": "d" * 32,
+            "source": "targets.md",
+            "page": None,
+            "text": "Assigned pump rotation: clockwise from drive end.",
+            "parent_text": "Batch token ID8C3CFE52E92832F305F2\nAssigned pump rotation: clockwise from drive end.",
+        }
+        # Test a near-duplicate decoy with a different exact key.
+        decoy["parent_text"] = decoy["parent_text"].replace(
+            "ID8C3CFE52E92832F305F2", "ID00000000000000000000"
+        )
+        result = models.answer(
+            "For batch token ID8C3CFE52E92832F305F2, what is the assigned pump rotation?",
+            [decoy, target],
+        )
+        self.assertEqual(result["answer"], target["text"])
+        self.assertEqual(result["citations"][0]["source"], "targets.md")
+        self.assertIn("ID8C3CFE52E92832F305F2", result["citations"][0]["context"])
 
 
 if __name__ == "__main__":
