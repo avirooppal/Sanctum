@@ -1,5 +1,40 @@
 # Implementation status
 
+## Step 0 — bounded admitted-request dispatch (partial)
+
+Last green commit: `e39783c`. Contract/ADR 0028 and three scheduler tests written
+before implementation; initial compile failed missing dispatch module as expected.
+Six blocking workers now dispatch admitted HTTP requests with active lane caps
+2 control / 1 voice / 2 chat / 1 background, eight waiting requests, ten-second queue
+expiry, 503 + Retry-After on overload. Metadata has reserved capacity. SQLite and
+Knowledge IPC use narrow mutexes rather than a global application lock. Shutdown
+rejects queued work and joins active workers; bounded shutdown under a slow body is
+NOT established, so Step 0 remains open.
+
+Verification this session: Rust full `bash tools/check_rust.sh` PASS (24 tests,
+73 crate licenses, 38 kernel denial probes); Windows source 131 pass + one privilege
+skip, Linux source 132/132 PASS, including lint/format/types/licenses. Logs:
+`.sanctum/dispatch-{rust,source,linux-source}.log`. Unchanged frontend baseline
+12 tests/typecheck/build/audit passed earlier in this session.
+
+Real `python evals/gateway_dispatch.py --token-file <state>/local.token --output
+evals/results/gateway-dispatch.json` against confined port 8769 PASS. One held HTTP
+speech upload: 50 health requests p95 **1.320ms**, 50 model requests p95 **1.196ms**.
+Two real chat streams plus document ingestion complete concurrently. Twelve queued
+speech attempts: overload rejection **23.659ms**, 503 with Retry-After=1; remaining
+malformed uploads returned 400 after releasing the held request. No deadlock.
+Official SDK regression 8/8: chat 0.3251s, TTFT 0.3262s, embedding dims 1024.
+Early test invocation preceded artifact-hash startup/token creation; rerun after
+the runtime's readiness line succeeded. No measurements fabricated or gate relaxed.
+
+Remaining Step 0 requirements: bounded transport connections/slow-client deadlines,
+hosted held-WebSocket measurements, per-engine limits across all callers, prompt
+disconnect/process-tree cancellation, bounded graceful shutdown and FD/process
+storm assertions. The admitted queue does not bound tiny_http's internal accept
+threads. Do NOT proceed to Step 1 or tag Phase 3 on this evidence.
+Next three steps: transport migration/limits; cancellation supervision; full Step 0
+held-session/overload/storm harness. No user input needed; implementation is pending.
+
 ## Single-user continuation — scope amendment
 
 Current step: scope amendment before Step 0. Last green commit: `4246aec` (already

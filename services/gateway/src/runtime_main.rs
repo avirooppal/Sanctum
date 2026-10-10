@@ -80,40 +80,83 @@ fn run() -> Result<(), Box<dyn std::error::Error + Send + Sync>> {
         serde_json::json!({"address":address.to_string(),"ready":true,"token_file":chat.as_ref().map(|chat|chat.token_path())})
     );
     std::io::stdout().flush()?;
+    use sanctum_gateway::dispatch::{Dispatcher, Lane};
+    let queue = Dispatcher::<tiny_http::Request>::new(8, [2, 1, 2, 1]);
+    let chat = std::sync::Arc::new(chat);
+    let health = serde_json::json!({"status":"ok","cloud_connectors":"disabled","isolation":"linux-user-netns-seccomp","checks":checks});
+    let mut workers = Vec::new();
+    for _ in 0..6 {
+        let (queue, chat, health) = (queue.clone(), chat.clone(), health.clone());
+        workers.push(std::thread::spawn(move || {
+            while let Some(job) = queue.take() {
+                let request = job.value;
+                if job.expired {
+                    overload(request);
+                    continue;
+                }
+                if request.url() != "/healthz" {
+                    if let Some(chat) = chat.as_ref() {
+                        if let Err(error) = chat.handle(request) {
+                            eprintln!("request failed: {error}");
+                        }
+                        continue;
+                    }
+                }
+                let (code, value) =
+                    if request.method() == &tiny_http::Method::Get && request.url() == "/healthz" {
+                        (200, health.clone())
+                    } else {
+                        (404, serde_json::json!({"error":"not_found"}))
+                    };
+                let _ = request.respond(
+                    tiny_http::Response::from_string(value.to_string())
+                        .with_status_code(code)
+                        .with_header(
+                            tiny_http::Header::from_bytes("Content-Type", "application/json")
+                                .unwrap(),
+                        ),
+                );
+            }
+        }));
+    }
     while !STOP.load(std::sync::atomic::Ordering::Relaxed) {
         let Some(request) = server.recv_timeout(std::time::Duration::from_millis(200))? else {
             continue;
         };
-        if request.url() != "/healthz" {
-            if let Some(chat) = &chat {
-                if let Err(error) = chat.handle(request) {
-                    eprintln!("request failed: {error}");
-                }
-                continue;
-            }
-        }
-        let (code, value) = if request.method() == &tiny_http::Method::Get
-            && request.url() == "/healthz"
-        {
-            (
-                200,
-                serde_json::json!({"status":"ok","cloud_connectors":"disabled","isolation":"linux-user-netns-seccomp","checks":checks}),
-            )
-        } else {
-            (404, serde_json::json!({"error":"not_found"}))
+        let lane = match request.url().split('?').next().unwrap_or("/") {
+            "/v1/realtime" | "/v1/audio/transcriptions" | "/v1/audio/speech" => Lane::Voice,
+            "/v1/chat/completions" | "/v1/embeddings" => Lane::Chat,
+            path if path.starts_with("/v1/workspaces") => Lane::Background,
+            _ => Lane::Control,
         };
-        request.respond(
-            tiny_http::Response::from_string(value.to_string())
-                .with_status_code(code)
-                .with_header(
-                    tiny_http::Header::from_bytes("Content-Type", "application/json").unwrap(),
-                ),
-        )?;
+        if let Err(request) = queue.submit(lane, request, std::time::Instant::now()) {
+            overload(request);
+        }
         if args.iter().any(|a| a == "--once") {
             break;
         }
     }
+    // Test --once drains its single accepted request; ordinary shutdown rejects queued work.
+    if args.iter().any(|a| a == "--once") {
+        queue.drain();
+    }
+    for request in queue.close() {
+        overload(request);
+    }
+    for worker in workers {
+        let _ = worker.join();
+    }
     Ok(())
+}
+
+#[cfg(all(target_os = "linux", target_arch = "x86_64"))]
+fn overload(request: tiny_http::Request) {
+    let _ = request.respond(
+        tiny_http::Response::from_string("{\"error\":{\"message\":\"Gateway busy; retry later\"}}")
+            .with_status_code(503)
+            .with_header(tiny_http::Header::from_bytes("Content-Type", "application/json").unwrap())
+            .with_header(tiny_http::Header::from_bytes("Retry-After", "1").unwrap()),
+    );
 }
 
 fn main() {

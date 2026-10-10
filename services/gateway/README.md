@@ -1,4 +1,12 @@
 # Gateway
+
+Admitted HTTP requests now use six bounded workers: control 2, voice 1, chat 2,
+background 1; eight waiting requests, ten-second queue expiry. Overload returns
+503 with Retry-After=1. See `docs/contracts/gateway-dispatch-v1.md` and ADR 0028.
+Run `cargo test -p sanctum-gateway --test dispatch`; live integration is
+`python evals/gateway_dispatch.py --token-file <path> --output <path>` on port 8769.
+Connection/parser bounds, disconnect cancellation and bounded slow-client shutdown
+remain pending; this is not a completed realtime transport or Step 0 gate.
 Rust local HTTP gateway and strict foundation diagnostic. OpenAPI contracts live
 in docs/contracts/{chat,runtime,diagnostics}.openapi.json. Chat requires a random
 local bearer key, stored mode 0600 under a mode 0700 state directory. SQLite stores

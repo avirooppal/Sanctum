@@ -1,5 +1,12 @@
 # Plan coverage audit
 
+Step 0 dispatch update: `services/gateway/src/dispatch.rs` and `runtime_main.rs`
+implement bounded admitted-request workers/queues with 503 backpressure and lane
+priority. `gateway-dispatch.json` measures real held-upload health/models and mixed
+chat/ingestion, plus overload. Mark concurrency **Partial**: held WebSocket,
+transport connection bounds, disconnect/engine cancellation and storm leak tests
+are not verified or implemented. This is not Step 0 acceptance.
+
 ## Single-user scope amendment
 
 The following supersedes team-related cells throughout this historical audit.

@@ -81,11 +81,11 @@ impl Drop for Engines {
 pub struct Chat {
     config: Config,
     token: String,
-    store: Store,
+    store: Mutex<Store>,
     chat: LocalEngine,
     embedding: LocalEngine,
     _engines: Engines,
-    knowledge: Option<crate::knowledge::Knowledge>,
+    knowledge: Option<Mutex<crate::knowledge::Knowledge>>,
 }
 
 impl Chat {
@@ -217,11 +217,11 @@ impl Chat {
         Ok(Self {
             config,
             token,
-            store,
+            store: Mutex::new(store),
             chat,
             embedding,
             _engines: engines,
-            knowledge,
+            knowledge: knowledge.map(Mutex::new),
         })
     }
     pub fn token_path(&self) -> PathBuf {
@@ -401,7 +401,7 @@ impl Chat {
                     }
                 }
             };
-            let result=worker.call(json!({"user":"local-owner","workspace":workspace,"operation":operation,"payload":payload}));
+            let result=worker.lock().map_err(|_| "knowledge lock poisoned")?.call(json!({"user":"local-owner","workspace":workspace,"operation":operation,"payload":payload}));
             return match result {
                 Ok(value) if value["ok"] == true => respond(request, 200, value["result"].clone()),
                 Ok(value) => respond(
@@ -426,12 +426,12 @@ impl Chat {
                 "/v1/conversations" => respond(
                     request,
                     200,
-                    json!({"data":self.store.conversations("local-owner")?}),
+                    json!({"data":self.store.lock().map_err(|_| "store lock poisoned")?.conversations("local-owner")?}),
                 ),
                 p if p.starts_with("/v1/conversations/") => respond(
                     request,
                     200,
-                    json!({"data":self.store.turns("local-owner",p.trim_start_matches("/v1/conversations/"))?}),
+                    json!({"data":self.store.lock().map_err(|_| "store lock poisoned")?.turns("local-owner",p.trim_start_matches("/v1/conversations/"))?}),
                 ),
                 _ => respond(request, 404, json!({"error":{"message":"Not found"}})),
             };
@@ -551,7 +551,7 @@ impl Chat {
         request.respond(response)?;
         if is_chat && reply.status == 200 {
             let bytes = captured.lock().map_err(|_| "capture poisoned")?;
-            self.store.save(
+            self.store.lock().map_err(|_| "store lock poisoned")?.save(
                 "local-owner",
                 &conversation,
                 &payload,
