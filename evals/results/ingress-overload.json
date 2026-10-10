@@ -1,0 +1,22 @@
+{
+  "duration_seconds": 180,
+  "health_samples": 3344,
+  "health_p95_seconds": 0.006386010994901881,
+  "health_max_seconds": 0.039269807981327176,
+  "before": {
+    "fds": 5,
+    "threads": 13,
+    "rss_kib": 5120
+  },
+  "after": {
+    "fds": 5,
+    "threads": 13,
+    "rss_kib": 13696
+  },
+  "peak": {
+    "fds": 8,
+    "threads": 16,
+    "rss_kib": 13696
+  },
+  "scope": "Ingress background-upload flood only; no engine jobs, voice or chat latency measurement"
+}

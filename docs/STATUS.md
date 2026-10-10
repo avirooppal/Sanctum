@@ -1,5 +1,68 @@
 # Implementation status
 
+## Step 0 — bounded ingress slice (in progress, 2026-10-10)
+
+Baseline commit `c7ae17f` was already checked out; no destructive reset needed.
+Current slice adds a guarded public TCP listener before the private application
+listener, connection/lane/header/body limits, upload deadlines and bounded
+rejection logging. ADR 0029 and ingress-v1 define the contract. Two tests were
+written before the implementation (initial missing-module compile failure).
+
+This session's baseline: Linux `python tools/check.py` 132/132 PASS; Rust
+`bash tools/check_rust.sh` 24 tests, 73 licenses, 38 kernel denial probes PASS;
+web 12 tests, typecheck/build PASS, npm audit zero vulnerabilities; SDK 8/8 PASS.
+Logs: `.sanctum/step0-baseline-{source,rust,sdk}.log`.
+
+After implementation: `bash tools/check_rust.sh` PASS, 26 tests, 74 reviewed
+crate licenses, 38 kernel denial probes (`.sanctum/ingress-rust-final.log`).
+Linux `python tools/check.py` PASS, 132 tests plus lint/format/types/licenses/evals
+(`.sanctum/ingress-linux-source.log`). Windows source gate also passed with the
+existing one privilege skip. No new skip or relaxed threshold.
+
+Real Linux commands (dev venv Python, repository root):
+
+```
+python evals/ingress_limits.py --binary target/debug/sanctum-runtime --output evals/results/ingress-limits.json
+python evals/ingress_overload.py --binary target/debug/sanctum-runtime --output evals/results/ingress-overload.json
+```
+
+PASS: three framing checks, 100 disconnects; header/body stall release
+1.871941s / 1.875998s (<2s). FDs 5 -> 5, threads 13 -> 13, RSS 5120 -> 5504 KiB
+after ten-second quiescence. Health-only SIGTERM shutdown 0.007713s.
+First run exceeded the declared two-second stall bound (2.088235s / 2.104096s);
+preserved `ingress-limits-first.json`. Internal timeout tightened to 1800ms and
+test assertion tightened to 2s; rerun passed.
+
+PASS: 180-second background-upload flood, 3344 health samples, p95 6.386ms,
+maximum 39.270ms (<250ms p95). FDs 5 -> 5, threads 13 -> 13; peak 8 FDs,
+16 threads, 13696 KiB RSS (baseline 5120 KiB, within +16 MiB tolerance).
+These are no-engine ingress checks, not full mixed-engine overload acceptance.
+
+Real guarded listener regression: `uv run --offline --group knowledge python
+evals/sdk_chat.py --base-url http://127.0.0.1:8769/v1 --token-file <state>/local.token`
+PASS 8/8; chat 1.0460s, streaming TTFT 0.3778s, embeddings 1024 dimensions.
+`SANCTUM_BASE_URL=http://127.0.0.1:8769 node evals/browser_speech.mjs
+<playwright-package> <token-file> .sanctum/speech-smoke/jfk.wav
+asr-parakeet-q4k-reference tts-flite-slt-reference tts-flite-slt-reference` PASS 7/7,
+no page errors; browser playback only, no physical audio/microphone claim.
+Same environment with `node evals/browser_meeting.mjs <playwright-package>
+<token-file>` PASS 5/5, no page errors; semantic quality remains unverified.
+Existing `python evals/gateway_dispatch.py --token-file <state>/local.token
+--output evals/results/gateway-dispatch.json` PASS: two real chat streams and
+ingestion complete; health/models p95 21.701/26.604ms (50 each); first overload
+503 in 16.589ms. Its initially held HTTP upload now times out at ingress, so this
+does NOT prove a session remained held throughout the mixed workload.
+The first runtime restart encountered an occupied closing port; retry reached
+the readiness record before these tests. Evidence is in the committed result JSONs.
+
+Remaining: minimum-throughput response enforcement, bounded engine cancellation
+and process-tree cleanup, full graceful shutdown with engine jobs, socket/process
+storm and repeated-start/stop assertions, mixed-engine sustained overload.
+WebSocket held-voice criterion: **PENDING: re-run against the real authenticated
+WebSocket in Step 1a**. Upgrade currently returns 501. Step 0 is NOT complete;
+Step 1 has not started. Next three steps: real SDK/browser regression on guarded
+listener; commit/push this green slice; cancellation supervision with real engines.
+
 ## Step 0 — bounded admitted-request dispatch (partial)
 
 Last green commit: `e39783c`. Contract/ADR 0028 and three scheduler tests written

@@ -2,6 +2,8 @@
 use serde::{Deserialize, Serialize};
 use std::io::{self, Read, Write};
 pub mod dispatch;
+#[cfg(all(target_os = "linux", target_arch = "x86_64"))]
+pub mod ingress;
 pub mod storage;
 
 pub const MAX_FRAME: usize = 64 * 1024;

@@ -1,5 +1,13 @@
 # Plan coverage audit
 
+Step 0 ingress update: connection/lane/header/body bounds and upload stall checks
+are implemented in `services/gateway/src/ingress.rs`, with unit tests and measured
+`evals/results/ingress-{limits,overload}.json`. Three-minute upload-flood health p95
+is 6.386ms. Overall resource governance remains **Partial**: these no-engine
+checks do not establish inference/ASR/ingestion cancellation, response throughput,
+process-tree leak freedom, mixed-engine load, or full graceful shutdown.
+Held authenticated WebSocket criterion is **PENDING Step 1a**.
+
 Step 0 dispatch update: `services/gateway/src/dispatch.rs` and `runtime_main.rs`
 implement bounded admitted-request workers/queues with 503 backpressure and lane
 priority. `gateway-dispatch.json` measures real held-upload health/models and mixed

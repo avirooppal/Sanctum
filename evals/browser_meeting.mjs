@@ -10,7 +10,7 @@ const errors = [];
 page.on('pageerror', error => errors.push(error.message));
 const passed = [];
 try {
-  await page.goto('http://127.0.0.1:8768');
+  await page.goto(process.env.SANCTUM_BASE_URL || 'http://127.0.0.1:8768');
   await page.getByLabel('Local access key').fill(readFileSync(tokenFile,'utf8').trim());
   await page.getByRole('button',{name:'Open workspace',exact:true}).click();
   await page.getByText('Meeting notes',{exact:true}).click();

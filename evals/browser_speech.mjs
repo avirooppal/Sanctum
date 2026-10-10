@@ -14,7 +14,7 @@ const failures = [];
 page.on('pageerror', error => failures.push(error.message));
 const passed = [];
 try {
-  const response = await page.goto('http://127.0.0.1:8766');
+  const response = await page.goto(process.env.SANCTUM_BASE_URL || 'http://127.0.0.1:8766');
   const csp = response.headers()['content-security-policy'];
   assert(csp.includes("connect-src 'self'") && csp.includes('media-src blob:'));
   passed.push('same_origin_and_blob_only_media_csp');

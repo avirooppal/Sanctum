@@ -13,6 +13,7 @@ sanctum-inference = { path = "../inference" }
 rusqlite = { version = "=0.32.1", features = ["bundled"] }
 sha2 = "=0.10.9"
 base64 = "=0.22.1"
+httparse = "=1.10.1"
 
 [target.'cfg(all(target_os = "linux", target_arch = "x86_64"))'.dependencies]
 libc.workspace = true

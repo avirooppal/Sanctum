@@ -74,7 +74,10 @@ fn run() -> Result<(), Box<dyn std::error::Error + Send + Sync>> {
     } else {
         None
     };
-    let server = tiny_http::Server::from_listener(listener, None)?;
+    let private_listener = TcpListener::bind(("127.0.0.1", 0))?;
+    let ingress =
+        sanctum_gateway::ingress::Ingress::start(listener, private_listener.local_addr()?)?;
+    let server = tiny_http::Server::from_listener(private_listener, None)?;
     println!(
         "{}",
         serde_json::json!({"address":address.to_string(),"ready":true,"token_file":chat.as_ref().map(|chat|chat.token_path())})
@@ -139,7 +142,9 @@ fn run() -> Result<(), Box<dyn std::error::Error + Send + Sync>> {
     // Test --once drains its single accepted request; ordinary shutdown rejects queued work.
     if args.iter().any(|a| a == "--once") {
         queue.drain();
+        ingress.drain(std::time::Duration::from_secs(2));
     }
+    drop(ingress);
     for request in queue.close() {
         overload(request);
     }

@@ -1,0 +1,18 @@
+{
+  "framing_checks": 3,
+  "header_stall_release_seconds": 2.088234684022609,
+  "body_stall_release_seconds": 2.104096444003517,
+  "before": {
+    "fds": 5,
+    "threads": 13,
+    "rss_kib": 4992
+  },
+  "after": {
+    "fds": 5,
+    "threads": 13,
+    "rss_kib": 5248
+  },
+  "disconnected_clients": 100,
+  "shutdown_seconds": 0.21794535798835568,
+  "scope": "Ingress-only no-engine runtime; engine cancellation, slow response reader and full Step 0 NOT verified"
+}

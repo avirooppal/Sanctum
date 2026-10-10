@@ -23,3 +23,11 @@ network route, host Unix sockets, namespace escape or cloud downloads are allowe
 Run `bash tools/check_rust.sh`; official SDK integration uses evals/sdk_chat.py.
 Signals stop the gateway and reap children; parent-death signals stop orphan engines.
 This is trusted-engine egress containment, not a hostile-code filesystem sandbox.
+
+Public ingress limits and framing restrictions: `docs/contracts/ingress-v1.md`
+and ADR 0029. HTTP keep-alive is disabled; uploads require Content-Length.
+Run `python evals/ingress_limits.py --binary target/debug/sanctum-runtime --output
+evals/results/ingress-limits.json` and the same arguments with
+`evals/ingress_overload.py` (180 seconds). These tests use a real isolated listener
+without engines; they do not prove engine cancellation or full graceful shutdown.
+Browser speech/meeting harnesses accept `SANCTUM_BASE_URL` for the tested listener.

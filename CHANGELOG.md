@@ -1,5 +1,12 @@
 # Changelog
 
+## 2026-10-10 — Bounded ingress (partial Step 0)
+
+- Guard the public TCP listener with connection/lane/backlog and framing limits,
+  upload deadlines and sampled rejection counts. Private HTTP handlers retain auth.
+- Add real socket disconnect/stall and three-minute upload-flood harnesses.
+  Full engine cancellation and WebSocket acceptance remain outstanding.
+
 ## 2026-10-10 — Repeatable development bundle verification
 
 - Add an optional fresh output path while preserving existing bundles and rejecting

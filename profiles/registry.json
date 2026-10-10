@@ -1688,6 +1688,15 @@
       "integrity": "sha512-AHEzTORMbi7/7aXp7w7KZ5+DCUdSeLsJz0grY8xHpc9DHdYb0vQu6DqJfm2tOw3gDExNgPgnJTXxM6syYFHaCA==",
       "scope": "web",
       "verified_at": "2026-10-10"
+    },
+    {
+      "name": "httparse",
+      "version": "1.10.1",
+      "license": "MIT OR Apache-2.0",
+      "license_source": "https://crates.io/crates/httparse/1.10.1",
+      "scope": "rust",
+      "verified_at": "2026-10-10",
+      "sha256": "6dbf3de79e51f3d586ab4cb9d5c3e2c14aa28ed23d180cf89b4df0454a69cc87"
     }
   ]
 }
