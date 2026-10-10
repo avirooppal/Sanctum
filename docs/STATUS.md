@@ -8,7 +8,7 @@ Phase 1 starts after the Phase 0 completion commit below. Placeholder service di
 | 0 Foundations | done (Linux x86_64) | Doctor tier/profile passes; real isolated HTTP ingress, exec inheritance and egress startup probes pass. Other runtime platforms fail closed. |
 | 1 Chat | done (Linux reference) | Offline clean-rootfs install to answer 50.6005s; official SDK 8/8. Downloads/build excluded; native macOS/Windows unverified. |
 | 2 Knowledge | done (v6, user-directed reviewer) | Vector/hybrid recall@5 0.60/1.00 (gain +0.40); MRR 0.60/1.00. Hybrid exact citation and expected-answer inclusion 1.00; abstention passed; calibrated local judge 30/30 supported. Vector-only answer/citation/judge rates 0.60. Codex checked 4/4 hybrid cases against frozen sources at the user's direction (ADR 0014); no independent human audit. |
-| 3 Speech | in progress (profile-bound local TTS API orchestration, chunked dictation, file transcription) | T1 first audio p95 <800 ms; LibriSpeech test-clean WER <=0.10 and test-other <=0.20 (ADR 0018). Host is T0; measurements unverified. |
+| 3 Speech | in progress (meeting-to-Knowledge integration, local TTS orchestration, chunked dictation, file transcription) | T1 first audio p95 <800 ms; LibriSpeech test-clean WER <=0.10 and test-other <=0.20 (ADR 0018). Host is T0; measurements unverified. |
 | 4 Vision | not started | Measurable visual QA lift: unverified; dataset/threshold pending. |
 | 5 Agents | not started | Red team passes and zero unexpected ledger egress: unverified. |
 | 6 Team | not started | 20 concurrent users meet reference SLO; verified air-gapped install: unverified. |
@@ -283,6 +283,7 @@ as a default.
 - [x] Contract-driven upload orchestration composes local profile validation, WAV decoding, VAD/ASR/diarization pipeline, and OpenAI-style response formatting; fake-engine end-to-end tests pass.
 - [x] Chunked realtime push-to-talk session handler validates events and private context, commits to local ASR, and clears buffered audio on cancellation; stub-engine tests pass.
 - [x] Contract-validated local TTS request orchestration checks the selected model and complete voice registry entries (permissive license, source, revision, hash), then returns bounded WAV or PCM; fake-engine tests pass.
+- [x] Meeting notes and action items are stored through Knowledge with the requested readers and classification; action items require transcript quotes, and an integration test confirms cross-reader ACL filtering.
 - [x] Generated API documentation updated; all speech tests included in `tools/check.py`.
 - [ ] Integrate a locally licensed streaming ASR backend, VAD backend, TTS, and audio capture/output.
 - [ ] Implement push-to-talk, file transcription with diarization, barge-in voice loop, and meeting-to-Knowledge integration.
@@ -295,7 +296,7 @@ as a default.
 | Foundation tests | 22/22 pass |
 | Isolation/evaluation tests | 9/9 pass |
 | Knowledge tests | 21 pass, 1 Windows symlink privilege skip |
-| Speech contract/interface tests | 42/42 pass |
+| Speech contract/interface tests | 46/46 pass |
 | Speech profile and whisper.cpp adapter tests | 4/4 pass |
 | Speech evaluation/runner tests | 8/8 pass |
 | Ruff lint/format, type checks, Python/frontend license scans | PASS |

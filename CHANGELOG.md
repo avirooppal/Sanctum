@@ -1,5 +1,13 @@
 # Changelog
 
+## 2026-10-10 — Phase 3 meeting notes in Knowledge
+
+- Added local-only meeting summary orchestration that requires a model registry entry,
+  rejects action items without verbatim transcript evidence, and stores the transcript,
+  summary, and actions in the selected Knowledge workspace with its reader ACLs.
+- ADR 0019 aligns speech classification with Knowledge's `confidential` vocabulary.
+  Integration tests confirm an unauthorized workspace member cannot retrieve notes.
+
 ## 2026-10-10 — Phase 3 local TTS request orchestration
 
 - Added contract-validated TTS request handling with a selected local model ID,

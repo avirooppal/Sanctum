@@ -31,6 +31,9 @@ policy.
   the selected local ASR engine, and clears buffered input on cancellation. Microphone
   capture, partial streaming recognition, output TTS, and a WebSocket listener remain
   unimplemented.
+- `services/speech/sanctum_speech/meeting.py`: requires a locally registered summary
+  model, verifies action-item evidence against the transcript, and stores notes using
+  Knowledge's owner check, reader ACLs, and data classification.
 - `services/speech/sanctum_speech/responses.py`: OpenAI-style `json`, `text`,
   `verbose_json`, and `vtt` transcription response formatting.
 - `docs/contracts/speech-profile.schema.json`: local engine paths and pinned hashes;

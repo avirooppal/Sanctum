@@ -1,0 +1,27 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://sanctum.local/contracts/meeting-notes.schema.json",
+  "title": "Sanctum local meeting notes",
+  "description": "Output of a local-only meeting summarizer. Every action item carries a verbatim transcript quote for review.",
+  "type": "object",
+  "required": ["summary", "action_items"],
+  "properties": {
+    "summary": { "type": "string", "minLength": 1, "maxLength": 20000 },
+    "action_items": {
+      "type": "array",
+      "maxItems": 100,
+      "items": {
+        "type": "object",
+        "required": ["description", "owner", "due_date", "evidence_quote"],
+        "properties": {
+          "description": { "type": "string", "minLength": 1, "maxLength": 2000 },
+          "owner": { "type": ["string", "null"], "maxLength": 256 },
+          "due_date": { "type": ["string", "null"], "maxLength": 64 },
+          "evidence_quote": { "type": "string", "minLength": 1, "maxLength": 2000 }
+        },
+        "additionalProperties": false
+      }
+    }
+  },
+  "additionalProperties": false
+}

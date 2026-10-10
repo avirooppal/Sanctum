@@ -761,7 +761,7 @@ Runtime HTTP: GET /healthz. Other contracts are foundation diagnostics.
             "enum": [
               "public",
               "internal",
-              "sensitive",
+              "confidential",
               "restricted"
             ]
           },
