@@ -74,6 +74,14 @@ hosting remain unavailable. A whole-file response is not streaming ASR or voice 
 
 ## Tests and evaluation
 
+`backends/flite.py` supplies an opt-in CPU TTSEngine. Its v1 TTS profile pins the
+executable containing the registered built-in voice data (ADR 0024). Voice cloning
+and URL/file voice selection are unavailable. Preserve `docs/licenses/flite-COPYING.txt`.
+Build reference: pinned source commit in registry, `./configure --with-audio=none
+--disable-shared`, `make -j 1`. Run `evals/tts_smoke.py` under the isolation wrapper;
+the exact executed command and measured WAV hash are in STATUS.md / speech-tts-smoke.json.
+This non-neural reference generates WAV files; it does not establish device playback.
+
 ASR profiles can select `whisper.cpp` or `parakeet.cpp`; `backends/factory.py` performs
 the dispatch without a remote fallback. Parakeet uses a pinned local CLI, reports one
 coarse clip segment and unknown detected language, and rejects vocabulary prompts.

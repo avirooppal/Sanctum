@@ -1,5 +1,23 @@
 # Threat model
 
+## Current verified scope (2026-10-10)
+
+The Linux gateway, llama.cpp children and file-speech worker run under inherited
+namespace/seccomp containment. Authenticated speech accepts bounded multipart WAVs,
+rejects duplicate/unknown fields and spoofed solo workspace context, and verifies
+model/executable hashes. Filename metadata is never used as a filesystem path.
+The worker and ASR have deadlines; no speech requests write Knowledge documents.
+
+Knowledge tests enforce workspace/document ACLs before retrieval, including revocation.
+Meeting ingestion checks authorization before summarization. Neither an action-item
+quote match nor a hash-pinned model proves output correctness. Treat outputs as data.
+These are trusted-engine isolation mechanisms, not arbitrary agent sandboxes.
+
+Missing controls remain explicit: complete egress capture/reconciliation, hash-chained
+Privacy Ledger, declarative data-flow policy, hostile MCP/agent containment, encryption
+at rest, OIDC/mTLS and signed distribution. Do not infer those from passing local tests.
+The early diagnostic descriptions below are historical; current evidence is in STATUS.md.
+
 Assets: prompts, documents, identities, workspace memberships, model files, keys,
 tool output and local hardware inventory. Trust OS administrators; distrust external
 documents, models, web/email content and tool manifests/results.

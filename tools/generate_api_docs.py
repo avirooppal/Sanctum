@@ -51,6 +51,10 @@ def render():
             "",
         ]
     )
+    tts_profile = json.loads((ROOT / "docs/contracts/tts-profile-v1.schema.json").read_text())
+    lines.extend(
+        ["## Local TTS profile v1", "", "```json", json.dumps(tts_profile, indent=2), "```", ""]
+    )
     return "\n".join(lines)
 
 

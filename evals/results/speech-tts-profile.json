@@ -1,0 +1,12 @@
+{
+  "schema_version": "1.0",
+  "id": "tts-flite-slt-reference",
+  "engine": "flite",
+  "egress": "denied",
+  "executable_path": "/opt/sanctum-speech/flite/bin/flite",
+  "executable_sha256": "8a199f912d921c6a60cbf955042156b1044bb5e74b179a12829877720df004c9",
+  "timeout_seconds": 120,
+  "voices": {
+    "tts-flite-slt-reference": "slt"
+  }
+}

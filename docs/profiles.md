@@ -19,3 +19,11 @@ Speech engine profiles are validated by `docs/contracts/speech-profile.schema.js
 The whisper.cpp adapter requires explicit local executable/model paths and matching
 SHA-256 values; it does not accept upstream model IDs. Register the exact model license,
 source revision, and hash before making any speech model available as a profile default.
+
+Implemented ASR discriminators: `whisper.cpp` and `parakeet.cpp`. Optional file VAD:
+`silero.cpp` with independent executable/model pins. Profiles are opt-in; the hardware
+recommendation has not been changed by small smoke tests. Reference evidence is in
+`evals/results/speech-*-profile.json` and `speech-vad-smoke.json`. Legacy `silero`
+profiles still validate for compatibility but cannot launch an unimplemented engine.
+Parakeet emits coarse whole-clip timestamps and does not force language or support
+vocabulary prompts. Retain the attribution in `docs/model-attributions.md`.

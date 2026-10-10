@@ -1,5 +1,12 @@
 # Changelog
 
+## 2026-10-10 — Real permissive CPU TTS reference
+
+- Added a pinned Flite TTSEngine/profile with registered built-in voices, bounded
+  temporary files and explicit speed handling. Preserved CMU license/voice notices.
+- Real isolated synthesis produced 3.31s of audio in 0.053s. This is file-generation
+  evidence, not physical playback, neural voice quality or a full voice-turn SLO.
+
 ## 2026-10-10 — Second real local ASR backend
 
 - Added Parakeet CLI ASR and profile factory without changing product API or defaults.

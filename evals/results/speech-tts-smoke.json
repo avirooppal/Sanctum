@@ -1,0 +1,24 @@
+{
+  "suite": "real-file-tts-smoke",
+  "profile": {
+    "schema_version": "1.0",
+    "id": "tts-flite-slt-reference",
+    "engine": "flite",
+    "egress": "denied",
+    "executable_path": "/opt/sanctum-speech/flite/bin/flite",
+    "executable_sha256": "8a199f912d921c6a60cbf955042156b1044bb5e74b179a12829877720df004c9",
+    "timeout_seconds": 120,
+    "voices": {
+      "tts-flite-slt-reference": "slt"
+    }
+  },
+  "text": "Sanctum keeps your conversations on this machine.",
+  "voice": "tts-flite-slt-reference",
+  "sample_rate": 16000,
+  "channels": 1,
+  "audio_seconds": 3.31,
+  "synthesis_seconds": 0.05270699498942122,
+  "wav_sha256": "446c51b8be3f5c42b814cfdfe09cec57d36bc1fddefebd0941bda4091df6fd55",
+  "physical_playback_verified": false,
+  "voice_turn_latency_verified": false
+}

@@ -1,5 +1,24 @@
 # Architecture
 
+## Current implementation (2026-10-10)
+
+Linux x86_64 Rust gateway binds host loopback before entering a private namespace
+and installing seccomp. Hash-verified llama.cpp children share private loopback;
+authenticated clients use OpenAI chat/embedding/models and SQLite conversation history.
+Knowledge uses a separately confined Python JSONL worker and retrieval-time ACLs.
+The solo vector store is SQLite-vec under ADR 0010, not the planned LanceDB default.
+
+Optional file speech launches a bounded Python worker through the same confined
+engine-child entry. A versioned profile selects Whisper or Parakeet and optional
+Silero VAD. Uploaded bytes are transient; no remote engine fallback exists. The gateway
+derives the current solo request context. ASR is real and SDK-tested; TTS hosting,
+streaming, diarization and a microphone/speaker loop remain incomplete.
+
+React/Tailwind chat is implemented. Desktop, vision, agents, declarative policy,
+Privacy Ledger, OIDC, Postgres, OpenTelemetry and signed releases remain planned.
+The paragraphs below retain early foundation design history; use STATUS.md and
+PLAN_COVERAGE.md for current verification scope rather than those historical limits.
+
 plan.md is the architecture and phase source of truth. Gateway/control plane
 (Rust) is the sole ingress. Inference, speech, vision-docs, knowledge and agents
 are separate processes behind versioned contracts. Engines are replaceable adapters.

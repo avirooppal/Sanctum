@@ -15,6 +15,9 @@ Streaming VAD/ASR and voice SLOs remain unverified; file VAD is opt-in.
 `backends/parakeet_cpp.py` now supplies a second real ASREngine. Its isolated file and
 HTTP results are in `speech-parakeet-smoke.json` and `speech-sdk-parakeet.json`.
 Language selection is unforced and timestamps coarse; live streaming remains absent.
+`backends/flite.py` now provides a real opt-in CPU TTSEngine with a versioned profile
+and reviewed permissive voice artifact. `speech-tts-smoke.json` records synthesis;
+physical playback and neural quality remain unverified. TTS HTTP hosting is next.
 `Implemented` means the named scope has current executable evidence, not that the
 whole phase is complete. `Partial` includes missing integrations. `UNVERIFIED` means
 implementation/evidence exists but the required execution has not passed this run.

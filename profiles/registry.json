@@ -82,6 +82,20 @@
       "upstream_source": "https://huggingface.co/nvidia/parakeet-tdt-0.6b-v3",
       "upstream_revision": "541d1f99c6b0c3cd0b11a95167540bb8edefd82b",
       "attribution": "NVIDIA Parakeet TDT 0.6B v3 (CC BY 4.0); model conversion and Q4_K quantization by ggml-org (MIT). See docs/model-attributions.md."
+    },
+    {
+      "id": "tts-flite-slt-reference",
+      "license": "LicenseRef-CMU-Flite",
+      "license_url": "https://github.com/festvox/flite/blob/e9e2e37c329dbe98bfeb27a1828ef9a71fa84f88/COPYING",
+      "verified_at": "2026-10-10",
+      "sha256": "8a199f912d921c6a60cbf955042156b1044bb5e74b179a12829877720df004c9",
+      "format": "native-voice",
+      "capabilities": [
+        "tts"
+      ],
+      "source": "https://github.com/festvox/flite/tree/e9e2e37c329dbe98bfeb27a1828ef9a71fa84f88/lang/cmu_us_slt",
+      "revision": "e9e2e37c329dbe98bfeb27a1828ef9a71fa84f88",
+      "attribution": "Carnegie Mellon University and Flite contributors; preserve docs/licenses/flite-COPYING.txt. Built-in SLT data in the pinned no-audio executable; not a neural voice."
     }
   ],
   "dependencies": [
@@ -2322,6 +2336,15 @@
       "scope": "optional-source-engine",
       "verified_at": "2026-10-10",
       "revision": "d1be6fde11ac6e0407606b4e42fe72d34add8037"
+    },
+    {
+      "name": "flite",
+      "version": "2.2",
+      "license": "LicenseRef-CMU-Flite",
+      "license_source": "https://github.com/festvox/flite/blob/e9e2e37c329dbe98bfeb27a1828ef9a71fa84f88/COPYING",
+      "scope": "optional-static-tts-runtime",
+      "verified_at": "2026-10-10",
+      "revision": "e9e2e37c329dbe98bfeb27a1828ef9a71fa84f88"
     }
   ]
 }

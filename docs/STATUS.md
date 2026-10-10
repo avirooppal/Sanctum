@@ -2,6 +2,29 @@
 
 ## Active autonomous mission — 2026-10-10
 
+### Latest slice: Phase 3 real CPU TTS adapter
+
+Last green commit: `1c2fcd4`. Added opt-in Flite 2.2 TTSEngine, versioned TTS profile,
+strict registered voice selection, private temporary text input and bounded WAV output.
+ADR 0024 records the permissive CMU collection license and compiled-voice format
+exception; exact upstream COPYING is preserved. This is a small non-neural reference,
+not a replacement claim for planned neural voice quality. No new Python dependency.
+
+Build executed on pinned source: `./configure --with-audio=none --disable-shared &&
+make -j 1`; `ldd bin/flite` lists only libc, libm and the OS loader. Hash and profile
+are in `evals/results/speech-tts-profile.json`. Contract-first tests initially failed
+import, then passed; `tools/check.py` PASS, 122 tests passed + 1 Windows privilege skip,
+type/lint/format/license gates and 8 profile fixtures pass.
+
+Real command: `python3 tools/isolated_run.py -- /home/aviroop/.local/share/sanctum-dev-venv/bin/python
+evals/tts_smoke.py --profile .sanctum/speech-smoke/tts-profile.json --voice
+tts-flite-slt-reference --text "Sanctum keeps your conversations on this machine."
+--wav .sanctum/speech-smoke/tts.wav --output evals/results/speech-tts-smoke.json`.
+PASS 4 network denial probes; nonzero mono 16 kHz PCM, 3.31s audio generated in
+0.052706995s. Physical playback, neural quality and voice-turn latency UNVERIFIED.
+
+Next three steps: host TTS API; cancellable voice-turn orchestration; browser audio UI.
+
 ### Latest slice: Phase 3 second real ASR backend
 
 Last green commit: `08b8711`. Added profile-selected `parakeet.cpp` behind ASREngine;
