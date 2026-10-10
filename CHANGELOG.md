@@ -1,5 +1,10 @@
 # Changelog
 
+## 2026-10-10 — Active shutdown evidence
+
+- Add real engine shutdown checks with chat, ingestion, ASR, queued work and a slow
+  upload; assert listener closure, five-second exit and zero surviving owned PIDs.
+
 ## 2026-10-10 — Response backpressure
 
 - Bound fixed and streaming response writes with cancellation, idle/block deadlines

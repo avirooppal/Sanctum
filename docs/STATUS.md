@@ -1,16 +1,16 @@
 # Current state
 
-- Current step: Step 0, S0-4 response backpressure verified locally; Step 1 blocked by the Step 0 gate.
-- Last locally/hosted green commit: `4fd4109`; H1/H2 commit `0cc3859`.
+- Current step: Step 0, S0-5 active and queued shutdown verified locally; Step 1 blocked by the Step 0 gate.
+- Last locally/hosted green commit: `1154400`; H1/H2 commit `0cc3859`.
 - Open blockers: engine-wide admission remains incomplete; full
   engine storm/shutdown/overload gates are unmeasured. Hosted CI blocker resolved.
-- Next three steps: commit response throughput; measure active-engine shutdown; implement shared engine admission.
+- Next three steps: commit shutdown evidence; implement shared engine admission; run real-engine storms and mixed overload.
 
 | Step 0 gate | Current result |
 |---|---|
 | Disconnect -> slot release p95 by engine | PASS gateway slot release: 50 samples each chat/Knowledge/ASR/TTS, p95 151/208/178/178ms; shared-engine compute stop not established |
 | Process/FD/thread/socket/RSS storm cleanup | Partial: no-engine ingress only; real-engine storms pending |
-| Active-engine bounded shutdown | NOT MEASURED |
+| Active-engine bounded shutdown | PASS 0.772s active; 1.019s active + queued; zero surviving owned PIDs |
 | Minutes of mixed-engine overload with bounded queues | NOT MEASURED; upload-only ingress flood is insufficient |
 | Held authenticated WebSocket | PENDING: re-run against the real authenticated WebSocket in Step 1a |
 
@@ -209,6 +209,31 @@ subsequent slow window.
 evals/results/response-ingress.json`: PASS 100 disconnects, header/body release
 1.876457/1.880110s, FDs 5->5, threads 13->13, RSS 5120->5376KiB; health-only
 shutdown 0.214930s. This still does not prove active-engine shutdown/storm cleanup.
+
+## S0-5 active-engine shutdown
+
+S0-4 commit `4e12418`, followed by status whitespace correction `1154400`, pushed.
+Hosted runs 38055640585 and 38055653258 completed successfully. No runtime code
+change was required for this slice: prior cancellation/supervision now satisfies
+the active shutdown experiment. Contract and executable assertion harness added.
+
+`python evals/active_shutdown.py --pid 68621 --token-file <state>/local.token
+--output evals/results/active-shutdown.json`: PASS real streaming chat, Knowledge
+ingestion, confirmed Parakeet CLI, and slow upload; listener closed **0.182430s**,
+shutdown **0.772163s**, all 13 observed child PIDs plus gateway gone.
+
+Expanded harness to require a queued chat too. Restarted runtime to readiness;
+`python evals/active_shutdown.py --pid 690 --token-file <state>/local.token --output
+evals/results/active-queued-shutdown.json`: PASS active lanes [1,1,2,1], queued
+[0,0,1,0], slow upload; listener closed **0.171963s**, shutdown **1.019047s**;
+all 15 observed child PIDs plus gateway gone. Both meet five-second bound, with
+listener closure below 250ms. Runtime launch sessions exited successfully.
+These are two measured shutdowns, not the repeated storm/resource-baseline gate.
+
+Fresh Linux `python tools/check.py`: PASS 133 tests and all source checks;
+`.sanctum/active-shutdown-source.log`. Rust runtime unchanged since S0-4's full
+40-test/probe gate. `ruff format`/`ruff check evals/active_shutdown.py`: PASS.
+S0-6 global engine admission and S0-7/S0-8 remain incomplete; no Step 1 or tags.
 
 ## Phase table (scope and historical evidence)
 

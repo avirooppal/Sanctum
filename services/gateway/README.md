@@ -48,3 +48,8 @@ Response delivery limits are in `docs/contracts/response-flow-v1.md` (ADR 0034).
 Run `python evals/response_backpressure.py --token-file <state>/local.token --output
 <result.json>` against the ready reference runtime for actual embedding/SSE and
 burst-then-trickle upload probes.
+
+`evals/active_shutdown.py --pid <gateway-pid> --token-file <state>/local.token
+--output <result.json>` intentionally terminates that ready reference gateway after
+starting real chat, ingestion, ASR, queued chat and a slow upload. It asserts the
+shutdown contract in `docs/contracts/shutdown-v1.md`.
