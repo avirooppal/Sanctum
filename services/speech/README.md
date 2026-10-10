@@ -74,6 +74,14 @@ hosting remain unavailable. A whole-file response is not streaming ASR or voice 
 
 ## Tests and evaluation
 
+For opt-in file VAD, select `vad.engine=silero.cpp` with registered model ID,
+model/executable paths and SHA-256 pins, threads, and timeout at most 20s. The adapter
+converts upstream centiseconds to validated seconds. Run `evals/vad_smoke.py --profile
+PROFILE --audio WAV --output JSON` under `tools/isolated_run.py`. The exact reference
+profile and real speech/silence results are in `speech-vad-smoke.json`.
+`speech-sdk-vad.json` records 8/8 real SDK checks and a 36.004s first file request;
+this is not streaming VAD or a voice-latency pass. No default profile enables it.
+
 See [reference provisioning and reproduction](../../docs/speech-reference.md) for
 the pinned fallback candidate, observed download hash and current WSL build failure.
 

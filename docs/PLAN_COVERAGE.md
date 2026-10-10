@@ -9,6 +9,9 @@ quality corpus). `/v1/audio/transcriptions` is now implemented for authenticated
 multipart uploads: `services/gateway/src/speech.rs`, `services/speech/worker.py`,
 `speech-sdk.json` (8/8 real SDK checks). Other speech routes and full Phase 3 remain
 partial. `docs/contracts/speech-worker-v1.md` states exact limits and context scope.
+File VAD is now implemented by `backends/silero_cpp.py`: `speech-vad-smoke.json`
+records real speech/silence checks and `speech-sdk-vad.json` the HTTP integration.
+Streaming VAD/ASR and voice SLOs remain unverified; file VAD is opt-in.
 `Implemented` means the named scope has current executable evidence, not that the
 whole phase is complete. `Partial` includes missing integrations. `UNVERIFIED` means
 implementation/evidence exists but the required execution has not passed this run.

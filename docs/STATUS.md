@@ -2,6 +2,27 @@
 
 ## Active autonomous mission — 2026-10-10
 
+### Latest slice: Phase 3 real Silero file VAD
+
+Last green commit: `a53a2f5`. Added SileroCppVAD behind the detector protocol, MIT
+model pins, additive profile fields and registry support (ADR 0022); defaults unchanged.
+Contract-first tests failed import before implementation, then passed. Upstream README
+named an obsolete build target; inspecting CMake resolved the failed build to target
+`whisper-vad-speech-segments`. Actual output uses centiseconds, covered by adapter tests.
+
+Fresh results: `tools/check.py` PASS, 114 tests passed + 1 existing Windows privilege
+skip, typing/lint/format and 26 Python/145 frontend license checks pass.
+`python3 tools/isolated_run.py -- /home/aviroop/.local/share/sanctum-dev-venv/bin/python
+evals/vad_smoke.py --profile .sanctum/speech-smoke/profile.json --audio
+.sanctum/speech-smoke/jfk.wav --output evals/results/speech-vad-smoke.json`: PASS,
+4 network-denial probes, 4 intervals in 0.141802387s, zero intervals for digital silence.
+`evals/sdk_speech.py` using the prior arguments and output `speech-sdk-vad.json`:
+PASS 8/8 actual VAD-enabled gateway tests; first request 36.004429950s. This is not
+streaming or a T1 SLO pass; exact transcript and profile/hashes are in result artifacts.
+
+Next three steps: second ASR engine; bounded streaming/voice cancellation; real TTS.
+Remaining Phase 3 requirements include diarization, live audio and T1 measurements.
+
 ### Latest slice: Phase 3 authenticated file-ASR endpoint
 
 Last green commit: `5c4b3a1` (real isolated ASR and mandatory speech typing).

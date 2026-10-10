@@ -1379,14 +1379,63 @@ Runtime HTTP: GET /healthz. Other contracts are foundation diagnostics.
         "engine": {
           "enum": [
             "none",
-            "silero"
+            "silero",
+            "silero.cpp"
           ]
         },
         "model_path": {
           "type": "string",
           "minLength": 1
+        },
+        "model_id": {
+          "type": "string",
+          "minLength": 1
+        },
+        "model_sha256": {
+          "type": "string",
+          "pattern": "^[a-f0-9]{64}$"
+        },
+        "executable_path": {
+          "type": "string",
+          "minLength": 1
+        },
+        "executable_sha256": {
+          "type": "string",
+          "pattern": "^[a-f0-9]{64}$"
+        },
+        "threads": {
+          "type": "integer",
+          "minimum": 1,
+          "maximum": 256
+        },
+        "timeout_seconds": {
+          "type": "integer",
+          "minimum": 1,
+          "maximum": 20
         }
-      }
+      },
+      "allOf": [
+        {
+          "if": {
+            "properties": {
+              "engine": {
+                "const": "silero.cpp"
+              }
+            }
+          },
+          "then": {
+            "required": [
+              "model_path",
+              "model_id",
+              "model_sha256",
+              "executable_path",
+              "executable_sha256",
+              "threads",
+              "timeout_seconds"
+            ]
+          }
+        }
+      ]
     },
     "egress": {
       "const": "denied"

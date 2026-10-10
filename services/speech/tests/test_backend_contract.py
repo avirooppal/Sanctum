@@ -26,6 +26,20 @@ class SpeechProfileContractTests(unittest.TestCase):
         }
         validator = Draft202012Validator(schema)
         self.assertTrue(validator.is_valid(valid))
+        for legacy_vad in ({"engine": "none"}, {"engine": "silero", "model_path": "/old-model"}):
+            self.assertTrue(validator.is_valid({**valid, "vad": legacy_vad}))
+        self.assertFalse(validator.is_valid({**valid, "vad": {"engine": "silero.cpp"}}))
+        pinned_vad = {
+            "engine": "silero.cpp",
+            "model_id": "vad",
+            "model_path": "/model",
+            "model_sha256": "a" * 64,
+            "executable_path": "/vad",
+            "executable_sha256": "b" * 64,
+            "threads": 1,
+            "timeout_seconds": 20,
+        }
+        self.assertTrue(validator.is_valid({**valid, "vad": pinned_vad}))
         for key, value in (
             ("egress", "allowed"),
             ("asr", {**valid["asr"], "model_path": "Systran/model"}),

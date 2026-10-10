@@ -24,6 +24,8 @@ One stdout JSON response: `{ok:true, content_type, result}` or
 transcripts, local paths or engine stderr. Worker deadline is 150 seconds, ASR at most
 120 seconds. Gateway kills/reaps a worker exceeding 160 seconds. No network fetches.
 
-The initial backend uses the configured `vad.engine=none` whole-file mode. It does
-not label all audio as detected speech and rejects diarization without an engine.
+The backend uses explicit `vad.engine=none` whole-file mode or additive `silero.cpp`
+profiles with registry/model/binary verification (ADR 0022). Whole-file mode does not
+label all audio as detected speech. Both reject diarization without an engine.
+VAD has a 20s timeout; the 150s worker deadline covers VAD and all ASR segments.
 Only JSON/text/verbose_json/VTT responses are implemented. TTS/realtime stay disabled.

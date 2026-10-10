@@ -1,5 +1,12 @@
 # Changelog
 
+## 2026-10-10 — Real Silero VAD adapter
+
+- Added hash-pinned Silero file VAD with timestamp conversion and silence checks.
+  Additive profiles preserve prior configurations (ADR 0022).
+- Recorded real denied-network VAD and VAD+ASR SDK results. VAD remains opt-in;
+  the measured 36.004s first file upload is not a real-time voice result.
+
 ## 2026-10-10 — Authenticated hosted file transcription
 
 - Added optional gateway speech configuration and an isolated, bounded multipart

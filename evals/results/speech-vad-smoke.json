@@ -1,0 +1,50 @@
+{
+  "suite": "real-file-vad-smoke",
+  "profile": {
+    "schema_version": "1.0",
+    "id": "asr-whisper-tiny-en-reference",
+    "egress": "denied",
+    "vad": {
+      "engine": "silero.cpp",
+      "model_id": "vad-silero-reference",
+      "model_path": "/opt/sanctum-speech/ggml-silero-v6.2.0.bin",
+      "model_sha256": "2aa269b785eeb53a82983a20501ddf7c1d9c48e33ab63a41391ac6c9f7fb6987",
+      "executable_path": "/opt/sanctum-speech/build/bin/whisper-vad-speech-segments",
+      "executable_sha256": "259c10302d2fc8444dec8b1a0fbd3c2cfa5aa02e6c75b6bed9fb50c009b0096e",
+      "threads": 2,
+      "timeout_seconds": 20
+    },
+    "asr": {
+      "engine": "whisper.cpp",
+      "model_path": "/opt/sanctum-speech/ggml-tiny.en.bin",
+      "model_sha256": "921e4cf8686fdd993dcd081a5da5b6c365bfde1162e72b08d75ac75289920b1f",
+      "executable_path": "/opt/sanctum-speech/build/bin/whisper-cli",
+      "executable_sha256": "5d06d1e07e4b8b5dd29d41b034a0290a06fc984e4ad767d4810bc2d3289c27a0",
+      "threads": 2,
+      "timeout_seconds": 120
+    }
+  },
+  "audio_sha256": "59dfb9a4acb36fe2a2affc14bacbee2920ff435cb13cc314a08c13f66ba7860e",
+  "audio_seconds": 11.0,
+  "vad_seconds": 0.14180238702101633,
+  "intervals": [
+    {
+      "start": 0.32,
+      "end": 2.27
+    },
+    {
+      "start": 3.27,
+      "end": 4.41
+    },
+    {
+      "start": 5.38,
+      "end": 7.68
+    },
+    {
+      "start": 8.16,
+      "end": 10.62
+    }
+  ],
+  "silence_intervals": 0,
+  "streaming_latency_verified": false
+}
