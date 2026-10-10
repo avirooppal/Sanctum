@@ -293,18 +293,26 @@ as a default.
 | Check | Observed result |
 |---|---|
 | Full offline `tools/check.py` | PASS |
-| Foundation tests | 22/22 pass |
+| Foundation tests | 23/23 pass |
 | Isolation/evaluation tests | 9/9 pass |
 | Knowledge tests | 20 pass, 1 Windows symlink privilege skip (21 discovered) |
 | Speech contract/interface tests | 45/45 pass, including 2 new buffer regressions; previous 46 count was incorrect |
 | Speech profile and whisper.cpp adapter tests | 4/4 pass |
 | Speech evaluation/runner tests | 8/8 pass |
 | Ruff lint/format, CLI type checks, Python/frontend license scans | PASS; type checking currently covers the CLI only |
-| T1 WER and voice latency | Unverified; no whisper.cpp artifact/model or benchmark data available locally; host is T0; WER thresholds set by ADR 0018 |
+| T1 WER and voice latency | Unverified; model downloaded and hash verified, engine build has no completion result after WSL service failure; host is T0; WER thresholds set by ADR 0018 |
 
 Phase 3 remains in progress and Phase 4 has not started because the Phase 3 exit gate
 has not been verified. `evals/run_speech_asr.py` creates measured local ASR records;
 `evals/speech_eval.py` scores them. Neither can substitute for a real T1 voice-loop run.
+
+Latest verification: meeting authorization now precedes summarization, and encoded
+audio is bounded before decoding. The source gate passed after both regressions were
+fixed. The registry now pins a MIT whisper.cpp/tiny.en fallback candidate (ADR 0020),
+without changing recommended profiles. Real inference remains unverified: WSL shell
+creation failed with `Wsl/Service/0x8007274c` during the build attempt. See
+`docs/speech-reference.md` for observed hashes, limitations and reproduction commands.
+Earlier statements above about no model being provisioned describe earlier slices.
 
 ### Phase 3 ASR adapter slice
 

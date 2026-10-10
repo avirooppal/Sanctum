@@ -1,5 +1,12 @@
 # Changelog
 
+## 2026-10-10 — Phase 3 reference ASR provisioning
+
+- Record MIT source/model pins for whisper.cpp v1.9.5 and tiny.en; verify the downloaded
+  model hash. Restrict legacy GGML registry entries to ASR (ADR 0020, contract test).
+- Document the WSL service failure that prevented real inference verification and
+  provide build/evaluation reproduction commands. Phase 3 remains in progress.
+
 ## 2026-10-10 — Phase 3 intake security verification
 
 - Reject unauthorized meeting ingestion before invoking the summarizer, including

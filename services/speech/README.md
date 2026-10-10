@@ -45,6 +45,9 @@ policy.
 
 ## Tests and evaluation
 
+See [reference provisioning and reproduction](../../docs/speech-reference.md) for
+the pinned fallback candidate, observed download hash and current WSL build failure.
+
 Run the full offline repository gate from the root:
 
 ```powershell

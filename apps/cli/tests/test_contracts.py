@@ -31,6 +31,18 @@ class ContractTests(unittest.TestCase):
         registry = json.loads((ROOT / "profiles/registry.json").read_text())
         Draft202012Validator(schema, format_checker=FormatChecker()).validate(registry)
 
+    def test_legacy_ggml_is_restricted_to_asr(self):
+        schema = json.loads((ROOT / "docs/contracts/registry.schema.json").read_text())
+        registry = json.loads((ROOT / "profiles/registry.json").read_text())
+        entry = registry["models"][0]
+        entry["format"] = "ggml"
+        entry["capabilities"] = ["asr"]
+        validator = Draft202012Validator(schema)
+        validator.validate(registry)
+        entry["capabilities"] = ["text", "asr"]
+        with self.assertRaises(ValidationError):
+            validator.validate(registry)
+
     def setUp(self):
         self.schemas = json.loads((ROOT / "docs/contracts/diagnostics.openapi.json").read_text())[
             "components"
