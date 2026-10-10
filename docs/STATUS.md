@@ -1,13 +1,11 @@
 # Current state
 
-- Current step: Step 0, housekeeping H1/H2; Step 1 blocked by the Step 0 gate.
-- Last locally green code commit: `32caea2`; checked-out documentation commit `c94ab89`.
-  No checkout/reset needed. Hosted CI for this commit is failing (see H3).
+- Current step: Step 0, S0-1 cancellation contract; Step 1 blocked by the Step 0 gate.
+- Last locally/hosted green commit: `24c7874`; H1/H2 commit `0cc3859`.
 - Open blockers: cancellation and process supervision are unimplemented; full
-  engine storm/shutdown/overload gates are unmeasured. Hosted macOS source fails
-  because runner Python lacks SQLite extension loading; Windows was cancelled.
-- Next three steps: repair hosted CI and verify all five jobs; implement the common
-  cancellation contract/context; implement supervised cancellable engine I/O.
+  engine storm/shutdown/overload gates are unmeasured. Hosted CI blocker resolved.
+- Next three steps: implement the common cancellation contract/context; implement
+  owned process supervision; implement cancellable engine I/O.
 
 | Step 0 gate | Current result |
 |---|---|
@@ -47,6 +45,11 @@ commit `c94ab89`: Linux source PASS, Rust PASS, web PASS; macOS FAIL (two Knowle
 retrieval tests: `sqlite3.Connection` lacks `enable_load_extension`); Windows
 CANCELLED by matrix fail-fast. Full macOS log retrieved as authenticated account
 `avirooppal`, saved at `.sanctum/ci-macos-failure.log`. Repair pending; no checks skipped.
+
+H3 repair `24c7874`: require uv-managed Python 3.12; disable matrix fail-fast so all
+platforms report results. No checks weakened. [Hosted run 38051917489](https://github.com/avirooppal/Sanctum/actions/runs/38051917489)
+completed with **all five jobs PASS**: source Linux, source Windows, source macOS,
+Rust foundation and web. Observed through the GitHub jobs API this session.
 
 ## Phase table
 
