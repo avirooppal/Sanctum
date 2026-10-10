@@ -1,11 +1,11 @@
 # Current state
 
-- Current step: Step 0, S0-7 Step 0 complete for the Linux CPU HTTP reference; push/hosted CI finalization pending; Step 1 blocked by the Step 0 gate.
-- Last locally/hosted green commit: `e15ffbc`; all five hosted jobs passed.
-- Open blockers: no unresolved local HTTP-reference gate failure; final push/hosted CI pending.
+- Current step: Step 0, S0-7 Step 0 complete and verified for the Linux CPU HTTP reference; Step 1 blocked by the Step 0 gate.
+- Last locally/hosted green code commit: `f6963fd`; all five hosted jobs passed.
+- Open blockers: none for the measured Step 0 HTTP reference.
   Held authenticated WebSocket remains explicitly deferred to Step 1a.
   Repeated active shutdown and sustained mixed overload remain unverified. Hosted CI is green.
-- Next three steps: push final Step 0 commit; confirm all hosted jobs; Step 1a authenticated WebSocket (not started).
+- Next three steps: Step 1a authenticated WebSocket; rerun held-session criterion; Step 1b warm supervised engines (all not started).
 
 | Step 0 gate | Current result |
 |---|---|
@@ -15,7 +15,7 @@
 | Minutes of mixed-engine overload with bounded queues | PASS 181.527s, chat/ASR/TTS p95 3.330/4.424/1.364s; queue peak 3, zero foreground errors, resource restoration |
 | Held authenticated WebSocket | PENDING: re-run against the real authenticated WebSocket in Step 1a |
 
-Step 0 HTTP-reference gate and final local regression pass; final push/CI pending. No phase tag. Step 1 has not started.
+Step 0 HTTP-reference gate, final regression, push and hosted CI pass. No phase tag. Step 1 has not started.
 
 ## Earlier slices this session
 
@@ -262,12 +262,23 @@ audit zero vulnerabilities. Final startup self-test and SDK/browser results abov
 The requested Step 0 HTTP-reference gates pass with measured evidence. The
 explicitly deferred held authenticated WebSocket remains PENDING Step 1a; physical
 audio/mic and real <800ms voice-turn/WER gates remain future verification, not
-claimed here. Step 1 has not started. Final commit/push/hosted CI still to record.
+claimed here. Step 1 has not started. Code commit `f6963fd` pushed; all hosted jobs PASS.
 
 Decisions for review: ADR 0037 (large-response header setup wait), ADR 0038
 (representative warmup/setup timeout), ADR 0042 (exact archive bytes), ADR 0043
 (measured ASR thread profile and bounded CPU admission). No latency/resource gate
 was loosened. Failed runs remain committed or preserved as named evidence.
+
+## GitHub completion evidence
+
+S0-7 commit `e15ffbc` and S0-8 commit `f6963fd` pushed to origin/main using the
+already-verified avirooppal authentication. [Run 38073325305](https://github.com/avirooppal/Sanctum/actions/runs/38073325305)
+for `f6963fd` completed all five jobs successfully: Linux/Windows/macOS source,
+Rust foundation and web (observed jobs API). Final process inventory
+`ps -C sanctum-runtime,llama-server,parakeet-cli,flite -o pid,ppid,stat,comm`
+returned no matching processes after shutdown. No phase tags or Step 1 code.
+The final documentation commit records this verified code hash; no self-referential
+commit-hash claim. All earlier failures, measurements and archive hashes retained.
 
 ## Phase table (scope and historical evidence)
 
