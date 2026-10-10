@@ -1,5 +1,13 @@
 # Changelog
 
+## 2026-10-10 — Fresh-checkout validation and frontend security refresh
+
+- Fix README's missing Knowledge dependency group and document exact engine extraction.
+- Remove vulnerable Tailwind 3 scanner dependencies using pinned Tailwind 4 core;
+  update Vite/PostCSS/Rollup, recheck licenses, and gate CI on npm audit.
+- Registry audit falls from 10 advisories to zero; real browser styling/speech checks
+  pass. Fresh checkout reaches a real answer with staged verified artifacts.
+
 ## 2026-10-10 — Bounded local microphone dictation
 
 - Capture mono PCM locally with explicit start/finish controls, a 30-second cap,

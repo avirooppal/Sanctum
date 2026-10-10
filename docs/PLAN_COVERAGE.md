@@ -121,9 +121,9 @@ directories are `Not done`. No claim is based merely on a protocol or a mock eng
 | §9 Rust/Python/React stack and §13 directories | Implemented (layout) | Cargo workspace, uv lock, React/Tailwind web build; placeholders clearly identified |
 | §9 Tauri/PWA/gRPC/MCP/queue/OPA/OIDC/OTel | Not done | Future integrations, not inferred from chosen stack |
 | §10 Phase 0 gate | Partial | Current doctor and Linux probes pass; hosted CI and full service/platform matrix unverified |
-| §10 Phase 1 gate | UNVERIFIED | Fresh SDK/install checks pending; historical scope excludes source setup time |
+| §10 Phase 1 gate | Partial | Fresh clone reaches answer, SDK 8/8 (`fresh-checkout-sdk.json`); staged artifacts/toolchain used, cold-machine <5min not established |
 | §10 Phase 2 gate | UNVERIFIED | Historical synthetic v6 +0.40 recall lift; current real-document benchmark required |
-| §10 Phase 3 gate | UNVERIFIED | Real engines, T1 WER and <800ms first-audio incomplete |
+| §10 Phase 3 gate | Partial | Real Whisper/Parakeet/VAD/TTS and browser dictation verified; streaming, diarization and T1 WER/<800ms incomplete |
 | §10 Phase 4 gate | Not done | No measured visual QA lift |
 | §10 Phase 5 gate | Not done | No agent red-team suite or Privacy Ledger |
 | §10 Phase 6 gate | Not done | No 20-user reference server or signed air-gap install |
@@ -131,7 +131,7 @@ directories are `Not done`. No claim is based merely on a protocol or a mock eng
 | §11 retrieval/answers evaluation | Partial | Existing synthetic datasets and local judge; no current real-corpus/human review |
 | §11 visual/ASR/voice/inference/agents/privacy metrics | Partial | Speech scoring and SDK timing harnesses; most real measurements absent |
 | §11 regression thresholds/CI profile checks | Implemented (foundation) | `tools/tests/test_evals.py`, `evals/run.py`; 5% and security zero tolerance (ADR 0004) |
-| §12 chat/embedding/models routes | UNVERIFIED (current run) | Implemented gateway; SDK rerun pending |
+| §12 chat/embedding/models routes | Implemented (reference) | `fresh-checkout-sdk.json` and `phase1-sdk.json`, real SDK 8/8 in this session |
 | §12 workspaces/documents/search/ask | UNVERIFIED (current run) | Implemented gateway/worker; real rerun pending |
 | §12 rerank/audio/realtime/agent/ledger/policy/MCP | Partial | Some schemas only; no complete public implementation |
 | §14 differentiators | Partial | Aggregate goals, dependent on incomplete modules above |

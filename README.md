@@ -2,7 +2,9 @@
 
 Private local AI platform. Architecture and phase gates: [plan.md](plan.md).
 Working Linux x86_64 reference: confined llama.cpp chat/embeddings, local auth,
-SQLite history, React/Tailwind UI, verified offline artifact import.
+SQLite history, React/Tailwind UI, verified offline artifact import. Optional local
+file/microphone dictation and WAV playback: [speech setup](services/speech/README.md).
+Phases 0–6 are not complete; current limitations and evidence are in [STATUS](docs/STATUS.md).
 
 ## Five-minute offline bundle quickstart
 
@@ -27,23 +29,27 @@ this is an unsigned development artifact, not the Phase 6 signed release.
 
 Install uv/Python 3.12, Rust 1.99.0, Node 20.19+; these developer setup commands
 explicitly access package registries. Runtime services never download anything.
+Run the runtime/build commands on Linux or inside WSL. Native Windows can run doctor,
+Python source tests and the web build, but cannot launch the confined service.
 
 ```sh
-uv sync --locked
-uv run --offline sanctum doctor
+uv sync --locked --group knowledge
+uv run --offline --group knowledge sanctum doctor
 cargo fetch --locked
 npm ci --prefix apps/web
 npm run build --prefix apps/web
-uv run --offline sanctum estimate chat-tiny-q8
-uv run --offline sanctum pull chat-tiny-q8 --allow-network
-uv run --offline sanctum pull embed-small-q8 --allow-network
-uv run --offline sanctum pull llama-cpu-linux --allow-network
+uv run --offline --group knowledge sanctum estimate chat-tiny-q8
+uv run --offline --group knowledge sanctum pull chat-tiny-q8 --allow-network
+uv run --offline --group knowledge sanctum pull embed-small-q8 --allow-network
+uv run --offline --group knowledge sanctum pull llama-cpu-linux --allow-network
 ```
 
-Artifact IDs and immutable URLs are in profiles/artifacts.json. Extract the engine
-archive into .sanctum/engines/llama-b11429, preserving its library layout, then:
+Artifact IDs and immutable URLs are in profiles/artifacts.json. Extract the verified
+engine archive preserving its library layout, then:
 
 ```sh
+mkdir -p .sanctum/engines
+tar -xzf .sanctum/artifacts/llama-b11429-bin-ubuntu-x64.tar.gz -C .sanctum/engines
 python3 tools/configure_reference.py
 cargo build --locked --offline --bin sanctum-runtime
 target/debug/sanctum-runtime --config profiles/runtime-cpu.json
@@ -51,15 +57,19 @@ target/debug/sanctum-runtime --config profiles/runtime-cpu.json
 
 For a development bundle, run `python3 tools/build_dev_bundle.py` on Linux after
 building. Offline import uses `sanctum pull ID --from-file PATH` instead of network.
+For an isolated verification session, set `state_dir` in `profiles/runtime-cpu.json`
+to a new empty directory before launch; pass `--port 8767` if 8765 is occupied.
+Use that session's printed token-file path and base URL for SDK validation.
 
 ## Validation
 
 ```sh
-uv run --offline python tools/check.py
+uv run --offline --group knowledge python tools/check.py
 bash tools/check_rust.sh
 npm run typecheck --prefix apps/web
+npm test --prefix apps/web
 npm run build --prefix apps/web
-uv run --offline python evals/sdk_chat.py --token-file ~/.local/share/sanctum/local.token
+uv run --offline --group knowledge python evals/sdk_chat.py --token-file ~/.local/share/sanctum/local.token
 ```
 
 SDK validation requires the running reference runtime. See [status](docs/STATUS.md),

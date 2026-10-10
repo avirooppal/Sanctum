@@ -32,6 +32,7 @@ jobs:
     steps:
       - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683
       - run: npm ci --prefix apps/web
+      - run: npm audit --prefix apps/web --audit-level=low
       - run: npm run typecheck --prefix apps/web
       - run: npm test --prefix apps/web
       - run: npm run build --prefix apps/web

@@ -1,0 +1,27 @@
+{
+  "suite": "frontend-dependency-security",
+  "date": "2026-10-10",
+  "before": {
+    "info": 0,
+    "low": 0,
+    "moderate": 2,
+    "high": 8,
+    "critical": 0,
+    "total": 10
+  },
+  "after": {
+    "info": 0,
+    "low": 0,
+    "moderate": 0,
+    "high": 0,
+    "critical": 0,
+    "total": 0
+  },
+  "removed": "Tailwind 3 scanner tree including unpatched braces",
+  "sources": [
+    "https://github.com/advisories/GHSA-vfj7-8cjw-p6xm",
+    "https://github.com/advisories/GHSA-mw96-cpmx-2vgc",
+    "https://github.com/advisories/GHSA-fx2h-pf6j-xcff"
+  ],
+  "scope": "npm registry audit at execution time; not proof of absence of undisclosed vulnerabilities"
+}

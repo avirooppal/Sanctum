@@ -1,4 +1,11 @@
 # Web client
+
+Build uses pinned Tailwind 4 core with a local literal-class collector, without the
+v3 scanner tree or optional native integrations (ADR 0025). `npm run build` generates
+ignored `build/styles.css` from TS/TSX and index.html before Vite bundles the app.
+Use complete literal utility names; dynamically constructing class names is unsupported.
+`npm audit --prefix apps/web --audit-level=low` is a separate online development/CI
+gate. Runtime has no registry calls. All 72 locked dependency licenses are reviewed.
 React, TypeScript, Tailwind; same-origin local API only. Contract: docs/contracts/chat.openapi.json.
 Local bearer key is held in memory, never localStorage. Includes streaming chat,
 configured model picker and saved conversation restoration. Build assets are served

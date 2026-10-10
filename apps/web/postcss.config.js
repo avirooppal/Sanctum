@@ -1,1 +1,2 @@
-export default {plugins: {tailwindcss: {}, autoprefixer: {}}};
+// Tailwind is compiled by tools/build-css.mjs (ADR 0025).
+export default {plugins: {}};

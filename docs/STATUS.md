@@ -2,6 +2,47 @@
 
 ## Active autonomous mission — 2026-10-10
 
+### Latest slice: fresh-checkout acceptance audit and frontend dependency security
+
+Last green commit: `c5100e2`. Fresh clone from GitHub into `.sanctum/acceptance-20261010`.
+README's original `uv sync --locked` produced 4 Knowledge import errors during checks;
+corrected setup/validation includes `--group knowledge`. Corrected clean-venv source
+suite passes (123 + 1 Windows privilege skip). Doctor reports T0/t0-cpu/llama.cpp/Q4_K_M,
+12 CPUs, 15.70 GiB, Intel shared GPU; native Windows startup correctly blocked.
+Exact engine extraction commands are now documented.
+
+Fresh clone imported the three reference artifacts using README's `--from-file`
+path, verifying size/hash. `npm ci`, typecheck, 8 web tests and build passed on cloned
+commit. WSL `cargo build --locked --offline --bin sanctum-runtime` completed in 2m24s;
+`bash tools/check_rust.sh` passed 21 tests, 73 crate licenses, 38 real denial probes.
+Configured a new empty state directory and port 8767; real official SDK passed 8/8:
+chat 0.7924s, streaming TTFT 0.5852s, embedding dimensions 1024. Evidence:
+`evals/results/fresh-checkout-sdk.json`. This uses existing dev tools and staged
+models; it is NOT a timed clean-machine download/install or final platform acceptance.
+Fresh-container rerun blocked: Docker reports an active unit but its socket is
+unreachable. No container success is claimed in this run.
+
+Fresh npm install exposed 10 advisories (8 high, 2 moderate). Stopped acceptance to
+fix them. Upgraded verified MIT Vite 7.3.7, PostCSS 8.5.29, Rollup 4.64.4, Tailwind
+4.3.3 core. ADR 0025 replaces the vulnerable scanner dependency tree with local
+compiler glue; retains React/Tailwind. No advisory suppression or threshold relaxation.
+New compiler test failed absent implementation, then caught an invalid @source directive;
+fixed syntax and reran. Final frontend tests 9/9, typecheck/build PASS. Real browser
+7/7 including computed desktop styles, mobile bounds, dictation, chat, playback/stop.
+Screenshots inspected; explicit input/button styling preserves the speech panel.
+
+`npm audit --prefix apps/web --audit-level=low`: PASS, zero advisories.
+`evals/results/frontend-security.json` records before/after. Changed package license,
+tarball and integrity metadata checked against npm; 72 locked packages have only
+MIT/ISC/Apache-2.0/BSD-3-Clause licenses. Full `tools/check.py` PASS with updated registry.
+CI now includes the audit. Runtime never calls npm. Last Rust gate is the fresh-clone
+run above; no Rust implementation changed in this slice.
+
+Next three steps: repeat updated source setup in the verification clone; finish
+streaming speech/cancellation; integrate meeting/diarization. Full mission remains
+partial and no phase is tagged green. Ledger reconciliation cannot run until ledger
+implementation exists; Phase 4–6 remain outstanding, not hardware-only blockers.
+
 ### Latest slice: Phase 3 bounded microphone dictation
 
 Last green commit: `354d993`. Explicit Start microphone / Finish dictation uses a

@@ -5,7 +5,7 @@
   "license": "MIT",
   "type": "module",
   "scripts": {
-    "build": "vite build",
+    "build": "node tools/build-css.mjs && vite build",
     "typecheck": "tsc --noEmit",
     "test": "tsc --outDir build/tests --noEmit false --target ES2022 --module NodeNext --moduleResolution NodeNext src/speech.ts src/pcm.ts && node --test tests/*.test.mjs"
   },
@@ -14,15 +14,14 @@
     "react-dom": "19.1.1"
   },
   "devDependencies": {
-    "vite": "7.1.7",
+    "vite": "7.3.7",
     "typescript": "5.9.2",
     "@types/react": "19.1.13",
     "@types/react-dom": "19.1.9",
-    "tailwindcss": "3.4.17",
-    "postcss": "8.5.6",
-    "autoprefixer": "10.4.21"
+    "tailwindcss": "4.3.3",
+    "postcss": "8.5.29"
   },
   "overrides": {
-    "rollup": "4.52.2"
+    "rollup": "4.64.4"
   }
 }

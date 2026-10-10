@@ -18,6 +18,9 @@ try {
   const csp = response.headers()['content-security-policy'];
   assert(csp.includes("connect-src 'self'") && csp.includes('media-src blob:'));
   passed.push('same_origin_and_blob_only_media_csp');
+  assert.equal(await page.locator('aside').evaluate(node => getComputedStyle(node).backgroundColor), 'rgb(22, 62, 50)');
+  assert((await page.locator('aside').evaluate(node => getComputedStyle(node.parentElement).gridTemplateColumns)).startsWith('250px'));
+  passed.push('compiled_tailwind_desktop_styles');
   await page.getByLabel('Local access key').fill(readFileSync(tokenFile, 'utf8').trim());
   await page.getByRole('button', {name:'Open workspace'}).click();
   await page.getByText('Local speech', {exact:true}).click();

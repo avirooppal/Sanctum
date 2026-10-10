@@ -2,6 +2,7 @@
   "suite": "real-browser-speech",
   "passed": [
     "same_origin_and_blob_only_media_csp",
+    "compiled_tailwind_desktop_styles",
     "real_wav_dictation_to_draft",
     "real_chat_response",
     "browser_audio_play_promise_resolved",

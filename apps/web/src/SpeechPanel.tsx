@@ -67,7 +67,7 @@ export function SpeechPanel({token, answer, conversation, onTranscript}: {
       if (operation === generation.current && !(error instanceof DOMException && error.name === 'AbortError')) setStatus(String(error));
     } finally { if (operation === generation.current) setBusy(false); }
   }
-  return <details className="border border-[#c6d3c7] rounded-xl p-3 mt-3">
+  return <details className="speech-controls border border-[#c6d3c7] rounded-xl p-3 mt-3">
     <summary className="cursor-pointer text-sm">Local speech</summary>
     <p className="text-xs my-3">Use the model and voice IDs from your configured local profiles. WAV: mono 16 kHz PCM16.</p>
     <div className="flex gap-3 flex-wrap text-sm">
