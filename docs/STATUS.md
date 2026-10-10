@@ -1,14 +1,14 @@
 # Implementation status
 
-Updated: 2026-10-09. Source of truth: ../plan.md. Phase 0 complete; Phase 1 reference implemented.
+Updated: 2026-10-10. Source of truth: ../plan.md. Phase 0 complete; Phase 1 reference implemented.
 Phase 1 starts after the Phase 0 completion commit below. Placeholder service directories are not implementations.
 
 | Phase | State | Exit criteria / evidence |
 |---|---|---|
 | 0 Foundations | done (Linux x86_64) | Doctor tier/profile passes; real isolated HTTP ingress, exec inheritance and egress startup probes pass. Other runtime platforms fail closed. |
 | 1 Chat | done (Linux reference) | Offline clean-rootfs install to answer 50.6005s; official SDK 8/8. Downloads/build excluded; native macOS/Windows unverified. |
-| 2 Knowledge | in progress (hybrid judge recheck) | v6 exact-key challenge: vector/hybrid recall@5 0.60/1.00 (gain +0.40; target >=0.05); MRR 0.60/1.00. Hybrid answers: citation and expected-answer inclusion 1.00; abstention passed. Vector-only answers and calibrated judge: citation, expected-answer inclusion, and judge support all 0.60. Codex's user-directed spot-check verified 4/4 hybrid cases. Calibrated hybrid judge is running; Phase 3 remains gated. |
-| 3 Speech | not started | T1 voice latency <800 ms and WER target: unverified; WER target pending. |
+| 2 Knowledge | done (v6, user-directed reviewer) | Vector/hybrid recall@5 0.60/1.00 (gain +0.40); MRR 0.60/1.00. Hybrid exact citation and expected-answer inclusion 1.00; abstention passed; calibrated local judge 30/30 supported. Vector-only answer/citation/judge rates 0.60. Codex checked 4/4 hybrid cases against frozen sources at the user's direction (ADR 0014); no independent human audit. |
+| 3 Speech | in progress (contract and eval plan) | T1 end-of-speech to first audio <800 ms; plan.md does not numerically specify a WER threshold (ADR 0015). T1 hardware unavailable on this host; both metrics unverified. |
 | 4 Vision | not started | Measurable visual QA lift: unverified; dataset/threshold pending. |
 | 5 Agents | not started | Red team passes and zero unexpected ledger egress: unverified. |
 | 6 Team | not started | 20 concurrent users meet reference SLO; verified air-gapped install: unverified. |
@@ -239,10 +239,20 @@ found three of four sampled vector-only answers cited decoy facts for different
 identifiers, despite the prior judge marking all supported. ADR 0013 adds a
 deterministic exact-entity check before local entailment judgment. The calibrated
 vector judge supports 18/30 (0.60), matching vector answer containment/citation
-metrics. Calibrated hybrid judging is running. The original evidence is
-`evals/results/knowledge-needle-v6-judge.json`,
-`evals/results/knowledge-needle-v6-vector-grounded-answers.json`, and
-`evals/results/knowledge-needle-v6-vector-judge.json`. Review packet:
-`evals/results/knowledge-needle-v6-human-review.md`. Accordingly Phase 2 and the Phase 3
-gate remain in progress. The corpus is synthetic and demonstrates
+metrics; calibrated hybrid judging also supports 30/30 (1.00). Artifacts:
+`evals/results/knowledge-needle-v6-judge-entity-v2.json` and
+`evals/results/knowledge-needle-v6-vector-judge-entity-v2.json`. ADR 0014 records the
+user-directed Codex review substitution. Phase 2 is complete under that instruction,
+with no claim of independent human review. The corpus is synthetic and demonstrates
 pipeline behavior only, not customer-corpus quality.
+
+## Phase 3 slice 1 — speech contracts and evaluation plan
+
+Tasks: define OpenAI-compatible file transcription and speech contracts plus a
+WebSocket event protocol; contract tests first; then stable VAD, ASR, diarization, and
+TTS engine interfaces; add a dataset-driven WER/latency harness and document local-only
+profiles. Tests cover schema validity, malformed/oversized audio, adapter conformance,
+VAD segmentation, transcription timing, and barge-in cancellation. Risks: no numeric
+WER threshold is stated in plan.md, this machine is T0 rather than T1, audio hardware is
+unavailable, and each weight/voice has its own license. No T1 performance result will be
+claimed here.

@@ -1,5 +1,14 @@
 # Changelog
 
+## 2026-10-10 — Phase 2 gate closed; Phase 3 contract planning started
+
+- Calibrated exact-entity faithfulness judging: hybrid 30/30 supported (1.00),
+  vector-only 18/30 (0.60), matching citation and expected-answer measures. Codex
+  verified all four sampled hybrid answers against the frozen source at the user's
+  direction; ADR 0014 records this reviewer substitution and its limits.
+- Phase 2 is complete for the synthetic v6 suite. Phase 3 is in progress with its
+  contract-first plan; the T1 latency gate and unspecified WER threshold remain open.
+
 ## 2026-10-10 — Phase 2 v6 retrieval and grounded answer gate
 
 - Added the frozen exact machine-identifier v6 challenge, its retrieval-only ablation,

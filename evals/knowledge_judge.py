@@ -6,6 +6,7 @@ import json
 import re
 import time
 import urllib.request
+import urllib.error
 from pathlib import Path
 
 ROOT = Path(__file__).resolve().parents[1]
@@ -31,8 +32,14 @@ def main():
             data=json.dumps(body).encode(),
             headers={"Authorization": f"Bearer {token}", "Content-Type": "application/json"},
         )
-        with opener.open(request, timeout=360) as response:
-            return json.load(response)
+        for attempt in range(3):
+            try:
+                with opener.open(request, timeout=360) as response:
+                    return json.load(response)
+            except urllib.error.HTTPError as error:
+                if error.code not in {400, 408, 429, 500, 502, 503, 504} or attempt == 2:
+                    raise
+                time.sleep(attempt + 1)
 
     dataset = json.loads(args.dataset.read_text(encoding="utf-8"))
     answers = json.loads(args.answers.read_text(encoding="utf-8"))

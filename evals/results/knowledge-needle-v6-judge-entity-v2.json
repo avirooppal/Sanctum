@@ -1,0 +1,164 @@
+{
+  "suite": "knowledge-needle-v6",
+  "dataset_sha256": "bd2c1f62b08284eb62fbc8781969ffc1c530f93b38d5e00942b9569d4039247e",
+  "workspace_id": "855080e8c20b45f4965a39f293829b62",
+  "retrieval_mode": "hybrid",
+  "questions": 30,
+  "complete": true,
+  "local_judge_supported_rate": 1.0,
+  "seconds": 849.042,
+  "seconds_scope": "resumed_segment_only",
+  "human_spot_check": "pending",
+  "records": [
+    {
+      "id": "needle-v6-01",
+      "rationale": "The evidence directly states that the assigned sealant for Batch token IDA17F0385D8B44A108DDB is sodium silicate. No conflicting information is present in the provided evidence.",
+      "supported": true
+    },
+    {
+      "id": "needle-v6-02",
+      "rationale": "The evidence directly states that the assigned coolant for batch token IDA97046EF44B2626B8433 is propylene glycol. No conflicting information is present in the evidence.",
+      "supported": true
+    },
+    {
+      "id": "needle-v6-03",
+      "rationale": "The evidence directly states that the assigned filter grade for Batch token ID70732EFC8FEAD94995E0 is 'nominal 14 micron'. No conflicting information is present in the other evidence entries. Therefore, the answer is supported.",
+      "supported": true
+    },
+    {
+      "id": "needle-v6-04",
+      "rationale": "The evidence directly states that the assigned lubricant for batch token IDE6C17542F8899AF9ACB2 is ISO VG 46. No conflicting information is present in the provided evidence.",
+      "supported": true
+    },
+    {
+      "id": "needle-v6-05",
+      "rationale": "The evidence directly states that the assigned insulation for batch token IDE5530DEF211D67C854A4 is 'mica sheet'. No other information is provided in the evidence about the insulation for this specific token.",
+      "supported": true
+    },
+    {
+      "id": "needle-v6-06",
+      "rationale": "The evidence directly states that the assigned fastener for batch token IDE9DFCB3D655196A70230 is M8 by 30 millimeter.",
+      "supported": true
+    },
+    {
+      "id": "needle-v6-07",
+      "rationale": "The evidence directly states that for batch token ID71483DCF798D53FC0587, the assigned calibration gas is 'zero air'. No conflicting information is present in the provided evidence.",
+      "supported": true
+    },
+    {
+      "id": "needle-v6-08",
+      "rationale": "The evidence directly states that the assigned gasket material for Batch token ID8C894352387C30FA43DF is EPDM. No conflicting information is present in the provided evidence.",
+      "supported": true
+    },
+    {
+      "id": "needle-v6-09",
+      "rationale": "The evidence directly states that the assigned storage bin for Batch token ID687B07F4A4152DC601A2 is blue compartment 7. No conflicting information is present in the provided evidence.",
+      "supported": true
+    },
+    {
+      "id": "needle-v6-10",
+      "rationale": "The evidence directly states that the assigned inspection interval for Batch token IDFE20B77A0DEA127A5C52 is 120 operating hours.",
+      "supported": true
+    },
+    {
+      "id": "needle-v6-11",
+      "rationale": "The evidence directly states that for Batch token ID0A7A012485EA707C89EF, the assigned cable jacket is 'halogen-free LSZH'. No conflicting information is present in the evidence provided.",
+      "supported": true
+    },
+    {
+      "id": "needle-v6-12",
+      "rationale": "The evidence directly states that for batch token ID601CB0FA99A4F2C1CAA0, the assigned bearing grease is NLGI grade 1. No conflicting information is present in the provided evidence.",
+      "supported": true
+    },
+    {
+      "id": "needle-v6-13",
+      "rationale": "The evidence directly states that the assigned valve position for Batch token ID749F9D311E8A65D988ED is 'normally closed'. No conflicting information is present in the evidence.",
+      "supported": true
+    },
+    {
+      "id": "needle-v6-14",
+      "rationale": "The evidence directly states that the assigned panel label for batch token IDE096C34B7B09F5C63AAA is PANEL C17.",
+      "supported": true
+    },
+    {
+      "id": "needle-v6-15",
+      "rationale": "The evidence directly states that the assigned solvent for batch token IDD5166D218A38888A2CB5 is isopropyl alcohol.",
+      "supported": true
+    },
+    {
+      "id": "needle-v6-16",
+      "rationale": "The evidence directly states that the assigned belt profile for the batch token ID3286B06C1A904DB754CB is SPZ 1000.",
+      "supported": true
+    },
+    {
+      "id": "needle-v6-17",
+      "rationale": "The evidence directly states that the assigned sensor range for batch token ID0FDAE2B7720D74F233C7 is 'minus 20 to 80 Celsius'. No conflicting information is present in the other evidence provided.",
+      "supported": true
+    },
+    {
+      "id": "needle-v6-18",
+      "rationale": "The evidence provided directly addresses the question by stating that for batch token IDFBBA7C8183AC27D42B32, the assigned connector key is 'keyway D'. The other evidence also confirms this key for similar tokens, making it consistent with the information provided.",
+      "supported": true
+    },
+    {
+      "id": "needle-v6-19",
+      "rationale": "The evidence directly states that the assigned packing type for Batch token ID5C84576C655B67B6379B is 'spiral wound graphite'. No conflicting information is present in the provided evidence.",
+      "supported": true
+    },
+    {
+      "id": "needle-v6-20",
+      "rationale": "The evidence directly states that the assigned relay rating for Batch token ID606CD24EA938F9ED30FA is 24 volt DC.",
+      "supported": true
+    },
+    {
+      "id": "needle-v6-21",
+      "rationale": "The evidence directly addresses the question by stating that the assigned shelf location for Batch token ID1F99D324A00636496FF4 is 'aisle K shelf 12'. No other information is provided in the evidence that contradicts or expands on this statement.",
+      "supported": true
+    },
+    {
+      "id": "needle-v6-22",
+      "rationale": "The evidence directly states that the assigned test pressure for Batch token ID44E2F27213D0E7E1B4FA is 1.6 megapascal.",
+      "supported": true
+    },
+    {
+      "id": "needle-v6-23",
+      "rationale": "The evidence directly states that the assigned paint code for batch token IDB2B600B5A6866097C730 is RAL 5014.",
+      "supported": true
+    },
+    {
+      "id": "needle-v6-24",
+      "rationale": "The evidence directly states that the assigned fuse rating for Batch token IDA5C94446086BCFD25203 is 2.5 ampere slow-blow. No conflicting information is present in the evidence.",
+      "supported": true
+    },
+    {
+      "id": "needle-v6-25",
+      "rationale": "The evidence directly addresses the question. The candidate answer is supported by the evidence as it states that for Batch token ID8C3CFE52E92832F305F2, the assigned pump rotation is 'clockwise from drive end'. The evidence also confirms this in two different contexts, making the answer accurate and supported.",
+      "supported": true
+    },
+    {
+      "id": "needle-v6-26",
+      "rationale": "The evidence directly states that the assigned seal size for batch token IDDFCDC5DE99C3BB42B702 is 32 by 47 by 7 millimeters.",
+      "supported": true
+    },
+    {
+      "id": "needle-v6-27",
+      "rationale": "The evidence directly states that the assigned battery chemistry for batch token IDE8A25312221254E818D4 is lithium iron phosphate. No conflicting information is present in the evidence provided.",
+      "supported": true
+    },
+    {
+      "id": "needle-v6-28",
+      "rationale": "The evidence directly states that the assigned thread pitch for Batch token ID94FF0725350FDE1E7C94 is 1.25 millimeter.",
+      "supported": true
+    },
+    {
+      "id": "needle-v6-29",
+      "rationale": "The evidence directly states that the assigned trigger threshold for Batch token ID99B5C092D03D00EFA46C is 0.35 bar.",
+      "supported": true
+    },
+    {
+      "id": "needle-v6-30",
+      "rationale": "The evidence directly states that the assigned replacement element for batch token IDBF4EB0C4632D224F115F is 'cartridge XR-14'. No conflicting information is present in the provided evidence.",
+      "supported": true
+    }
+  ]
+}

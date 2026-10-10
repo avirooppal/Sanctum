@@ -62,12 +62,12 @@ expected-answer inclusion 1.00, and passed unsupported-query abstention. Artifac
 The v6 hybrid and vector-only local judge runs initially both reported 30/30 supported,
 but a directed spot-check found three sampled vector-only answers cited values for
 different identifiers. ADR 0013 adds exact-entity evidence validation before local
-entailment judgment. At the user's direction, Codex checked four hybrid examples
-against the frozen source and citation; all four were supported. The calibrated
-vector-only judge supports 18/30 (0.60), matching vector answer exact citation support
-and expected-answer inclusion (0.60); unsupported-query abstention passed. Its artifact
-is `evals/results/knowledge-needle-v6-vector-judge-entity-v2.json`. The calibrated
-hybrid judge is still running; record that result before closing the no-regression gate.
-Human spot-check remains pending in
-`evals/results/knowledge-needle-v6-human-review.md`. Keep Phase 3 gated until these
-checks complete and the human review has been recorded.
+entailment judgment. Calibrated vector-only judge supports 18/30 (0.60); calibrated
+hybrid judge supports 30/30 (1.00). Answer exact citation support and expected-answer
+inclusion are likewise 0.60 vector-only vs. 1.00 hybrid; abstention passed. At the
+user's direction, Codex checked four hybrid examples against the frozen source and
+citation; all four were supported. ADR 0014 records the reviewer substitution and its
+limits. Artifacts: `evals/results/knowledge-needle-v6-judge-entity-v2.json`,
+`evals/results/knowledge-needle-v6-vector-judge-entity-v2.json`, and
+`evals/results/knowledge-needle-v6-human-review.md`. No independent human review is
+claimed. The user's explicit instruction accepts this source-anchored review for Phase 2.
