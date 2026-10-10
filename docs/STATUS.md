@@ -2,6 +2,13 @@
 
 ## Step 0 — bounded ingress slice (in progress, 2026-10-10)
 
+Last green code commit: `32caea2`, pushed to `avirooppal/Sanctum` main.
+This is a verified slice, not the Step 0 gate. Cancellation review confirms that
+speech currently kills only its direct worker on timeout; Knowledge blocks on
+worker stdout and inference uses blocking HTTP. A common request cancellation
+context and owned process-group supervision are required before claiming prompt
+slot release. No cancellation acceptance result exists yet.
+
 Baseline commit `c7ae17f` was already checked out; no destructive reset needed.
 Current slice adds a guarded public TCP listener before the private application
 listener, connection/lane/header/body limits, upload deadlines and bounded
@@ -60,8 +67,9 @@ and process-tree cleanup, full graceful shutdown with engine jobs, socket/proces
 storm and repeated-start/stop assertions, mixed-engine sustained overload.
 WebSocket held-voice criterion: **PENDING: re-run against the real authenticated
 WebSocket in Step 1a**. Upgrade currently returns 501. Step 0 is NOT complete;
-Step 1 has not started. Next three steps: real SDK/browser regression on guarded
-listener; commit/push this green slice; cancellation supervision with real engines.
+Step 1 has not started. Next three steps: cancellation context/process supervision
+contract and tests; propagate disconnect/shutdown through all engine calls; run
+real cancellation, slow-reader and mixed-engine storm/soak gates before Step 1a.
 
 ## Step 0 — bounded admitted-request dispatch (partial)
 
