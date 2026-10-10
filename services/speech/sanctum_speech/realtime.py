@@ -14,7 +14,7 @@ class RealtimeAudioBuffer:
         if type(max_bytes) is not int or not 0 < max_bytes <= HARD_MAX_AUDIO_BYTES:
             raise ValueError("max_bytes must be a positive integer no larger than 256 MiB")
         self.max_bytes = max_bytes
-        self._chunks: list[bytes] = []
+        self._pcm = bytearray()
         self._buffered_bytes = 0
         self._sample_rate: int | None = None
         self._channels: int | None = None
@@ -26,6 +26,9 @@ class RealtimeAudioBuffer:
     def append(self, encoded_audio: str, *, sample_rate: int, channels: int = 1) -> None:
         if not isinstance(encoded_audio, str):
             raise ValueError("audio must be base64 text")
+        remaining = self.max_bytes - self._buffered_bytes
+        if len(encoded_audio) > 4 * ((min(remaining, 1024 * 1024) + 2) // 3):
+            raise ValueError("encoded audio exceeds the remaining buffer or message limit")
         try:
             chunk = base64.b64decode(encoded_audio, validate=True)
         except (binascii.Error, ValueError) as error:
@@ -40,27 +43,27 @@ class RealtimeAudioBuffer:
             raise ValueError("audio format cannot change within a realtime buffer")
         if self._buffered_bytes + len(chunk) > self.max_bytes:
             raise ValueError("realtime audio buffer exceeds its configured byte limit")
-        self._chunks.append(chunk)
+        self._pcm.extend(chunk)
         self._buffered_bytes += len(chunk)
         self._sample_rate = sample_rate
         self._channels = channels
 
     def commit(self) -> AudioBuffer:
-        if not self._chunks:
+        if not self._pcm:
             raise ValueError("cannot commit an empty realtime audio buffer")
         audio = AudioBuffer(
-            pcm_s16le=b"".join(self._chunks),
+            pcm_s16le=bytes(self._pcm),
             sample_rate=self._sample_rate,
             channels=self._channels,
         )
-        self._chunks.clear()
+        self._pcm.clear()
         self._buffered_bytes = 0
         self._sample_rate = None
         self._channels = None
         return audio
 
     def clear(self) -> None:
-        self._chunks.clear()
+        self._pcm.clear()
         self._buffered_bytes = 0
         self._sample_rate = None
         self._channels = None

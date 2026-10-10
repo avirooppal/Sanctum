@@ -1,5 +1,13 @@
 # Changelog
 
+## 2026-10-10 — Phase 3 intake security verification
+
+- Reject unauthorized meeting ingestion before invoking the summarizer, including
+  invalid reader memberships. Knowledge repeats authorization at ingestion.
+- Bound encoded audio before base64 decoding and accumulate PCM in a bytearray to
+  avoid per-chunk object amplification. Regression tests reproduced both defects.
+- Correct recorded test counts and clarify that type checks currently cover the CLI.
+
 ## 2026-10-10 — Phase 3 meeting notes in Knowledge
 
 - Added local-only meeting summary orchestration that requires a model registry entry,

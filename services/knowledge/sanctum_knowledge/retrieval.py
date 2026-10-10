@@ -34,8 +34,15 @@ class Knowledge:
         self.catalog, self.parser, self.embedder = catalog, parser, embedder
         self.vectors, self.reranker = vectors, reranker
 
-    def ingest(self, user, workspace, name, content, readers, data_class):
+    def authorize_ingest(self, user, workspace, readers, data_class):
         self.catalog.require(user, workspace, owner=True)
+        for reader in readers:
+            self.catalog.require(reader, workspace)
+        if data_class not in {"public", "internal", "confidential", "restricted"}:
+            raise ValueError("invalid data class")
+
+    def ingest(self, user, workspace, name, content, readers, data_class):
+        self.authorize_ingest(user, workspace, readers, data_class)
         parsed = chunks(self.parser.parse(content, name))
         if not parsed:
             raise ValueError("document has no text")

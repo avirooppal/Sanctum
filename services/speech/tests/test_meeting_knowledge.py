@@ -18,14 +18,19 @@ class FakeSummarizer:
 
     def __init__(self, notes):
         self.notes = notes
+        self.calls = []
 
     def summarize(self, transcript):
+        self.calls.append(transcript)
         return self.notes
 
 
 class FakeKnowledge:
     def __init__(self):
         self.calls = []
+
+    def authorize_ingest(self, user, workspace, readers, data_class):
+        pass
 
     def ingest(self, user, workspace, name, content, readers, data_class):
         self.calls.append((user, workspace, name, content, readers, data_class))
@@ -164,6 +169,19 @@ class MeetingKnowledgeTests(unittest.TestCase):
                 model_registry_entry=summarizer_registry_entry(),
             )
             try:
+                for caller, readers in (("bob", []), ("alice", ["outsider"])):
+                    with self.subTest(caller=caller, readers=readers):
+                        with self.assertRaises(PermissionError):
+                            service.capture(
+                                user=caller,
+                                workspace=workspace,
+                                meeting_id="denied",
+                                title="Denied",
+                                transcript=self.transcript,
+                                readers=readers,
+                                data_class="confidential",
+                            )
+                        self.assertEqual(service.summarizer.calls, [])
                 service.capture(
                     user="alice",
                     workspace=workspace,

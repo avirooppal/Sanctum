@@ -85,6 +85,7 @@ class MeetingKnowledgeService:
         }:
             raise ValueError("unsupported data classification")
 
+        self.knowledge.authorize_ingest(user, workspace, readers, data_class)
         notes = self.summarizer.summarize(transcript)
         Draft202012Validator(NOTES_SCHEMA).validate(notes)
         for item in notes["action_items"]:

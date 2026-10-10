@@ -295,11 +295,11 @@ as a default.
 | Full offline `tools/check.py` | PASS |
 | Foundation tests | 22/22 pass |
 | Isolation/evaluation tests | 9/9 pass |
-| Knowledge tests | 21 pass, 1 Windows symlink privilege skip |
-| Speech contract/interface tests | 46/46 pass |
+| Knowledge tests | 20 pass, 1 Windows symlink privilege skip (21 discovered) |
+| Speech contract/interface tests | 45/45 pass, including 2 new buffer regressions; previous 46 count was incorrect |
 | Speech profile and whisper.cpp adapter tests | 4/4 pass |
 | Speech evaluation/runner tests | 8/8 pass |
-| Ruff lint/format, type checks, Python/frontend license scans | PASS |
+| Ruff lint/format, CLI type checks, Python/frontend license scans | PASS; type checking currently covers the CLI only |
 | T1 WER and voice latency | Unverified; no whisper.cpp artifact/model or benchmark data available locally; host is T0; WER thresholds set by ADR 0018 |
 
 Phase 3 remains in progress and Phase 4 has not started because the Phase 3 exit gate

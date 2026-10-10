@@ -30,6 +30,18 @@ metrics are measured on T1.
 
 ## Verified candidate components (2026-10-10)
 
+## Security audit and real ASR verification slice
+
+Tasks: authorize meeting ingestion before summarization; bound encoded audio before
+decoding and avoid per-chunk memory overhead; build a pinned whisper.cpp fallback
+and run real file ASR inside the Linux network namespace. Contracts: explicit Knowledge
+authorization preflight and existing speech profile/benchmark schemas. Tests: reproduce
+unauthorized summarizer calls and oversized decoding first, then run the full gate.
+Risks: this T0 smoke test cannot establish T1 WER or voice-loop latency. Transcript
+quote matching proves source presence, not semantic entailment of generated notes.
+
+## Candidate sources
+
 - faster-whisper code: MIT, reported by its project packaging metadata; the current
   locked dependency tree includes `tqdm` components declared MPL-2.0 AND MIT, so it is
   excluded by the permissive-only dependency rule (ADR 0017):

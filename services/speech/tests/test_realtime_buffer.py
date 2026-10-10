@@ -1,5 +1,6 @@
 import sys
 import unittest
+from unittest.mock import patch
 from pathlib import Path
 
 ROOT = Path(__file__).resolve().parents[3]
@@ -30,7 +31,7 @@ class RealtimeAudioBufferTests(unittest.TestCase):
         buffer = RealtimeAudioBuffer(max_bytes=6)
         buffer.append("AQIDBA==", sample_rate=16000, channels=1)
         with self.assertRaises(ValueError):
-            buffer.append("BQYH", sample_rate=16000, channels=1)
+            buffer.append("BQYHCA==", sample_rate=16000, channels=1)
         self.assertEqual(buffer.buffered_bytes, 4)
         with self.assertRaises(ValueError):
             RealtimeAudioBuffer(max_bytes=3).append("AQID", sample_rate=16000, channels=1)
@@ -42,6 +43,24 @@ class RealtimeAudioBufferTests(unittest.TestCase):
     def test_configured_limit_has_a_hard_ceiling(self):
         with self.assertRaises(ValueError):
             RealtimeAudioBuffer(max_bytes=256 * 1024 * 1024 + 1)
+
+    def test_rejects_oversized_encoded_input_before_decoding(self):
+        buffer = RealtimeAudioBuffer(max_bytes=4)
+        with patch("sanctum_speech.realtime.base64.b64decode") as decode:
+            with self.assertRaises(ValueError):
+                buffer.append("AAAA" * 100, sample_rate=16000)
+            decode.assert_not_called()
+        self.assertEqual(buffer.buffered_bytes, 0)
+
+    def test_small_appends_preserve_order_and_clear_resets_format(self):
+        buffer = RealtimeAudioBuffer(max_bytes=200)
+        for _ in range(100):
+            buffer.append("AQI=", sample_rate=16000)
+        self.assertEqual(buffer.commit().pcm_s16le, b"\x01\x02" * 100)
+        buffer.append("AQIDBA==", sample_rate=24000, channels=2)
+        buffer.clear()
+        buffer.append("AQI=", sample_rate=16000)
+        self.assertEqual(buffer.commit().channels, 1)
 
 
 if __name__ == "__main__":
