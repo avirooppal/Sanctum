@@ -1,5 +1,52 @@
 # Implementation status
 
+## Active autonomous mission — 2026-10-10
+
+Current slice: Phase 0 re-verification and strict coverage audit; then Phase 3
+independent speech orchestration. Tested base / last committed source-green slice:
+`303d16ea409792dd5f1052adef53a3edde4f48f9`. Historical phase completion records below
+are not fresh verification. No fully green phase tag has been created this session.
+
+Fresh commands and results:
+- `uv run --offline --group dev --group knowledge python tools/check.py`: PASS,
+  105 tests passed, 1 existing Windows symlink privilege skip; Ruff/CLI typing,
+  26 Python and 145 frontend dependency license checks passed. Profile fixture
+  evaluation: 8/8, accuracy 1.0, false-ready 0. Log: `.sanctum/mission-baseline.log`.
+- `uv run --offline sanctum doctor`: PASS; Windows AMD64, 12 CPUs, 15.70 GiB RAM,
+  Intel Iris Xe with unknown/shared VRAM, T0 / t0-cpu / llama.cpp / Q4_K_M.
+  Privacy correctly reports egress UNVERIFIED and startup BLOCKED.
+- `npm run typecheck --prefix apps/web` and `npm run build --prefix apps/web`: PASS;
+  Vite built 28 modules. This is not a browser or real chat request test.
+- Linux re-entry: FAIL `Wsl/Service/0x8007274c`. Targeted Ubuntu-22.04 termination
+  requested to recover that distribution; recovery not yet confirmed. No global
+  WSL shutdown requested. Fresh Rust, containment and inference checks are blocked.
+
+Recovery and additional fresh evidence (supersedes that blocker): targeted termination
+completed and Linux shell access recovered. `bash tools/check_rust.sh` passed: 16 Rust
+tests, fmt/Clippy, 73 crate licenses, 22 bootstrap and 16 runtime/child denial probes.
+The first invocation had a shell PATH quoting error; retried with a literal Linux PATH.
+`python3 tools/isolated_run.py -- python3 -c "print(123)"` passed all 4 network probes.
+`evals/sdk_chat.py --token-file /home/aviroop/.local/share/sanctum/local.token` against
+the running confined reference passed 8/8; chat 0.435s, streaming TTFT 0.540s, embedding
+dimension 1024. This is a single CPU smoke run, not a throughput benchmark.
+
+whisper.cpp built successfully with one compiler job. The existing ASR runner executed
+inside `tools/isolated_run.py` (4/4 denial probes) against the real pinned tiny.en model:
+11.0s JFK audio, 1.109763671s processing, RTF 0.100887606, WER 0/22 = 0.0.
+Artifacts: `evals/results/speech-jfk-{provenance,smoke,smoke-metrics}.json`.
+This single public-domain speech excerpt is not LibriSpeech or a T1/voice-loop result;
+`phase3_slo_verified=false`. Reproduction: `docs/speech-reference.md`.
+
+Expanded `ty check services/speech/sanctum_speech` initially FAILED with 3 optional-value
+diagnostics. Explicit guards now preserve existing failure behavior; the mandatory
+gate includes speech type checking. Final source rerun is recorded with the slice commit.
+
+Next three steps: (1) recover Linux and rerun foundation containment; (2) complete
+bounded voice-loop orchestration with cancellation tests; (3) connect real local
+speech engines and measure the file/voice path. Independent work may continue under
+ADR 0021; unmet plan gates remain unmet. Missing T1/Apple/NVIDIA/audio hardware must
+remain explicitly UNVERIFIED. See PLAN_COVERAGE.md for the stricter scope audit.
+
 Updated: 2026-10-10. Source of truth: ../plan.md. Phase 0 complete; Phase 1 reference implemented.
 Phase 1 starts after the Phase 0 completion commit below. Placeholder service directories are not implementations.
 

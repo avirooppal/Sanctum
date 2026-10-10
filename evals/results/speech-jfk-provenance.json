@@ -1,0 +1,35 @@
+{
+  "profile": {
+    "schema_version": "1.0",
+    "id": "asr-whisper-tiny-en-reference",
+    "egress": "denied",
+    "vad": {
+      "engine": "none"
+    },
+    "asr": {
+      "engine": "whisper.cpp",
+      "model_path": "/opt/sanctum-speech/ggml-tiny.en.bin",
+      "model_sha256": "921e4cf8686fdd993dcd081a5da5b6c365bfde1162e72b08d75ac75289920b1f",
+      "executable_path": "/opt/sanctum-speech/build/bin/whisper-cli",
+      "executable_sha256": "5d06d1e07e4b8b5dd29d41b034a0290a06fc984e4ad767d4810bc2d3289c27a0",
+      "threads": 2,
+      "timeout_seconds": 120
+    }
+  },
+  "manifest": {
+    "suite": "whisper-jfk-single-file-smoke",
+    "dataset_license": "Public-domain-US-government-speech",
+    "profile_id": "asr-whisper-tiny-en-reference",
+    "hardware_tier": "T0",
+    "wer_target": 0.1,
+    "records": [
+      {
+        "id": "jfk",
+        "audio_path": "jfk.wav",
+        "audio_sha256": "59dfb9a4acb36fe2a2affc14bacbee2920ff435cb13cc314a08c13f66ba7860e",
+        "language": "en",
+        "reference": "And so my fellow Americans ask not what your country can do for you ask what you can do for your country"
+      }
+    ]
+  }
+}

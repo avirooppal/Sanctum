@@ -1,5 +1,14 @@
 # Changelog
 
+## 2026-10-10 — Recovered runtime and real speech verification
+
+- Recovered the affected WSL distribution and completed the pinned whisper.cpp build.
+  Recorded real isolated ASR on the upstream JFK sample, with audio/model/binary hashes.
+- Reran Rust containment and real OpenAI SDK integration; added strict plan coverage
+  and resumability records (ADR 0021). No unverified phase gate is declared green.
+- Extended mandatory Python type checking to speech and fixed three optional-value
+  diagnostics without removing tests or weakening validation.
+
 ## 2026-10-10 — Phase 3 reference ASR provisioning
 
 - Record MIT source/model pins for whisper.cpp v1.9.5 and tiny.en; verify the downloaded

@@ -49,6 +49,8 @@ class RealtimeAudioBuffer:
         self._channels = channels
 
     def commit(self) -> AudioBuffer:
+        if self._sample_rate is None or self._channels is None:
+            raise ValueError("cannot commit an empty audio buffer")
         if not self._pcm:
             raise ValueError("cannot commit an empty realtime audio buffer")
         audio = AudioBuffer(

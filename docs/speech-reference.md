@@ -1,5 +1,30 @@
 # Reproducing the local ASR check
 
+## Recovery and real execution, 2026-10-10
+
+The affected WSL distribution was restarted; the build completed with `-j 1`.
+Executable SHA-256: `5d06d1e07e4b8b5dd29d41b034a0290a06fc984e4ad767d4810bc2d3289c27a0`.
+The pinned upstream `samples/jfk.wav` (11 seconds) has SHA-256
+`59dfb9a4acb36fe2a2affc14bacbee2920ff435cb13cc314a08c13f66ba7860e`.
+The excerpt is President Kennedy's public-domain inaugural address; reference text:
+[National Archives](https://www.archives.gov/milestone-documents/president-john-f-kennedys-inaugural-address).
+Audio source: [pinned upstream sample](https://github.com/ggml-org/whisper.cpp/blob/d1be6fde11ac6e0407606b4e42fe72d34add8037/samples/jfk.wav).
+
+Actual invocation from the repository on Linux (with locked dependencies installed):
+
+```bash
+python3 tools/isolated_run.py -- /home/aviroop/.local/share/sanctum-dev-venv/bin/python evals/run_speech_asr.py --manifest .sanctum/speech-smoke/manifest.json --profile .sanctum/speech-smoke/profile.json --output evals/results/speech-jfk-smoke.json
+/home/aviroop/.local/share/sanctum-dev-venv/bin/python evals/speech_eval.py --input evals/results/speech-jfk-smoke.json --output evals/results/speech-jfk-smoke-metrics.json
+```
+
+`evals/results/speech-jfk-provenance.json` contains the exact manifest and profile;
+copy those objects into the indicated local files and copy the pinned upstream WAV
+beside the manifest. Adjust local paths and verify a newly compiled executable hash
+before repeating on another host. Do not assume binaries from other builds hash identically.
+Result: 4 network-denial probes passed; 1 real file transcribed; WER 0/22 words,
+1.109763671s processing, RTF 0.100887606. This is a smoke test on T0, not a quality
+corpus or voice-loop/T1 gate. The failure record below is retained as history.
+
 This is a development fallback check, not the Phase 3 acceptance benchmark. The
 reference model is registry entry `asr-whisper-tiny-en-reference`; hardware defaults
 are unchanged. ADR 0020 explains its legacy GGML format.

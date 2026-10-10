@@ -60,6 +60,8 @@ class TranscriptionPipeline:
                 )
 
         if diarize:
+            if self.diarizer is None:
+                raise ValueError("diarization requested without a configured local diarizer")
             assigned = tuple(self.diarizer.assign(audio, tuple(segments)))
             if len(assigned) != len(segments):
                 raise ValueError("diarizer must return one labeled segment per input segment")
