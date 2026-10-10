@@ -2,6 +2,31 @@
 
 ## Active autonomous mission — 2026-10-10
 
+### Latest slice: recovered clean-container verification
+
+Last green commit: `8c4989a`. Docker now responds (29.6.1); the earlier socket
+blocker is cleared. Add backward-compatible `--output` to development bundle CLI,
+with tests before code for fresh-copy success, overwrite refusal and recursive
+destination refusal. Existing bundle preserved. Built fresh output at
+`/home/aviroop/.local/share/sanctum-reference-20261010` from current runtime/UI.
+
+`python tools/check.py`: Windows 131 pass + one privilege skip; Linux 132/132 PASS,
+plus format/lint/type/contract/license/eval checks. Logs:
+`.sanctum/mission-bundle-{source,linux}.log`. Actual container build:
+`docker build -f deploy/Dockerfile.reference-test -t sanctum-reference-test:local deploy`.
+Run `docker run --rm --network none --security-opt seccomp=unconfined` with read-only
+mounts of the fresh bundle at `/bundle` and `tools/clean_install_test.py` at `/test.py`,
+plus writable `evals/results` at `/results`, image `sanctum-reference-test:local`,
+command `python /test.py`. PASS: first real answer in **31.7311s**, threshold 300s.
+Evidence: `evals/results/phase1-clean-install.json`; README updated. Application
+namespace/seccomp startup enforcement remains enabled; relaxed outer Docker seccomp
+allows its setup. External container network is disabled. This verifies only the
+offline unsigned chat bundle; it excludes download/build and Phase 6 release signing.
+
+Next three steps: hosted realtime transport; process cancellation; licensed
+diarization. Reference T1/audio/GPU hardware remain unavailable. Phase 3–6 are not
+complete; no all-platform/phase-green tag or final acceptance claim.
+
 ### Latest slice: Phase 3 incremental ASR adapter
 
 Last green commit: `aac0dce`. ADR 0026 and `incremental-asr-v1.md` define bounded

@@ -1,5 +1,11 @@
 # Plan coverage audit
 
+Container verification update: Docker recovered; current unsigned offline chat
+bundle reached first answer in 31.7311s on a fresh no-network container. Evidence:
+`evals/results/phase1-clean-install.json`, `tools/clean_install_test.py`. This
+supersedes the socket blocker and old timing; it does not verify a signed air-gap
+release, downloads/build time, or non-Linux engines.
+
 Incremental ASR update: `services/speech/sanctum_speech/incremental.py` provides
 bounded partial replacement snapshots with either verified ASR backend. Real
 isolated evidence in `speech-incremental-{parakeet,whisper}.json`; final decoding

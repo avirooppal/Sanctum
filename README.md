@@ -21,7 +21,7 @@ Open http://127.0.0.1:8765 and enter the key from the printed token-file path.
 The key is only held in browser memory. Runtime startup verifies all engine/model
 hashes and kernel egress denial; failures prevent startup. Cloud is disabled.
 
-Measured offline bundle copy through first answer: **50.6005 seconds** in a fresh
+Measured offline bundle copy through first answer: **31.7311 seconds** in a fresh
 Linux container. Downloads, compiling, and creating the bundle are excluded;
 this is an unsigned development artifact, not the Phase 6 signed release.
 
@@ -56,7 +56,8 @@ target/debug/sanctum-runtime --config profiles/runtime-cpu.json
 ```
 
 For a development bundle, run `python3 tools/build_dev_bundle.py` on Linux after
-building. Offline import uses `sanctum pull ID --from-file PATH` instead of network.
+building. Use `--output /path/to/new-bundle` for another run; existing destinations
+are never overwritten. Offline import uses `sanctum pull ID --from-file PATH` instead of network.
 For an isolated verification session, set `state_dir` in `profiles/runtime-cpu.json`
 to a new empty directory before launch; pass `--port 8767` if 8765 is occupied.
 Use that session's printed token-file path and base URL for SDK validation.

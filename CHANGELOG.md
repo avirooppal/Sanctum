@@ -1,5 +1,12 @@
 # Changelog
 
+## 2026-10-10 — Repeatable development bundle verification
+
+- Add an optional fresh output path while preserving existing bundles and rejecting
+  recursive destinations. Rerun all source gates on Linux and Windows.
+- Fresh no-network container reaches a real answer in 31.7311s from an offline
+  unsigned bundle. Downloads, build and Phase 6 signed packaging remain excluded.
+
 ## 2026-10-10 — Bounded incremental recognition
 
 - Add replaceable transcript snapshots over bounded PCM prefixes, with stale-result
