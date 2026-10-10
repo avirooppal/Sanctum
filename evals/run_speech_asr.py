@@ -5,7 +5,6 @@ import hashlib
 import json
 import sys
 import time
-import wave
 from pathlib import Path
 
 from jsonschema import Draft202012Validator
@@ -13,7 +12,7 @@ from jsonschema import Draft202012Validator
 ROOT = Path(__file__).resolve().parents[1]
 sys.path.insert(0, str(ROOT / "services/speech"))
 from sanctum_speech.backends.whisper_cpp import WhisperCppASR  # noqa: E402
-from sanctum_speech.types import AudioBuffer  # noqa: E402
+from sanctum_speech.audio_io import decode_pcm16_wav  # noqa: E402
 
 MANIFEST_SCHEMA = json.loads((ROOT / "docs/contracts/speech-benchmark.schema.json").read_text())
 PROFILE_SCHEMA = json.loads((ROOT / "docs/contracts/speech-profile.schema.json").read_text())
@@ -28,7 +27,7 @@ def _sha256(path: Path) -> str:
     return digest.hexdigest()
 
 
-def _local_audio(manifest_dir: Path, relative_path: str, expected_hash: str) -> AudioBuffer:
+def _local_audio(manifest_dir: Path, relative_path: str, expected_hash: str):
     path = (manifest_dir / relative_path).resolve(strict=True)
     if not path.is_relative_to(manifest_dir):
         raise ValueError("audio_path resolves outside the manifest directory")
@@ -36,19 +35,7 @@ def _local_audio(manifest_dir: Path, relative_path: str, expected_hash: str) -> 
         raise ValueError("audio file must be regular and no larger than 64 MiB")
     if _sha256(path) != expected_hash:
         raise ValueError(f"audio SHA-256 mismatch: {relative_path}")
-    try:
-        with wave.open(str(path), "rb") as source:
-            if source.getcomptype() != "NONE" or source.getsampwidth() != 2:
-                raise ValueError("audio must be uncompressed PCM16 WAV")
-            if source.getnchannels() != 1 or source.getframerate() != 16000:
-                raise ValueError("audio must be mono 16 kHz WAV")
-            frames = source.getnframes()
-            if frames <= 0 or frames * 2 > MAX_AUDIO_BYTES:
-                raise ValueError("audio frame count is empty or exceeds the size cap")
-            pcm = source.readframes(frames)
-    except (wave.Error, EOFError) as error:
-        raise ValueError(f"invalid WAV audio: {relative_path}") from error
-    return AudioBuffer(pcm_s16le=pcm, sample_rate=16000, channels=1)
+    return decode_pcm16_wav(path.read_bytes(), max_bytes=MAX_AUDIO_BYTES)
 
 
 def run_benchmark(manifest_path: Path, profile_path: Path, *, asr_factory=None) -> dict:

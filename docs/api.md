@@ -647,7 +647,7 @@ Runtime HTTP: GET /healthz. Other contracts are foundation diagnostics.
               },
               "encoding": {
                 "file": {
-                  "contentType": "audio/wav, audio/mpeg, audio/mp4, audio/webm, audio/ogg"
+                  "contentType": "audio/wav"
                 }
               }
             }
@@ -791,7 +791,7 @@ Runtime HTTP: GET /healthz. Other contracts are foundation diagnostics.
           "file": {
             "type": "string",
             "format": "binary",
-            "description": "Accepted MIME types are constrained by the request encoding. Runtime byte limit is profile-configured."
+            "description": "Currently supported input is uncompressed mono PCM16 WAV at 16 kHz. Runtime byte limit is profile-configured."
           },
           "model": {
             "type": "string",

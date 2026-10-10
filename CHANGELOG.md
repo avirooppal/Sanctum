@@ -1,5 +1,11 @@
 # Changelog
 
+## 2026-10-10 — Phase 3 bounded WAV intake
+
+- Added a shared 64 MiB PCM16 mono 16 kHz WAV decoder that rejects malformed,
+  truncated, empty, or unsupported inputs. The upload contract now advertises only
+  the audio container implemented by this slice; the ASR runner uses the same decoder.
+
 ## 2026-10-10 — Phase 3 transcription response formats
 
 - Added tested JSON, plain text, verbose segment JSON, and WebVTT serialization for

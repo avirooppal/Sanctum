@@ -17,7 +17,7 @@
           "content": {
             "multipart/form-data": {
               "schema": { "$ref": "#/components/schemas/TranscriptionRequest" },
-              "encoding": { "file": { "contentType": "audio/wav, audio/mpeg, audio/mp4, audio/webm, audio/ogg" } }
+              "encoding": { "file": { "contentType": "audio/wav" } }
             }
           }
         },
@@ -63,7 +63,7 @@
         "type": "object",
         "required": ["file", "context"],
         "properties": {
-          "file": { "type": "string", "format": "binary", "description": "Accepted MIME types are constrained by the request encoding. Runtime byte limit is profile-configured." },
+          "file": { "type": "string", "format": "binary", "description": "Currently supported input is uncompressed mono PCM16 WAV at 16 kHz. Runtime byte limit is profile-configured." },
           "model": { "type": "string", "description": "Configured local profile/model ID; no remote model names are accepted." },
           "language": { "type": "string", "pattern": "^[a-z]{2,3}(-[A-Z]{2})?$" },
           "prompt": { "type": "string", "maxLength": 2000 },

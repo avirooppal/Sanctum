@@ -18,6 +18,8 @@ policy.
   and TTS protocols. `pipeline.py` composes VAD, ASR, and optional diarization.
 - `services/speech/sanctum_speech/realtime.py`: bounded realtime PCM accumulation
   with strict base64 decoding, consistent sample format, and an aggregate byte cap.
+- `services/speech/sanctum_speech/audio_io.py`: bounded decoder for uncompressed mono
+  PCM16 WAV at 16 kHz; unsupported containers and truncated files fail closed.
 - `services/speech/sanctum_speech/responses.py`: OpenAI-style `json`, `text`,
   `verbose_json`, and `vtt` transcription response formatting.
 - `docs/contracts/speech-profile.schema.json`: local engine paths and pinned hashes;

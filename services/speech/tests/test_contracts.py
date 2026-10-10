@@ -25,6 +25,12 @@ class SpeechContractTests(unittest.TestCase):
         self.assertEqual(
             set(self.openapi["paths"]), {"/v1/audio/transcriptions", "/v1/audio/speech"}
         )
+        self.assertEqual(
+            self.openapi["paths"]["/v1/audio/transcriptions"]["post"]["requestBody"]["content"][
+                "multipart/form-data"
+            ]["encoding"]["file"]["contentType"],
+            "audio/wav",
+        )
         for path in self.openapi["paths"].values():
             operation = path["post"]
             self.assertEqual(operation["x-egress"], "denied")
