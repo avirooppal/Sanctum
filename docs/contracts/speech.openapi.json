@@ -22,7 +22,7 @@
           }
         },
         "responses": {
-          "200": { "description": "OpenAI-compatible transcription or detailed segments", "content": { "application/json": { "schema": { "$ref": "#/components/schemas/TranscriptionResponse" } }, "text/plain": { "schema": { "type": "string" } } } },
+          "200": { "description": "OpenAI-compatible transcription, detailed segments, or WebVTT cues", "content": { "application/json": { "schema": { "$ref": "#/components/schemas/TranscriptionResponse" } }, "text/plain": { "schema": { "type": "string" } }, "text/vtt": { "schema": { "type": "string" } } } },
           "400": { "description": "Invalid or unsupported audio" },
           "413": { "description": "Audio exceeds the configured byte limit" },
           "422": { "description": "Invalid request context" },

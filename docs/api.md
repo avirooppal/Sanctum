@@ -655,7 +655,7 @@ Runtime HTTP: GET /healthz. Other contracts are foundation diagnostics.
         },
         "responses": {
           "200": {
-            "description": "OpenAI-compatible transcription or detailed segments",
+            "description": "OpenAI-compatible transcription, detailed segments, or WebVTT cues",
             "content": {
               "application/json": {
                 "schema": {
@@ -663,6 +663,11 @@ Runtime HTTP: GET /healthz. Other contracts are foundation diagnostics.
                 }
               },
               "text/plain": {
+                "schema": {
+                  "type": "string"
+                }
+              },
+              "text/vtt": {
                 "schema": {
                   "type": "string"
                 }

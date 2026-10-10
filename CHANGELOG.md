@@ -1,5 +1,10 @@
 # Changelog
 
+## 2026-10-10 — Phase 3 transcription response formats
+
+- Added tested JSON, plain text, verbose segment JSON, and WebVTT serialization for
+  engine-neutral transcription results; declared WebVTT in the API response contract.
+
 ## 2026-10-10 — Phase 3 bounded realtime audio input
 
 - Added an engine-neutral realtime PCM buffer with strict base64 validation,

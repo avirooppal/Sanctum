@@ -29,6 +29,12 @@ class SpeechContractTests(unittest.TestCase):
             operation = path["post"]
             self.assertEqual(operation["x-egress"], "denied")
             self.assertIn("503", operation["responses"])
+        transcription_response = self.openapi["paths"]["/v1/audio/transcriptions"]["post"][
+            "responses"
+        ]["200"]["content"]
+        self.assertTrue(
+            {"application/json", "text/plain", "text/vtt"}.issubset(transcription_response)
+        )
 
     def test_transcription_requires_private_request_context(self):
         schema = self.openapi["components"]["schemas"]["TranscriptionRequest"]
