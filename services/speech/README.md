@@ -22,7 +22,10 @@ policy.
   PCM16 WAV at 16 kHz; unsupported containers and truncated files fail closed.
 - `services/speech/sanctum_speech/service.py`: validates upload requests against the
   OpenAPI contract, enforces the configured local profile, then composes decode,
-  transcription, and response formatting. It is not yet mounted on a network listener.
+  transcription, and response formatting. It also validates local TTS requests against
+  a configured profile/voice and packages engine audio as WAV or PCM. It is not yet
+  mounted on a network listener. Voice definitions must validate against the model
+  registry schema, including license, source, revision, and artifact hash.
 - `services/speech/sanctum_speech/realtime_session.py`: schema-validates authenticated
   session context and realtime events, buffers push-to-talk audio until commit, invokes
   the selected local ASR engine, and clears buffered input on cancellation. Microphone

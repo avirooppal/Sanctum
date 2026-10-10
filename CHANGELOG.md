@@ -1,5 +1,12 @@
 # Changelog
 
+## 2026-10-10 — Phase 3 local TTS request orchestration
+
+- Added contract-validated TTS request handling with a selected local model ID,
+  configured voice IDs constrained to the registry's permissive license set, bounded
+  PCM output, WAV packaging, and speed forwarding. Fake-engine tests pass; real voices,
+  TTS runtime, microphone/speaker loop, and latency remain unverified.
+
 ## 2026-10-10 — Phase 3 chunked local dictation
 
 - Added a schema-validated realtime dictation session that accumulates bounded local

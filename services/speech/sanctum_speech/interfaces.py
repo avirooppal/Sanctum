@@ -22,4 +22,6 @@ class Diarizer(Protocol):
 
 
 class TTSEngine(Protocol):
-    def synthesize(self, text: str, *, voice: str, sample_rate: int = 24000) -> AudioBuffer: ...
+    def synthesize(
+        self, text: str, *, voice: str, sample_rate: int = 24000, speed: float = 1.0
+    ) -> AudioBuffer: ...
