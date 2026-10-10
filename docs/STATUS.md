@@ -1,5 +1,26 @@
 # Implementation status
 
+## Single-user continuation — scope amendment
+
+Current step: scope amendment before Step 0. Last green commit: `4246aec` (already
+checked out; no reset or checkout needed). Preserved three unrelated untracked
+paths. Re-read plan and status before edits. ADR 0027 removes team collaboration,
+Postgres/pgvector, SSO, multi-user roles/quotas/tenancy, Helm and multi-user load.
+Plan content retained with in-place scope marks. Coverage labels these requirements
+Out of scope by decision. Local auth, data classes, retrieval ACLs and personal
+workspaces stay in scope. Phase 6 has explicit single-owner replacement gates.
+
+Baseline this session: `uv run --offline --group knowledge python tools/check.py`
+PASS (131 passed, one Windows privilege skip); web tests 12/12, typecheck/build
+PASS, npm audit zero vulnerabilities. `bash tools/check_rust.sh` PASS: 21 tests,
+73 reviewed crate licenses, 38 real kernel denial probes. Logs:
+`.sanctum/single-baseline-{source,rust}.log`. No fresh full quality-corpus/voice
+acceptance is claimed; those remain incomplete. No phase tags.
+
+Next three steps: bounded gateway scheduler contract/tests; concurrent HTTP
+dispatch with resource limits; real mixed-load/disconnect/held-session verification.
+Step 0 must pass before Step 1. Physical T1/audio/NVIDIA verification unavailable.
+
 ## Active autonomous mission — 2026-10-10
 
 ### Latest slice: recovered clean-container verification

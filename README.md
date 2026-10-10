@@ -1,6 +1,8 @@
 # Sanctum
 
 Private local AI platform. Architecture and phase gates: [plan.md](plan.md).
+Single-owner scope: [ADR 0027](docs/adr/0027-single-user-scope.md). Workspaces organize
+personal data; team storage, SSO, collaboration and Helm are out of scope.
 Working Linux x86_64 reference: confined llama.cpp chat/embeddings, local auth,
 SQLite history, React/Tailwind UI, verified offline artifact import. Optional local
 file/microphone dictation and WAV playback: [speech setup](services/speech/README.md).

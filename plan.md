@@ -1,5 +1,15 @@
 # Sanctum — Local Private AI Platform (working name)
 
+## Scope amendment — single-user edition
+
+[ADR-0027: single-user scope](docs/adr/0027-single-user-scope.md) supersedes
+conflicting requirements below. One owner, local auth, personal workspaces,
+SQLite + planned LanceDB, data classes and retrieval ACLs remain. Team storage,
+SSO, multi-user roles/quotas/tenancy, sharing, Helm/Kubernetes and multi-user load [OUT OF SCOPE (ADR-0027): team/SSO/tenant/Helm requirements on this line; local ACLs and optional engines retained.]
+are **OUT OF SCOPE (ADR-0027)**. Original content is retained with annotations.
+Phase 6 uses the single-owner packaging, encryption, signed-bundle and one-hour
+workload-soak gate in ADR-0027. Optional GPU engines remain in scope.
+
 > One install. Models, RAG, speech, vision, and agents running entirely on-device or inside a private network. Provably no data leaves unless you explicitly allow it.
 
 Last researched: 2026-10-06. Model names and benchmarks move monthly; anything marked **(verify)** should be re-checked at build time.
@@ -57,7 +67,7 @@ Nobody ships **all of it as one coherent, verifiable-private, hardware-adaptive 
 3. **Hardware-adaptive.** Detect GPU/VRAM/RAM/NPU and pick a runtime and model profile automatically. Tell the user honestly what will and won't run.
 4. **One brain, many modalities.** Text, voice, vision, docs, and agents share auth, memory, knowledge, tools, and audit.
 5. **Boring to install.** `curl | sh` or a signed desktop installer, then a first answer in under 5 minutes. Air-gapped bundle supported.
-6. **Open standards over lock-in.** OpenAI-compatible API, MCP for tools, OpenTelemetry for observability, GGUF/safetensors for models, OIDC for identity.
+6. **Open standards over lock-in.** OpenAI-compatible API, MCP for tools, OpenTelemetry for observability, GGUF/safetensors for models, OIDC for identity. [OUT OF SCOPE (ADR-0027): team/SSO/tenant/Helm requirements on this line; local ACLs and optional engines retained.]
 7. **Measured, not vibes.** Every release runs an eval suite (RAG quality, ASR WER, latency, agent success, privacy tests).
 
 ---
@@ -67,7 +77,7 @@ Nobody ships **all of it as one coherent, verifiable-private, hardware-adaptive 
 | Mode | User | Footprint | Notes |
 |---|---|---|---|
 | **Solo / Desktop** | Individual, laptop/workstation | Single binary + app shell (Tauri) | llama.cpp / MLX engine, embedded stores, no Docker needed |
-| **Team / Server** | Small team or department, private LAN | Docker Compose or Helm | vLLM/SGLang option, Postgres, OIDC SSO, RBAC |
+| **Team / Server** | Small team or department, private LAN | Docker Compose or Helm | vLLM/SGLang option, Postgres, OIDC SSO, RBAC | [OUT OF SCOPE (ADR-0027): team/SSO/tenant/Helm requirements on this line; local ACLs and optional engines retained.]
 | **Air-gapped / Regulated** | Clinics, law, finance, gov | Offline signed bundle | No internet ever; model bundle import, audit export |
 | **Edge / Appliance** (later) | Home-lab, small office box | ARM/x86 mini-PC with NPU | Pre-tuned profile |
 
@@ -84,8 +94,8 @@ Nobody ships **all of it as one coherent, verifiable-private, hardware-adaptive 
                                             │ HTTPS / WebSocket / WebRTC
 ┌───────────────────────────────────────────▼─────────────────────────────────────────┐
 │ GATEWAY / CONTROL PLANE                                                             │
-│ AuthN (local + OIDC) · RBAC/ABAC · Rate limits · OpenAI-compatible API ·            │
-│ Policy engine (egress, tools, data classes) · Audit + Privacy Ledger · Quotas       │
+│ AuthN (local + OIDC) · RBAC/ABAC · Rate limits · OpenAI-compatible API ·            │ [OUT OF SCOPE (ADR-0027): team/SSO/tenant/Helm requirements on this line; local ACLs and optional engines retained.]
+│ Policy engine (egress, tools, data classes) · Audit + Privacy Ledger · Quotas       │ [OUT OF SCOPE (ADR-0027): team/SSO/tenant/Helm requirements on this line; local ACLs and optional engines retained.]
 └───────┬────────────┬───────────────┬──────────────┬───────────────┬─────────────────┘
         │            │               │              │               │
 ┌───────▼─────┐ ┌────▼──────┐ ┌──────▼──────┐ ┌─────▼──────┐ ┌──────▼───────┐
@@ -100,7 +110,7 @@ Nobody ships **all of it as one coherent, verifiable-private, hardware-adaptive 
         └────────────┴───────┬───────┴──────────────┴───────────────┘
                              │
         ┌────────────────────▼───────────────────────────────────────┐
-        │ STORAGE: Postgres (meta, auth, audit) · LanceDB/pgvector   │
+        │ STORAGE: Postgres (meta, auth, audit) · LanceDB/pgvector   │ [OUT OF SCOPE (ADR-0027): team/SSO/tenant/Helm requirements on this line; local ACLs and optional engines retained.]
         │ (vectors) · Object store (files) · Encrypted at rest       │
         └────────────────────────────────────────────────────────────┘
         ┌────────────────────────────────────────────────────────────┐
@@ -124,7 +134,7 @@ Nobody ships **all of it as one coherent, verifiable-private, hardware-adaptive 
 - **Backends (pluggable):**
   - `llama.cpp` (GGUF): default for CPU, hybrid CPU/GPU, AMD/Intel/Vulkan, single-user.
   - `MLX`: Apple Silicon fast path for safetensors models.
-  - `vLLM` and/or `SGLang`: multi-user GPU serving, continuous batching, prefix caching. Default when ≥1 NVIDIA GPU *and* team mode.
+  - `vLLM` and/or `SGLang`: multi-user GPU serving, continuous batching, prefix caching. Default when ≥1 NVIDIA GPU *and* team mode. [OUT OF SCOPE (ADR-0027): team/SSO/tenant/Helm requirements on this line; local ACLs and optional engines retained.]
 - **Hardware profiler:** detect GPU/VRAM/RAM/CPU features/NPU; pick backend + quantization + context length + KV-cache settings.
 - **Router/scheduler:**
   - Model registry with capabilities (text, vision, tools, reasoning, embedding, rerank, ASR, TTS).
@@ -174,21 +184,21 @@ query → rewrite/decompose (small model)
 - **Visual retrieval (differentiator):** optional ColPali/ColQwen-class page-image index for slide decks, scanned PDFs, dense tables/charts. Use it as a *second retriever* fused with text retrieval; compress multi-vectors (binarization/pooling) to control storage.
 - **Graph/global queries (later):** lightweight entity/relationship graph for "summarize across everything" questions (GraphRAG-style), built lazily per workspace.
 - **Agentic RAG:** the agent may issue multiple searches, follow citations, and run SQL/table queries over extracted tables.
-- **Stores:** LanceDB embedded for solo mode (no server); Postgres + pgvector (+ FTS) for team mode. Same abstraction.
+- **Stores:** LanceDB embedded for solo mode (no server); Postgres + pgvector (+ FTS) for team mode. Same abstraction. [OUT OF SCOPE (ADR-0027): team/SSO/tenant/Helm requirements on this line; local ACLs and optional engines retained.]
 - **Trust UX:** every answer shows sources, confidence, and "what I could not find."
 
 ### 6.5 Agent runtime
 - **Core loop:** plan → tool call → observe → reflect, with budgets (steps, tokens, wall-time, $-equivalent compute) and a hard stop.
 - **Tools via MCP** (client + server): the platform's own tools (search knowledge, transcribe, OCR, run code) are exposed as an MCP server, so external agents and IDEs can use them.
 - **Built-in tools:** knowledge search, file ops (scoped), code execution (sandboxed), browser/web (only if egress allowed, via an allowlist proxy), calendar/email (local connectors), SQL (read-only by default).
-- **Sandbox:** containers by default; **gVisor** (user-space kernel) for stronger isolation; **Firecracker microVMs** for untrusted code in server mode. Per-sandbox egress control, CPU/mem/time quotas, ephemeral filesystems.
+- **Sandbox:** containers by default; **gVisor** (user-space kernel) for stronger isolation; **Firecracker microVMs** for untrusted code in server mode. Per-sandbox egress control, CPU/mem/time quotas, ephemeral filesystems. [OUT OF SCOPE (ADR-0027): team/SSO/tenant/Helm requirements on this line; local ACLs and optional engines retained.]
 - **Memory:** short-term (thread), long-term (user facts/preferences, editable and exportable by the user), project memory (per workspace). Memory is data, so it follows the same ACL/classification rules.
 - **Workflows:** visual graph builder (Dify/Flowise-inspired) that compiles to the same runtime; scheduled and event-triggered runs (new file, new email, new meeting).
 - **Human-in-the-loop:** approval gates for side-effecting actions, with diff previews.
 
 ### 6.6 Control plane, security, and governance
-- **Identity:** local accounts + OIDC/SAML SSO; API keys scoped per workspace/model/tool.
-- **Authorization:** RBAC for roles, ABAC for data classes (public / internal / confidential / restricted), per-workspace model and tool allow-lists.
+- **Identity:** local accounts + OIDC/SAML SSO; API keys scoped per workspace/model/tool. [OUT OF SCOPE (ADR-0027): team/SSO/tenant/Helm requirements on this line; local ACLs and optional engines retained.]
+- **Authorization:** RBAC for roles, ABAC for data classes (public / internal / confidential / restricted), per-workspace model and tool allow-lists. [OUT OF SCOPE (ADR-0027): team/SSO/tenant/Helm requirements on this line; local ACLs and optional engines retained.]
 - **Policy engine** (OPA/Cedar-style, declarative): examples:
   - "Restricted-class documents may only be processed by local models."
   - "Agent X may call `search_knowledge` and `read_file` in workspace W only."
@@ -209,7 +219,7 @@ Profiles are **config, not code**; update them with the eval harness each quarte
 | **T0 Tiny** | 8 GB RAM, no GPU | llama.cpp (CPU) | ~4B-class Q4 | small VLM or none | Parakeet small / whisper-small | small embed + no/small reranker |
 | **T1 Laptop** | 16 GB RAM / 8 GB VRAM / M-series 16 GB | llama.cpp or MLX | 8-14B dense or ~30B MoE with few active params | 12B-class multimodal | Parakeet / whisper-turbo | bge-m3-class + reranker |
 | **T2 Workstation** | 24 GB VRAM / M-series 64 GB+ | llama.cpp / MLX / vLLM | ~30B dense or 100B+ MoE (e.g., gpt-oss-120B on high-memory Macs) | strong multimodal | Parakeet + diarization | full RAG stack + visual index |
-| **T3 Team server** | 1-4 GPUs (48-160+ GB total) | **vLLM / SGLang** | largest MoE that fits, prefix caching | dedicated VLM instance | dedicated ASR workers | dedicated embed/rerank workers |
+| **T3 Team server** | 1-4 GPUs (48-160+ GB total) | **vLLM / SGLang** | largest MoE that fits, prefix caching | dedicated VLM instance | dedicated ASR workers | dedicated embed/rerank workers | [OUT OF SCOPE (ADR-0027): team/SSO/tenant/Helm requirements on this line; local ACLs and optional engines retained.]
 
 UX rule: show a **"will it fit / how fast"** estimate before downloading any model.
 
@@ -223,9 +233,9 @@ UX rule: show a **"will it fit / how fast"** estimate before downloading any mod
 | Prompt injection via documents/web/email | Treat retrieved content as untrusted data: separate channels, strip/flag instructions, tool calls triggered by untrusted content require approval, output filters for exfil patterns (URLs, base64 blobs) |
 | Malicious/compromised MCP server or tool | Signed/pinned tool manifests, per-tool permission scopes, sandboxed execution, egress deny |
 | Agent exfiltration through *authorized* tools | Sandboxing can't see intent, so enforce **policy engine rules on data flow** (data class → tool), taint tracking on sensitive context, approval gates |
-| Cross-tenant data leakage in RAG | ACL pre-filtering at retrieval, per-workspace indexes/keys, tests that try cross-workspace queries |
+| Cross-tenant data leakage in RAG | ACL pre-filtering at retrieval, per-workspace indexes/keys, tests that try cross-workspace queries | [OUT OF SCOPE (ADR-0027): team/SSO/tenant/Helm requirements on this line; local ACLs and optional engines retained.]
 | Poisoned model weights | Hash/signature verification; prefer safetensors/GGUF from verified sources; scan bundles |
-| Insider access | RBAC, audit, optional encryption with per-workspace keys, break-glass flow |
+| Insider access | RBAC, audit, optional encryption with per-workspace keys, break-glass flow | [OUT OF SCOPE (ADR-0027): team/SSO/tenant/Helm requirements on this line; local ACLs and optional engines retained.]
 | Disk theft | Encryption at rest |
 
 ---
@@ -239,13 +249,13 @@ UX rule: show a **"will it fit / how fast"** estimate before downloading any mod
 | Web UI | **React/Next or SvelteKit + Tailwind**, PWA | Streaming UI, voice via WebRTC |
 | API | **OpenAI-compatible** REST + WebSocket; **gRPC** internal | Drop-in for existing apps |
 | Tools | **MCP** (client + server) | Ecosystem standard |
-| Metadata DB | **SQLite** (solo) / **Postgres** (team) | Same schema via migrations |
-| Vectors/FTS | **LanceDB** (solo) / **pgvector + Postgres FTS** (team) | Embedded vs. server |
-| Queue | In-process (solo) / **NATS or Redis Streams** (team) | Keep optional |
+| Metadata DB | **SQLite** (solo) / **Postgres** (team) | Same schema via migrations | [OUT OF SCOPE (ADR-0027): team/SSO/tenant/Helm requirements on this line; local ACLs and optional engines retained.]
+| Vectors/FTS | **LanceDB** (solo) / **pgvector + Postgres FTS** (team) | Embedded vs. server | [OUT OF SCOPE (ADR-0027): team/SSO/tenant/Helm requirements on this line; local ACLs and optional engines retained.]
+| Queue | In-process (solo) / **NATS or Redis Streams** (team) | Keep optional | [OUT OF SCOPE (ADR-0027): team/SSO/tenant/Helm requirements on this line; local ACLs and optional engines retained.]
 | Policy | **OPA/Rego or Cedar** | Declarative, testable |
 | Observability | **OpenTelemetry**, Prometheus, Grafana, Langfuse-style trace viewer (self-hosted) | No SaaS telemetry |
-| Packaging | Signed installers, Docker Compose, Helm chart, offline bundle (OCI tarballs + model pack) | Air-gap friendly |
-| Auth | OIDC (Keycloak/Authentik compatible) | Enterprise SSO |
+| Packaging | Signed installers, Docker Compose, Helm chart, offline bundle (OCI tarballs + model pack) | Air-gap friendly | [OUT OF SCOPE (ADR-0027): team/SSO/tenant/Helm requirements on this line; local ACLs and optional engines retained.]
+| Auth | OIDC (Keycloak/Authentik compatible) | Enterprise SSO | [OUT OF SCOPE (ADR-0027): team/SSO/tenant/Helm requirements on this line; local ACLs and optional engines retained.]
 
 ---
 
@@ -289,13 +299,13 @@ Time estimates assume one strong full-stack builder working steadily; compress b
 - Sandbox: container → gVisor → (server mode) Firecracker.
 - Policy engine, approval gates, Privacy Ledger UI, egress enforcement + startup self-test.
 - Workflow builder (minimal): triggers → steps → tools.
-- **Exit:** red-team suite (prompt injection, exfil attempts, cross-tenant queries) passes; ledger shows zero unexpected egress.
+- **Exit:** red-team suite (prompt injection, exfil attempts, cross-tenant queries) passes; ledger shows zero unexpected egress. [OUT OF SCOPE (ADR-0027): team/SSO/tenant/Helm requirements on this line; local ACLs and optional engines retained.]
 
-### Phase 6 — Team mode and hardening (Weeks 20-24)
-- vLLM/SGLang backend, queueing/priorities, Postgres/pgvector, OIDC SSO, quotas.
-- Helm chart, offline bundle, signed releases, SBOM, encrypted-at-rest.
-- Load tests (concurrent users), observability dashboards.
-- **Exit:** 20 concurrent users on a reference server meet latency SLOs; air-gapped install verified.
+### Phase 6 — Team mode and hardening (Weeks 20-24) [OUT OF SCOPE (ADR-0027): team/SSO/tenant/Helm requirements on this line; local ACLs and optional engines retained.]
+- vLLM/SGLang backend, queueing/priorities, Postgres/pgvector, OIDC SSO, quotas. [OUT OF SCOPE (ADR-0027): team/SSO/tenant/Helm requirements on this line; local ACLs and optional engines retained.]
+- Helm chart, offline bundle, signed releases, SBOM, encrypted-at-rest. [OUT OF SCOPE (ADR-0027): team/SSO/tenant/Helm requirements on this line; local ACLs and optional engines retained.]
+- Load tests (concurrent users), observability dashboards. [OUT OF SCOPE (ADR-0027): team/SSO/tenant/Helm requirements on this line; local ACLs and optional engines retained.]
+- **Exit:** 20 concurrent users on a reference server meet latency SLOs; air-gapped install verified. [OUT OF SCOPE (ADR-0027): team/SSO/tenant/Helm requirements on this line; local ACLs and optional engines retained.]
 
 ### Phase 7 — Polish and ecosystem (Weeks 25+)
 - Desktop installer (Tauri), mobile PWA, IDE plugin, plugin SDK, template gallery.
@@ -355,7 +365,7 @@ sanctum/
 │  └─ policy/              # rego/cedar bundles + tests
 ├─ profiles/               # hardware-tier → model/engine configs
 ├─ evals/                  # datasets, harnesses, CI gates
-├─ deploy/                 # compose, helm, offline-bundle builder
+├─ deploy/                 # compose, helm, offline-bundle builder [OUT OF SCOPE (ADR-0027): team/SSO/tenant/Helm requirements on this line; local ACLs and optional engines retained.]
 ├─ docs/                   # ADRs, threat model, user docs
 └─ tools/                  # bench scripts, model signer, egress self-test
 ```

@@ -1,5 +1,15 @@
 # Plan coverage audit
 
+## Single-user scope amendment
+
+The following supersedes team-related cells throughout this historical audit.
+Each is **Out of scope by decision**, not implemented: team mode/collaboration,
+shared workspaces/multiple human accounts, Postgres/pgvector/Postgres FTS, team
+queues, OIDC/SAML, multi-user RBAC/tenancy/per-user quotas, multi-user load and the
+20-user gate, Helm/Kubernetes. See [ADR-0027](adr/0027-single-user-scope.md).
+Local ACLs, personal workspace boundaries, optional GPU inference, resource limits,
+single-owner workload/soak tests and signed offline deployment remain required.
+
 Container verification update: Docker recovered; current unsigned offline chat
 bundle reached first answer in 31.7311s on a fresh no-network container. Evidence:
 `evals/results/phase1-clean-install.json`, `tools/clean_install_test.py`. This
