@@ -59,8 +59,8 @@ expected-answer inclusion 1.00, and passed unsupported-query abstention. Artifac
 `evals/results/knowledge-needle-v6-retrieval-only.json` and
 `evals/results/knowledge-needle-v6-grounded-answers.json`.
 
-The v6 local faithfulness judge is underway: the latest checkpoint has 9/30 cases,
-all 9 supported. No vector-only answer faithfulness comparison is complete yet; do not
+The v6 local faithfulness judge is underway; all cases evaluated so far are supported.
+No vector-only answer faithfulness comparison is complete yet; do not
 infer no regression from retrieval alone. Human spot-check remains pending in
 `evals/results/knowledge-needle-v6-human-review.md`. Keep Phase 3 gated until these
 checks complete and the human review has been recorded.

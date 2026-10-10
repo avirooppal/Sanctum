@@ -232,7 +232,7 @@ is unique in retrieved evidence, avoiding small-model confusion between near-dup
 records; citations retain heading context. The previous v6 answer run is retained as
 diagnostic evidence of 28/30 before this fix.
 
-The local judge is currently partial: 14/30 answers evaluated, 14 supported. The
+The local judge is currently partial; all answers evaluated so far are supported. The
 vector-only answer-faithfulness comparison and human spot-check are still pending.
 Review packet: `evals/results/knowledge-needle-v6-human-review.md`. Accordingly Phase 2
 and the Phase 3 gate remain in progress. The corpus is synthetic and demonstrates

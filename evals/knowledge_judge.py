@@ -16,6 +16,7 @@ def main():
     parser.add_argument("--dataset", type=Path, required=True)
     parser.add_argument("--answers", type=Path, required=True)
     parser.add_argument("--workspace-id", required=True)
+    parser.add_argument("--mode", choices=("hybrid", "vector"), default="hybrid")
     parser.add_argument("--resume", action="store_true")
     parser.add_argument("--base-url", default="http://127.0.0.1:8765")
     args = parser.parse_args()
@@ -36,13 +37,17 @@ def main():
     digest = hashlib.sha256(args.dataset.read_bytes()).hexdigest()
     if answers.get("dataset_sha256") != digest or not answers.get("complete"):
         raise ValueError("answer result must be complete and match the dataset hash")
-    output = ROOT / f"evals/results/{dataset['suite']}-judge.json"
+    suffix = "-judge" if args.mode == "hybrid" else "-vector-judge"
+    output = ROOT / f"evals/results/{dataset['suite']}{suffix}.json"
+    if answers.get("retrieval_mode", "hybrid") != args.mode:
+        raise ValueError("answer result retrieval mode does not match requested judge mode")
     records = []
     if args.resume and output.exists():
         previous = json.loads(output.read_text(encoding="utf-8"))
         if (
             previous.get("dataset_sha256") != digest
             or previous.get("workspace_id") != args.workspace_id
+            or previous.get("retrieval_mode") != args.mode
         ):
             raise ValueError("judge checkpoint does not match dataset and workspace")
         if previous.get("complete"):
@@ -58,7 +63,7 @@ def main():
         candidate = answers_by_id[case["id"]]["answer"]["answer"]
         judgment = call(
             f"/v1/workspaces/{args.workspace_id}/ask",
-            {"query": case["question"], "mode": "hybrid", "judge_answer": candidate},
+            {"query": case["question"], "mode": args.mode, "judge_answer": candidate},
         )
         row = {"id": case["id"], **judgment}
         records.append(row)
@@ -66,6 +71,7 @@ def main():
             "suite": dataset["suite"],
             "dataset_sha256": digest,
             "workspace_id": args.workspace_id,
+            "retrieval_mode": args.mode,
             "questions": len(dataset["questions"]),
             "processed": len(records),
             "complete": False,
@@ -78,6 +84,7 @@ def main():
         "suite": dataset["suite"],
         "dataset_sha256": digest,
         "workspace_id": args.workspace_id,
+        "retrieval_mode": args.mode,
         "questions": len(records),
         "complete": True,
         "local_judge_supported_rate": passed / len(records),

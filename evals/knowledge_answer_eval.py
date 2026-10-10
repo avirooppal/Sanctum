@@ -17,6 +17,7 @@ def main():
     parser.add_argument("--dataset", type=Path, required=True)
     parser.add_argument("--retrieval-results", type=Path, required=True)
     parser.add_argument("--workspace-id", required=True)
+    parser.add_argument("--mode", choices=("hybrid", "vector"), default="hybrid")
     parser.add_argument("--resume", action="store_true")
     parser.add_argument("--base-url", default="http://127.0.0.1:8765")
     args = parser.parse_args()
@@ -47,17 +48,21 @@ def main():
             raise ValueError(f"label {case['id']} is not an exact parsed source quote")
     digest = hashlib.sha256(args.dataset.read_bytes()).hexdigest()
     retrieval = json.loads(args.retrieval_results.read_text(encoding="utf-8"))
-    if retrieval.get("dataset_sha256") != digest or retrieval.get("questions") != len(
-        dataset["questions"]
+    if (
+        retrieval.get("dataset_sha256") != digest
+        or retrieval.get("questions") != len(dataset["questions"])
+        or retrieval.get("workspace_id") != args.workspace_id
     ):
         raise ValueError("retrieval result must match the same frozen dataset")
-    output = ROOT / f"evals/results/{dataset['suite']}-grounded-answers.json"
+    suffix = "-grounded-answers" if args.mode == "hybrid" else "-vector-grounded-answers"
+    output = ROOT / f"evals/results/{dataset['suite']}{suffix}.json"
     records = []
     if args.resume and output.exists():
         previous = json.loads(output.read_text(encoding="utf-8"))
         if (
             previous.get("dataset_sha256") != digest
             or previous.get("workspace_id") != args.workspace_id
+            or previous.get("retrieval_mode") != args.mode
         ):
             raise ValueError("answer checkpoint does not match this dataset and workspace")
         if previous.get("complete"):
@@ -70,7 +75,7 @@ def main():
     for case in dataset["questions"][len(records) :]:
         answer = call(
             f"/v1/workspaces/{args.workspace_id}/ask",
-            {"query": case["question"], "mode": "hybrid", "k": 5},
+            {"query": case["question"], "mode": args.mode, "k": 5},
         )
         supported = any(
             citation["source"] == case["source"] and case["answer"] in citation["quote"]
@@ -90,6 +95,7 @@ def main():
                     "suite": dataset["suite"],
                     "dataset_sha256": digest,
                     "workspace_id": args.workspace_id,
+                    "retrieval_mode": args.mode,
                     "questions": len(dataset["questions"]),
                     "processed": len(records),
                     "complete": False,
@@ -107,6 +113,7 @@ def main():
         "suite": dataset["suite"],
         "dataset_sha256": digest,
         "workspace_id": args.workspace_id,
+        "retrieval_mode": args.mode,
         "questions": len(records),
         "complete": True,
         "retrieval_reference": str(args.retrieval_results.resolve().relative_to(ROOT.resolve())),
