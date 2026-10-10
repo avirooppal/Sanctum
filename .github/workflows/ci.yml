@@ -5,6 +5,7 @@ permissions:
 jobs:
   source-gates:
     strategy:
+      fail-fast: false
       matrix:
         os: [ubuntu-22.04, windows-latest, macos-latest]
     runs-on: ${{ matrix.os }}
@@ -13,7 +14,7 @@ jobs:
       - uses: astral-sh/setup-uv@d0d8abe699bfb85fec6de9f7adb5ae17292296ff
         with:
           version: "0.12.14"
-      - run: uv sync --locked --group knowledge --python 3.12
+      - run: uv sync --locked --group knowledge --python 3.12 --managed-python
       - run: uv run --offline --group knowledge python tools/check.py
       - if: runner.os == 'Linux'
         run: python3 tools/isolated_run.py -- python3 -c "print('isolated child started')"
