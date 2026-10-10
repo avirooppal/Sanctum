@@ -61,7 +61,9 @@ expected-answer inclusion 1.00, and passed unsupported-query abstention. Artifac
 
 The v6 hybrid local faithfulness judge completed with 30/30 answers supported (1.00),
 in `evals/results/knowledge-needle-v6-judge.json`. A matched vector-only answer replay
-and local judge comparison is running; do not infer no regression from retrieval alone.
+measured exact citation support and expected-answer inclusion of 0.60, versus 1.00 for
+hybrid, and passed unsupported-query abstention. Its local judge comparison is running;
+do not infer no regression from retrieval alone until that comparison completes.
 Human spot-check remains pending in
 `evals/results/knowledge-needle-v6-human-review.md`. Keep Phase 3 gated until these
 checks complete and the human review has been recorded.
