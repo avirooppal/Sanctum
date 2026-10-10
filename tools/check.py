@@ -14,6 +14,7 @@ def main():
         ["-m", "ruff", "check", "."],
         ["-m", "ruff", "format", "--check", "."],
         ["-m", "ty", "check", "apps/cli/sanctum", "services/speech/sanctum_speech"],
+        ["-m", "ty", "check", "--python-platform", "linux", "services/speech/worker.py"],
         ["-m", "unittest", "discover", "-s", "apps/cli/tests", "-v"],
         ["-m", "unittest", "discover", "-s", "tools/tests", "-v"],
         ["-m", "unittest", "discover", "-s", "services/knowledge/tests", "-v"],

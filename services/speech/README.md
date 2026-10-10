@@ -43,6 +43,35 @@ policy.
   registry entry. Check the code, model, and voice license independently; the current
   license review and candidate sources are in `docs/PHASE-3-PLAN.md`.
 
+## Hosted file transcription
+
+The Linux Rust gateway can launch `worker.py` through its confined `--engine-child`
+entry for each authenticated multipart upload. Add an optional `speech` object to
+the existing runtime config:
+
+```json
+{"speech":{"python":"/absolute/locked-venv/bin/python","profile":"/absolute/speech-profile.json","model_id":"asr-whisper-tiny-en-reference"}}
+```
+
+The profile follows `speech-profile.schema.json`, selects explicit `vad.engine=none`
+whole-file mode, sets `timeout_seconds` at most 120, and pins the local model and
+executable hashes. Its ID/model hash must match the registry. No model is downloaded
+by startup or requests. This hosted route uses the authenticated solo session;
+Knowledge workspace selection and diarization are not implemented by this slice.
+Uploads are at most 8 MiB, mono PCM16 16 kHz WAV. Gateway injects private context;
+the official SDK needs only `model` and `file`. JSON, text, verbose JSON and VTT work.
+The content-type allowlist includes the serializers' UTF-8 charset parameters.
+
+Run the actual SDK integration after starting that configured gateway:
+
+```bash
+python evals/sdk_speech.py --base-url http://127.0.0.1:8766/v1 --token-file /absolute/local.token --audio /absolute/licensed.wav --model asr-whisper-tiny-en-reference --output evals/results/local-speech-sdk.json
+```
+
+Contract: `docs/contracts/speech-worker-v1.md`. Test modules: `test_multipart.py`,
+`test_worker.py` and Rust `speech::tests`. TTS and realtime HTTP/WebSocket
+hosting remain unavailable. A whole-file response is not streaming ASR or voice chat.
+
 ## Tests and evaluation
 
 See [reference provisioning and reproduction](../../docs/speech-reference.md) for

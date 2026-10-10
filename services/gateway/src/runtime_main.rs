@@ -131,3 +131,5 @@ fn main() {
 mod chat;
 #[cfg(all(target_os = "linux", target_arch = "x86_64"))]
 mod knowledge;
+#[cfg(all(target_os = "linux", target_arch = "x86_64"))]
+mod speech;

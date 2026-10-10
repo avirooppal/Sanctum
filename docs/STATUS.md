@@ -2,7 +2,43 @@
 
 ## Active autonomous mission — 2026-10-10
 
-Current slice: Phase 0 re-verification and strict coverage audit; then Phase 3
+### Latest slice: Phase 3 authenticated file-ASR endpoint
+
+Last green commit: `5c4b3a1` (real isolated ASR and mandatory speech typing).
+Acceptance: real official SDK multipart WAV upload through the isolated authenticated
+gateway, bounded inputs, private context, no chat regression. Added versioned worker
+contract, optional backward-compatible runtime speech config, strict multipart intake,
+contained per-request worker with registry/hash verification and deadlines, and SDK
+integration script. Whole-file/no-VAD mode is explicit. TTS/realtime remain disabled.
+
+Commands/evidence:
+- Before edits: full Python source gate, Rust regression/license/kernel gates green.
+- Contract-first multipart test initially failed import (implementation absent); then
+  3 multipart and 3 worker security tests passed. Rust config/type tests initially failed
+  compilation before implementation. These expected development failures were not committed.
+- First SDK attempt failed because pinned OpenAI 3.26 uses `httpx2`, not `httpx`;
+  corrected to the already locked dependency. JSON upload then worked, but text failed
+  503 due to missing charset allowlist entries. Added a Rust regression and fixed it.
+- `evals/sdk_speech.py --token-file /home/aviroop/.local/share/sanctum-speech-smoke/local.token
+  --audio .sanctum/speech-smoke/jfk.wav --model asr-whisper-tiny-en-reference
+  --output evals/results/speech-sdk.json`: PASS 8/8 real tests. First request 3.782195892s;
+  JSON/text/verbose/VTT, unknown model, invalid WAV, cross-workspace spoof and bad token.
+- `evals/sdk_chat.py --base-url http://127.0.0.1:8766/v1 --token-file
+  /home/aviroop/.local/share/sanctum-speech-smoke/local.token`: PASS 8/8 real regression;
+  chat 0.3047s, TTFT 0.4484s, embedding dimension 1024 (`phase1-sdk.json`).
+- `tools/check.py`: 111 pass, 1 Windows privilege skip; CLI/speech typing, Ruff,
+  26 Python + 145 web license checks, 8/8 profile fixtures pass. Worker typing targets
+  Linux explicitly because SIGALRM is intentionally unavailable on Windows.
+- Full `tools/check_rust.sh`: PASS, 20 Rust tests, fmt/Clippy, 73 licenses,
+  22 bootstrap + 16 runtime/child denial probes. The added compatibility test first
+  triggered Clippy's test-module ordering rule; moved the test module to the end and
+  reran successfully without suppressing the lint.
+
+Next three steps: streaming/VAD engine integration; cancellable TTS voice loop;
+real Knowledge/document and clean-clone acceptance audit. Phase 3 gate is NOT green:
+no diarizer, second ASR engine, live microphone/speaker path or T1 SLO measurements.
+
+Initial slice in this mission: Phase 0 re-verification and strict coverage audit; then Phase 3
 independent speech orchestration. Tested base / last committed source-green slice:
 `303d16ea409792dd5f1052adef53a3edde4f48f9`. Historical phase completion records below
 are not fresh verification. No fully green phase tag has been created this session.

@@ -1,5 +1,15 @@
 # Changelog
 
+## 2026-10-10 — Authenticated hosted file transcription
+
+- Added optional gateway speech configuration and an isolated, bounded multipart
+  file-ASR worker. Registry/model/binary hashes are checked before inference; the
+  gateway supplies solo restricted context and rejects unauthorized requests.
+- Real official SDK tests cover four response formats and four rejection cases;
+  existing chat SDK tests still pass. OpenAPI 0.2 adds gateway-injected context
+  semantics; existing runtime configurations remain valid without speech.
+- File ASR is whole-file only: streaming, VAD, diarization and voice chat remain partial.
+
 ## 2026-10-10 — Recovered runtime and real speech verification
 
 - Recovered the affected WSL distribution and completed the pinned whisper.cpp build.

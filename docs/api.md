@@ -624,7 +624,7 @@ Runtime HTTP: GET /healthz. Other contracts are foundation diagnostics.
   "openapi": "3.1.0",
   "info": {
     "title": "Sanctum Speech",
-    "version": "0.1.0",
+    "version": "0.2.0",
     "description": "Local-only OpenAI-compatible audio APIs. Audio and transcript data never use cloud fallback."
   },
   "security": [
@@ -818,7 +818,9 @@ Runtime HTTP: GET /healthz. Other contracts are foundation diagnostics.
             "default": false
           },
           "context": {
-            "$ref": "#/components/schemas/RequestContext"
+            "$ref": "#/components/schemas/RequestContext",
+            "readOnly": true,
+            "description": "Injected by the authenticated gateway for hosted transcription. Internal service calls still require context; hosted solo requests use workspace solo and restricted classification."
           }
         },
         "additionalProperties": false

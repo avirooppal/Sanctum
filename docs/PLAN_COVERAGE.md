@@ -1,6 +1,14 @@
 # Plan coverage audit
 
 Audit begun 2026-10-10 at `303d16e`; this is a live audit, not final acceptance.
+
+Latest evidence superseding pending cells below: Linux recovered; Rust containment
+reverified; `phase1-sdk.json` now records a fresh 8/8 real chat SDK run. Real whisper.cpp
+file ASR is verified by `speech-jfk-smoke.json` (single public-domain sample, not a
+quality corpus). `/v1/audio/transcriptions` is now implemented for authenticated solo
+multipart uploads: `services/gateway/src/speech.rs`, `services/speech/worker.py`,
+`speech-sdk.json` (8/8 real SDK checks). Other speech routes and full Phase 3 remain
+partial. `docs/contracts/speech-worker-v1.md` states exact limits and context scope.
 `Implemented` means the named scope has current executable evidence, not that the
 whole phase is complete. `Partial` includes missing integrations. `UNVERIFIED` means
 implementation/evidence exists but the required execution has not passed this run.

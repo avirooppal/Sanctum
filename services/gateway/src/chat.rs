@@ -38,6 +38,7 @@ struct Config {
     embedding: Model,
     reranker: Option<Model>,
     knowledge_python: Option<PathBuf>,
+    speech: Option<crate::speech::Config>,
     threads: usize,
     context: usize,
     state_dir: PathBuf,
@@ -250,6 +251,77 @@ impl Chat {
                 401,
                 json!({"error":{"message":"Invalid local API token","type":"authentication_error"}}),
             );
+        }
+        if path == "/v1/audio/transcriptions" {
+            if request.method() != &tiny_http::Method::Post {
+                return respond(request, 405, json!({"error":{"message":"POST required"}}));
+            }
+            let Some(speech) = &self.config.speech else {
+                return respond(
+                    request,
+                    503,
+                    json!({"error":{"message":"Local speech is not configured"}}),
+                );
+            };
+            let content_type = request
+                .headers()
+                .iter()
+                .find(|h| h.field.equiv("Content-Type"))
+                .map(|h| h.value.as_str().to_owned())
+                .unwrap_or_default();
+            let mut bytes = Vec::new();
+            request
+                .as_reader()
+                .take(8 * 1024 * 1024 + 1)
+                .read_to_end(&mut bytes)?;
+            if bytes.len() > 8 * 1024 * 1024 {
+                return respond(
+                    request,
+                    413,
+                    json!({"error":{"message":"Upload too large"}}),
+                );
+            }
+            let trace = random_id()?[..32].to_owned();
+            return match speech.call(content_type, bytes, trace) {
+                Ok(value) if value["ok"] == true => {
+                    let kind = value["content_type"].as_str().unwrap_or("");
+                    if kind == "application/json" {
+                        respond(request, 200, value["result"].clone())
+                    } else if crate::speech::is_text_response(kind) && value["result"].is_string() {
+                        request.respond(
+                            tiny_http::Response::from_string(value["result"].as_str().unwrap())
+                                .with_header(
+                                    tiny_http::Header::from_bytes("Content-Type", kind).unwrap(),
+                                ),
+                        )?;
+                        Ok(())
+                    } else {
+                        respond(
+                            request,
+                            503,
+                            json!({"error":{"message":"Invalid local speech response"}}),
+                        )
+                    }
+                }
+                Ok(value) => {
+                    let status = match value["status"].as_u64() {
+                        Some(400) => 400,
+                        Some(413) => 413,
+                        Some(422) => 422,
+                        _ => 503,
+                    };
+                    respond(
+                        request,
+                        status,
+                        json!({"error":{"message":"Local transcription failed"}}),
+                    )
+                }
+                Err(_) => respond(
+                    request,
+                    503,
+                    json!({"error":{"message":"Local speech unavailable"}}),
+                ),
+            };
         }
         if path == "/v1/workspaces" || path.starts_with("/v1/workspaces/") {
             let Some(worker) = &self.knowledge else {
@@ -522,4 +594,16 @@ fn respond(request: tiny_http::Request, status: u16, payload: Value) -> Result<(
             ),
     )?;
     Ok(())
+}
+
+#[cfg(test)]
+mod config_tests {
+    use super::Config;
+
+    #[test]
+    fn existing_reference_config_remains_valid_without_speech() {
+        let config: Config =
+            serde_json::from_str(include_str!("../../../profiles/runtime-cpu.json")).unwrap();
+        assert!(config.speech.is_none());
+    }
 }
