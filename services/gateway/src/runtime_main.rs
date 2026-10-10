@@ -37,6 +37,29 @@ fn run() -> Result<(), Box<dyn std::error::Error + Send + Sync>> {
         let status = sanctum_gateway::supervision::run(&mut command, &STOP)?;
         std::process::exit(status.code().unwrap_or(128 + status.signal().unwrap_or(1)));
     }
+    if let Some(index) = args.iter().position(|a| a == "--inference-request") {
+        use sanctum_inference::{Engine, LocalEngine};
+        use std::io::Read;
+        runtime::checks()?;
+        let base = args.get(index + 1).ok_or("missing engine base")?;
+        let path = args.get(index + 2).ok_or("missing engine path")?;
+        let mut input = Vec::new();
+        std::io::stdin()
+            .take(1024 * 1024 + 1)
+            .read_to_end(&mut input)?;
+        if input.len() > 1024 * 1024 {
+            return Err("inference input exceeds limit".into());
+        }
+        let payload = serde_json::from_slice(&input)?;
+        let mut reply = LocalEngine::new(base)?.send(path, &payload)?;
+        println!(
+            "{}",
+            serde_json::json!({"status": reply.status, "content_type": reply.content_type})
+        );
+        std::io::stdout().flush()?;
+        std::io::copy(&mut reply.body, &mut std::io::stdout())?;
+        return Ok(());
+    }
     if args.iter().any(|a| a == "--probe-child") {
         println!("{}", serde_json::to_string(&runtime::checks()?)?);
         return Ok(());
@@ -133,7 +156,7 @@ fn run() -> Result<(), Box<dyn std::error::Error + Send + Sync>> {
                     overload(request);
                     continue;
                 }
-                if request.url() != "/healthz" {
+                if !matches!(request.url(), "/healthz" | "/healthz/dispatch") {
                     if let Some(chat) = chat.as_ref() {
                         if let Err(error) = chat.handle(request, &context) {
                             eprintln!("request failed: {error}");
@@ -144,6 +167,11 @@ fn run() -> Result<(), Box<dyn std::error::Error + Send + Sync>> {
                 let (code, value) =
                     if request.method() == &tiny_http::Method::Get && request.url() == "/healthz" {
                         (200, health.clone())
+                    } else if request.method() == &tiny_http::Method::Get
+                        && request.url() == "/healthz/dispatch"
+                    {
+                        let (queued, active) = queue.counts();
+                        (200, serde_json::json!({"queued": queued, "active": active}))
                     } else {
                         (404, serde_json::json!({"error":"not_found"}))
                     };
@@ -226,3 +254,5 @@ mod chat;
 mod knowledge;
 #[cfg(all(target_os = "linux", target_arch = "x86_64"))]
 mod speech;
+#[cfg(all(target_os = "linux", target_arch = "x86_64"))]
+mod supervised_inference;

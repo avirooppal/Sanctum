@@ -158,7 +158,7 @@ Runtime HTTP: GET /healthz. Other contracts are foundation diagnostics.
   "openapi": "3.1.0",
   "info": {
     "title": "Sanctum runtime health",
-    "version": "0.1.0"
+    "version": "0.2.0"
   },
   "paths": {
     "/healthz": {
@@ -171,6 +171,48 @@ Runtime HTTP: GET /healthz. Other contracts are foundation diagnostics.
               "application/json": {
                 "schema": {
                   "$ref": "#/components/schemas/Health"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/healthz/dispatch": {
+      "get": {
+        "operationId": "dispatchCounts",
+        "responses": {
+          "200": {
+            "description": "Aggregate lane counts in control, voice, chat, background order",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "additionalProperties": false,
+                  "required": [
+                    "queued",
+                    "active"
+                  ],
+                  "properties": {
+                    "queued": {
+                      "type": "array",
+                      "minItems": 4,
+                      "maxItems": 4,
+                      "items": {
+                        "type": "integer",
+                        "minimum": 0
+                      }
+                    },
+                    "active": {
+                      "type": "array",
+                      "minItems": 4,
+                      "maxItems": 4,
+                      "items": {
+                        "type": "integer",
+                        "minimum": 0
+                      }
+                    }
+                  }
                 }
               }
             }

@@ -18,9 +18,11 @@ Completion removes association/leases. Cancellation must close request-specific
 engine I/O, cancel owned work, and release the worker only after cleanup. Context
 unit tests alone do not prove those effects. ADR 0031 defines measured acceptance.
 
-Initial implementation scope: context shared through ingress/queue and Rust engine
-entry points. The backward-compatible default send_with_context rejects already
-cancelled work but delegates to legacy send; it does not interrupt in-flight I/O.
-Knowledge nested Python calls and speech children are not yet cancellation-aware.
-S0-2/S0-3 must replace these blocking paths before S0-1 propagation can be called
-complete end to end. Do not infer acceptance from the presence of the parameter.
+Runtime implementation: context-aware nonblocking pipes interrupt Knowledge and
+request-specific inference helpers. Cancellation terminates their owned process
+groups, closing nested HTTP requests. Speech polls the same context and terminates
+its guardian group. Knowledge restarts on a subsequent request without mutation
+replay. The legacy default Engine method remains preflight-only; the runtime uses
+the supervised override. Shared-model compute cessation, global engine permits,
+resource storm recovery and authenticated WebSocket propagation require their own
+gates; context presence alone proves none of them.

@@ -1,3 +1,4 @@
+use crate::supervised_inference::SupervisedEngine;
 use sanctum_gateway::storage::Store;
 use sanctum_inference::{Engine, LocalEngine};
 use serde::Deserialize;
@@ -83,8 +84,8 @@ pub struct Chat {
     config: Config,
     token: String,
     store: Mutex<Store>,
-    chat: LocalEngine,
-    embedding: LocalEngine,
+    chat: SupervisedEngine,
+    embedding: SupervisedEngine,
     _engines: Engines,
     knowledge: Option<Mutex<crate::knowledge::Knowledge>>,
 }
@@ -175,8 +176,9 @@ impl Chat {
             }
             engines.0.push(command.spawn()?);
         }
-        let chat = LocalEngine::new(&format!("http://127.0.0.1:{}", config.chat.port))?;
-        let embedding = LocalEngine::new(&format!("http://127.0.0.1:{}", config.embedding.port))?;
+        let chat = SupervisedEngine::new(&format!("http://127.0.0.1:{}", config.chat.port))?;
+        let embedding =
+            SupervisedEngine::new(&format!("http://127.0.0.1:{}", config.embedding.port))?;
         let deadline = Instant::now() + Duration::from_secs(120);
         let reranker = config
             .reranker

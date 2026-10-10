@@ -1,15 +1,14 @@
 # Current state
 
-- Current step: Step 0, S0-2 owned supervision verification; Step 1 blocked by the Step 0 gate.
-- Last locally/hosted green commit: `55631ed`; H1/H2 commit `0cc3859`.
-- Open blockers: in-flight engine cancellation is unimplemented; full
+- Current step: Step 0, S0-3 cancellable engine I/O verified locally; Step 1 blocked by the Step 0 gate.
+- Last locally/hosted green commit: `c38ab2a`; H1/H2 commit `0cc3859`.
+- Open blockers: engine-wide admission and response throughput remain incomplete; full
   engine storm/shutdown/overload gates are unmeasured. Hosted CI blocker resolved.
-- Next three steps: finish supervision/transport regressions; implement cancellable
-  engine I/O; response throughput and active-engine shutdown gates.
+- Next three steps: commit cancellable I/O; enforce response throughput; measure active-engine shutdown.
 
 | Step 0 gate | Current result |
 |---|---|
-| Disconnect -> slot release p95 by engine | NOT MEASURED; inference, Knowledge and speech still block |
+| Disconnect -> slot release p95 by engine | PASS gateway slot release: 50 samples each chat/Knowledge/ASR/TTS, p95 151/208/178/178ms; shared-engine compute stop not established |
 | Process/FD/thread/socket/RSS storm cleanup | Partial: no-engine ingress only; real-engine storms pending |
 | Active-engine bounded shutdown | NOT MEASURED |
 | Minutes of mixed-engine overload with bounded queues | NOT MEASURED; upload-only ingress flood is insufficient |
@@ -135,6 +134,51 @@ item. No claim that five successes establish the complete S0-7/S0-8 gate.
 Final real SDK: PASS 8/8, chat 0.3103s, TTFT 0.2827s, embeddings 1024. Browser speech
 on supervised workers: PASS 7/7, zero page errors; physical playback unverified.
 All real requests waited for runtime readiness. S0-3 onward remains incomplete.
+
+## S0-3 cancellable engine I/O
+
+Based on `c38ab2a`, whose hosted [run 38053769682](https://github.com/avirooppal/Sanctum/actions/runs/38053769682) passed all five jobs.
+Nonblocking context-aware pipes now interrupt Knowledge reads/writes; cancelled
+Knowledge workers restart on the next request without replaying mutations. Speech
+cancellation terminates its owned process tree. A confined request-specific HTTP
+bridge closes inference connections on cancellation without killing resident models
+(ADR 0033). Additive dispatch counters expose queued/active lane counts for measurement.
+
+Tests first: missing ContextIo/dispatch counters failed before implementation; three
+real socket-pair tests cover blocked read, blocked write and partial-frame delivery.
+Initial ASR harness failed to observe its engine because it scanned only the main
+thread's children. Added a failing-then-passing descendant-enumeration regression
+and scan all task child lists; no failed run counted as a pass.
+
+Commands/results observed this session:
+
+| Command | Result |
+|---|---|
+| Linux `bash tools/check_rust.sh` | PASS 37 tests, format/clippy, 74 licenses, 38 denial probes, three supervision scenarios |
+| Linux `python tools/check.py` | PASS 133 tests, lint/format/types/licenses/evals/API docs |
+| `cargo build --locked --offline -p sanctum-gateway --bin sanctum-runtime` | PASS; real configured runtime reached readiness |
+| SDK command recorded above | PASS 8/8, chat 0.3443s, TTFT 0.3716s, dimensions 1024 |
+| Browser speech command recorded above, after cancellation runs | PASS 7/7, zero page errors; physical playback/microphone unverified |
+| `python evals/gateway_dispatch.py --token-file <state>/local.token --output evals/results/cancellable-dispatch.json` | PASS two chat streams + ingestion; health/models p95 28.551/26.778ms; first 503 15.872ms |
+
+Linux command `python evals/cancellation_release.py --pid 55195 --token-file
+/home/aviroop/.local/share/sanctum-dispatch-smoke/local.token --mode MODE --output
+evals/results/cancel-MODE.json` ran 50 samples for EACH mode, sequentially, exit 0.
+
+| Real engine mode | Disconnect -> gateway slot p95 | Maximum |
+|---|---:|---:|
+| chat (resident llama.cpp) | 0.151116s | 0.162824s |
+| Knowledge ingestion (nested embedding/rerank) | 0.207841s | 0.210524s |
+| ASR (Parakeet CLI) | 0.178409s | 0.192204s |
+| TTS (Flite CLI) | 0.178116s | 0.194712s |
+
+All meet ADR 0031 p95 <=2s/max <3s. Chat/Knowledge recovery requests succeeded;
+speech CLI PIDs were absent after cancellation. This measures gateway slot release,
+not complete resource-baseline recovery or proof of shared model compute cessation.
+Full real-engine leak/storm, active shutdown and minutes of mixed overload remain
+UNVERIFIED. Held authenticated WebSocket remains PENDING Step 1a.
+Logs: `.sanctum/cancellable-final-rust.log`, `.sanctum/cancellable-source-final.log`,
+`.sanctum/cancel-{chat,knowledge,asr,tts}.log`; committed JSON preserves all 200 samples.
 
 ## Phase table (scope and historical evidence)
 

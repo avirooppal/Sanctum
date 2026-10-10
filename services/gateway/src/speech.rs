@@ -44,7 +44,7 @@ impl Config {
         } else {
             (&self.profile, &self.model_id)
         };
-        let mut child = Command::new(std::env::current_exe().map_err(|e| e.to_string())?)
+        let child = Command::new(std::env::current_exe().map_err(|e| e.to_string())?)
             .arg("--engine-child")
             .arg(&self.python)
             .arg("services/speech/worker.py")
@@ -63,6 +63,7 @@ impl Config {
             .stderr(Stdio::null())
             .spawn()
             .map_err(|e| e.to_string())?;
+        let mut child = sanctum_gateway::supervision::OwnedChild(child);
         // These streams are guaranteed by Stdio::piped above.
         let mut input = child.stdin.take().expect("piped stdin");
         let output = child.stdout.take().expect("piped stdout");
@@ -76,7 +77,7 @@ impl Config {
         let status = loop {
             match child.try_wait() {
                 Ok(Some(status)) => break Ok(status),
-                Ok(None) if Instant::now() < deadline => {
+                Ok(None) if Instant::now() < deadline && context.check().is_ok() => {
                     std::thread::sleep(Duration::from_millis(10));
                 }
                 _ => {

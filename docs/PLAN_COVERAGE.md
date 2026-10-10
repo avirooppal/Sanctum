@@ -201,3 +201,11 @@ Fresh clone → README → first answer; full clean regression and security suit
 last egress self-test plus ledger reconciliation; complete per-phase real features.
 The ledger is absent, so "zero unexpected outbound connections in the ledger" cannot
 currently be asserted. No final acceptance or fully green phase tags are implied.
+
+## Step 0 cancellation evidence (2026-10-10)
+
+Partial: shared context, owned process groups and cancellable engine I/O are tested
+in `services/gateway/tests/cancellable_io.rs`, `tools/verify_supervision.py`, and
+`evals/cancellation_release.py`. `evals/results/cancel-{chat,knowledge,asr,tts}.json`
+records 50 actual samples per engine. This does not establish response-throughput,
+engine-wide admission, full resource storm, active shutdown or mixed overload gates.

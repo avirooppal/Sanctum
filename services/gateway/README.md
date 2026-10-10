@@ -37,3 +37,9 @@ group and reaps descendants. See `docs/contracts/process-supervision-v1.md`.
 The full Rust check includes `python tools/verify_supervision.py
 target/debug/sanctum-runtime`: actual TERM, gateway parent death and natural-exit
 fixtures. These are process-ownership tests, not real-engine cancellation latency.
+
+Cancellation I/O and measurement contracts: `docs/contracts/cancellable-io-v1.md`
+and `dispatch-observation-v1.md`. Run `python evals/cancellation_release.py --pid
+<runtime-pid> --token-file <state>/local.token --mode chat --output <result.json>`
+with a ready reference runtime; repeat modes knowledge, asr, tts. This measures
+lane release and recovery, not full leak or shared-model compute-stop acceptance.

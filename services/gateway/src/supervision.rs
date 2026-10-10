@@ -8,6 +8,26 @@ use std::{
     time::{Duration, Instant},
 };
 
+pub struct OwnedChild(pub Child);
+impl std::ops::Deref for OwnedChild {
+    type Target = Child;
+    fn deref(&self) -> &Child {
+        &self.0
+    }
+}
+impl std::ops::DerefMut for OwnedChild {
+    fn deref_mut(&mut self) -> &mut Child {
+        &mut self.0
+    }
+}
+impl Drop for OwnedChild {
+    fn drop(&mut self) {
+        if let Err(error) = terminate(&mut self.0) {
+            eprintln!("owned guardian cleanup failed: {error}");
+        }
+    }
+}
+
 fn signal(group: i32, number: i32) {
     // SAFETY: positive PID of an owned process-group leader, never caller's group.
     unsafe {

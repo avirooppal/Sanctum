@@ -43,6 +43,13 @@ impl<T> Drop for Permit<T> {
     }
 }
 impl<T> Dispatcher<T> {
+    pub fn counts(&self) -> ([usize; 4], [usize; 4]) {
+        let state = self.state.lock().unwrap();
+        (
+            std::array::from_fn(|index| state.queues[index].len()),
+            state.active,
+        )
+    }
     pub fn new(capacity: usize, limits: [usize; 4]) -> Arc<Self> {
         assert!(capacity > 0 && limits.iter().all(|limit| *limit > 0));
         Arc::new(Self {

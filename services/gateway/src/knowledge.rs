@@ -1,33 +1,61 @@
+use sanctum_gateway::{
+    cancellable_io::ContextIo,
+    supervision::{terminate, OwnedChild},
+};
+use sanctum_inference::cancellation::Cancellation;
 use serde_json::Value;
 use std::{
-    cell::RefCell,
     io::{BufRead, BufReader, Read, Write},
-    path::Path,
-    process::{Child, Command, Stdio},
+    path::{Path, PathBuf},
+    process::{Command, Stdio},
+    time::{Duration, Instant},
 };
 type Result<T> = std::result::Result<T, Box<dyn std::error::Error + Send + Sync>>;
 
 pub struct Knowledge {
-    child: RefCell<Child>,
-    output: RefCell<BufReader<std::process::ChildStdout>>,
+    child: OwnedChild,
+    input: ContextIo<std::process::ChildStdin>,
+    output: BufReader<ContextIo<std::process::ChildStdout>>,
+    settings: (PathBuf, PathBuf, PathBuf),
 }
 impl Knowledge {
     pub fn start(python: &Path, config: &Path, state: &Path) -> Result<Self> {
-        let mut child = Command::new(std::env::current_exe()?)
-            .arg("--engine-child")
-            .arg(python)
-            .arg("services/knowledge/worker.py")
-            .arg(config)
-            .arg(state)
-            .env_clear()
-            .stdin(Stdio::piped())
-            .stdout(Stdio::piped())
-            .stderr(Stdio::null())
-            .spawn()?;
-        let output = BufReader::new(child.stdout.take().ok_or("missing worker stdout")?);
-        let instance = Self {
-            child: RefCell::new(child),
-            output: RefCell::new(output),
+        let context = Cancellation::new(Instant::now() + Duration::from_secs(120));
+        Self::start_with_context(python, config, state, &context)
+    }
+    fn start_with_context(
+        python: &Path,
+        config: &Path,
+        state: &Path,
+        context: &Cancellation,
+    ) -> Result<Self> {
+        context.check()?;
+        let mut child = OwnedChild(
+            Command::new(std::env::current_exe()?)
+                .arg("--engine-child")
+                .arg(python)
+                .arg("services/knowledge/worker.py")
+                .arg(config)
+                .arg(state)
+                .env_clear()
+                .stdin(Stdio::piped())
+                .stdout(Stdio::piped())
+                .stderr(Stdio::null())
+                .spawn()?,
+        );
+        let input = ContextIo::new(
+            child.stdin.take().ok_or("missing worker stdin")?,
+            context.clone(),
+        )?;
+        let output = BufReader::new(ContextIo::new(
+            child.stdout.take().ok_or("missing worker stdout")?,
+            context.clone(),
+        )?);
+        let mut instance = Self {
+            child,
+            input,
+            output,
+            settings: (python.into(), config.into(), state.into()),
         };
         let ready = instance.read()?;
         if ready["ready"] != true {
@@ -35,10 +63,9 @@ impl Knowledge {
         }
         Ok(instance)
     }
-    fn read(&self) -> Result<Value> {
+    fn read(&mut self) -> Result<Value> {
         let mut line = Vec::new();
         self.output
-            .borrow_mut()
             .by_ref()
             .take(16 * 1024 * 1024 + 1)
             .read_until(b'\n', &mut line)?;
@@ -48,23 +75,31 @@ impl Knowledge {
         Ok(serde_json::from_slice(&line)?)
     }
     pub fn call(
-        &self,
+        &mut self,
         request: Value,
         context: &sanctum_inference::cancellation::Cancellation,
     ) -> Result<Value> {
         context.check()?;
-        let mut child = self.child.borrow_mut();
-        let input = child.stdin.as_mut().ok_or("missing worker stdin")?;
-        serde_json::to_writer(&mut *input, &request)?;
-        input.write_all(b"\n")?;
-        input.flush()?;
-        self.read()
-    }
-}
-impl Drop for Knowledge {
-    fn drop(&mut self) {
-        if let Err(error) = sanctum_gateway::supervision::terminate(self.child.get_mut()) {
-            eprintln!("knowledge cleanup failed: {error}");
+        if self.child.try_wait()?.is_some() {
+            // Restart only for the next request; never replay a possibly committed write.
+            for _ in 0..10 {
+                context.check()?;
+                std::thread::sleep(Duration::from_millis(10));
+            }
+            let (python, config, state) = self.settings.clone();
+            *self = Self::start_with_context(&python, &config, &state, context)?;
         }
+        self.input.set_context(context.clone());
+        self.output.get_mut().set_context(context.clone());
+        let result = (|| {
+            serde_json::to_writer(&mut self.input, &request)?;
+            self.input.write_all(b"\n")?;
+            self.input.flush()?;
+            self.read()
+        })();
+        if result.is_err() {
+            terminate(&mut self.child)?;
+        }
+        result
     }
 }

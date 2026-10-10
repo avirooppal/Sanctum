@@ -47,3 +47,15 @@ fn completed_permit_wakes_waiter() {
     assert_eq!(thread.join().unwrap(), 2);
     queue.close();
 }
+
+#[test]
+fn measured_counts_follow_queue_and_permit_lifetimes() {
+    let queue = Dispatcher::new(2, [1, 1, 1, 1]);
+    assert_eq!(queue.counts(), ([0; 4], [0; 4]));
+    queue.submit(Lane::Chat, 1, Instant::now()).unwrap();
+    assert_eq!(queue.counts(), ([0, 0, 1, 0], [0; 4]));
+    let job = queue.take().unwrap();
+    assert_eq!(queue.counts(), ([0; 4], [0, 0, 1, 0]));
+    drop(job);
+    assert_eq!(queue.counts(), ([0; 4], [0; 4]));
+}

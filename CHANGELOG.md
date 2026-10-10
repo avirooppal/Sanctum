@@ -1,5 +1,12 @@
 # Changelog
 
+## 2026-10-10 — Cancellable engine I/O
+
+- Interrupt Knowledge pipes, speech waits and inference HTTP through shared contexts
+  and owned process cleanup; retain resident inference servers and safe next-request recovery.
+- Add aggregate dispatch observation and 50-sample real-engine cancellation runs per mode.
+  Step 0 resource, shutdown and sustained overload gates remain open.
+
 ## 2026-10-10 â€” Owned process guardians
 
 - Keep a confined guardian around each engine/worker, with a separate worker group,
