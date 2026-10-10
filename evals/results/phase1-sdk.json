@@ -10,8 +10,8 @@
     "authentication",
     "unknown_model"
   ],
-  "chat_seconds": 0.3675,
-  "stream_ttft_seconds": 0.4433,
+  "chat_seconds": 0.3822,
+  "stream_ttft_seconds": 0.4365,
   "embedding_dimensions": 1024,
   "streamed_text": "Hello! How can I assist you today?"
 }

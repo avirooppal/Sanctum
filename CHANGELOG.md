@@ -1,5 +1,13 @@
 # Changelog
 
+## 2026-10-10 — Mixed-engine CPU scheduling gate
+
+- Give speech priority over background execution and bound interactive deferral to
+  2500ms; keep health/control available and every wait cancellable.
+- Record a measured six-thread ASR reference profile and the passing >=180-second
+  mixed-engine lane/resource gate. Preserve all three failed runs and decisions.
+- Keep real authenticated WebSocket and voice-turn acceptance pending Step 1a.
+
 ## 2026-10-10 — Engine cancellation and crash hardening
 
 - Add bounded resident engine restart, cancellable execution admission and readiness waits.

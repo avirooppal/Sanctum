@@ -17,3 +17,8 @@ waiting, so the external queue is bounded by the original admission capacity.
 Retain execution through helper/body cleanup. After a crash, pending callers wait
 for readiness before sending their generation POST once. This limits the crashed
 model's in-flight request fault domain to the one executing request.
+
+CPU voice priority: speech holds the one-slot `voice-priority` lease during its
+owned job. New background inference execution waits for this lease to be free, checking
+cancellation every 10ms. Existing model jobs continue. Interactive chat waits at most 2500ms, then proceeds; control/health traffic
+bypasses the gate. There is no new unbounded queue, suspension or deadline reset.

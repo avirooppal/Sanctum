@@ -1,0 +1,10 @@
+{
+  "inputs": 17,
+  "dimensions": 1024,
+  "seconds": 1.5330550769867841,
+  "scalar_max_difference": 0.0,
+  "usage": {
+    "prompt_tokens": 126,
+    "total_tokens": 126
+  }
+}

@@ -27,3 +27,10 @@ recommendation has not been changed by small smoke tests. Reference evidence is 
 profiles still validate for compatibility but cannot launch an unimplemented engine.
 Parakeet emits coarse whole-clip timestamps and does not force language or support
 vocabulary prompts. Retain the attribution in `docs/model-attributions.md`.
+
+The Linux CPU reference ASR profile is `profiles/asr-parakeet-cpu-reference.json`:
+six threads selected from measured candidates on this 12-logical-CPU host. It
+requires the documented local `/opt/sanctum-speech` artifacts and is not a universal
+hardware recommendation. Same-fixture transcripts matched at 2/4/6 thread settings;
+see `evals/results/asr-thread-candidates.json` and ADR 0043. Admission gives voice
+priority over background work and bounds interactive deferral to 2500ms.

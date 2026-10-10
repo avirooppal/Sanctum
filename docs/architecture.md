@@ -43,3 +43,10 @@ transport does not replace planned product HTTP/gRPC contracts (ADR 0005).
 
 ## Phase 1 runtime
 The host listener is bound before user/network isolation. Rust gateway and both trusted llama.cpp processes share private loopback only. Engine requests use a replaceable Rust trait; clients see OpenAI HTTP/SSE. SQLite and the local key live in a private state directory; UI assets are same-origin. Explicit artifact provisioning happens outside runtime and is locally logged.
+
+Step 0 CPU scheduling: shared per-engine admission and execution leases cover
+Rust and Python callers. Speech holds a voice-priority lease; background waits,
+while new interactive execution defers at most 2500ms before proceeding. Health
+and control stay independent. All waits use cancellation/deadlines, with no model
+request replay. Reference file-speech latency is distinct from the future real
+WebSocket voice-turn gate. See ADR 0043 and the measured status evidence.

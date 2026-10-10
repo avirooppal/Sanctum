@@ -68,3 +68,8 @@ Run the full real engine storm harness against a ready reference runtime:
 --runtime-config <config> --output <result.json>`. It warms representative work,
 then tests floods and 50 disconnect/explicit cancellations per engine with real
 slot observation and resource comparisons. The >=180-second mixed-overload gate and real WebSocket criterion are separate.
+
+Mixed gate: `python evals/mixed_engine_overload.py --pid <pid> --token-file
+<state>/local.token --runtime-config <config> --output <result.json>` (>=180s).
+ADR 0041 declares its bounds; ADR 0043 documents measured CPU priority refinements.
+The held-upload actor rotates at its idle deadline; real WebSocket remains Step 1a.

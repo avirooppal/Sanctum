@@ -215,11 +215,17 @@ engine-wide admission, full resource storm, active shutdown or mixed overload ga
 | Requirement | State | Current evidence |
 |---|---|---|
 | Shared context and owned process cleanup | Implemented for HTTP reference paths | cancellation-v1/process-supervision-v1 contracts; Rust tests and 38 denial probes |
-| Cancellable engine I/O | Partial | 50 samples each in cancel-{chat,knowledge,asr,tts}.json; gateway release measured, shared compute stop needs confirmation |
+| Cancellable engine I/O | Implemented reference | engine-storms-verified-* 500 real disconnect/explicit samples, observed actual model slot idle/CLI absence, all p95/max gates passed |
 | Response/upload throughput | Implemented reference | response-flow tests and response-backpressure.json actual embedding/SSE/upload probes |
-| Active/queued bounded shutdown | Partial | active-queued-shutdown.json 1.019047s, zero survivors; repeated-cycle gate pending |
+| Active/queued bounded shutdown | Implemented reference | repeated-shutdown.json three active/queued cycles max 1.198612s, zero survivors |
 | Cross-caller engine limits | Implemented reference | engine_admission Rust/Python interoperability and engine-admission.json actual 503/Retry-After |
 | Real engine crash recovery | Implemented reference | engine-crash-storage.json: queued/next requests succeed, affected turn not saved, old PID absent and resources restored |
 | Resource storms | Implemented reference | engine-storms-verified.json and 500 per-engine/method samples; exact restoration and worst retained RSS +13248KiB |
-| Mixed-engine sustained overload | Not done | No qualifying minutes-long run yet |
+| Mixed-engine sustained overload | Implemented reference | mixed-engine-overload.json 181.527s; all predeclared lane/resource gates passed, zero foreground errors |
 | Held authenticated WebSocket | PENDING Step 1a | No authenticated WebSocket implemented yet |
+
+Step 0 final local verification: 49 Rust and 138 source tests, 38 kernel denial
+probes, 500 per-engine disconnect/explicit samples, three active start/stop cycles,
+and the 181.527s mixed-engine gate pass. `final-priority-active-shutdown.json`
+records the final 0.759479s stop with zero surviving owned PIDs. Real authenticated
+WebSocket remains explicitly PENDING Step 1a; this does not complete Phase 3.

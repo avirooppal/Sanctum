@@ -47,6 +47,12 @@ def wait_execution(root, key, deadline, background=False):
         while True:
             if time.monotonic() >= deadline:
                 raise TimeoutError("engine execution deadline")
+            try:
+                with acquire(root, "voice-priority", 1, False):
+                    pass
+            except TimeoutError:
+                time.sleep(0.01)
+                continue
             if background:
                 try:
                     with acquire(root, key, 2, False):

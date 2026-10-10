@@ -42,6 +42,9 @@ impl Config {
             false,
         )
         .map_err(|error| error.to_string())?;
+        let _voice_priority =
+            sanctum_gateway::engine_admission::acquire(admission_root, "voice-priority", 1, false)
+                .map_err(|error| error.to_string())?;
         let limit = if synthesize { 65536 } else { 8 * 1024 * 1024 };
         if body.len() > limit || content_type.len() > 256 {
             return Err("speech request exceeds limit".into());

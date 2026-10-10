@@ -62,10 +62,38 @@ pub fn wait_execution(
     key: &str,
     context: &sanctum_inference::cancellation::Cancellation,
 ) -> io::Result<File> {
+    wait_execution_kind(root, key, context, false)
+}
+
+pub fn wait_background_execution(
+    root: &Path,
+    key: &str,
+    context: &sanctum_inference::cancellation::Cancellation,
+) -> io::Result<File> {
+    wait_execution_kind(root, key, context, true)
+}
+
+fn wait_execution_kind(
+    root: &Path,
+    key: &str,
+    context: &sanctum_inference::cancellation::Cancellation,
+    background: bool,
+) -> io::Result<File> {
+    let started = std::time::Instant::now();
     loop {
         context
             .check()
             .map_err(|error| io::Error::new(io::ErrorKind::ConnectionAborted, error))?;
+        if background || started.elapsed() < std::time::Duration::from_millis(2500) {
+            match acquire(root, "voice-priority", 1, false) {
+                Ok(probe) => drop(probe),
+                Err(error) if error.kind() == io::ErrorKind::WouldBlock => {
+                    std::thread::sleep(std::time::Duration::from_millis(10));
+                    continue;
+                }
+                Err(error) => return Err(error),
+            }
+        }
         match acquire(root, &format!("execute-{key}"), 1, false) {
             Ok(lease) => return Ok(lease),
             Err(error) if error.kind() == io::ErrorKind::WouldBlock => {

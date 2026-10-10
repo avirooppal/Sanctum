@@ -1,21 +1,21 @@
 # Current state
 
-- Current step: Step 0, S0-7 S0-7 cancellation/storm/repeated-shutdown gate passed; S0-8 next; Step 1 blocked by the Step 0 gate.
-- Last locally/hosted green commit: `6eeed8b`; H1/H2 commit `0cc3859`.
-- Open blockers: three-minute mixed-engine overload remains to verify.
+- Current step: Step 0, S0-7 Step 0 complete for the Linux CPU HTTP reference; push/hosted CI finalization pending; Step 1 blocked by the Step 0 gate.
+- Last locally/hosted green commit: `e15ffbc`; all five hosted jobs passed.
+- Open blockers: no unresolved local HTTP-reference gate failure; final push/hosted CI pending.
   Held authenticated WebSocket remains explicitly deferred to Step 1a.
   Repeated active shutdown and sustained mixed overload remain unverified. Hosted CI is green.
-- Next three steps: commit/push S0-7; run mixed-engine overload; full final regression and egress checks.
+- Next three steps: push final Step 0 commit; confirm all hosted jobs; Step 1a authenticated WebSocket (not started).
 
 | Step 0 gate | Current result |
 |---|---|
 | Disconnect -> slot/compute release p95 by engine | PASS 50 per mode/method; chat 156ms, Knowledge 1327ms, reranker 1177ms, ASR 230ms, TTS 233ms actual compute p95; explicit sets also pass |
 | Process/FD/thread/socket/RSS storm cleanup | PASS all five engine paths, disconnect/explicit and floods; exact role/FD/socket restoration, thread tolerance, worst RSS +13248KiB |
 | Active-engine bounded shutdown | PASS latest 0.976377s active + queued; listener 0.169111s, zero survivors; three repeated cycles PASS (max 1.199s) |
-| Minutes of mixed-engine overload with bounded queues | NOT MEASURED; upload-only ingress flood is insufficient |
+| Minutes of mixed-engine overload with bounded queues | PASS 181.527s, chat/ASR/TTS p95 3.330/4.424/1.364s; queue peak 3, zero foreground errors, resource restoration |
 | Held authenticated WebSocket | PENDING: re-run against the real authenticated WebSocket in Step 1a |
 
-No Step 0 completion claim or phase tag. Step 1 has not started.
+Step 0 HTTP-reference gate and final local regression pass; final push/CI pending. No phase tag. Step 1 has not started.
 
 ## Earlier slices this session
 
@@ -169,6 +169,105 @@ so the aggregate Step 0 gate is NOT complete and Step 1 has not started.
 Earlier same-session narratives archived verbatim with SHA256
 `dc43f9838ed19ddd92550680be4536b83f4523736baa75b8c5df4f97319768ee`;
 all previous measurements and failures retained.
+
+## S0-8 plan and gate
+
+S0-7 committed/pushed `e15ffbc`; hosted run 38068265543 completed: Linux/Windows/macOS source, Rust and web all PASS.
+New ADR 0041 and integration assertions precede this gate. Tasks: >=180 seconds
+real mixed load, observe lanes/resources, enforce latency limits, quiesce/compare,
+then full regression/egress/SDK checks. Interfaces unchanged. Risks: cold speech
+startup, connection-cap refusals and CPU contention; errors are recorded, not retried.
+Held uploads rotate under the idle bound; held authenticated WebSocket remains
+PENDING Step 1a. The <800ms real voice turn gate is not redefined by file-speech tests.
+
+S0-8 first run FAILED after 181.308393s: file-ASR p95 8.121609s >5s.
+No foreground errors. Health/models p95 0.011443/0.011025s, chat 1.658524s,
+TTS 1.375576s, voice admission 0.075422s. 12474 background 503s, max refusal
+0.042447s; queue peak three, process peak 14, RSS 2830900 -> peak 3404240KiB.
+Failed result preserved as `mixed-engine-overload-asr-failure.json`; no pass counted.
+Idle ASR five timings 4.072325/4.283321/3.530949/3.765492/3.501510s.
+Thread candidates: four threads 3.344709/3.003539/3.079342s; six threads
+2.721607/2.851768/2.559289s; every transcript identical. ADR 0043 selects the
+six-thread reference profile and cancellable voice-priority execution admission.
+Test first FAILED when execution ignored the held voice lease. Fix under verification;
+no changed latency threshold, warm speech implementation or process suspension.
+
+S0-8 priority rerun FAILED chat p95 11.261964s >5s after 182.566607s;
+ASR p95 3.837983s now passed. No foreground errors. Evidence preserved as
+`mixed-engine-overload-chat-failure.json`. Narrow priority waiting to background
+work while preserving interactive progress; retain unchanged latency bounds.
+
+S0-8 background-only priority run FAILED ASR p95 6.404672s >5s.
+Evidence preserved in `mixed-engine-overload-background-asr-failure.json`.
+ADR 0043 now bounds foreground deferral to 2500ms during voice, while background
+still yields. Health/control and every latency gate remain unchanged. Reverify.
+
+## S0-8 successful gate and final verification
+
+Command: Linux `python evals/mixed_engine_overload.py --pid 685 --token-file
+/home/aviroop/.local/share/sanctum-dispatch-smoke/local.token --runtime-config
+.sanctum/runtime-dispatch.json --output evals/results/mixed-engine-overload.json`.
+PASS exit 0; **181.527274s**, six-thread reference ASR, two chat stream producers,
+six ingestion producers, actual ASR/TTS, health/models/queue probes and held-upload
+rotation. No foreground errors or discarded latency samples.
+
+| Metric | Real result | Gate |
+|---|---:|---:|
+| health p95 (2846 samples) | 0.010019s | <=0.250s |
+| models p95 (2846) | 0.010163s | <=0.250s |
+| chat p95 (145 completed streams) | 3.330308s | <=5s |
+| file ASR p95 (36) | 4.424422s | <=5s |
+| file TTS p95 (35) | 1.363956s | <=5s |
+| voice admission p95 (71) | 0.080029s | <=0.250s |
+| background 503 responses | 12727 | shedding required |
+| queue / owned process peak | 3 / 14 | <=8 / baseline+8 |
+| peak owned RSS | 3409756KiB | baseline+2GiB |
+| worst retained per-role RSS delta | 14412KiB | <=16384KiB |
+
+Exact role/FD/socket restoration and thread allowance passed after ten-second
+quiescence. Every latency and observation retained in mixed-engine-overload.json.
+Held upload rotation exercises the idle deadline; real authenticated WebSocket
+remains PENDING Step 1a. File timings do not claim <800ms real voice-turn latency.
+All three failed load runs remain in separately named JSON files; gates unchanged.
+
+Post-load SDK command recorded in archive: PASS 8/8, chat 0.3822s, TTFT 0.4365s,
+1024 dimensions. `python evals/sdk_batch_embeddings.py --token-file <state>/local.token
+--output evals/results/sdk-batch-embeddings-final.json`: PASS 17 inputs/1024 dims,
+1.533055s, scalar max difference 0.0, usage 126. Completed conversation test PASS
+stream/nonstream one turn each (`conversation-completion-final.json`). Real browser
+speech command from archive: PASS 7/7, zero page errors; physical playback/mic still
+UNVERIFIED. Final `python tools/verify_runtime.py target/debug/sanctum-runtime`:
+PASS isolated startup and 16 runtime/exec-child denial probes. Combined full Rust
+gate retains 22 bootstrap +16 runtime denial checks, 49 tests and 74 licenses.
+
+## Final local Step 0 acceptance
+
+Updated six-thread ASR cancellation rerun: Linux `evals/cancellation_release.py`
+with --pid 685, --runtime-config .sanctum/runtime-dispatch.json, --mode asr,
+50 samples each --cancel-method disconnect/explicit. Both PASS: gateway p95
+0.223768/0.136982s, computation/PID-release p95 0.229745/0.144583s, maxima
+0.263195/0.147836s. Evidence `final-asr-{disconnect,explicit}.json`.
+
+Latest active+queued shutdown command: PASS **0.759479s**, listener **0.182709s**,
+zero surviving owned PIDs (`final-priority-active-shutdown.json`). No orphan
+process or socket left after the final service stop. No phase tags created.
+
+Full final Linux `bash tools/check_rust.sh`: PASS **49 tests**, fmt/clippy,
+74 reviewed crate licenses, **38 kernel denial probes** and three supervision
+scenarios; `.sanctum/final-step0-rust.log`. Final Linux `python tools/check.py`:
+PASS **138 tests**, formatting/lint/types/licenses/evals/API docs;
+`.sanctum/final-step0-source.log`. Web this session PASS 12/12, typecheck/build,
+audit zero vulnerabilities. Final startup self-test and SDK/browser results above.
+
+The requested Step 0 HTTP-reference gates pass with measured evidence. The
+explicitly deferred held authenticated WebSocket remains PENDING Step 1a; physical
+audio/mic and real <800ms voice-turn/WER gates remain future verification, not
+claimed here. Step 1 has not started. Final commit/push/hosted CI still to record.
+
+Decisions for review: ADR 0037 (large-response header setup wait), ADR 0038
+(representative warmup/setup timeout), ADR 0042 (exact archive bytes), ADR 0043
+(measured ASR thread profile and bounded CPU admission). No latency/resource gate
+was loosened. Failed runs remain committed or preserved as named evidence.
 
 ## Phase table (scope and historical evidence)
 
