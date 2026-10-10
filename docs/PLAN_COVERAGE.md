@@ -1,5 +1,11 @@
 # Plan coverage audit
 
+Browser speech update (2026-10-10): file dictation to draft, WAV playback and client
+stop now exist in `apps/web/src/SpeechPanel.tsx` / `speech.ts`. Real browser 6/6 in
+`speech-browser.json`; warm ASR-chat-TTS full-WAV latency 5.120009s in
+`speech-voice-turn-warm.json`. Streaming ASR, microphone, server-side barge-in,
+diarization and T1 latency remain Partial/UNVERIFIED. This is not Phase 3 acceptance.
+
 Hosted TTS update (2026-10-10): authenticated `/v1/audio/speech` now returns real
 WAV/PCM through the confined worker (`services/gateway/src/speech.rs`,
 `services/speech/worker.py`). `evals/results/speech-sdk-tts.json` records 8/8 SDK
@@ -23,7 +29,7 @@ HTTP results are in `speech-parakeet-smoke.json` and `speech-sdk-parakeet.json`.
 Language selection is unforced and timestamps coarse; live streaming remains absent.
 `backends/flite.py` now provides a real opt-in CPU TTSEngine with a versioned profile
 and reviewed permissive voice artifact. `speech-tts-smoke.json` records synthesis;
-physical playback and neural quality remain unverified. TTS HTTP hosting is next.
+physical playback and neural quality remain unverified. TTS HTTP hosting is verified above.
 `Implemented` means the named scope has current executable evidence, not that the
 whole phase is complete. `Partial` includes missing integrations. `UNVERIFIED` means
 implementation/evidence exists but the required execution has not passed this run.

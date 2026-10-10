@@ -582,7 +582,7 @@ impl Chat {
             Some("css") => "text/css",
             _ => "text/html",
         };
-        request.respond(tiny_http::Response::from_data(content).with_header(tiny_http::Header::from_bytes("Content-Type",mime).unwrap()).with_header(tiny_http::Header::from_bytes("Content-Security-Policy","default-src 'self'; style-src 'self'; connect-src 'self'; frame-ancestors 'none'").unwrap()))?;
+        request.respond(tiny_http::Response::from_data(content).with_header(tiny_http::Header::from_bytes("Content-Type",mime).unwrap()).with_header(tiny_http::Header::from_bytes("Content-Security-Policy","default-src 'self'; style-src 'self'; connect-src 'self'; media-src blob:; frame-ancestors 'none'").unwrap()))?;
         Ok(())
     }
 }

@@ -1,0 +1,14 @@
+{
+  "suite": "real-browser-speech",
+  "passed": [
+    "same_origin_and_blob_only_media_csp",
+    "real_wav_dictation_to_draft",
+    "real_chat_response",
+    "browser_audio_play_promise_resolved",
+    "stop_control",
+    "mobile_no_horizontal_overflow"
+  ],
+  "page_errors": [],
+  "physical_playback_verified": false,
+  "microphone_verified": false
+}

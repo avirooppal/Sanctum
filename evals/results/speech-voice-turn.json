@@ -1,0 +1,15 @@
+{
+  "suite": "real-file-voice-turn",
+  "input_sha256": "59dfb9a4acb36fe2a2affc14bacbee2920ff435cb13cc314a08c13f66ba7860e",
+  "transcript": "And so, my fellow Americans, ask not what your country can do for you, ask what you can do for your country.",
+  "answer": "Ask not what your country can do for you, ask what you can do for your country.",
+  "asr_seconds": 20.838995970989345,
+  "chat_seconds": 0.9856983970094007,
+  "tts_seconds": 1.1539951659797225,
+  "full_wav_available_seconds": 22.978689533978468,
+  "output_audio_seconds": 4.69,
+  "output_sha256": "83f0002c3afe7430c0895dadc61d680c6d89b38767fd8c1d861d37c0ecef59a4",
+  "physical_capture_playback_verified": false,
+  "t1_slo_verified": false,
+  "samples": 1
+}

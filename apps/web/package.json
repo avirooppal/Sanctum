@@ -6,7 +6,8 @@
   "type": "module",
   "scripts": {
     "build": "vite build",
-    "typecheck": "tsc --noEmit"
+    "typecheck": "tsc --noEmit",
+    "test": "tsc --outDir build/tests --noEmit false --target ES2022 --module NodeNext --moduleResolution NodeNext src/speech.ts && node --test tests/*.test.mjs"
   },
   "dependencies": {
     "react": "19.1.1",

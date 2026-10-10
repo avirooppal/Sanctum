@@ -1,5 +1,12 @@
 # Changelog
 
+## 2026-10-10 — Browser file speech
+
+- Add local WAV dictation to draft, response playback and cancellation with stale
+  response suppression. Keep model IDs explicit and audio/credentials in memory.
+- Real browser passes six checks; warm file-ASR/chat/TTS completes in 5.12s.
+  Physical audio, streaming speech and T1 latency remain unverified or incomplete.
+
 ## 2026-10-10 — Authenticated local TTS API
 
 - Host opt-in WAV/PCM synthesis under inherited kernel containment with bounded

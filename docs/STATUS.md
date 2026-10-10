@@ -2,6 +2,42 @@
 
 ## Active autonomous mission — 2026-10-10
 
+### Latest slice: Phase 3 browser file dictation and playback
+
+Last green commit: `555caa4`. Added opt-in Local speech panel, draft-only file
+transcription, explicit profile/voice IDs, real WAV playback and Stop audio. Controller
+suppresses stale delivery when cancellation races; credentials/audio remain in memory.
+Contract: `docs/contracts/web-speech-v1.md`. CSP allows blob media only, same-origin
+connections unchanged. Microphone/streaming/server-side barge-in are not implemented.
+
+Baseline `npm run typecheck --prefix apps/web` + `npm run build --prefix apps/web`
+passed before edits. New controller tests first failed missing implementation; now
+`npm test --prefix apps/web` passes 4/4 and is wired into CI. Typecheck/build PASS.
+`uv run --offline --group dev --group knowledge python tools/check.py` PASS: 123 tests
++ 1 Windows privilege skip, lint/format/type/license/doc gates. Rust full check PASS:
+21 tests, 73 crate licenses, 38 kernel denial probes after rebuilding gateway for CSP.
+
+Real browser command: `node evals/browser_speech.mjs <playwright-package> <token-file>
+.sanctum/speech-smoke/jfk.wav asr-parakeet-q4k-reference tts-flite-slt-reference
+tts-flite-slt-reference`. Bundled Playwright used as external test tooling, no new
+product dependency. First navigation timed out while models initialized; rerun after
+startup passed. Screenshot exposed composer overlap; removed sticky positioning,
+rebuilt and repeated browser test. Final: 6/6 checks, zero page errors, real dictation,
+chat, browser play promise and stop; mobile width 390px has no horizontal overflow.
+Evidence: `evals/results/speech-browser.json`; screenshots in `.sanctum/`.
+
+`python evals/sdk_voice_turn.py --token-file <local.token> --audio
+.sanctum/speech-smoke/jfk.wav --asr asr-parakeet-q4k-reference --chat chat-tiny-q8
+--tts tts-flite-slt-reference --voice tts-flite-slt-reference --output <result.json>`
+ran twice. `speech-voice-turn.json`: 22.978690s including startup overlap;
+`speech-voice-turn-warm.json`: ASR 3.579339s, chat 0.548261s, TTS 0.992409s,
+complete WAV available 5.120009s, generated duration 4.69s. These are single-file
+smokes, not a corpus percentile or physical voice turn. T1 <800ms gate NOT met/verified.
+
+Next three steps: microphone capture; streaming ASR and cancellable server execution;
+meeting/diarization integration. Blockers: T1/audio device verification unavailable;
+current CLI engine startup cannot meet streaming latency. No phase green tag.
+
 ### Latest slice: Phase 3 hosted TTS
 
 Last green commit: `6972cf8`. Optional `speech.tts` adds authenticated bounded
