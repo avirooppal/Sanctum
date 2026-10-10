@@ -21,11 +21,12 @@ measurement with a fake clock. No microphone, speaker, or GPU test may be marked
 without the relevant hardware.
 
 Risks: plan.md defines voice first-audio latency <800 ms on T1 but gives no numeric WER
-target (ADR 0015); this Windows host profiles as T0, and audio hardware is unavailable.
+target; ADR 0018 sets initial English LibriSpeech test-clean/test-other gates at 0.10/0.20.
+This Windows host profiles as T0, and audio hardware is unavailable.
 Model weights and TTS voices have licenses independent of their engine packages. No
 model defaults or benchmark claims will be added until each artifact's license, source,
-revision, and hash are verified. The Phase 3 exit remains blocked until both metrics run
-on T1 and a WER threshold is defined.
+revision, and hash are verified. The Phase 3 exit remains blocked until WER and latency
+metrics are measured on T1.
 
 ## Verified candidate components (2026-10-10)
 
@@ -41,6 +42,9 @@ on T1 and a WER threshold is defined.
   [license](https://github.com/ggml-org/whisper.cpp/blob/master/LICENSE).
 - Whisper code and weights: MIT according to the official project card:
   [OpenAI Whisper model card](https://github.com/openai/whisper/blob/main/model-card.md).
+- English WER datasets: OpenSLR identifies LibriSpeech as CC BY 4.0. ADR 0018 sets
+  test-clean <=10% and test-other <=20% weighted WER as initial T1 gates:
+  [OpenSLR LibriSpeech](https://www.openslr.org/12/).
 - whisper.cpp fallback: MIT according to its repository license:
   [whisper.cpp license](https://github.com/ggml-org/whisper.cpp/blob/master/LICENSE).
 - Silero VAD project: MIT according to its repository metadata:

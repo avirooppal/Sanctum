@@ -8,7 +8,7 @@ Phase 1 starts after the Phase 0 completion commit below. Placeholder service di
 | 0 Foundations | done (Linux x86_64) | Doctor tier/profile passes; real isolated HTTP ingress, exec inheritance and egress startup probes pass. Other runtime platforms fail closed. |
 | 1 Chat | done (Linux reference) | Offline clean-rootfs install to answer 50.6005s; official SDK 8/8. Downloads/build excluded; native macOS/Windows unverified. |
 | 2 Knowledge | done (v6, user-directed reviewer) | Vector/hybrid recall@5 0.60/1.00 (gain +0.40); MRR 0.60/1.00. Hybrid exact citation and expected-answer inclusion 1.00; abstention passed; calibrated local judge 30/30 supported. Vector-only answer/citation/judge rates 0.60. Codex checked 4/4 hybrid cases against frozen sources at the user's direction (ADR 0014); no independent human audit. |
-| 3 Speech | in progress (contract and eval plan) | T1 end-of-speech to first audio <800 ms; plan.md does not numerically specify a WER threshold (ADR 0015). T1 hardware unavailable on this host; both metrics unverified. |
+| 3 Speech | in progress (contracts, evaluator, ASR adapter) | T1 first audio p95 <800 ms; LibriSpeech test-clean WER <=0.10 and test-other <=0.20 (ADR 0018). Host is T0; measurements unverified. |
 | 4 Vision | not started | Measurable visual QA lift: unverified; dataset/threshold pending. |
 | 5 Agents | not started | Red team passes and zero unexpected ledger egress: unverified. |
 | 6 Team | not started | 20 concurrent users meet reference SLO; verified air-gapped install: unverified. |
@@ -263,8 +263,9 @@ diarization, offline WER/voice-loop evaluator, and a hash-pinned whisper.cpp fil
 adapter are implemented. Speech contracts and evaluator are wired into the normal
 repository check. No whisper.cpp binary/model, VAD runtime, voice, listener, or hardware
 benchmark is provisioned. T1 latency and WER remain unverified; Phase 3 is in progress.
-ADR 0015 records the missing numeric WER target; ADR 0016 defines p95 aggregation for
-the plan's <800 ms first-audio SLO; ADR 0017 excludes a transitive MPL dependency.
+ADR 0018 defines initial LibriSpeech WER gates (test-clean <=0.10, test-other <=0.20);
+ADR 0016 defines p95 aggregation for the plan's <800 ms first-audio SLO; ADR 0017
+excludes a transitive MPL dependency. T1 metric measurements remain unverified.
 Candidate licensing review is documented in `docs/PHASE-3-PLAN.md`; no model is pinned
 as a default.
 
@@ -291,7 +292,7 @@ as a default.
 | Speech profile and whisper.cpp adapter tests | 4/4 pass |
 | Speech evaluation tests | 4/4 pass |
 | Ruff lint/format, type checks, Python/frontend license scans | PASS |
-| T1 WER and voice latency | Unverified; no whisper.cpp artifact/model, licensed benchmark dataset, T1 hardware, or numeric WER threshold available |
+| T1 WER and voice latency | Unverified; no whisper.cpp artifact/model or benchmark data available locally; host is T0; WER thresholds set by ADR 0018 |
 
 Phase 3 remains in progress and Phase 4 has not started because the Phase 3 exit gate
 has not been verified. `evals/speech_eval.py` is the reproducible offline runner for
