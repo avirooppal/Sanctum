@@ -43,3 +43,8 @@ and `dispatch-observation-v1.md`. Run `python evals/cancellation_release.py --pi
 <runtime-pid> --token-file <state>/local.token --mode chat --output <result.json>`
 with a ready reference runtime; repeat modes knowledge, asr, tts. This measures
 lane release and recovery, not full leak or shared-model compute-stop acceptance.
+
+Response delivery limits are in `docs/contracts/response-flow-v1.md` (ADR 0034).
+Run `python evals/response_backpressure.py --token-file <state>/local.token --output
+<result.json>` against the ready reference runtime for actual embedding/SSE and
+burst-then-trickle upload probes.

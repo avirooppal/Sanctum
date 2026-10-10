@@ -1,10 +1,10 @@
 # Current state
 
-- Current step: Step 0, S0-3 cancellable engine I/O verified locally; Step 1 blocked by the Step 0 gate.
-- Last locally/hosted green commit: `c38ab2a`; H1/H2 commit `0cc3859`.
-- Open blockers: engine-wide admission and response throughput remain incomplete; full
+- Current step: Step 0, S0-4 response backpressure verified locally; Step 1 blocked by the Step 0 gate.
+- Last locally/hosted green commit: `4fd4109`; H1/H2 commit `0cc3859`.
+- Open blockers: engine-wide admission remains incomplete; full
   engine storm/shutdown/overload gates are unmeasured. Hosted CI blocker resolved.
-- Next three steps: commit cancellable I/O; enforce response throughput; measure active-engine shutdown.
+- Next three steps: commit response throughput; measure active-engine shutdown; implement shared engine admission.
 
 | Step 0 gate | Current result |
 |---|---|
@@ -180,6 +180,36 @@ UNVERIFIED. Held authenticated WebSocket remains PENDING Step 1a.
 Logs: `.sanctum/cancellable-final-rust.log`, `.sanctum/cancellable-source-final.log`,
 `.sanctum/cancel-{chat,knowledge,asr,tts}.log`; committed JSON preserves all 200 samples.
 
+## S0-4 response backpressure
+
+S0-3 committed/pushed `4fd4109`; [hosted run 38055235469](https://github.com/avirooppal/Sanctum/actions/runs/38055235469)
+completed all five jobs successfully (observed jobs API).
+
+Contract/ADR 0034 and tests preceded implementation. Initial missing-module test
+failed as expected. First socket test then exceeded two seconds because brief
+kernel progress reset idle time. Kept the test unchanged; added a stricter 1800ms
+absolute bound per output block as well as idle/cancellation checks. No threshold
+relaxed. Final fixed/chunked non-reading-client socket tests pass. Uploads now use
+rolling two-second throughput windows rather than lifetime averaging.
+
+`bash tools/check_rust.sh`: PASS 40 tests, fmt/clippy, 74 licenses, 38 denial probes,
+three supervision scenarios; `.sanctum/response-flow-rust.log`. Linux
+`python tools/check.py`: PASS 133 tests plus all source gates;
+`.sanctum/response-flow-source.log`. Runtime rebuilt and reached readiness.
+
+`python evals/response_backpressure.py --token-file <state>/local.token --output
+evals/results/response-backpressure.json`: PASS real embeddings and SSE responses.
+Header-to-slot-release: fixed **1.819566s**, streaming **2.770852s**. These include
+socket-buffer filling and model generation, NOT last-send idle time. The two-second
+pending-write bound is separately tested with real socket pairs. Burst-then-trickle
+upload closed after **4.008985s**, proving an initial burst cannot subsidize the
+subsequent slow window.
+
+`python evals/ingress_limits.py --binary target/debug/sanctum-runtime --output
+evals/results/response-ingress.json`: PASS 100 disconnects, header/body release
+1.876457/1.880110s, FDs 5->5, threads 13->13, RSS 5120->5376KiB; health-only
+shutdown 0.214930s. This still does not prove active-engine shutdown/storm cleanup.
+
 ## Phase table (scope and historical evidence)
 
 These scope-limited phase records retain the historical evidence; only the session
@@ -199,3 +229,6 @@ continuing Phase 3 speech work, not a reset of the original Phase 0 roadmap.
 
 Phase 6 team/SSO/Postgres/pgvector/Helm/multi-user quotas and 20-user load gate:
 **Out of scope by decision**, [ADR 0027](adr/0027-single-user-scope.md).
+
+S0-4 final SDK command recorded above: PASS 8/8, chat 0.3484s, TTFT 0.4335s, dimensions 1024.
+

@@ -1,5 +1,11 @@
 # Changelog
 
+## 2026-10-10 — Response backpressure
+
+- Bound fixed and streaming response writes with cancellation, idle/block deadlines
+  and delivery throughput windows; exclude model generation pauses.
+- Apply rolling upload throughput checks and add real slow-reader regressions.
+
 ## 2026-10-10 — Cancellable engine I/O
 
 - Interrupt Knowledge pipes, speech waits and inference HTTP through shared contexts

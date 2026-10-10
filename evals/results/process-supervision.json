@@ -1,17 +1,17 @@
 [
   {
     "scenario": "term",
-    "release_seconds": 0.5660152510099579,
+    "release_seconds": 0.5657005929970182,
     "surviving_pids": 0
   },
   {
     "scenario": "parent-death",
-    "release_seconds": 0.5249473059957381,
+    "release_seconds": 0.5268127110030036,
     "surviving_pids": 0
   },
   {
     "scenario": "natural",
-    "release_seconds": 0.5657785710063763,
+    "release_seconds": 0.565517197974259,
     "surviving_pids": 0
   }
 ]

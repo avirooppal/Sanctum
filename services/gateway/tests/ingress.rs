@@ -102,3 +102,51 @@ fn advertises_close_before_a_pooled_client_can_reuse_the_connection() {
     );
     assert!(response.ends_with("\r\n\r\n{}"));
 }
+
+#[cfg(target_os = "linux")]
+#[test]
+fn nonreading_clients_cancel_fixed_and_streaming_upstreams() {
+    use sanctum_gateway::ingress::Ingress;
+    use std::{
+        io::{Read, Write},
+        net::{TcpListener, TcpStream},
+        time::{Duration, Instant},
+    };
+    for framing in ["Content-Length: 16777216", "Transfer-Encoding: chunked"] {
+        let backend = TcpListener::bind("127.0.0.1:0").unwrap();
+        let listener = TcpListener::bind("127.0.0.1:0").unwrap();
+        let address = listener.local_addr().unwrap();
+        let ingress = Ingress::start(listener, backend.local_addr().unwrap()).unwrap();
+        let mut client = TcpStream::connect(address).unwrap();
+        client
+            .write_all(b"GET /healthz HTTP/1.1\r\nHost: local\r\n\r\n")
+            .unwrap();
+        let (mut upstream, peer) = backend.accept().unwrap();
+        upstream.read_exact(&mut [0u8; 1]).unwrap();
+        let context = ingress.context(peer).unwrap();
+        let started = Instant::now();
+        let sender = std::thread::spawn(move || {
+            upstream
+                .set_write_timeout(Some(Duration::from_secs(3)))
+                .unwrap();
+            write!(upstream, "HTTP/1.1 200 OK\r\n{framing}\r\n\r\n").unwrap();
+            for _ in 0..1024 {
+                if framing.starts_with("Transfer") && upstream.write_all(b"4000\r\n").is_err() {
+                    break;
+                }
+                if upstream.write_all(&[42; 16384]).is_err() {
+                    break;
+                }
+                if framing.starts_with("Transfer") && upstream.write_all(b"\r\n").is_err() {
+                    break;
+                }
+            }
+        });
+        while context.check().is_ok() && started.elapsed() < Duration::from_secs(3) {
+            std::thread::sleep(Duration::from_millis(5));
+        }
+        assert!(context.check().is_err(), "{framing} pinned its worker");
+        assert!(started.elapsed() < Duration::from_secs(3));
+        sender.join().unwrap();
+    }
+}

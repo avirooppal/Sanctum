@@ -1,0 +1,11 @@
+{
+  "burst_then_trickle_upload_seconds": 4.00898479798343,
+  "fixed_embeddings": {
+    "header_to_slot_release_seconds": 1.8195663389924448,
+    "scope": "Includes socket-buffer filling/model generation; not last-send idle time"
+  },
+  "streaming_chat": {
+    "header_to_slot_release_seconds": 2.770852443005424,
+    "scope": "Includes socket-buffer filling/model generation; not last-send idle time"
+  }
+}

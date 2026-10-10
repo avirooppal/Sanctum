@@ -1,4 +1,5 @@
 //! Bounded TCP ingress; the application listener stays in the private namespace.
+use crate::response_flow::{write_response, Budget};
 use sanctum_inference::cancellation::{Cancellation, Reason};
 use std::{
     collections::HashMap,
@@ -246,25 +247,38 @@ fn relay(
     let mut body = vec![0; head.length];
     let uploaded = Instant::now();
     let mut offset = 0;
+    let mut upload_budget = Budget::default();
+    let mut upload_tick = uploaded;
+    let mut upload_progress = uploaded;
     while offset < body.len() {
-        if uploaded.elapsed().as_secs_f64() > 2.0
-            && (offset as f64 / uploaded.elapsed().as_secs_f64()) < 1024.0
+        if stop.load(Ordering::Relaxed)
+            || uploaded.elapsed() >= Duration::from_secs(15)
+            || upload_progress.elapsed() >= Duration::from_millis(1800)
         {
             return Err(timed_out());
         }
-        let size = read_some(
-            &mut client,
-            &mut body[offset..],
-            std::cmp::min(
-                uploaded + Duration::from_secs(15),
-                Instant::now() + Duration::from_millis(1800),
-            ),
-            &stop,
-        )?;
-        if size == 0 {
-            return Ok(());
+        let size = match client.read(&mut body[offset..]) {
+            Ok(0) => return Ok(()),
+            Ok(size) => size,
+            Err(error)
+                if matches!(
+                    error.kind(),
+                    io::ErrorKind::WouldBlock
+                        | io::ErrorKind::TimedOut
+                        | io::ErrorKind::Interrupted
+                ) =>
+            {
+                0
+            }
+            Err(error) => return Err(error),
+        };
+        let now = Instant::now();
+        upload_budget.advance(now - upload_tick, size)?;
+        upload_tick = now;
+        if size > 0 {
+            upload_progress = now;
+            offset += size;
         }
-        offset += size;
     }
     let mut engine = TcpStream::connect_timeout(&backend, Duration::from_secs(1))?;
     let peer = engine.local_addr()?;
@@ -282,6 +296,7 @@ fn relay(
     let mut bytes = [0u8; 16384];
     let mut response_head = Vec::new();
     let mut sent_head = false;
+    let mut delivery = Budget::default();
     let result = loop {
         if stop.load(Ordering::Relaxed) {
             context.cancel(Reason::Shutdown);
@@ -334,7 +349,9 @@ fn relay(
                     sent_head = true;
                     output
                 };
-                if let Err(error) = client.write_all(&output) {
+                if let Err(error) =
+                    write_response(&mut client, &output, &context, &stop, &mut delivery)
+                {
                     break Err(error);
                 }
             }
