@@ -2,6 +2,30 @@
 
 ## Active autonomous mission — 2026-10-10
 
+### Latest slice: Phase 3 second real ASR backend
+
+Last green commit: `08b8711`. Added profile-selected `parakeet.cpp` behind ASREngine;
+the existing worker/eval runner now use an engine factory. Both adapters ran for real.
+Registry keeps NVIDIA CC-BY-4.0 plus conversion MIT obligations with required attribution
+and upstream revision (ADR 0023). Inspected model magic `lmgg`: recorded GGML despite
+upstream repository naming it GGUF. No default profile changed.
+
+Fresh checks: `tools/check.py` PASS, 118 tests passed + 1 Windows privilege skip;
+lint/format/type/license/profile gates pass. Contract-first adapter test initially
+failed import, then 3 new adapter tests plus attribution validation passed.
+Real command: `python3 tools/isolated_run.py -- /home/aviroop/.local/share/sanctum-dev-venv/bin/python
+evals/run_speech_asr.py --manifest .sanctum/speech-smoke/parakeet-manifest.json --profile
+.sanctum/speech-smoke/parakeet-profile.json --output evals/results/speech-parakeet-smoke.json`.
+PASS 4 egress probes; 11s public-domain JFK sample transcribed in 1.760729854s,
+WER 0/22, RTF 0.160066350; score via `evals/speech_eval.py`. Artifacts and exact
+profile/binary/model hashes: `speech-parakeet-{profile,smoke,smoke-metrics}.json`.
+`evals/sdk_speech.py` with model `asr-parakeet-q4k-reference`: PASS 8/8 real HTTP checks,
+first request 23.964087261s (`speech-sdk-parakeet.json`). Timestamps are explicitly
+whole-clip coarse boundaries, detected language unknown, vocabulary prompts unsupported.
+These are file ASR implementations, not streaming input or Phase 3 SLO verification.
+
+Next three steps: audio UI; cancellable voice streaming; audited real TTS/diarization.
+
 ### Latest slice: Phase 3 real Silero file VAD
 
 Last green commit: `a53a2f5`. Added SileroCppVAD behind the detector protocol, MIT

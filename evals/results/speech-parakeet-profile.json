@@ -1,0 +1,17 @@
+{
+  "schema_version": "1.0",
+  "id": "asr-parakeet-q4k-reference",
+  "egress": "denied",
+  "vad": {
+    "engine": "none"
+  },
+  "asr": {
+    "engine": "parakeet.cpp",
+    "model_path": "/opt/sanctum-speech/parakeet-q4_k.bin",
+    "model_sha256": "8b205b8b39c6535e153de6fb11c51db46125d45c4f16ba496fe41a0fe71b885e",
+    "executable_path": "/opt/sanctum-speech/build/bin/parakeet-cli",
+    "executable_sha256": "84241dc633545112acdc35d942a9f1254c164327c793108d6c31a9ee8ff5afb9",
+    "threads": 2,
+    "timeout_seconds": 120
+  }
+}

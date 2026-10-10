@@ -1,5 +1,13 @@
 # Changelog
 
+## 2026-10-10 — Second real local ASR backend
+
+- Added Parakeet CLI ASR and profile factory without changing product API or defaults.
+  Both Whisper and Parakeet passed real isolated file/SDK integration.
+- Preserve upstream NVIDIA weight attribution alongside the conversion license;
+  record inspected GGML format rather than relying on repository tags (ADR 0023).
+- Document coarse timestamps and unsupported vocabulary prompts; no voice SLO claim.
+
 ## 2026-10-10 — Real Silero VAD adapter
 
 - Added hash-pinned Silero file VAD with timestamp conversion and silence checks.

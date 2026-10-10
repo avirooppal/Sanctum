@@ -7,7 +7,7 @@ import sys
 
 from jsonschema import Draft202012Validator, ValidationError
 
-from sanctum_speech.backends.whisper_cpp import WhisperCppASR
+from sanctum_speech.backends.factory import load_asr
 from sanctum_speech.backends.silero_cpp import SileroCppVAD
 from sanctum_speech.multipart import MAX_UPLOAD, parse_upload
 from sanctum_speech.pipeline import TranscriptionPipeline
@@ -86,7 +86,7 @@ def process(profile, model_id, content_type, trace_id, body):
         raise ValueError("VAD engine is not implemented")
     if profile["asr"].get("timeout_seconds", 1800) > 120:
         raise ValueError("worker ASR deadline must not exceed 120 seconds")
-    engine = WhisperCppASR.from_profile(profile)
+    engine = load_asr(profile)
     service = TranscriptionService(
         TranscriptionPipeline(detector, engine), model_id=model_id, max_upload_bytes=MAX_UPLOAD
     )

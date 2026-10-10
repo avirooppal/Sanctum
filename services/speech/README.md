@@ -74,6 +74,12 @@ hosting remain unavailable. A whole-file response is not streaming ASR or voice 
 
 ## Tests and evaluation
 
+ASR profiles can select `whisper.cpp` or `parakeet.cpp`; `backends/factory.py` performs
+the dispatch without a remote fallback. Parakeet uses a pinned local CLI, reports one
+coarse clip segment and unknown detected language, and rejects vocabulary prompts.
+`speech-parakeet-profile.json` records the tested reference. Keep
+`docs/model-attributions.md` with redistributed model artifacts (ADR 0023).
+
 For opt-in file VAD, select `vad.engine=silero.cpp` with registered model ID,
 model/executable paths and SHA-256 pins, threads, and timeout at most 20s. The adapter
 converts upstream centiseconds to validated seconds. Run `evals/vad_smoke.py --profile

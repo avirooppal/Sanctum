@@ -12,7 +12,7 @@
       "additionalProperties": false,
       "required": ["engine", "model_path", "model_sha256", "executable_path", "executable_sha256", "threads"],
       "properties": {
-        "engine": { "const": "whisper.cpp" },
+        "engine": { "enum": ["whisper.cpp", "parakeet.cpp"] },
         "model_path": { "type": "string", "minLength": 1, "pattern": "^(?:[A-Za-z]:[/\\\\]|[/\\\\]|\\.\\.?[/\\\\])" },
         "model_sha256": { "type": "string", "pattern": "^[a-f0-9]{64}$" },
         "executable_path": { "type": "string", "minLength": 1, "pattern": "^(?:[A-Za-z]:[/\\\\]|[/\\\\]|\\.\\.?[/\\\\])" },

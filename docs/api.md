@@ -1337,7 +1337,10 @@ Runtime HTTP: GET /healthz. Other contracts are foundation diagnostics.
       ],
       "properties": {
         "engine": {
-          "const": "whisper.cpp"
+          "enum": [
+            "whisper.cpp",
+            "parakeet.cpp"
+          ]
         },
         "model_path": {
           "type": "string",

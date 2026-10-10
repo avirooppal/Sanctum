@@ -1,0 +1,26 @@
+{
+  "suite": "parakeet-jfk-single-file-smoke",
+  "dataset_license": "Public-domain-US-government-speech",
+  "profile_id": "asr-parakeet-q4k-reference",
+  "hardware_tier": "T0",
+  "cases": 1,
+  "reference_words": 22,
+  "wer": 0.0,
+  "wer_target": 0.1,
+  "wer_pass": true,
+  "by_language": {
+    "en": {
+      "wer": 0.0,
+      "edits": 0,
+      "reference_words": 22
+    }
+  },
+  "asr_real_time_factor": 0.16006635036319494,
+  "voice_first_audio_p50_ms": null,
+  "voice_first_audio_p95_ms": null,
+  "voice_first_audio_max_ms": null,
+  "voice_latency_target_ms": 800,
+  "latency_pass": null,
+  "barge_in_success_rate": null,
+  "phase3_slo_verified": false
+}

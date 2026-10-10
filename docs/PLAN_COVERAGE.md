@@ -12,6 +12,9 @@ partial. `docs/contracts/speech-worker-v1.md` states exact limits and context sc
 File VAD is now implemented by `backends/silero_cpp.py`: `speech-vad-smoke.json`
 records real speech/silence checks and `speech-sdk-vad.json` the HTTP integration.
 Streaming VAD/ASR and voice SLOs remain unverified; file VAD is opt-in.
+`backends/parakeet_cpp.py` now supplies a second real ASREngine. Its isolated file and
+HTTP results are in `speech-parakeet-smoke.json` and `speech-sdk-parakeet.json`.
+Language selection is unforced and timestamps coarse; live streaming remains absent.
 `Implemented` means the named scope has current executable evidence, not that the
 whole phase is complete. `Partial` includes missing integrations. `UNVERIFIED` means
 implementation/evidence exists but the required execution has not passed this run.

@@ -26,7 +26,7 @@ class SpeechWorkerTests(unittest.TestCase):
 
     def test_rejects_workspace_spoof_before_loading_engine(self):
         forged = json.dumps({"workspace_id": "another-tenant"}).encode()
-        with patch.object(worker.WhisperCppASR, "from_profile") as engine:
+        with patch.object(worker, "load_asr") as engine:
             with self.assertRaises(ValueError):
                 worker.process(
                     {},
@@ -53,7 +53,7 @@ class SpeechWorkerTests(unittest.TestCase):
                 "timeout_seconds": 120,
             },
         }
-        with patch.object(worker.WhisperCppASR, "from_profile") as engine:
+        with patch.object(worker, "load_asr") as engine:
             with self.assertRaises(ValueError):
                 worker.process(
                     profile,

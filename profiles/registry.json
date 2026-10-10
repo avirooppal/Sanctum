@@ -66,6 +66,22 @@
       ],
       "source": "https://huggingface.co/ggml-org/whisper-vad/resolve/9ffd54a1e1ee413ddf265af9913beaf518d1639b/ggml-silero-v6.2.0.bin",
       "revision": "9ffd54a1e1ee413ddf265af9913beaf518d1639b"
+    },
+    {
+      "id": "asr-parakeet-q4k-reference",
+      "license": "MIT AND CC-BY-4.0",
+      "license_url": "https://creativecommons.org/licenses/by/4.0/",
+      "verified_at": "2026-10-10",
+      "sha256": "8b205b8b39c6535e153de6fb11c51db46125d45c4f16ba496fe41a0fe71b885e",
+      "format": "ggml",
+      "capabilities": [
+        "asr"
+      ],
+      "source": "https://huggingface.co/ggml-org/parakeet-GGUF/resolve/35156454d1a39de06863303dd209fd2bed6ee079/ggml-parakeet-tdt-0.6b-v3-q4_k.bin",
+      "revision": "35156454d1a39de06863303dd209fd2bed6ee079",
+      "upstream_source": "https://huggingface.co/nvidia/parakeet-tdt-0.6b-v3",
+      "upstream_revision": "541d1f99c6b0c3cd0b11a95167540bb8edefd82b",
+      "attribution": "NVIDIA Parakeet TDT 0.6B v3 (CC BY 4.0); model conversion and Q4_K quantization by ggml-org (MIT). See docs/model-attributions.md."
     }
   ],
   "dependencies": [

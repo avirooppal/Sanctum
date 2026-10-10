@@ -11,7 +11,7 @@ from jsonschema import Draft202012Validator
 
 ROOT = Path(__file__).resolve().parents[1]
 sys.path.insert(0, str(ROOT / "services/speech"))
-from sanctum_speech.backends.whisper_cpp import WhisperCppASR  # noqa: E402
+from sanctum_speech.backends.factory import load_asr  # noqa: E402
 from sanctum_speech.audio_io import decode_pcm16_wav  # noqa: E402
 
 MANIFEST_SCHEMA = json.loads((ROOT / "docs/contracts/speech-benchmark.schema.json").read_text())
@@ -47,7 +47,7 @@ def run_benchmark(manifest_path: Path, profile_path: Path, *, asr_factory=None) 
     Draft202012Validator(PROFILE_SCHEMA).validate(profile)
     if manifest["profile_id"] != profile["id"]:
         raise ValueError("manifest profile_id does not match selected profile")
-    asr = (asr_factory or WhisperCppASR.from_profile)(profile)
+    asr = (asr_factory or load_asr)(profile)
     output = {
         key: manifest[key]
         for key in ("suite", "dataset_license", "profile_id", "hardware_tier", "wer_target")

@@ -45,6 +45,26 @@ class ContractTests(unittest.TestCase):
         with self.assertRaises(ValidationError):
             validator.validate(registry)
 
+    def test_attribution_license_requires_provenance(self):
+        schema = json.loads((ROOT / "docs/contracts/registry.schema.json").read_text())
+        registry = json.loads((ROOT / "profiles/registry.json").read_text())
+        entry = registry["models"][0]
+        entry.update(license="MIT AND CC-BY-4.0", capabilities=["asr"])
+        for key in ("attribution", "upstream_source", "upstream_revision"):
+            entry.pop(key, None)
+        validator = Draft202012Validator(schema)
+        with self.assertRaises(ValidationError):
+            validator.validate(registry)
+        entry.update(
+            attribution="NVIDIA; converted and quantized by ggml-org",
+            upstream_source="https://huggingface.co/nvidia/parakeet-tdt-0.6b-v3",
+            upstream_revision="pinned",
+        )
+        validator.validate(registry)
+        entry["license"] = "CC-BY-NC-4.0"
+        with self.assertRaises(ValidationError):
+            validator.validate(registry)
+
     def setUp(self):
         self.schemas = json.loads((ROOT / "docs/contracts/diagnostics.openapi.json").read_text())[
             "components"
