@@ -231,4 +231,3 @@ Phase 6 team/SSO/Postgres/pgvector/Helm/multi-user quotas and 20-user load gate:
 **Out of scope by decision**, [ADR 0027](adr/0027-single-user-scope.md).
 
 S0-4 final SDK command recorded above: PASS 8/8, chat 0.3484s, TTFT 0.4335s, dimensions 1024.
-
