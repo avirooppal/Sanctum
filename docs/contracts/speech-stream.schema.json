@@ -2,7 +2,7 @@
   "$schema": "https://json-schema.org/draft/2020-12/schema",
   "$id": "https://sanctum.local/contracts/speech-stream.schema.json",
   "title": "Sanctum local speech WebSocket messages",
-  "description": "Each WebSocket JSON message must match one of these local-only events. Implementations must also enforce a configured aggregate byte limit per input buffer; the schema's per-message limit does not bound total session memory.",
+  "description": "Each WebSocket JSON message must match one of these local-only events. Input audio is base64 interleaved PCM16 and chunks must end on complete sample-frame boundaries. Implementations must also enforce a configured aggregate byte limit per input buffer; the schema's per-message limit does not bound total session memory.",
   "oneOf": [
     { "$ref": "#/$defs/audioAppend" },
     { "$ref": "#/$defs/audioCommit" },

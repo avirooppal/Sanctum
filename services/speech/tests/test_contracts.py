@@ -89,6 +89,7 @@ class SpeechContractTests(unittest.TestCase):
     def test_realtime_event_schema_accepts_bounded_audio_and_rejects_unknown_events(self):
         Draft202012Validator.check_schema(self.stream)
         self.assertIn("aggregate byte limit", self.stream["description"])
+        self.assertIn("complete sample-frame boundaries", self.stream["description"])
         valid = {
             "type": "input_audio_buffer.append",
             "audio": "AQID",

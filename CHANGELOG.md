@@ -1,5 +1,12 @@
 # Changelog
 
+## 2026-10-10 — Phase 3 chunked local dictation
+
+- Added a schema-validated realtime dictation session that accumulates bounded local
+  PCM chunks, transcribes on commit through the replaceable local ASR interface, and
+  clears input on cancellation. Tests use a stub engine; microphone capture, partial
+  streaming ASR, TTS output, and WebSocket hosting remain unverified/unimplemented.
+
 ## 2026-10-10 — Phase 3 file transcription orchestration
 
 - Added a contract-validated local upload service that binds requests to the selected
