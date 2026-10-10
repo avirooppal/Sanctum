@@ -2,6 +2,47 @@
 
 ## Active autonomous mission — 2026-10-10
 
+### Latest slice: Phase 3 hosted meeting notes into Knowledge
+
+Last green commit: `dfe25e4`. Additive authenticated
+`POST /v1/workspaces/{id}/meetings` contract, three tests before implementation,
+then local JSON-schema summarization in the confined Knowledge worker. Workspace
+write authorization precedes inference; model artifact must match the licensed
+registry. Notes default to restricted, inherit document ACLs, and action quotes
+must occur verbatim in the transcript. Quote presence is not semantic entailment.
+
+`uv run --offline --group knowledge python tools/check.py`: PASS, 126 tests plus
+one Windows symlink privilege skip. Clean Linux venv `python tools/check.py`:
+127/127 PASS, including that symlink check; lint, formatting, type checks, contract,
+license and hardware-fixture gates pass. Rust rebuild and `bash tools/check_rust.sh`:
+21 tests, 73 crate licenses, 38 kernel denial probes PASS.
+
+Real isolated runtime on port 8768 with a new state directory:
+`python evals/meeting_smoke.py --token-file <state>/local.token --asr-result
+evals/results/speech-sdk-parakeet.json --output evals/results/speech-meeting.json`
+PASS 7/7. Actual ASR transcript -> local summary -> stored/retrievable document
+in 2.053715s. Model returned no action items for the Kennedy speech fixture;
+nonempty action evidence is covered by unit tests, not this live sample. Semantic
+quality and diarization remain UNVERIFIED. Early calls failed before startup had
+created the token; waited for readiness. First completed test incorrectly expected
+403 for a malformed workspace ID; corrected fixture to a valid nonexistent ID and
+retained a separate 400 assertion for malformed IDs. No product gate relaxed.
+
+Prior chat regression rerun on the same runtime: `python evals/sdk_chat.py
+--base-url http://127.0.0.1:8768/v1 --token-file <state>/local.token` PASS 8/8;
+chat 0.4039s, streaming TTFT 0.4391s, 1024 embedding dimensions. Evidence updated
+in `evals/results/phase1-sdk.json`. Final source gate rerun after smoke-script changes
+PASS (`.sanctum/mission-meeting-source-final.log`).
+
+Updated verification clone at `dfe25e4` also passed source checks, nine web tests,
+typecheck, build and npm audit (zero advisories). This remains staged-artifact
+acceptance, not clean-machine install timing. No phase tag is justified.
+
+Next three steps: meeting review UI; streaming speech/server cancellation;
+diarization with verified permissive provenance. Open blockers: no physical audio
+or T1 reference hardware; Docker socket unavailable. Phase 4–6 and full final
+acceptance remain incomplete. Privacy Ledger is absent; no ledger claim is made.
+
 ### Latest slice: fresh-checkout acceptance audit and frontend dependency security
 
 Last green commit: `c5100e2`. Fresh clone from GitHub into `.sanctum/acceptance-20261010`.

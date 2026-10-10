@@ -74,6 +74,14 @@ def main():
                     payload.get("readers", []),
                     payload.get("data_class", "internal"),
                 )
+            elif operation == "meeting":
+                # Product orchestration shares the existing worker's ACL/inference boundary.
+                speech_path = str(Path(__file__).resolve().parents[1] / "speech")
+                if speech_path not in sys.path:
+                    sys.path.insert(0, speech_path)
+                from sanctum_speech.hosted_meeting import capture_meeting
+
+                result = capture_meeting(knowledge, models, user, workspace, payload)
             elif operation in {"search", "ask"}:
                 hits = knowledge.search(
                     user,

@@ -1,5 +1,14 @@
 # Speech service
 
+Hosted meeting notes: `POST /v1/workspaces/{id}/meetings` accepts `meeting_id`,
+`title`, `transcript` (up to 6000 characters), optional `readers` and `data_class`
+(default restricted). Requires local bearer auth and configured Knowledge worker.
+The worker checks workspace ownership before calling the configured local chat
+model, validates structured notes and verbatim action quotes, and saves Markdown
+through Knowledge ACLs. See `docs/contracts/knowledge.openapi.json` and generated
+`docs/api.md`. This does not verify semantic accuracy or supply diarization; review
+notes before acting. Run `evals/meeting_smoke.py --help` for the live smoke command.
+
 Phase 3 provides authenticated file ASR and TTS through the confined Linux gateway,
 with interchangeable Whisper/Parakeet ASR, optional Silero VAD and Flite synthesis.
 Provision local executables and models with the registry's verified hashes before

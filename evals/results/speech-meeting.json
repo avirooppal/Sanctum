@@ -1,0 +1,20 @@
+{
+  "suite": "real-local-meeting-knowledge",
+  "passed": [
+    "local_summary_and_acl_ingestion",
+    "verbatim_action_evidence",
+    "saved_notes_retrievable",
+    "unauthorized_workspace",
+    "malformed_workspace",
+    "identity_spoof",
+    "authentication"
+  ],
+  "summary_and_ingest_seconds": 2.0537149670126382,
+  "notes": {
+    "action_items": [],
+    "summary": "The untrusted transcript emphasizes the importance of individual contribution to national well-being."
+  },
+  "source_asr_result": "speech-sdk-parakeet.json",
+  "semantic_quality_verified": false,
+  "diarization_verified": false
+}

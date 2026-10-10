@@ -604,6 +604,50 @@ Runtime HTTP: GET /healthz. Other contracts are foundation diagnostics.
           }
         }
       }
+    },
+    "/v1/workspaces/{id}/meetings": {
+      "post": {
+        "summary": "Summarize an untrusted local transcript and save ACL-protected notes",
+        "security": [
+          {
+            "localBearer": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/MeetingRequest"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Stored document and generated notes; action quotes checked, semantic quality requires review"
+          },
+          "400": {
+            "description": "Invalid request, notes, or unsupported model"
+          },
+          "403": {
+            "description": "Workspace authorization denied before inference"
+          },
+          "503": {
+            "description": "Local model or worker unavailable"
+          }
+        }
+      }
     }
   },
   "components": {
@@ -611,6 +655,51 @@ Runtime HTTP: GET /healthz. Other contracts are foundation diagnostics.
       "localBearer": {
         "type": "http",
         "scheme": "bearer"
+      }
+    },
+    "schemas": {
+      "MeetingRequest": {
+        "type": "object",
+        "required": [
+          "meeting_id",
+          "title",
+          "transcript"
+        ],
+        "additionalProperties": false,
+        "properties": {
+          "meeting_id": {
+            "type": "string",
+            "pattern": "^[A-Za-z0-9][A-Za-z0-9._-]{0,127}$"
+          },
+          "title": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 200
+          },
+          "transcript": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 6000
+          },
+          "readers": {
+            "type": "array",
+            "maxItems": 100,
+            "uniqueItems": true,
+            "items": {
+              "type": "string",
+              "minLength": 1
+            }
+          },
+          "data_class": {
+            "enum": [
+              "public",
+              "internal",
+              "confidential",
+              "restricted"
+            ],
+            "default": "restricted"
+          }
+        }
       }
     }
   }

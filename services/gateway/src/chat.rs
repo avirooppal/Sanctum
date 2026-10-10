@@ -366,6 +366,7 @@ impl Chat {
                         "documents" => "ingest",
                         "search" => "search",
                         "ask" => "ask",
+                        "meetings" => "meeting",
                         _ => "invalid",
                     },
                     Some(parts[3]),

@@ -1,5 +1,12 @@
 # Plan coverage audit
 
+Meeting update (2026-10-10): `services/speech/sanctum_speech/hosted_meeting.py`
+connects the authenticated workspace meetings route to local inference and ACL
+ingestion. `evals/results/speech-meeting.json`: 7/7 real API checks, 2.053715s
+summary/ingestion on a short actual ASR transcript. Phase 3 meeting mode remains
+Partial: no diarization or meeting UI, and summary semantics are not quality-gated.
+Unit tests enforce authorization before inference and verbatim action evidence.
+
 Microphone update (2026-10-10): bounded start/finish capture now exists in
 `apps/web/src/microphone.ts`, `capture-worklet.js` and `pcm.ts`. Real worklet to
 local ASR tested with an emulated device: `speech-microphone.json` 4/4. Physical

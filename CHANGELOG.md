@@ -1,5 +1,12 @@
 # Changelog
 
+## 2026-10-10 — Hosted local meeting notes
+
+- Add authenticated meeting transcript summarization into Knowledge, with workspace
+  authorization before inference, restricted default classification and action quotes.
+- Verify real local summary, ingestion/retrieval and request-security checks (7/7).
+  Diarization and semantic summary evaluation remain incomplete.
+
 ## 2026-10-10 — Fresh-checkout validation and frontend security refresh
 
 - Fix README's missing Knowledge dependency group and document exact engine extraction.
