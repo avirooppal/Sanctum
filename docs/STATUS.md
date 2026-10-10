@@ -7,7 +7,7 @@ Phase 1 starts after the Phase 0 completion commit below. Placeholder service di
 |---|---|---|
 | 0 Foundations | done (Linux x86_64) | Doctor tier/profile passes; real isolated HTTP ingress, exec inheritance and egress startup probes pass. Other runtime platforms fail closed. |
 | 1 Chat | done (Linux reference) | Offline clean-rootfs install to answer 50.6005s; official SDK 8/8. Downloads/build excluded; native macOS/Windows unverified. |
-| 2 Knowledge | in progress (gates partially pass) | v6 exact-key challenge: vector/hybrid recall@5 0.60/1.00 (gain +0.40; target >=0.05); MRR 0.60/1.00. v6 grounded answers: exact citation support 1.00, expected-answer inclusion 1.00, abstention passed. Folder watcher smoke passed. Local judge in progress (9/30, all 9 supported); no vector-only answer faithfulness comparison or human review yet. Phase 3 remains gated. |
+| 2 Knowledge | in progress (gates partially pass) | v6 exact-key challenge: vector/hybrid recall@5 0.60/1.00 (gain +0.40; target >=0.05); MRR 0.60/1.00. v6 grounded answers: exact citation support 1.00, expected-answer inclusion 1.00, abstention passed. Hybrid local judge: 30/30 supported (1.00). Matched vector-only answer/judge comparison is running; human review remains pending. Phase 3 remains gated. |
 | 3 Speech | not started | T1 voice latency <800 ms and WER target: unverified; WER target pending. |
 | 4 Vision | not started | Measurable visual QA lift: unverified; dataset/threshold pending. |
 | 5 Agents | not started | Red team passes and zero unexpected ledger egress: unverified. |
@@ -232,8 +232,9 @@ is unique in retrieved evidence, avoiding small-model confusion between near-dup
 records; citations retain heading context. The previous v6 answer run is retained as
 diagnostic evidence of 28/30 before this fix.
 
-The local judge is currently partial; all answers evaluated so far are supported. The
-vector-only answer-faithfulness comparison and human spot-check are still pending.
+The hybrid local judge completed with 30/30 answers supported (1.00), recorded in
+`evals/results/knowledge-needle-v6-judge.json`. A matched vector-only answer replay
+and judge comparison is running; the human spot-check is still pending.
 Review packet: `evals/results/knowledge-needle-v6-human-review.md`. Accordingly Phase 2
 and the Phase 3 gate remain in progress. The corpus is synthetic and demonstrates
 pipeline behavior only, not customer-corpus quality.

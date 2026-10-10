@@ -8,7 +8,7 @@
   measured 1.00, and unsupported-query abstention passed.
 - Added deterministic unique-identifier answer resolution with source heading context
   (ADR 0012), plus a local judge checkpoint runner and human review packet.
-- Phase 2 remains in progress: local judge is partial; vector-only answer comparison and
+- Phase 2 remains in progress: hybrid local judge supports 30/30 answers; vector-only answer comparison and
   human review are pending. Phase 3 remains gated.
 
 ## 0.1.0 — 2026-10-08
