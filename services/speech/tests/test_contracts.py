@@ -48,7 +48,7 @@ class SpeechContractTests(unittest.TestCase):
             "file": "local-audio-bytes",
             "context": {
                 "workspace_id": "workspace-1",
-                "data_class": "sensitive",
+                "data_class": "confidential",
                 "trace_id": "a" * 32,
                 "policy_context": {"cloud_enabled": False},
             },
@@ -58,6 +58,7 @@ class SpeechContractTests(unittest.TestCase):
         for invalid in (
             {"file": "audio"},
             {**valid, "unexpected": "value"},
+            {**valid, "context": {**valid["context"], "data_class": "sensitive"}},
             {
                 **valid,
                 "context": {**valid["context"], "policy_context": {"cloud_enabled": True}},

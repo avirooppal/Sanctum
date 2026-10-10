@@ -30,7 +30,7 @@ class RealtimeDictationSessionTests(unittest.TestCase):
         self.asr = FakeASR()
         self.context = {
             "workspace_id": "workspace-1",
-            "data_class": "sensitive",
+            "data_class": "confidential",
             "trace_id": "a" * 32,
             "policy_context": {"cloud_enabled": False},
         }
