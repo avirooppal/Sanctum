@@ -47,7 +47,7 @@ def main():
         if (
             previous.get("dataset_sha256") != digest
             or previous.get("workspace_id") != args.workspace_id
-            or previous.get("retrieval_mode") != args.mode
+            or previous.get("retrieval_mode", "hybrid") != args.mode
         ):
             raise ValueError("judge checkpoint does not match dataset and workspace")
         if previous.get("complete"):
