@@ -1,0 +1,17 @@
+{
+  "suite": "phase1-real-openai-sdk",
+  "passed": [
+    "models",
+    "chat",
+    "streaming",
+    "embeddings",
+    "json_schema",
+    "tools",
+    "authentication",
+    "unknown_model"
+  ],
+  "chat_seconds": 0.3557,
+  "stream_ttft_seconds": 0.3838,
+  "embedding_dimensions": 1024,
+  "streamed_text": "Hello! How can I assist you today?"
+}
