@@ -3,7 +3,7 @@
 - Step: H1â€“H4 housekeeping before Step 1a; Step 0 HTTP reference passed.
 - Last green commit: `cf75ca9`; baseline rerun below; no phase tags.
 - Blockers: held authenticated WebSocket PENDING Step 1a; T1 latency and physical audio UNVERIFIED.
-- Next: H2 decision review queue; H3 batching/cache cost measurements; Step 1-pre/1a.
+- Next: measure embedding throughput; measure chat cache cost/KV reuse; Step 1-pre/1a.
 
 | Step 0 gate | Historical measured result (details in archive) |
 |---|---|
@@ -60,3 +60,9 @@ Phase 6 team/SSO/Postgres/pgvector/Helm/multi-user quotas and 20-user load gate:
 H1 correction: `7960f76` pushed, but its command wrapper continued after a trailing
 blank-at-EOF warning from `git diff --check`. Remove only that current-status blank
 line; archive untouched. Future check/commit commands are success-gated separately.
+
+H2: [Decision review queue](REVIEW_QUEUE.md) indexes timeout/threshold/tolerance
+and scope changes, costs and failing evidence. Setup/baseline exceptions and human
+review substitution are explicitly labelled; no original ADR changed. Link/required
+entry checks and raw archive SHA256 PASS after correcting Windows validation text
+encoding to UTF-8 (initial decode failure was not a pass). H1 correction `017ba95` pushed.
