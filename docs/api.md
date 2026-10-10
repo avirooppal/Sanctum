@@ -930,7 +930,7 @@ Runtime HTTP: GET /healthz. Other contracts are foundation diagnostics.
   "$schema": "https://json-schema.org/draft/2020-12/schema",
   "$id": "https://sanctum.local/contracts/speech-stream.schema.json",
   "title": "Sanctum local speech WebSocket messages",
-  "description": "Each WebSocket JSON message must match one of these local-only events.",
+  "description": "Each WebSocket JSON message must match one of these local-only events. Implementations must also enforce a configured aggregate byte limit per input buffer; the schema's per-message limit does not bound total session memory.",
   "oneOf": [
     {
       "$ref": "#/$defs/audioAppend"

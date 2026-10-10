@@ -1,5 +1,13 @@
 # Changelog
 
+## 2026-10-10 — Phase 3 bounded realtime audio input
+
+- Added an engine-neutral realtime PCM buffer with strict base64 validation,
+  per-buffer sample-format consistency, complete-frame checks, a configurable byte
+  limit capped at 256 MiB, and explicit commit/clear behavior.
+- Documented the distinction between per-message schema limits and aggregate session
+  memory limits. Hardware-backed streaming and latency remain unverified.
+
 ## 2026-10-10 — Phase 3 local ASR benchmark runner
 
 - Added a schema-validated, offline manifest runner for hash-pinned local PCM WAV

@@ -8,7 +8,7 @@ Phase 1 starts after the Phase 0 completion commit below. Placeholder service di
 | 0 Foundations | done (Linux x86_64) | Doctor tier/profile passes; real isolated HTTP ingress, exec inheritance and egress startup probes pass. Other runtime platforms fail closed. |
 | 1 Chat | done (Linux reference) | Offline clean-rootfs install to answer 50.6005s; official SDK 8/8. Downloads/build excluded; native macOS/Windows unverified. |
 | 2 Knowledge | done (v6, user-directed reviewer) | Vector/hybrid recall@5 0.60/1.00 (gain +0.40); MRR 0.60/1.00. Hybrid exact citation and expected-answer inclusion 1.00; abstention passed; calibrated local judge 30/30 supported. Vector-only answer/citation/judge rates 0.60. Codex checked 4/4 hybrid cases against frozen sources at the user's direction (ADR 0014); no independent human audit. |
-| 3 Speech | in progress (local benchmark runner, ASR adapter) | T1 first audio p95 <800 ms; LibriSpeech test-clean WER <=0.10 and test-other <=0.20 (ADR 0018). Host is T0; measurements unverified. |
+| 3 Speech | in progress (bounded realtime audio buffer, local ASR runner) | T1 first audio p95 <800 ms; LibriSpeech test-clean WER <=0.10 and test-other <=0.20 (ADR 0018). Host is T0; measurements unverified. |
 | 4 Vision | not started | Measurable visual QA lift: unverified; dataset/threshold pending. |
 | 5 Agents | not started | Red team passes and zero unexpected ledger egress: unverified. |
 | 6 Team | not started | 20 concurrent users meet reference SLO; verified air-gapped install: unverified. |
@@ -277,6 +277,7 @@ as a default.
 - [x] Speech engine profile contract requires explicit egress denial and SHA-256 pins.
 - [x] Offline speech evaluation schema and WER/latency/RTF/barge-in report; evaluator tests pass.
 - [x] Local manifest-based PCM WAV ASR benchmark runner with manifest-root path checks, 64 MiB bound, and audio hash verification; ASR-only results cannot claim voice-loop success.
+- [x] Bounded realtime input audio accumulation with strict base64 validation, consistent format, PCM frame alignment, and hard aggregate memory cap.
 - [x] Generated API documentation updated; all speech tests included in `tools/check.py`.
 - [ ] Integrate a locally licensed streaming ASR backend, VAD backend, TTS, and audio capture/output.
 - [ ] Implement push-to-talk, file transcription with diarization, barge-in voice loop, and meeting-to-Knowledge integration.
@@ -292,6 +293,7 @@ as a default.
 | Speech contract/interface tests | 16/16 pass |
 | Speech profile and whisper.cpp adapter tests | 4/4 pass |
 | Speech evaluation/runner tests | 8/8 pass |
+| Realtime audio buffer tests | 5/5 pass |
 | Ruff lint/format, type checks, Python/frontend license scans | PASS |
 | T1 WER and voice latency | Unverified; no whisper.cpp artifact/model or benchmark data available locally; host is T0; WER thresholds set by ADR 0018 |
 

@@ -16,6 +16,8 @@ policy.
   including audio, transcript, speech output, cancellation, and errors.
 - `services/speech/sanctum_speech/interfaces.py`: replaceable VAD, ASR, diarization,
   and TTS protocols. `pipeline.py` composes VAD, ASR, and optional diarization.
+- `services/speech/sanctum_speech/realtime.py`: bounded realtime PCM accumulation
+  with strict base64 decoding, consistent sample format, and an aggregate byte cap.
 - `docs/contracts/speech-profile.schema.json`: local engine paths and pinned hashes;
   profiles explicitly deny egress. `backends/whisper_cpp.py` invokes argv without a
   shell, writes temporary WAV/JSON files, enforces a timeout, and never downloads.
