@@ -1,5 +1,12 @@
 # Changelog
 
+## 2026-10-10 — Bounded incremental recognition
+
+- Add replaceable transcript snapshots over bounded PCM prefixes, with stale-result
+  suppression after cancellation and explicit concurrency/overflow guards.
+- Measure both real local ASR engines in network isolation. Native streaming,
+  hosted realtime transport and process cancellation remain outstanding.
+
 ## 2026-10-10 — Browser meeting capture
 
 - Add workspace selection/creation and explicit reviewed transcript save to Knowledge.

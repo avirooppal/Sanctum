@@ -1,5 +1,11 @@
 # Plan coverage audit
 
+Incremental ASR update: `services/speech/sanctum_speech/incremental.py` provides
+bounded partial replacement snapshots with either verified ASR backend. Real
+isolated evidence in `speech-incremental-{parakeet,whisper}.json`; final decoding
+1.97s / 1.19s. Streaming remains Partial: no hosted WebSocket, persistent native
+streaming state, or engine-process cancellation. No T1 latency claim.
+
 Browser meeting update: `apps/web/src/MeetingPanel.tsx` offers explicit reviewed
 transcript save and plain-text generated notes. `meeting-browser.json` records
 5/5 real browser checks. This supersedes the missing meeting UI note below;

@@ -1,5 +1,12 @@
 # Speech service
 
+`incremental.py` supplies bounded prefix re-decoding via either ASREngine. See
+`docs/contracts/incremental-asr-v1.md`: replace partial text rather than appending;
+cancel invalidates results but cannot kill engine computation. Measure provisioned
+engines using `evals/incremental_asr.py --help` under `tools/isolated_run.py`.
+Real evidence is in `evals/results/speech-incremental-*.json`. No realtime network
+endpoint or native streaming state is supplied by this adapter.
+
 The web Meeting notes panel now supports workspace creation/selection, reviewed
 transcript capture and plain-text notes. Run `node evals/browser_meeting.mjs
 <playwright-package> <token-file>` against the configured port 8768 runtime for

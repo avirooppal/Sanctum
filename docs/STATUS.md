@@ -2,6 +2,32 @@
 
 ## Active autonomous mission — 2026-10-10
 
+### Latest slice: Phase 3 incremental ASR adapter
+
+Last green commit: `aac0dce`. ADR 0026 and `incremental-asr-v1.md` define bounded
+prefix re-decoding, with full replacement snapshots. Four new tests failed absent
+implementation, then passed: partial/final output, invalid/overflow input, concurrent
+decode and cancellation races, failure cleanup. `IncrementalASR` composes either
+existing ASREngine without new dependencies. Cancellation clears buffers and
+suppresses stale output; it does NOT kill an engine already computing.
+
+Windows `uv run --offline --group knowledge python tools/check.py`: PASS, 130 pass
+and one Windows privilege skip. Clean Linux `python tools/check.py`: 131/131 PASS,
+including lint/format/types/licenses/contracts. Real isolated command:
+`python tools/isolated_run.py -- python evals/incremental_asr.py --profile <profile>
+--wav .sanctum/speech-smoke/jfk.wav --sha256
+59dfb9a4acb36fe2a2affc14bacbee2920ff435cb13cc314a08c13f66ba7860e --output <result>`.
+Both provisioned Parakeet and Whisper profiles produced five partials and a final
+transcript, with four denial probes each. Evidence: `speech-incremental-parakeet.json`
+and `speech-incremental-whisper.json`. Parakeet first partial compute 1.111719s,
+final 1.971970s; Whisper first 1.027287s, final 1.190440s. Partials contain errors
+that later revise correctly. These are file-fed chunks without real-time pacing;
+not microphone latency, WER corpus results, or the <800ms T1 voice gate.
+
+Next three steps: host the realtime transport; implement process cancellation;
+verify diarization provenance. Phase 3 remains partial, no phase tag. Browser and
+Rust implementations unchanged since their verified preceding slice.
+
 ### Latest slice: Phase 3 browser meeting capture
 
 Last green commit: `ecd761b`. Read full plan and reran baseline source/web checks
