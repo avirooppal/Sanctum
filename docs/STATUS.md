@@ -1,6 +1,6 @@
 # Current state
 
-- Step: H1–H4 housekeeping before Step 1a; Step 0 HTTP reference passed.
+- Step: H1â€“H4 housekeeping before Step 1a; Step 0 HTTP reference passed.
 - Last green commit: `cf75ca9`; baseline rerun below; no phase tags.
 - Blockers: held authenticated WebSocket PENDING Step 1a; T1 latency and physical audio UNVERIFIED.
 - Next: H2 decision review queue; H3 batching/cache cost measurements; Step 1-pre/1a.
@@ -20,7 +20,7 @@ verbatim in [Step 0 completion archive](status-archive/2026-10-10-step0-completi
 Archive SHA256: `c0f45bbdba4b48772d4fa1d0a240225c814fefe958ddadece806a74de43f0922` (raw bytes; prior measurements unchanged).
 Earlier archives are linked inside that archive. No historical benchmark is a fresh run.
 
-## Continuation baseline — H1 acceptance
+## Continuation baseline â€” H1 acceptance
 
 Base `cf75ca9`, existing checkout already at the latest hosted-green head. No checkout
 reset or unrelated untracked file changes. Read plan.md and previous STATUS completely.
@@ -57,3 +57,6 @@ continuing Phase 3 speech work, not a reset of the original Phase 0 roadmap.
 Phase 6 team/SSO/Postgres/pgvector/Helm/multi-user quotas and 20-user load gate:
 **Out of scope by decision**, [ADR 0027](adr/0027-single-user-scope.md).
 
+H1 correction: `7960f76` pushed, but its command wrapper continued after a trailing
+blank-at-EOF warning from `git diff --check`. Remove only that current-status blank
+line; archive untouched. Future check/commit commands are success-gated separately.
