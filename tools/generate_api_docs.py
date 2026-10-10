@@ -34,6 +34,10 @@ def render():
     lines.extend(
         ["## Speech evaluation input", "", "```json", json.dumps(speech_eval, indent=2), "```", ""]
     )
+    speech_profile = json.loads((ROOT / "docs/contracts/speech-profile.schema.json").read_text())
+    lines.extend(
+        ["## Speech engine profile", "", "```json", json.dumps(speech_profile, indent=2), "```", ""]
+    )
     return "\n".join(lines)
 
 

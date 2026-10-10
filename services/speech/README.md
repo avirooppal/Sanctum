@@ -1,10 +1,12 @@
 # Speech service
 
-Phase 3 currently provides the versioned API and streaming event contracts, plus an
-engine-neutral Python pipeline for voice activity detection, ASR, diarization, and TTS.
-No audio engine, model weights, voice, network listener, or microphone integration is
-selected or started yet. Cloud processing is disabled by contract; service execution
-remains subject to the foundation's fail-closed runtime policy.
+Phase 3 currently provides the versioned API and streaming event contracts, an
+engine-neutral Python pipeline, and a tested whisper.cpp file-ASR adapter. The adapter
+requires local executable/model files with SHA-256 values pinned in the speech profile.
+No engine binary, model weights, VAD, diarizer, TTS voice, network listener, or
+microphone integration is provisioned or started yet. Cloud processing is disabled by
+contract; service execution remains subject to the foundation's fail-closed runtime
+policy.
 
 ## Contract and configuration
 
@@ -14,6 +16,9 @@ remains subject to the foundation's fail-closed runtime policy.
   including audio, transcript, speech output, cancellation, and errors.
 - `services/speech/sanctum_speech/interfaces.py`: replaceable VAD, ASR, diarization,
   and TTS protocols. `pipeline.py` composes VAD, ASR, and optional diarization.
+- `docs/contracts/speech-profile.schema.json`: local engine paths and pinned hashes;
+  profiles explicitly deny egress. `backends/whisper_cpp.py` invokes argv without a
+  shell, writes temporary WAV/JSON files, enforces a timeout, and never downloads.
 - Engine and model selection must come from a future hardware profile and model
   registry entry. Check the code, model, and voice license independently; the current
   license review and candidate sources are in `docs/PHASE-3-PLAN.md`.

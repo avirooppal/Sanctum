@@ -258,19 +258,22 @@ unavailable, and each weight/voice has its own license. No T1 performance result
 claimed here.
 ## Phase 3 implementation update
 
-Phase 3 contract/evaluation slice is implemented: OpenAPI and realtime event contracts,
-Python engine protocols, VAD-to-ASR composition with optional diarization, and an
-offline WER/voice-loop evaluator. Speech contracts and evaluator are wired into the
-normal repository check. No audio backend, model weights, voice, listener, or hardware
-benchmark has been added. T1 latency and WER remain unverified; Phase 3 is in progress.
+Phase 3 contracts, Python engine protocols, VAD-to-ASR composition with optional
+diarization, offline WER/voice-loop evaluator, and a hash-pinned whisper.cpp file-ASR
+adapter are implemented. Speech contracts and evaluator are wired into the normal
+repository check. No whisper.cpp binary/model, VAD runtime, voice, listener, or hardware
+benchmark is provisioned. T1 latency and WER remain unverified; Phase 3 is in progress.
 ADR 0015 records the missing numeric WER target; ADR 0016 defines p95 aggregation for
-the plan's <800 ms first-audio SLO. Candidate licensing review is documented in
-`docs/PHASE-3-PLAN.md`; no model is pinned as a default.
+the plan's <800 ms first-audio SLO; ADR 0017 excludes a transitive MPL dependency.
+Candidate licensing review is documented in `docs/PHASE-3-PLAN.md`; no model is pinned
+as a default.
 
 ## Phase 3 checklist and measured slice results
 
 - [x] OpenAPI speech routes and realtime WebSocket event contract; schema tests pass.
 - [x] Stable VAD, ASR, diarization, and TTS interfaces; VAD/ASR composition tests pass.
+- [x] Local whisper.cpp file-ASR adapter with profile hash verification and no shell/network fallback.
+- [x] Speech engine profile contract requires explicit egress denial and SHA-256 pins.
 - [x] Offline speech evaluation schema and WER/latency/RTF/barge-in report; evaluator tests pass.
 - [x] Generated API documentation updated; all speech tests included in `tools/check.py`.
 - [ ] Integrate a locally licensed streaming ASR backend, VAD backend, TTS, and audio capture/output.
@@ -285,10 +288,21 @@ the plan's <800 ms first-audio SLO. Candidate licensing review is documented in
 | Isolation/evaluation tests | 9/9 pass |
 | Knowledge tests | 21 pass, 1 Windows symlink privilege skip |
 | Speech contract/interface tests | 11/11 pass |
+| Speech profile and whisper.cpp adapter tests | 4/4 pass |
 | Speech evaluation tests | 4/4 pass |
 | Ruff lint/format, type checks, Python/frontend license scans | PASS |
-| T1 WER and voice latency | Unverified; no speech backend/dataset, T1 hardware, or numeric WER threshold available |
+| T1 WER and voice latency | Unverified; no whisper.cpp artifact/model, licensed benchmark dataset, T1 hardware, or numeric WER threshold available |
 
 Phase 3 remains in progress and Phase 4 has not started because the Phase 3 exit gate
 has not been verified. `evals/speech_eval.py` is the reproducible offline runner for
 licensed T1 records when those inputs are available.
+
+### Phase 3 ASR adapter slice
+
+The machine check still reports Windows AMD64, 15.70 GiB RAM, Intel Iris Xe with
+unverified VRAM, and T0. No usable audio endpoint or whisper.cpp binary was found.
+The adapter's fake-process integration tests verify its WAV serialization, argv,
+timeout, JSON parsing, and hash checks. This is not an inference or WER measurement.
+The faster-whisper optional dependency was resolved and audited, then removed before
+commit because its current transitive `tqdm` package includes MPL-2.0-licensed files;
+see ADR 0017. The speech runtime dependency set remains unchanged.

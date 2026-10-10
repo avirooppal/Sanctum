@@ -1,0 +1,27 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "Sanctum local speech profile",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["schema_version", "id", "asr", "vad", "egress"],
+  "properties": {
+    "schema_version": { "const": "1.0" },
+    "id": { "type": "string", "minLength": 1 },
+    "asr": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["engine", "model_path", "model_sha256", "executable_path", "executable_sha256", "threads"],
+      "properties": {
+        "engine": { "const": "whisper.cpp" },
+        "model_path": { "type": "string", "minLength": 1, "pattern": "^(?:[A-Za-z]:[/\\\\]|[/\\\\]|\\.\\.?[/\\\\])" },
+        "model_sha256": { "type": "string", "pattern": "^[a-f0-9]{64}$" },
+        "executable_path": { "type": "string", "minLength": 1, "pattern": "^(?:[A-Za-z]:[/\\\\]|[/\\\\]|\\.\\.?[/\\\\])" },
+        "executable_sha256": { "type": "string", "pattern": "^[a-f0-9]{64}$" },
+        "threads": { "type": "integer", "minimum": 1, "maximum": 256 },
+        "timeout_seconds": { "type": "integer", "minimum": 1, "maximum": 86400 }
+      }
+    },
+    "vad": { "type": "object", "additionalProperties": false, "required": ["engine"], "properties": { "engine": { "enum": ["none", "silero"] }, "model_path": { "type": "string", "minLength": 1 } } },
+    "egress": { "const": "denied" }
+  }
+}

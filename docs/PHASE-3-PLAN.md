@@ -29,8 +29,16 @@ on T1 and a WER threshold is defined.
 
 ## Verified candidate components (2026-10-10)
 
-- faster-whisper code: MIT, reported by its project packaging metadata; use only with
-  separately registered Whisper weights: [project](https://github.com/SYSTRAN/faster-whisper).
+- faster-whisper code: MIT, reported by its project packaging metadata; the current
+  locked dependency tree includes `tqdm` components declared MPL-2.0 AND MIT, so it is
+  excluded by the permissive-only dependency rule (ADR 0017):
+  [project license](https://github.com/SYSTRAN/faster-whisper/blob/master/LICENSE),
+  [tqdm license](https://github.com/tqdm/tqdm/blob/master/LICENCE).
+- whisper.cpp core and CLI: MIT according to the upstream license. The adapter accepts
+  only a locally provisioned executable and model file with profile-pinned SHA-256;
+  optional non-MIT build features are not selected:
+  [project](https://github.com/ggml-org/whisper.cpp),
+  [license](https://github.com/ggml-org/whisper.cpp/blob/master/LICENSE).
 - Whisper code and weights: MIT according to the official project card:
   [OpenAI Whisper model card](https://github.com/openai/whisper/blob/main/model-card.md).
 - whisper.cpp fallback: MIT according to its repository license:

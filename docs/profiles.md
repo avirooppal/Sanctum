@@ -14,3 +14,8 @@ features are unverified. Model lists intentionally remain empty until verified.
 Model registry: profiles/registry.json, validated by docs/contracts/registry.schema.json.
 Only allowlisted permissive licenses, immutable revision, SHA-256 and verification
 date are admissible for weights. Dependency licenses include development tooling.
+
+Speech engine profiles are validated by `docs/contracts/speech-profile.schema.json`.
+The whisper.cpp adapter requires explicit local executable/model paths and matching
+SHA-256 values; it does not accept upstream model IDs. Register the exact model license,
+source revision, and hash before making any speech model available as a profile default.
