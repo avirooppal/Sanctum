@@ -9,8 +9,8 @@
 - Added deterministic unique-identifier answer resolution with source heading context
   (ADR 0012), plus a local judge checkpoint runner and human review packet.
 - Hybrid local judge supports 30/30 answers. Matched vector-only answers measured 0.60
-  citation support and expected-answer inclusion versus hybrid 1.00; vector-only local
-  judge and human review are pending. Phase 3 remains gated.
+  citation support and expected-answer inclusion versus hybrid 1.00; both hybrid and
+  vector-only local judges support 30/30. Human review is pending. Phase 3 remains gated.
 
 ## 0.1.0 — 2026-10-08
 
