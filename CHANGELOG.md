@@ -1,5 +1,15 @@
 # Changelog
 
+## 2026-10-10 — Status housekeeping and cancellation context
+
+- Archive status history verbatim and surface current Step 0 gates; correct Phase 6
+  to single-owner scope. Repair hosted macOS CI with managed Python; all five jobs pass.
+- Add shared first-wins cancellation/deadline state and private-peer association
+  through dispatch and Rust engine entry points. In-flight engine cancellation
+  remains pending supervision and I/O work; no Step 0 completion claim.
+- Record the future warm supervised speech-worker architecture and proposed memory
+  budgets; no warm-worker implementation or voice latency result yet.
+
 ## 2026-10-10 — Bounded ingress (partial Step 0)
 
 - Guard the public TCP listener with connection/lane/backlog and framing limits,

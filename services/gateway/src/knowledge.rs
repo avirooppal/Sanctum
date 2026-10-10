@@ -47,7 +47,12 @@ impl Knowledge {
         }
         Ok(serde_json::from_slice(&line)?)
     }
-    pub fn call(&self, request: Value) -> Result<Value> {
+    pub fn call(
+        &self,
+        request: Value,
+        context: &sanctum_inference::cancellation::Cancellation,
+    ) -> Result<Value> {
+        context.check()?;
         let mut child = self.child.borrow_mut();
         let input = child.stdin.as_mut().ok_or("missing worker stdin")?;
         serde_json::to_writer(&mut *input, &request)?;

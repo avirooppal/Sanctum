@@ -227,7 +227,12 @@ impl Chat {
     pub fn token_path(&self) -> PathBuf {
         self.config.state_dir.join("local.token")
     }
-    pub fn handle(&self, mut request: tiny_http::Request) -> Result<()> {
+    pub fn handle(
+        &self,
+        mut request: tiny_http::Request,
+        context: &sanctum_inference::cancellation::Cancellation,
+    ) -> Result<()> {
+        context.check()?;
         let path = request.url().to_string();
         if !path.starts_with("/v1/") {
             return self.static_file(request);
@@ -284,7 +289,7 @@ impl Chat {
                 );
             }
             let trace = random_id()?[..32].to_owned();
-            return match speech.call(content_type, bytes, trace, synthesize) {
+            return match speech.call(content_type, bytes, trace, synthesize, context) {
                 Ok(value) if value["ok"] == true => {
                     let kind = value["content_type"].as_str().unwrap_or("");
                     if synthesize {
@@ -401,7 +406,7 @@ impl Chat {
                     }
                 }
             };
-            let result=worker.lock().map_err(|_| "knowledge lock poisoned")?.call(json!({"user":"local-owner","workspace":workspace,"operation":operation,"payload":payload}));
+            let result=worker.lock().map_err(|_| "knowledge lock poisoned")?.call(json!({"user":"local-owner","workspace":workspace,"operation":operation,"payload":payload}), context);
             return match result {
                 Ok(value) if value["ok"] == true => respond(request, 200, value["result"].clone()),
                 Ok(value) => respond(
@@ -522,7 +527,7 @@ impl Chat {
             );
         }
         let engine: &dyn Engine = if is_chat { &self.chat } else { &self.embedding };
-        let reply = match engine.send(&path, &payload) {
+        let reply = match engine.send_with_context(&path, &payload, context) {
             Ok(reply) => reply,
             Err(_) => {
                 return respond(

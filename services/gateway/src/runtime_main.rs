@@ -84,7 +84,10 @@ fn run() -> Result<(), Box<dyn std::error::Error + Send + Sync>> {
     );
     std::io::stdout().flush()?;
     use sanctum_gateway::dispatch::{Dispatcher, Lane};
-    let queue = Dispatcher::<tiny_http::Request>::new(8, [2, 1, 2, 1]);
+    let queue = Dispatcher::<(
+        tiny_http::Request,
+        sanctum_inference::cancellation::Cancellation,
+    )>::new(8, [2, 1, 2, 1]);
     let chat = std::sync::Arc::new(chat);
     let health = serde_json::json!({"status":"ok","cloud_connectors":"disabled","isolation":"linux-user-netns-seccomp","checks":checks});
     let mut workers = Vec::new();
@@ -92,14 +95,14 @@ fn run() -> Result<(), Box<dyn std::error::Error + Send + Sync>> {
         let (queue, chat, health) = (queue.clone(), chat.clone(), health.clone());
         workers.push(std::thread::spawn(move || {
             while let Some(job) = queue.take() {
-                let request = job.value;
-                if job.expired {
+                let (request, context) = job.value;
+                if job.expired || context.check().is_err() {
                     overload(request);
                     continue;
                 }
                 if request.url() != "/healthz" {
                     if let Some(chat) = chat.as_ref() {
-                        if let Err(error) = chat.handle(request) {
+                        if let Err(error) = chat.handle(request, &context) {
                             eprintln!("request failed: {error}");
                         }
                         continue;
@@ -132,7 +135,15 @@ fn run() -> Result<(), Box<dyn std::error::Error + Send + Sync>> {
             path if path.starts_with("/v1/workspaces") => Lane::Background,
             _ => Lane::Control,
         };
-        if let Err(request) = queue.submit(lane, request, std::time::Instant::now()) {
+        let Some(context) = request
+            .remote_addr()
+            .and_then(|peer| ingress.context(*peer))
+        else {
+            overload(request);
+            continue;
+        };
+        if let Err((request, _)) = queue.submit(lane, (request, context), std::time::Instant::now())
+        {
             overload(request);
         }
         if args.iter().any(|a| a == "--once") {
@@ -145,7 +156,8 @@ fn run() -> Result<(), Box<dyn std::error::Error + Send + Sync>> {
         ingress.drain(std::time::Duration::from_secs(2));
     }
     drop(ingress);
-    for request in queue.close() {
+    for (request, context) in queue.close() {
+        context.cancel(sanctum_inference::cancellation::Reason::Shutdown);
         overload(request);
     }
     for worker in workers {

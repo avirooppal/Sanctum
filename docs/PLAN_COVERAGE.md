@@ -1,5 +1,12 @@
 # Plan coverage audit
 
+S0-1 context update: `services/inference/src/cancellation.rs` and ingress private-peer
+association share cancellation/deadline state through queued Rust engine entry
+points. Unit and real TCP tests cover terminal state and disconnect propagation.
+End-to-end cancellation is **Partial**: blocking inference/Knowledge/speech and
+their nested engine work are not interrupted yet. S0-2 through S0-8 remain open.
+ADRs 0031/0032 predeclare cleanup gates and future resident speech workers.
+
 Step 0 ingress update: connection/lane/header/body bounds and upload stall checks
 are implemented in `services/gateway/src/ingress.rs`, with unit tests and measured
 `evals/results/ingress-{limits,overload}.json`. Three-minute upload-flood health p95

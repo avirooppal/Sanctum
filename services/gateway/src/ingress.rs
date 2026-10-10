@@ -1,15 +1,29 @@
 //! Bounded TCP ingress; the application listener stays in the private namespace.
+use sanctum_inference::cancellation::{Cancellation, Reason};
 use std::{
+    collections::HashMap,
     io::{self, Read, Write},
     net::{Shutdown, SocketAddr, TcpListener, TcpStream},
     os::fd::AsRawFd,
     sync::{
         atomic::{AtomicBool, AtomicUsize, Ordering},
-        Arc,
+        Arc, Mutex,
     },
     thread::{self, JoinHandle},
     time::{Duration, Instant},
 };
+type Contexts = Arc<Mutex<HashMap<SocketAddr, Cancellation>>>;
+struct Registration {
+    contexts: Contexts,
+    peer: SocketAddr,
+    context: Cancellation,
+}
+impl Drop for Registration {
+    fn drop(&mut self) {
+        self.contexts.lock().unwrap().remove(&self.peer);
+        self.context.cancel(Reason::Disconnect);
+    }
+}
 
 pub struct Head {
     pub lane: usize,
@@ -172,10 +186,12 @@ fn relay(
     stop: Arc<AtomicBool>,
     lanes: [Arc<AtomicUsize>; 4],
     pending: Lease,
+    contexts: Contexts,
 ) -> io::Result<()> {
     client.set_read_timeout(Some(Duration::from_millis(100)))?;
     client.set_write_timeout(Some(Duration::from_secs(2)))?;
     let started = Instant::now();
+    let context = Cancellation::new(started + Duration::from_secs(330));
     let mut head = Vec::with_capacity(1024);
     while !head.ends_with(b"\r\n\r\n") {
         if head.len() >= 16384 {
@@ -233,6 +249,13 @@ fn relay(
         offset += size;
     }
     let mut engine = TcpStream::connect_timeout(&backend, Duration::from_secs(1))?;
+    let peer = engine.local_addr()?;
+    contexts.lock().unwrap().insert(peer, context.clone());
+    let _registration = Registration {
+        contexts,
+        peer,
+        context: context.clone(),
+    };
     engine.set_write_timeout(Some(Duration::from_secs(2)))?;
     engine.set_read_timeout(Some(Duration::from_millis(100)))?;
     engine.write_all(&head.forwarded)?;
@@ -240,10 +263,13 @@ fn relay(
     drop(body);
     let mut bytes = [0u8; 16384];
     let result = loop {
-        if stop.load(Ordering::Relaxed)
-            || started.elapsed() >= Duration::from_secs(330)
-            || !connected(&client)
-        {
+        if stop.load(Ordering::Relaxed) {
+            context.cancel(Reason::Shutdown);
+        }
+        if !connected(&client) {
+            context.cancel(Reason::Disconnect);
+        }
+        if context.check().is_err() {
             break Err(timed_out());
         }
         match engine.read(&mut bytes) {
@@ -267,6 +293,7 @@ fn relay(
 }
 
 pub struct Ingress {
+    contexts: Contexts,
     stop: Arc<AtomicBool>,
     active: Arc<AtomicUsize>,
     thread: Option<JoinHandle<()>>,
@@ -282,6 +309,8 @@ impl Ingress {
         let running = stop.clone();
         let active = Arc::new(AtomicUsize::new(0));
         let all = active.clone();
+        let contexts: Contexts = Arc::new(Mutex::new(HashMap::new()));
+        let associations = contexts.clone();
         let thread = thread::spawn(move || {
             let pending = Arc::new(AtomicUsize::new(0));
             let lanes = std::array::from_fn(|_| Arc::new(AtomicUsize::new(0)));
@@ -300,10 +329,12 @@ impl Ingress {
                     Ok((stream, _)) => {
                         let leases = Lease::acquire(&all, 24).zip(Lease::acquire(&pending, 8));
                         if let Some((overall, header)) = leases {
-                            let (running, lanes) = (running.clone(), lanes.clone());
+                            let (running, lanes, contexts) =
+                                (running.clone(), lanes.clone(), associations.clone());
                             tasks.push(thread::spawn(move || {
                                 let _overall = overall;
-                                if relay(stream, backend, running, lanes, header).is_err() {
+                                if relay(stream, backend, running, lanes, header, contexts).is_err()
+                                {
                                     log_rejection(408);
                                 }
                             }));
@@ -327,10 +358,14 @@ impl Ingress {
             }
         });
         Ok(Self {
+            contexts,
             stop,
             active,
             thread: Some(thread),
         })
+    }
+    pub fn context(&self, peer: SocketAddr) -> Option<Cancellation> {
+        self.contexts.lock().unwrap().get(&peer).cloned()
     }
     pub fn drain(&self, timeout: Duration) {
         let until = Instant::now() + timeout;
@@ -341,6 +376,9 @@ impl Ingress {
 }
 impl Drop for Ingress {
     fn drop(&mut self) {
+        for context in self.contexts.lock().unwrap().values() {
+            context.cancel(Reason::Shutdown);
+        }
         self.stop.store(true, Ordering::Relaxed);
         if let Some(task) = self.thread.take() {
             let _ = task.join();

@@ -31,7 +31,9 @@ impl Config {
         body: Vec<u8>,
         trace: String,
         synthesize: bool,
+        context: &sanctum_inference::cancellation::Cancellation,
     ) -> Result<Value, String> {
+        context.check().map_err(|error| error.to_string())?;
         let limit = if synthesize { 65536 } else { 8 * 1024 * 1024 };
         if body.len() > limit || content_type.len() > 256 {
             return Err("speech request exceeds limit".into());

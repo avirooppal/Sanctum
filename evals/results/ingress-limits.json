@@ -1,7 +1,7 @@
 {
   "framing_checks": 3,
-  "header_stall_release_seconds": 1.8719409120094497,
-  "body_stall_release_seconds": 1.875997720984742,
+  "header_stall_release_seconds": 1.8784325209853705,
+  "body_stall_release_seconds": 1.8759644600213505,
   "before": {
     "fds": 5,
     "threads": 13,
@@ -10,9 +10,9 @@
   "after": {
     "fds": 5,
     "threads": 13,
-    "rss_kib": 5504
+    "rss_kib": 5248
   },
   "disconnected_clients": 100,
-  "shutdown_seconds": 0.007712603983236477,
+  "shutdown_seconds": 0.01596841201535426,
   "scope": "Ingress-only no-engine runtime; engine cancellation, slow response reader and full Step 0 NOT verified"
 }

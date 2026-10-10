@@ -1,4 +1,5 @@
 //! Swappable local OpenAI-compatible inference adapter.
+pub mod cancellation;
 use serde_json::Value;
 use std::{io::Read, time::Duration};
 
@@ -10,6 +11,15 @@ pub struct Reply {
 
 pub trait Engine {
     fn send(&self, path: &str, payload: &Value) -> Result<Reply, String>;
+    fn send_with_context(
+        &self,
+        path: &str,
+        payload: &Value,
+        context: &cancellation::Cancellation,
+    ) -> Result<Reply, String> {
+        context.check().map_err(|e| e.to_string())?;
+        self.send(path, payload)
+    }
     fn healthy(&self) -> bool;
 }
 
