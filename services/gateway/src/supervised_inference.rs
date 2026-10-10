@@ -5,17 +5,22 @@ use serde::Deserialize;
 use serde_json::Value;
 use std::{
     io::{BufRead, BufReader, Read, Write},
+    path::{Path, PathBuf},
     process::{Command, Stdio},
 };
 
 pub struct SupervisedEngine {
     base: String,
     legacy: LocalEngine,
+    admission_root: PathBuf,
+    admission_key: String,
 }
 impl SupervisedEngine {
-    pub fn new(base: &str) -> Result<Self, String> {
+    pub fn new(base: &str, state: &Path, port: u16) -> Result<Self, String> {
         Ok(Self {
             base: base.into(),
+            admission_root: state.join("engine-admission"),
+            admission_key: format!("port-{port}"),
             legacy: LocalEngine::new(base)?,
         })
     }
@@ -23,6 +28,7 @@ impl SupervisedEngine {
 struct Body {
     reader: BufReader<ContextIo<std::process::ChildStdout>>,
     _child: OwnedChild,
+    _lease: std::fs::File,
 }
 impl Read for Body {
     fn read(&mut self, buffer: &mut [u8]) -> std::io::Result<usize> {
@@ -50,6 +56,12 @@ impl Engine for SupervisedEngine {
     ) -> Result<Reply, String> {
         let run = || -> Result<Reply, Box<dyn std::error::Error + Send + Sync>> {
             context.check()?;
+            let lease = sanctum_gateway::engine_admission::acquire(
+                &self.admission_root,
+                &self.admission_key,
+                2,
+                false,
+            )?;
             if !matches!(path, "/v1/chat/completions" | "/v1/embeddings") {
                 return Err("unsupported engine path".into());
             }
@@ -99,6 +111,7 @@ impl Engine for SupervisedEngine {
                 body: Box::new(Body {
                     reader,
                     _child: child,
+                    _lease: lease,
                 }),
             })
         };

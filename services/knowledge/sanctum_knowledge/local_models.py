@@ -1,5 +1,9 @@
 """Only confined loopback inference, with no environment proxy or redirects."""
 
+from contextlib import nullcontext
+
+from .engine_admission import acquire
+
 import json
 import math
 import re
@@ -12,8 +16,9 @@ class NoRedirect(urllib.request.HTTPRedirectHandler):
 
 
 class LocalModels:
-    def __init__(self, config):
+    def __init__(self, config, admission_root=None):
         self.config = config
+        self.admission_root = admission_root
         self.opener = urllib.request.build_opener(urllib.request.ProxyHandler({}), NoRedirect())
 
     def call(self, role, endpoint, payload):
@@ -27,7 +32,12 @@ class LocalModels:
             data=json.dumps(payload).encode(),
             headers={"Content-Type": "application/json"},
         )
-        with self.opener.open(request, timeout=240) as response:
+        lease = (
+            acquire(self.admission_root, f"port-{port}", 1 if role == "reranker" else 2, True)
+            if self.admission_root is not None
+            else nullcontext()
+        )
+        with lease, self.opener.open(request, timeout=240) as response:
             data = response.read(16 * 1024 * 1024 + 1)
             if len(data) > 16 * 1024 * 1024:
                 raise ValueError("oversized engine response")

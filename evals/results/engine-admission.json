@@ -1,0 +1,33 @@
+{
+  "chat": {
+    "status": 503,
+    "retry_after": 1,
+    "seconds": 0.009659433999331668
+  },
+  "embedding": {
+    "status": 503,
+    "retry_after": 1,
+    "seconds": 0.0070288760180119425
+  },
+  "knowledge_embedding_background": {
+    "status": 503,
+    "retry_after": 1,
+    "seconds": 0.01491967699257657
+  },
+  "knowledge_reranker": {
+    "status": 503,
+    "retry_after": 1,
+    "seconds": 0.0861271939938888
+  },
+  "tts": {
+    "status": 503,
+    "retry_after": 1,
+    "seconds": 0.006496631016489118
+  },
+  "asr": {
+    "status": 503,
+    "retry_after": 1,
+    "seconds": 0.016211840993491933
+  },
+  "scope": "Real HTTP replies and shared permits; not sustained mixed-engine overload"
+}

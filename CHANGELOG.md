@@ -1,5 +1,12 @@
 # Changelog
 
+## 2026-10-10 — Shared engine admission
+
+- Bound engine admission across Rust and Python callers with shared lifetime leases
+  and reserved interactive capacity; shed excess with 503 and Retry-After.
+- Verify cross-process limits and actual HTTP saturation/recovery without weakening
+  containment. Sustained mixed-load and engine-crash gates remain open.
+
 ## 2026-10-10 — Active shutdown evidence
 
 - Add real engine shutdown checks with chat, ingestion, ASR, queued work and a slow

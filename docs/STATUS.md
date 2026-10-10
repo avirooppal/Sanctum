@@ -1,10 +1,10 @@
 # Current state
 
-- Current step: Step 0, S0-5 active and queued shutdown verified locally; Step 1 blocked by the Step 0 gate.
-- Last locally/hosted green commit: `1154400`; H1/H2 commit `0cc3859`.
-- Open blockers: engine-wide admission remains incomplete; full
+- Current step: Step 0, S0-6 shared engine admission verified locally; Step 1 blocked by the Step 0 gate.
+- Last locally/hosted green commit: `765e9bc`; H1/H2 commit `0cc3859`.
+- Open blockers: full
   engine storm/shutdown/overload gates are unmeasured. Hosted CI blocker resolved.
-- Next three steps: commit shutdown evidence; implement shared engine admission; run real-engine storms and mixed overload.
+- Next three steps: commit shared engine admission; implement engine crash recovery and real storms; run mixed overload.
 
 | Step 0 gate | Current result |
 |---|---|
@@ -234,6 +234,36 @@ Fresh Linux `python tools/check.py`: PASS 133 tests and all source checks;
 `.sanctum/active-shutdown-source.log`. Rust runtime unchanged since S0-4's full
 40-test/probe gate. `ruff format`/`ruff check evals/active_shutdown.py`: PASS.
 S0-6 global engine admission and S0-7/S0-8 remain incomplete; no Step 1 or tags.
+
+## S0-6 shared engine admission
+
+S0-5 pushed as `765e9bc`; hosted run 38055842276 completed successfully.
+ADR 0035/engine-admission-v1 contract and failing missing-module test preceded
+implementation. Rust/Python now share nonblocking flock leases keyed by engine
+port. Chat/embedding admit two requests total, one capacity reserved from background;
+reranking/ASR/TTS admit one each. This bounds requests admitted to a single-slot
+model server, not two simultaneous inference computations. No extra waiting queue.
+Knowledge/meeting/ingestion nested inference uses the same leases; body cleanup
+retains the lease until helper termination. 503 responses include Retry-After: 1.
+
+`bash tools/check_rust.sh`: PASS 41 tests, fmt/clippy, 74 licenses, 38 denial probes,
+three supervision scenarios; `.sanctum/engine-admission-rust.log`. Additional final
+`cargo test --locked --offline -p sanctum-gateway --test engine_admission`: PASS
+cross-process Rust/Python ownership, reserved capacity, one-slot speech limit and
+symlink rejection. Linux `python tools/check.py`: PASS 133 tests/all source gates;
+`.sanctum/engine-admission-source.log`. No new dependencies or relaxed confinement.
+
+`python evals/engine_admission.py --config .sanctum/runtime-dispatch.json --output
+evals/results/engine-admission.json`: PASS real HTTP 503 + Retry-After under held
+shared leases: chat 9.659ms, embeddings 7.029ms, Knowledge embedding 14.920ms,
+Knowledge reranker 86.127ms, TTS 6.497ms, ASR 16.212ms. Interactive embeddings
+succeeded while the background permit was held; requests succeeded after release.
+This controlled permit saturation is NOT the sustained mixed-engine overload gate.
+
+Final real SDK command above: PASS 8/8, chat 0.3405s, TTFT 0.3923s, dimensions 1024.
+Browser speech command above: PASS 7/7, zero page errors, physical playback/mic
+unverified. Mixed dispatch rerun (`evals/results/admission-dispatch.json`) PASS: two streams + ingestion, health/models p95 27.078/19.919ms, first 503 12.811ms. Full real-engine crash/storm/resource-baseline tests remain S0-7;
+minutes of mixed-engine overload remain S0-8. Step 1 remains blocked.
 
 ## Phase table (scope and historical evidence)
 

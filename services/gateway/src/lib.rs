@@ -87,3 +87,6 @@ pub fn write_frame(writer: &mut impl Write, payload: &[u8]) -> io::Result<()> {
 
 #[cfg(target_os = "linux")]
 pub mod response_flow;
+
+#[cfg(target_os = "linux")]
+pub mod engine_admission;

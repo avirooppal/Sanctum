@@ -176,9 +176,16 @@ impl Chat {
             }
             engines.0.push(command.spawn()?);
         }
-        let chat = SupervisedEngine::new(&format!("http://127.0.0.1:{}", config.chat.port))?;
-        let embedding =
-            SupervisedEngine::new(&format!("http://127.0.0.1:{}", config.embedding.port))?;
+        let chat = SupervisedEngine::new(
+            &format!("http://127.0.0.1:{}", config.chat.port),
+            &config.state_dir,
+            config.chat.port,
+        )?;
+        let embedding = SupervisedEngine::new(
+            &format!("http://127.0.0.1:{}", config.embedding.port),
+            &config.state_dir,
+            config.embedding.port,
+        )?;
         let deadline = Instant::now() + Duration::from_secs(120);
         let reranker = config
             .reranker
@@ -292,7 +299,14 @@ impl Chat {
                 );
             }
             let trace = random_id()?[..32].to_owned();
-            return match speech.call(content_type, bytes, trace, synthesize, context) {
+            return match speech.call(
+                content_type,
+                bytes,
+                trace,
+                synthesize,
+                context,
+                &self.config.state_dir.join("engine-admission"),
+            ) {
                 Ok(value) if value["ok"] == true => {
                     let kind = value["content_type"].as_str().unwrap_or("");
                     if synthesize {
@@ -532,11 +546,15 @@ impl Chat {
         let engine: &dyn Engine = if is_chat { &self.chat } else { &self.embedding };
         let reply = match engine.send_with_context(&path, &payload, context) {
             Ok(reply) => reply,
-            Err(_) => {
+            Err(error) => {
                 return respond(
                     request,
-                    502,
-                    json!({"error":{"message":"Local engine unavailable"}}),
+                    if error == "engine busy; retry later" {
+                        503
+                    } else {
+                        502
+                    },
+                    json!({"error":{"message":"Local engine unavailable or busy"}}),
                 )
             }
         };
@@ -614,13 +632,13 @@ impl Read for Capture {
     }
 }
 fn respond(request: tiny_http::Request, status: u16, payload: Value) -> Result<()> {
-    request.respond(
-        tiny_http::Response::from_string(payload.to_string())
-            .with_status_code(status)
-            .with_header(
-                tiny_http::Header::from_bytes("Content-Type", "application/json").unwrap(),
-            ),
-    )?;
+    let mut response = tiny_http::Response::from_string(payload.to_string())
+        .with_status_code(status)
+        .with_header(tiny_http::Header::from_bytes("Content-Type", "application/json").unwrap());
+    if status == 503 {
+        response = response.with_header(tiny_http::Header::from_bytes("Retry-After", "1").unwrap());
+    }
+    request.respond(response)?;
     Ok(())
 }
 

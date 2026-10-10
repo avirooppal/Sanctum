@@ -53,3 +53,8 @@ burst-then-trickle upload probes.
 --output <result.json>` intentionally terminates that ready reference gateway after
 starting real chat, ingestion, ASR, queued chat and a slow upload. It asserts the
 shutdown contract in `docs/contracts/shutdown-v1.md`.
+
+Engine-wide limits use `docs/contracts/engine-admission-v1.md`. Run
+`python evals/engine_admission.py --config <runtime-config> --output <result.json>`
+against the ready runtime; it holds shared leases to verify actual overload replies
+and interactive reservation. Do not run this alongside latency benchmarks.

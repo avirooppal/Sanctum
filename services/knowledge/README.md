@@ -50,3 +50,8 @@ comparison. Folder
 watching is implemented. The v6 exact-key challenge passes the hybrid-gain target;
 local judge, vector-only answer comparison, and human review are still required before
 Phase 2 can exit.
+
+The runtime worker receives the private engine-admission directory and shares
+nonblocking per-port leases with direct Rust requests. Nested Knowledge, meeting
+and ingestion inference uses background admission; exhaustion becomes HTTP 503
+with Retry-After. See `docs/contracts/engine-admission-v1.md` and ADR 0035.

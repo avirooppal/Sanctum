@@ -44,7 +44,7 @@ def main():
     os.umask(0o077)
     catalog = Catalog(state / "catalog.sqlite3")
     vectors = SqliteVectors(state / "vectors.sqlite3")
-    models = LocalModels(config)
+    models = LocalModels(config, Path(sys.argv[2]) / "engine-admission")
     knowledge = Knowledge(catalog, StructuralParser(), models, vectors, models)
     print(json.dumps({"ready": True}), flush=True)
     signal.signal(signal.SIGALRM, operation_deadline)
