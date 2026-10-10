@@ -266,3 +266,29 @@ benchmark has been added. T1 latency and WER remain unverified; Phase 3 is in pr
 ADR 0015 records the missing numeric WER target; ADR 0016 defines p95 aggregation for
 the plan's <800 ms first-audio SLO. Candidate licensing review is documented in
 `docs/PHASE-3-PLAN.md`; no model is pinned as a default.
+
+## Phase 3 checklist and measured slice results
+
+- [x] OpenAPI speech routes and realtime WebSocket event contract; schema tests pass.
+- [x] Stable VAD, ASR, diarization, and TTS interfaces; VAD/ASR composition tests pass.
+- [x] Offline speech evaluation schema and WER/latency/RTF/barge-in report; evaluator tests pass.
+- [x] Generated API documentation updated; all speech tests included in `tools/check.py`.
+- [ ] Integrate a locally licensed streaming ASR backend, VAD backend, TTS, and audio capture/output.
+- [ ] Implement push-to-talk, file transcription with diarization, barge-in voice loop, and meeting-to-Knowledge integration.
+- [ ] Record licensed dataset and model/voice provenance, revision, and hashes in the registry.
+- [ ] Measure WER against an agreed numeric target and end-of-speech-to-first-audio p95 <800 ms on T1.
+
+| Check | Observed result |
+|---|---|
+| Full offline `tools/check.py` | PASS |
+| Foundation tests | 22/22 pass |
+| Isolation/evaluation tests | 9/9 pass |
+| Knowledge tests | 21 pass, 1 Windows symlink privilege skip |
+| Speech contract/interface tests | 11/11 pass |
+| Speech evaluation tests | 4/4 pass |
+| Ruff lint/format, type checks, Python/frontend license scans | PASS |
+| T1 WER and voice latency | Unverified; no speech backend/dataset, T1 hardware, or numeric WER threshold available |
+
+Phase 3 remains in progress and Phase 4 has not started because the Phase 3 exit gate
+has not been verified. `evals/speech_eval.py` is the reproducible offline runner for
+licensed T1 records when those inputs are available.
