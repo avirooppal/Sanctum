@@ -1,5 +1,12 @@
 # Changelog
 
+## 2026-10-10 — Phase 3 file transcription orchestration
+
+- Added a contract-validated local upload service that binds requests to the selected
+  local profile and composes bounded WAV decoding, the replaceable VAD/ASR/diarization
+  pipeline, and OpenAI-style response formatting. Fake-engine integration tests pass;
+  no network listener or real speech engine is claimed.
+
 ## 2026-10-10 — Phase 3 bounded WAV intake
 
 - Added a shared 64 MiB PCM16 mono 16 kHz WAV decoder that rejects malformed,

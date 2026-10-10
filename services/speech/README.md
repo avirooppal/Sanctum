@@ -20,6 +20,9 @@ policy.
   with strict base64 decoding, consistent sample format, and an aggregate byte cap.
 - `services/speech/sanctum_speech/audio_io.py`: bounded decoder for uncompressed mono
   PCM16 WAV at 16 kHz; unsupported containers and truncated files fail closed.
+- `services/speech/sanctum_speech/service.py`: validates upload requests against the
+  OpenAPI contract, enforces the configured local profile, then composes decode,
+  transcription, and response formatting. It is not yet mounted on a network listener.
 - `services/speech/sanctum_speech/responses.py`: OpenAI-style `json`, `text`,
   `verbose_json`, and `vtt` transcription response formatting.
 - `docs/contracts/speech-profile.schema.json`: local engine paths and pinned hashes;
