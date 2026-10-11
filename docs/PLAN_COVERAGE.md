@@ -1,5 +1,14 @@
 # Plan coverage audit
 
+2026-10-11 continuation evidence supplement: Step1-pre residency/startup
+measurement implemented (`tools/measure_speech_residency.sh`, native probe,
+`evals/results/speech-residency-reference.json`); this establishes only upstream
+adapter feasibility and the measured small-fixture footprint. Warm supervised
+speech workers, authenticated WebSocket, real held-session acceptance, UI port
+and later roadmap remain **Not done/Partial**, not hardware-only exceptions.
+Step1a internal ticket primitive is contract-tested; no issuing endpoint or
+transport yet. Historical entries below are not a fresh-session acceptance audit.
+
 S0-1 context update: `services/inference/src/cancellation.rs` and ingress private-peer
 association share cancellation/deadline state through queued Rust engine entry
 points. Unit and real TCP tests cover terminal state and disconnect propagation.

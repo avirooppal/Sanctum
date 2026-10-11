@@ -71,3 +71,5 @@ Choose reusable upstream library (bundled server is Whisper-only), retain Flite
 per-request after short-text p95 17.940ms. No SLO/tolerance relaxation; long-audio
 peak, enforced caps, supervised IPC and T1 measurements remain pending. Version
 probe exit1 accepted only with exact upstream version output; failed run retained.
+
+| [0047](adr/0047-realtime-admission-and-tickets.md), proposed | Tickets30s/cap32; WS900s hard lifetime, ping15s/pong30s, frame64KiB; held3 attempts/admit2 for600s | New WS transport bounds; HTTP330s unchanged; no lane/cancel/resource gate relaxed | Memory-only primitive first; actual endpoint/transport/held gate still pending |

@@ -1,0 +1,9 @@
+   Compiling sanctum-gateway v0.1.0 (/mnt/c/Users/aviroop/Desktop/Sanctum/services/gateway)
+error[E0432]: unresolved import `sanctum_gateway::realtime_tickets`
+ --> services/gateway/tests/realtime_tickets.rs:1:22
+  |
+1 | ...y::realt...ckets::T...
+  |       ^^^^^...^^^^^ could not find `realtime_tickets` in `sanctum_gateway`
+
+For more information about this error, try `rustc --explain E0432`.
+error: could not compile `sanctum-gateway` (test "realtime_tickets") due to 1 previous error

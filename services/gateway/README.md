@@ -80,3 +80,11 @@ the measured speech reference retains six. See ADR0044–0046 and
 `docs/contracts/inference-cache-policy-v1.md` for gates, costs and retained failures.
 Voice deferral counts actual blocked intervals and remains capped2500ms; model
 waiting cannot spend it before a voice job begins. Caller deadlines remain absolute.
+
+## Realtime preparation
+
+`realtime_tickets` is a bounded, memory-only internal credential store. It does
+not yet expose a ticket endpoint or authenticate a WebSocket. See
+`docs/contracts/realtime-tickets-v1.md` and ADR0047. Run its contract/security tests
+with `cargo test --locked --offline -p sanctum-gateway --test realtime_tickets`;
+the full gate remains `bash tools/check_rust.sh`. Held-session acceptance is pending.

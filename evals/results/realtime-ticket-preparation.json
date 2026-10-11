@@ -1,0 +1,17 @@
+{
+  "suite": "realtime-ticket-preparation-v1",
+  "rust_tests": 54,
+  "source_tests": 145,
+  "ticket_tests": 3,
+  "websocket_implemented": false,
+  "held_session_gate": "PENDING",
+  "commands": [
+    "cargo test --locked --offline -p sanctum-gateway --test realtime_tickets",
+    "bash tools/check_rust.sh",
+    "python tools/check.py"
+  ],
+  "logs": {
+    "source": "DB3EE16DC932FE066D945C0ECF540B3CFA286CCF9238409421B4E7B852086834",
+    "rust": "6F3D781722F2BB03E804160EB005ADC8D664D25801FF33F8D116581E0684B99C"
+  }
+}

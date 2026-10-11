@@ -1,7 +1,7 @@
 # Current state
 
-- Step: Step 1-pre measurement/ADR complete locally; authenticated WebSocket next.
-- Last green commit: `0404340`; all five hosted jobs verified; new slice awaiting push/CI; no phase tags.
+- Step: Step 1-pre committed/hosted green; Step1a ticket primitive in progress.
+- Last green commit: `d4e0d62`; all five hosted jobs verified; no phase tags.
 - Blockers: held authenticated WebSocket PENDING Step 1a; T1 latency and physical audio UNVERIFIED.
 - Next: implement authenticated WebSocket; run >=10min held-session/mixed gate; begin Step U source/license audit.
 
@@ -381,3 +381,22 @@ Post-change full source PASS145/all gates; Rust PASS51/all gates and containment
 supervision, `.sanctum/speech-residency-{source,rust}.log`. No new dependencies.
 Final inventory no runtime/engine/probe survivors. Held WS remains PENDING; Step1a
 and entire later roadmap unfinished. No tag. Slice commit and hosted CI below.
+
+Step1-pre commit `d4e0d62` pushed. Hosted
+[run38114413778](https://github.com/avirooppal/Sanctum/actions/runs/38114413778)
+jobs API observed all five completed/success for exact SHA. Step1-pre acceptance
+is the measurement/decision only; resident worker enforcement remains Step1b.
+
+Step1a preparatory slice: ADR0047/REVIEW_QUEUE predeclare tickets, WebSocket limits
+and actual held/mixed measurements before implementation. Internal contract and
+tests first; `cargo test --locked --offline -p sanctum-gateway --test realtime_tickets`
+initially FAILED unresolved module, then PASS3/3 including16 concurrent consumers
+with exactly one successful consumption. Memory-only SHA256 tickets, cap32/TTL30s,
+Origin binding/replay/expiry/refusal verified. No HTTP endpoint or WebSocket yet;
+these unit/contract results do not satisfy real-feature/held-session acceptance.
+Full Linux source `python tools/check.py` PASS145/all unchanged checks;
+full Rust/security PASS54, fmt/clippy,74 licenses,38 denial/startup checks and3
+supervisor scenarios/zero survivors (`.sanctum/realtime-ticket-rust.log`). Initial
+contract failure retained; named evidence manifest records log hashes. This is
+only a tested internal primitive, not completion of Step1a. Next: actual ticket endpoint, maintained
+WebSocket transport under guarded admission, then>=600s held gate. No phase tag.
