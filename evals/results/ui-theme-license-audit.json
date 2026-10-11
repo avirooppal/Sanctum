@@ -1,0 +1,37 @@
+[
+  {
+    "repo": "primer/github-vscode-theme",
+    "notice": "docs/licenses/primer-github-vscode-theme-MIT.txt",
+    "license": "MIT",
+    "notice_sha256": "e2c871bb6effe9f6ec8d94d6596db33c4bfe4dd94969a6a9a2fb0473ebe6442e",
+    "revision": "cd78e5e4e7bcf132a6f428ae0f32264bb1b729cf"
+  },
+  {
+    "repo": "catppuccin/vscode",
+    "notice": "docs/licenses/catppuccin-vscode-MIT.txt",
+    "license": "MIT",
+    "notice_sha256": "814096d2c34cc216c624738a49356f32b7237733b4f7edb0685f4e50ef5074ba",
+    "revision": "befc9e6fc41980f4241408f7049755d47c06ff45"
+  },
+  {
+    "repo": "sainnhe/everforest-vscode",
+    "notice": "docs/licenses/sainnhe-everforest-vscode-MIT.txt",
+    "license": "MIT",
+    "notice_sha256": "1578c1d9fe713f0ee479ff822b82baddbd2dfecf1f247a3f72bbdae5e0162e7e",
+    "revision": "b17f8affe9096f18d209caf2fc26322490e55857"
+  },
+  {
+    "repo": "ryanolsonx/vscode-solarized-theme",
+    "notice": "docs/licenses/ryanolsonx-vscode-solarized-theme-MIT.txt",
+    "license": "MIT",
+    "notice_sha256": "6102d59de942e27b0b54f3eb9a3e6ebc4b27d4c04b8041357648711ac0506302",
+    "revision": "5ba27bdacf662fb04c961db345dfebceb581e97b"
+  },
+  {
+    "repo": "altercation/solarized",
+    "notice": "docs/licenses/altercation-solarized-MIT.txt",
+    "license": "MIT",
+    "notice_sha256": "494aefdabf86acce06bd63001ad8aedad4ee38da23509d3f917d95aa3368b9a6",
+    "revision": "62f656a02f93c5190a8753159e34b385588d5ff3"
+  }
+]

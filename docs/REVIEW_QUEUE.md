@@ -100,3 +100,10 @@ threshold relaxation). Original mode and5s/250ms bounds retained; WS closes1001.
 | [0052](adr/0052-ui-package-audit.md) | Local primitives instead of the published package and unreviewed font/dependency bundle | No quality threshold changed | Exact MIT notice retained; component adaptation remains pending |
 | [0053](adr/0053-ui-font-audit.md) | Exclude Collapse/Rules/Mondwest/Neuebit; review pinned OFL candidates with actual render comparisons before selection | Glyph substitution required by licensing; no fidelity waiver | No binary admitted; comparison and individual font provenance pending |
 | [0054](adr/0054-ui-icons-and-assets-audit.md) | Exclude upstream brand, unverified icons and all bundled assets pending individual admission | Identity deviation required; no scope or gate relaxation | Original icon and license-verified selected assets remain pending |
+| [0055](adr/0055-ui-font-substitution-selection.md) | Select OFL Spectral/Archivo/League Gothic/VT323 from actual local render comparisons | No fidelity threshold waived; diagnostic sample shortened after overflow, same geometry | Bold/italic/language and compressed-width differences remain; no product font admitted yet |
+| [0056](adr/0056-ui-theme-and-icon-permissions.md) | Preserve palette-origin MIT notices and Lucide ISC plus Feather MIT/Tabler MIT | No scope/threshold changes; product preset labels exclude upstream branding | Installing selected icons and adapting palettes still requires product license/audit/provenance gates |
+
+ADR0056 exact-notice supplement: path-specific Git trailing-blank exception for
+the original Solarized copyright notice only; named whitespace failure retained.
+Do not rewrite a primary license to satisfy code whitespace rules. No code,
+test, timeout, benchmark or fidelity threshold exception.

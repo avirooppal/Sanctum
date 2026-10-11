@@ -3,3 +3,5 @@ docs/status-archive/2026-10-10-foundations-through-admission.md -text whitespace
 docs/status-archive/2026-10-10-step0-completion.md -text whitespace=cr-at-eol,-blank-at-eof
 docs/status-archive/2026-10-11-through-ticket-preparation.md -text whitespace=cr-at-eol,-blank-at-eof
 docs/status-archive/2026-10-11-websocket-and-source-pin.md -text whitespace=cr-at-eol,-blank-at-eof
+# ADR0056: preserve the primary copyright notice's original trailing blank line.
+docs/licenses/altercation-solarized-MIT.txt -text whitespace=cr-at-eol,-blank-at-eof

@@ -2,123 +2,144 @@
   "upstream_sha": "bd8f81ddb5c74d5c8897b36ad88b440266245103",
   "families": [
     {
-      "binary_admitted": false,
       "license": "OFL-1.1",
+      "source": "https://raw.githubusercontent.com/google/fonts/bd8f81ddb5c74d5c8897b36ad88b440266245103/ofl/archivo/OFL.txt",
+      "binary_admitted": false,
       "license_sha256": "108b4e57c9c796d3d38d0428ca7ee39de47ad93187302718d9b2d8864b9b716b",
-      "family": "archivo",
-      "source": "https://raw.githubusercontent.com/google/fonts/bd8f81ddb5c74d5c8897b36ad88b440266245103/ofl/archivo/OFL.txt"
+      "family": "archivo"
     },
     {
-      "binary_admitted": false,
       "license": "OFL-1.1",
+      "source": "https://raw.githubusercontent.com/google/fonts/bd8f81ddb5c74d5c8897b36ad88b440266245103/ofl/atkinsonhyperlegible/OFL.txt",
+      "binary_admitted": false,
       "license_sha256": "f32d22b3908fcad2c86a74000614ec22e6a7f66ea7e867e616026a27aebdc143",
-      "family": "atkinsonhyperlegible",
-      "source": "https://raw.githubusercontent.com/google/fonts/bd8f81ddb5c74d5c8897b36ad88b440266245103/ofl/atkinsonhyperlegible/OFL.txt"
+      "family": "atkinsonhyperlegible"
     },
     {
-      "binary_admitted": false,
       "license": "OFL-1.1",
+      "source": "https://raw.githubusercontent.com/google/fonts/bd8f81ddb5c74d5c8897b36ad88b440266245103/ofl/barlowcondensed/OFL.txt",
+      "binary_admitted": false,
+      "license_sha256": "186d750eb496a4c17a76385f82be6aea2ac1cf2de074a811d63786cf374ea73f",
+      "family": "barlowcondensed"
+    },
+    {
+      "license": "OFL-1.1",
+      "source": "https://raw.githubusercontent.com/google/fonts/bd8f81ddb5c74d5c8897b36ad88b440266245103/ofl/courierprime/OFL.txt",
+      "binary_admitted": false,
       "license_sha256": "9a755af092b494944c99f471be6fddd19b006a448fefdc4717e4ee0aa09a97b0",
-      "family": "courierprime",
-      "source": "https://raw.githubusercontent.com/google/fonts/bd8f81ddb5c74d5c8897b36ad88b440266245103/ofl/courierprime/OFL.txt"
+      "family": "courierprime"
     },
     {
-      "binary_admitted": false,
       "license": "OFL-1.1",
+      "source": "https://raw.githubusercontent.com/google/fonts/bd8f81ddb5c74d5c8897b36ad88b440266245103/ofl/dmmono/OFL.txt",
+      "binary_admitted": false,
       "license_sha256": "2bada5ea45c3c63b7f1ea1f88ce9672c9e4f0c42b2c3b7378949084fe55a3066",
-      "family": "dmmono",
-      "source": "https://raw.githubusercontent.com/google/fonts/bd8f81ddb5c74d5c8897b36ad88b440266245103/ofl/dmmono/OFL.txt"
+      "family": "dmmono"
     },
     {
-      "binary_admitted": false,
       "license": "OFL-1.1",
+      "source": "https://raw.githubusercontent.com/google/fonts/bd8f81ddb5c74d5c8897b36ad88b440266245103/ofl/dmsans/OFL.txt",
+      "binary_admitted": false,
       "license_sha256": "9af36190332437f5ecd09974de43c1f7c77a310a996cdd8ceb25628b458840e1",
-      "family": "dmsans",
-      "source": "https://raw.githubusercontent.com/google/fonts/bd8f81ddb5c74d5c8897b36ad88b440266245103/ofl/dmsans/OFL.txt"
+      "family": "dmsans"
     },
     {
-      "binary_admitted": false,
       "license": "OFL-1.1",
+      "source": "https://raw.githubusercontent.com/google/fonts/bd8f81ddb5c74d5c8897b36ad88b440266245103/ofl/fraunces/OFL.txt",
+      "binary_admitted": false,
       "license_sha256": "bdf4c22802eaf804f998195871c6b8938aac2ac14b2d78a8bd66a6f1eced833b",
-      "family": "fraunces",
-      "source": "https://raw.githubusercontent.com/google/fonts/bd8f81ddb5c74d5c8897b36ad88b440266245103/ofl/fraunces/OFL.txt"
+      "family": "fraunces"
     },
     {
-      "binary_admitted": false,
       "license": "OFL-1.1",
+      "source": "https://raw.githubusercontent.com/google/fonts/bd8f81ddb5c74d5c8897b36ad88b440266245103/ofl/ibmplexmono/OFL.txt",
+      "binary_admitted": false,
       "license_sha256": "7e6b2818edbd8f6a01ae80641cc8f16a51080d08fb4e532be3a0b6f74adb07da",
-      "family": "ibmplexmono",
-      "source": "https://raw.githubusercontent.com/google/fonts/bd8f81ddb5c74d5c8897b36ad88b440266245103/ofl/ibmplexmono/OFL.txt"
+      "family": "ibmplexmono"
     },
     {
-      "binary_admitted": false,
       "license": "OFL-1.1",
+      "source": "https://raw.githubusercontent.com/google/fonts/bd8f81ddb5c74d5c8897b36ad88b440266245103/ofl/ibmplexsans/OFL.txt",
+      "binary_admitted": false,
       "license_sha256": "7e6b2818edbd8f6a01ae80641cc8f16a51080d08fb4e532be3a0b6f74adb07da",
-      "family": "ibmplexsans",
-      "source": "https://raw.githubusercontent.com/google/fonts/bd8f81ddb5c74d5c8897b36ad88b440266245103/ofl/ibmplexsans/OFL.txt"
+      "family": "ibmplexsans"
     },
     {
-      "binary_admitted": false,
       "license": "OFL-1.1",
+      "source": "https://raw.githubusercontent.com/google/fonts/bd8f81ddb5c74d5c8897b36ad88b440266245103/ofl/instrumentserif/OFL.txt",
+      "binary_admitted": false,
+      "license_sha256": "129ed7618959716959f2941fdd5b49e0ad6e6c1d78726761786a00253d865521",
+      "family": "instrumentserif"
+    },
+    {
+      "license": "OFL-1.1",
+      "source": "https://raw.githubusercontent.com/google/fonts/bd8f81ddb5c74d5c8897b36ad88b440266245103/ofl/inter/OFL.txt",
+      "binary_admitted": false,
       "license_sha256": "5b9321a4298cfeb6b34354164a1c3afc3db114569984c502b9b35d988fd58c57",
-      "family": "inter",
-      "source": "https://raw.githubusercontent.com/google/fonts/bd8f81ddb5c74d5c8897b36ad88b440266245103/ofl/inter/OFL.txt"
+      "family": "inter"
     },
     {
-      "binary_admitted": false,
       "license": "OFL-1.1",
+      "source": "https://raw.githubusercontent.com/google/fonts/bd8f81ddb5c74d5c8897b36ad88b440266245103/ofl/jetbrainsmono/OFL.txt",
+      "binary_admitted": false,
       "license_sha256": "b2fe5e8987594e9ffd1d2ca52a2f5d73eb8335243893c5d6254b5ad69269591d",
-      "family": "jetbrainsmono",
-      "source": "https://raw.githubusercontent.com/google/fonts/bd8f81ddb5c74d5c8897b36ad88b440266245103/ofl/jetbrainsmono/OFL.txt"
+      "family": "jetbrainsmono"
     },
     {
-      "binary_admitted": false,
       "license": "OFL-1.1",
+      "source": "https://raw.githubusercontent.com/google/fonts/bd8f81ddb5c74d5c8897b36ad88b440266245103/ofl/leaguegothic/OFL.txt",
+      "binary_admitted": false,
+      "license_sha256": "44778c339892f79188c60b7471485dd5af92c59351c7f9629a00fc625c6cae5d",
+      "family": "leaguegothic"
+    },
+    {
+      "license": "OFL-1.1",
+      "source": "https://raw.githubusercontent.com/google/fonts/bd8f81ddb5c74d5c8897b36ad88b440266245103/ofl/pixelifysans/OFL.txt",
+      "binary_admitted": false,
       "license_sha256": "b66ba46f511a851ab09998b5a5a9fdbb102545a3864cb993095e1745996873a7",
-      "family": "pixelifysans",
-      "source": "https://raw.githubusercontent.com/google/fonts/bd8f81ddb5c74d5c8897b36ad88b440266245103/ofl/pixelifysans/OFL.txt"
+      "family": "pixelifysans"
     },
     {
-      "binary_admitted": false,
       "license": "OFL-1.1",
+      "source": "https://raw.githubusercontent.com/google/fonts/bd8f81ddb5c74d5c8897b36ad88b440266245103/ofl/sharetechmono/OFL.txt",
+      "binary_admitted": false,
       "license_sha256": "9d96f445b6e9c701428811d0177f894874f8d6f07ecc30d568c506542368f3ff",
-      "family": "sharetechmono",
-      "source": "https://raw.githubusercontent.com/google/fonts/bd8f81ddb5c74d5c8897b36ad88b440266245103/ofl/sharetechmono/OFL.txt"
+      "family": "sharetechmono"
     },
     {
-      "binary_admitted": false,
       "license": "OFL-1.1",
+      "source": "https://raw.githubusercontent.com/google/fonts/bd8f81ddb5c74d5c8897b36ad88b440266245103/ofl/sourceserif4/OFL.txt",
+      "binary_admitted": false,
       "license_sha256": "5f94c3fd3a23131a417ab5a0c8452de57e70c3cfb9f604d88241f7065ebf9fd9",
-      "family": "sourceserif4",
-      "source": "https://raw.githubusercontent.com/google/fonts/bd8f81ddb5c74d5c8897b36ad88b440266245103/ofl/sourceserif4/OFL.txt"
+      "family": "sourceserif4"
     },
     {
-      "binary_admitted": false,
       "license": "OFL-1.1",
+      "source": "https://raw.githubusercontent.com/google/fonts/bd8f81ddb5c74d5c8897b36ad88b440266245103/ofl/spacemono/OFL.txt",
+      "binary_admitted": false,
       "license_sha256": "8e4ee42b2553e1e01504e61cb0d46d148cd8c9e5eacaa3622a7df2d4f2955b9f",
-      "family": "spacemono",
-      "source": "https://raw.githubusercontent.com/google/fonts/bd8f81ddb5c74d5c8897b36ad88b440266245103/ofl/spacemono/OFL.txt"
+      "family": "spacemono"
     },
     {
-      "binary_admitted": false,
       "license": "OFL-1.1",
+      "source": "https://raw.githubusercontent.com/google/fonts/bd8f81ddb5c74d5c8897b36ad88b440266245103/ofl/spectral/OFL.txt",
+      "binary_admitted": false,
       "license_sha256": "501d6ceca8e552630fe3aa9442b9a818565680a1a2f79f3fb8c13d6f309a9e98",
-      "family": "spectral",
-      "source": "https://raw.githubusercontent.com/google/fonts/bd8f81ddb5c74d5c8897b36ad88b440266245103/ofl/spectral/OFL.txt"
+      "family": "spectral"
     },
     {
-      "binary_admitted": false,
       "license": "OFL-1.1",
+      "source": "https://raw.githubusercontent.com/google/fonts/bd8f81ddb5c74d5c8897b36ad88b440266245103/ofl/vt323/OFL.txt",
+      "binary_admitted": false,
       "license_sha256": "27d9af34210253e7ca1251fbace86c6f65b40031d6ce1a75493a1b2093631298",
-      "family": "vt323",
-      "source": "https://raw.githubusercontent.com/google/fonts/bd8f81ddb5c74d5c8897b36ad88b440266245103/ofl/vt323/OFL.txt"
+      "family": "vt323"
     },
     {
-      "binary_admitted": false,
       "license": "OFL-1.1",
+      "source": "https://raw.githubusercontent.com/google/fonts/bd8f81ddb5c74d5c8897b36ad88b440266245103/ofl/worksans/OFL.txt",
+      "binary_admitted": false,
       "license_sha256": "749aca05078664ce682dce1b1b10096ac397cb088c1a6df4e1bb56f0092a9272",
-      "family": "worksans",
-      "source": "https://raw.githubusercontent.com/google/fonts/bd8f81ddb5c74d5c8897b36ad88b440266245103/ofl/worksans/OFL.txt"
+      "family": "worksans"
     }
   ]
 }

@@ -1,0 +1,25 @@
+{
+  "suite": "real-knowledge-smoke",
+  "passed": [
+    "upload",
+    "acl_retrieval",
+    "cited_answer",
+    "empty_abstention"
+  ],
+  "answer": {
+    "abstained": false,
+    "answer": "The lighthouse color is amber.",
+    "citations": [
+      {
+        "chunk_id": "3f2cb988036a4543b9ff2b4b4a7ab2fc",
+        "context": "Harbour guide\nThe lighthouse color is amber.",
+        "document_id": "48d5612133014abd96c274752e27e2d7",
+        "end": 30,
+        "page": null,
+        "quote": "The lighthouse color is amber.",
+        "source": "lighthouse.md",
+        "start": 0
+      }
+    ]
+  }
+}
