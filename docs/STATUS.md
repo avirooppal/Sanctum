@@ -16,37 +16,37 @@
 | Full incremental smoke |8 stages PASS including Knowledge UI and chat Stop; release_complete=false |
 | U6 / final acceptance |NOT DONE; remaining screens, fidelity, axe, all-screen egress and later roadmap open |
 
-## Wrap-up inventory
-
-DONE below means the cited scoped work exists; historical gate evidence is labeled,
-and is not represented as remeasured this session. Whole-product rows remain open.
-
-| Mission work order / Amendment deliverable | State | Evidence / remaining work |
-|---|---|---|
-| Step 1a authenticated transport | DONE | realtime.rs, realtime-v1 contract; prior held 600.398s and mixed 182.553s in archives; current ticket smoke 6 PASS; speech_pipeline=false |
-| Step U foundation | IN PROGRESS | 16 palettes, 5 licensed fonts, responsive shell, adapter/notices; current 29 web tests; Knowledge upload/cited-answer UI now real; remaining screens, reference fidelity, axe, all-screen WS egress |
-| Step 1b resident supervised ASR | NOT STARTED | ADR0032 and measurement experiment only; no production resident worker |
-| Step 1c streaming TTS | NOT STARTED | File TTS works; sentence-stream pipeline absent |
-| Step 1d barge-in | NOT STARTED | Transport interrupt exists; complete playback/LLM/history cancellation absent |
-| Step 1e diarization / speaker meeting notes | IN PROGRESS | Existing reviewed transcript to Knowledge works (browser 5); diarization and speaker UI absent |
-| Step 2 real WER / WS latency | NOT STARTED | Corpus and >=50-turn measurements pending; T1 hardware gate unchanged |
-| Phase 4 VLM / OCR / tables / figures / visual eval | NOT STARTED | Real models, UI, n>=100 ablation and licenses pending |
-| Phase 5 MCP / manifests / policy / budgets / sandboxes / approvals / ledger / red-team | NOT STARTED | Existing network containment is not this complete agent boundary |
-| Phase 6 resource governance | IN PROGRESS | Admission/cancellation limits exist; lifecycle, eviction and complete owner controls pending |
-| Phase 6 optional GPU adapter | NOT STARTED | Contract adapter and NVIDIA verification script pending |
-| Phase 6 owner LAN TLS | NOT STARTED | TLS, allowlists, lockout, ledger and second-netns test pending |
-| Phase 6 encryption / rotation / backup | NOT STARTED | Implementation and real round-trip/canary tests pending |
-| Phase 6 installers / desktop / signed offline bundle / SBOM | NOT STARTED | Release artifacts and clean no-network install pending |
-| Phase 6 >=1h complete workload soak | NOT STARTED | Requires resident voice and agents |
-| Code cleanup / coverage / dependency audits | IN PROGRESS | Current lint/license/npm checks PASS; coverage, unused-code and Rust security audit pending |
-| Final acceptance / fresh clone / packet-ledger reconciliation | NOT STARTED | Requires all five modalities, LAN and artifacts |
-| D1 offline product behavior | IN PROGRESS | Real incremental smoke 6 PASS; five explicit release gaps remain |
-| D2 distributables | NOT STARTED | No verified release artifacts/checksums/signatures |
-| D3 repo and in-app documentation | IN PROGRESS | Existing contracts/ADRs/notices; full user guide and release documentation pending |
-| D4 delivery quality gates | IN PROGRESS | Baseline above; full eval/red-team/soak/fidelity/accessibility absent |
-| D5 strict coverage / support matrix | IN PROGRESS | Existing PLAN_COVERAGE needs final requirement-by-requirement evidence audit |
-| D6 tags / handoff | NOT STARTED | Software gaps prohibit release tag; HANDOFF and final report pending |
-
+## Wrap-up inventory
+
+DONE below means the cited scoped work exists; historical gate evidence is labeled,
+and is not represented as remeasured this session. Whole-product rows remain open.
+
+| Mission work order / Amendment deliverable | State | Evidence / remaining work |
+|---|---|---|
+| Step 1a authenticated transport | DONE | realtime.rs, realtime-v1 contract; prior held 600.398s and mixed 182.553s in archives; current ticket smoke 6 PASS; speech_pipeline=false |
+| Step U foundation | IN PROGRESS | 16 palettes, 5 licensed fonts, responsive shell, adapter/notices; current 29 web tests; Knowledge upload/cited-answer UI now real; remaining screens, reference fidelity, axe, all-screen WS egress |
+| Step 1b resident supervised ASR | NOT STARTED | ADR0032 and measurement experiment only; no production resident worker |
+| Step 1c streaming TTS | NOT STARTED | File TTS works; sentence-stream pipeline absent |
+| Step 1d barge-in | NOT STARTED | Transport interrupt exists; complete playback/LLM/history cancellation absent |
+| Step 1e diarization / speaker meeting notes | IN PROGRESS | Existing reviewed transcript to Knowledge works (browser 5); diarization and speaker UI absent |
+| Step 2 real WER / WS latency | NOT STARTED | Corpus and >=50-turn measurements pending; T1 hardware gate unchanged |
+| Phase 4 VLM / OCR / tables / figures / visual eval | NOT STARTED | Real models, UI, n>=100 ablation and licenses pending |
+| Phase 5 MCP / manifests / policy / budgets / sandboxes / approvals / ledger / red-team | NOT STARTED | Existing network containment is not this complete agent boundary |
+| Phase 6 resource governance | IN PROGRESS | Admission/cancellation limits exist; lifecycle, eviction and complete owner controls pending |
+| Phase 6 optional GPU adapter | NOT STARTED | Contract adapter and NVIDIA verification script pending |
+| Phase 6 owner LAN TLS | NOT STARTED | TLS, allowlists, lockout, ledger and second-netns test pending |
+| Phase 6 encryption / rotation / backup | NOT STARTED | Implementation and real round-trip/canary tests pending |
+| Phase 6 installers / desktop / signed offline bundle / SBOM | NOT STARTED | Release artifacts and clean no-network install pending |
+| Phase 6 >=1h complete workload soak | NOT STARTED | Requires resident voice and agents |
+| Code cleanup / coverage / dependency audits | IN PROGRESS | Current lint/license/npm checks PASS; coverage, unused-code and Rust security audit pending |
+| Final acceptance / fresh clone / packet-ledger reconciliation | NOT STARTED | Requires all five modalities, LAN and artifacts |
+| D1 offline product behavior | IN PROGRESS | Real incremental smoke 6 PASS; five explicit release gaps remain |
+| D2 distributables | NOT STARTED | No verified release artifacts/checksums/signatures |
+| D3 repo and in-app documentation | IN PROGRESS | Existing contracts/ADRs/notices; full user guide and release documentation pending |
+| D4 delivery quality gates | IN PROGRESS | Baseline above; full eval/red-team/soak/fidelity/accessibility absent |
+| D5 strict coverage / support matrix | IN PROGRESS | Existing PLAN_COVERAGE needs final requirement-by-requirement evidence audit |
+| D6 tags / handoff | NOT STARTED | Software gaps prohibit release tag; HANDOFF and final report pending |
+
 ## Latest slice evidence
 
 Contract `docs/contracts/knowledge-ui-v1.md`; tests first failed absent adapter
@@ -74,3 +74,9 @@ SHA256 `6b1b21b44eb81c9b27dca833263d5b6de30f5a7134db02e04700221d915b7190`.
 It preserves the full baseline, failed runs, commits, exact-byte correction and
 older archive links. WRAPUP committed bytes verified equal the source attachment.
 Existing untracked owner files untouched. Runtime remains on localhost:8769.
+
+Documentation check correction: mixed newline conversion in the inventory caused
+`git diff --check` to fail before b5a285a; the PowerShell wrapper incorrectly
+continued to commit. Preserved the failure as wrapup-knowledge-status-whitespace-
+failure.json, normalized only current STATUS (archives unchanged), and reran the
+check. No test, threshold or measured result was removed.
