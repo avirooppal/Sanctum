@@ -14,3 +14,15 @@ test('public website is offline, branded Sanctum, with honest setup links',()=>{
   }
   assert.doesNotMatch(html,/<script|<iframe|<img|<form|onclick=|Hermes|Nous Portal/);
 });
+
+test('docs site is offline, branded Sanctum, with local navigation and zero scripts/images',()=>{
+  const html=readFileSync(new URL('../docs.html',import.meta.url),'utf8');
+  assert.match(html,/<title>Sanctum Documentation/);
+  assert.match(html,/href="\/website\.html"/);
+  assert.match(html,/href="\/"/);
+  for(const match of html.matchAll(/(?:href|src)="([^"]+)"/g)) {
+    assert.match(match[1],/^(?:\/(?!\/)|#)/,'every docs asset and link is local');
+  }
+  assert.doesNotMatch(html,/<script|<iframe|<img|<form|onclick=|Hermes|Nous Portal/);
+});
+

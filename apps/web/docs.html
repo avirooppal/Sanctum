@@ -1,0 +1,102 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1.0">
+  <meta name="description" content="Sanctum documentation: architecture, private contracts, security invariants, and setup guides.">
+  <title>Sanctum Documentation — Private AI Platform</title>
+  <link rel="stylesheet" href="/src/website.css">
+  <style>
+    .docs-layout { display: grid; grid-template-columns: 240px 1fr; gap: 48px; max-width: 1200px; margin: 40px auto; padding: 0 24px; }
+    .docs-nav { border-right: 1px solid rgba(255,255,255,0.15); padding-right: 24px; }
+    .docs-nav h3 { font-size: 11px; text-transform: uppercase; letter-spacing: 0.15em; opacity: 0.7; margin-bottom: 12px; }
+    .docs-nav ul { list-style: none; padding: 0; margin: 0 0 24px; }
+    .docs-nav li { margin-bottom: 8px; font-size: 14px; }
+    .docs-nav a { color: inherit; text-decoration: none; opacity: 0.85; }
+    .docs-nav a:hover { opacity: 1; text-decoration: underline; }
+    .docs-content h1 { font-size: 32px; font-weight: 600; margin-bottom: 16px; }
+    .docs-content h2 { font-size: 22px; font-weight: 600; margin: 32px 0 12px; border-bottom: 1px solid rgba(255,255,255,0.1); padding-bottom: 8px; }
+    .docs-content p, .docs-content li { line-height: 1.7; opacity: 0.9; font-size: 15px; }
+    .docs-content pre { background: rgba(0,0,0,0.3); border: 1px solid rgba(255,255,255,0.15); border-radius: 8px; padding: 16px; overflow-x: auto; font-family: monospace; font-size: 13px; }
+    @media (max-width: 768px) { .docs-layout { display: block; } .docs-nav { border-right: none; margin-bottom: 32px; } }
+  </style>
+</head>
+<body>
+  <a class="skip" href="#docs-main">Skip to content</a>
+  <div class="blue-stage">
+    <header class="site-header">
+      <nav aria-label="Product"><a href="/website.html">Overview</a><a href="/website.html#setup">Setup</a><a href="/website.html#questions">FAQs</a></nav>
+      <a class="wordmark" href="/website.html" aria-label="Sanctum home">SANCTUM<span>DOCUMENTATION</span></a>
+      <nav aria-label="Application"><a class="outline" href="/">Open App ↗</a></nav>
+    </header>
+
+    <div class="docs-layout">
+      <aside class="docs-nav" aria-label="Documentation Navigation">
+        <h3>Architecture</h3>
+        <ul>
+          <li><a href="#overview">Overview & Invariants</a></li>
+          <li><a href="#containment">Kernel Containment</a></li>
+          <li><a href="#contracts">API Contracts</a></li>
+        </ul>
+
+        <h3>Capabilities</h3>
+        <ul>
+          <li><a href="#chat">Local Chat Inference</a></li>
+          <li><a href="#rag">Knowledge Retrieval</a></li>
+          <li><a href="#speech">Audio & Dictation</a></li>
+        </ul>
+
+        <h3>Development</h3>
+        <ul>
+          <li><a href="#development-gates">Quality Gates</a></li>
+          <li><a href="#licenses">License Compliance</a></li>
+        </ul>
+      </aside>
+
+      <main id="docs-main" class="docs-content">
+        <h1 id="overview">Sanctum Technical Documentation</h1>
+        <p>Sanctum is an on-device, single-owner AI platform designed for total privacy. All compute runs on local CPU/GPU hardware; no telemetry or unreviewed cloud connectors exist.</p>
+
+        <h2 id="containment">1. Kernel Containment & Security Boundary</h2>
+        <p>On Linux, Sanctum enforces isolated execution using unprivileged user namespaces, network namespaces (loopback-only with egress denial), and seccomp system-call filters.</p>
+        <pre><code># The Linux runtime checks deny-by-default egress before serving:
+bin/sanctum-runtime --config profiles/runtime-cpu.json</code></pre>
+
+        <h2 id="contracts">2. Gateway Contracts & Authentication</h2>
+        <p>All communication with the background daemon occurs through an authenticated gateway bound strictly to <code>127.0.0.1</code>. Authentication uses a local token generated per launch and stored with restricted permissions.</p>
+        <ul>
+          <li><code>POST /v1/chat/completions</code> — Local text inference stream</li>
+          <li><code>GET /v1/models</code> — Discovered local models and license verification</li>
+          <li><code>POST /v1/workspaces</code> — Local vector & document storage</li>
+          <li><code>GET /healthz</code> — Local daemon health and containment verification</li>
+        </ul>
+
+        <h2 id="chat">3. Chat Renderer & Slash Commands</h2>
+        <p>The web chat interface connects directly to the local daemon and supports markdown rendering with strict XSS sanitization (scripts and remote tracking images blocked). Built-in slash commands:</p>
+        <ul>
+          <li><code>/help</code> — List available local commands</li>
+          <li><code>/clear</code> — Clear transcript memory</li>
+          <li><code>/stop</code> — Abort in-flight inference</li>
+          <li><code>/info</code> — Display active local model and security state</li>
+        </ul>
+
+        <h2 id="rag">4. Knowledge Retrieval (RAG)</h2>
+        <p>Local document ingestion processes Markdown and PDF files entirely on-device, indexing chunks into an embedded vector store. Questions generate grounded answers with verbatim citations.</p>
+
+        <h2 id="development-gates">5. Quality & License Gates</h2>
+        <p>Every commit must pass 157 source tests, 62 Rust foundation tests, and comprehensive web tests with zero <code>npm audit</code> vulnerabilities and only permissive (MIT, Apache-2.0, BSD, OFL) licenses.</p>
+      </main>
+    </div>
+
+    <footer>
+      <div class="footer-mark">SANCTUM</div>
+      <div class="footer-links">
+        <span>YOUR INTELLIGENCE. YOUR MACHINE.</span>
+        <a href="/website.html">Back to Website</a>
+        <a href="/">Open Workspace</a>
+        <span>OPEN SOURCE · MIT</span>
+      </div>
+    </footer>
+  </div>
+</body>
+</html>
