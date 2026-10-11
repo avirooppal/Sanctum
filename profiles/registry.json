@@ -1985,6 +1985,15 @@
           "sha256": "7fea0ee51a4ca5d5cea7464135fd55e8b09caf3a61da3d451ac8a22af95c033f"
         }
       ]
+    },
+    {
+      "name": "hermes-ui-palette-source",
+      "version": "b30f95ac4a80d2f6dbe3aa01001b0524314f6d74",
+      "license": "MIT",
+      "license_source": "https://github.com/NousResearch/hermes-agent/blob/b30f95ac4a80d2f6dbe3aa01001b0524314f6d74/LICENSE",
+      "verified_at": "2026-10-11",
+      "scope": "web-source",
+      "metadata_evidence": "Root MIT notice plus reviewed palette-origin MIT notices; source paths and hashes in docs/ui-provenance.md"
     }
   ]
 }

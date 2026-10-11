@@ -115,3 +115,4 @@ trailing spaces using a single-file Git whitespace exception. No source or test
 waiver; failing whitespace output retained and STATUS archive SHA256 recorded.
 
 | [0058](adr/0058-native-license-surface.md) | Native in-app exact notices and initial primitives; palette/theme migration remains pending | New geometry860px/32px gutter/720px or86dvh, centering1CSS px;12px floor/opacity1/reduced motion0s | Legal surface only, not full fidelity/axe; screenshot-discovered top-left regression preserved before fixing |
+| [0059](adr/0059-pinned-palette-token-stage.md) | Pinned palettes, renamed identity and in-memory controls; system fonts until asset admission | New semantic4.5:1 base-backdrop ladder0.2,12px/opacity1 and16x2x3 coverage; former green assertion deliberately updated | Alpha-derived tiers differ by mission; all-surface contrast/typography/full fidelity remain pending |

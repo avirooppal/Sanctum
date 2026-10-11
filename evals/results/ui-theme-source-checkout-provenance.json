@@ -1,0 +1,27 @@
+[
+  {
+    "upstream_path": "apps/shared/src/theme-presets.ts",
+    "upstream_sha": "b30f95ac4a80d2f6dbe3aa01001b0524314f6d74",
+    "original_sha256": "ada88929c0500ce1f0a5b9d097c85c0ea6959c65107146bee8017445bd0e937b"
+  },
+  {
+    "upstream_path": "apps/shared/src/color.ts",
+    "upstream_sha": "b30f95ac4a80d2f6dbe3aa01001b0524314f6d74",
+    "original_sha256": "608965b40f22d98eede54d49319a5423acc12565f7d769a681ec725f33073cba"
+  },
+  {
+    "upstream_path": "apps/desktop/src/themes/skin.ts",
+    "upstream_sha": "b30f95ac4a80d2f6dbe3aa01001b0524314f6d74",
+    "original_sha256": "06a7d427bc8ede26a3fe5b216406612e45313d85face296af5632a4d71a0015d"
+  },
+  {
+    "upstream_path": "apps/desktop/src/themes/presets.ts",
+    "upstream_sha": "b30f95ac4a80d2f6dbe3aa01001b0524314f6d74",
+    "original_sha256": "be92a1408f3aa0e5c6e8fe5958169f03a910524a4cdfd77f83579794467a908d"
+  },
+  {
+    "upstream_path": "web/src/themes/presets.ts",
+    "upstream_sha": "b30f95ac4a80d2f6dbe3aa01001b0524314f6d74",
+    "original_sha256": "7708277633ad517d49ffcc1aa8b4588ddfd7c6c439e2310ec2c82810658783b4"
+  }
+]

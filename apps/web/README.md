@@ -31,7 +31,12 @@ or fetched from another origin. Contract: `docs/contracts/web-primitives-v1.md`.
 `evals/browser_licenses.mjs <playwright-package> <output-json>` verifies the actual
 served dialog at desktop/tablet/mobile sizes. This does not complete full Hermes
 theme/renderer fidelity or axe checks. Native primitives use the existing palette
-until that migration lands; unverified upstream font and brand assets remain absent.
+until a theme is chosen; unverified upstream font and brand assets remain absent.
+
+Theme/Mode controls apply16 pinned local palettes in memory without API writes,
+storage, remote fonts or update calls. `evals/browser_themes.mjs` exercises32
+theme/mode combinations at each of the three prescribed viewports. Current
+system fonts/legacy250px rail remain while full typography/shell fidelity is built.
 Local speech expands optional file dictation and playback controls. Enter configured
 ASR/TTS/voice IDs, choose a mono PCM16 16 kHz WAV, review the draft, then send.
 Read answer synthesizes the last response; Stop audio cancels browser delivery/playback.
