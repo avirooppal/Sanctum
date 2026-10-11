@@ -1,9 +1,9 @@
 # Current state
 
-- Step: final H3/H4 adoption checks before Step 1-pre/1a; HTTP gates pass.
-- Last green commit: `16c2b46`; all five hosted jobs verified; no phase tags.
+- Step: housekeeping H1-H4 complete; Step 1-pre/1a next; HTTP gates pass.
+- Last green commit: `820e3d8`; all five hosted jobs verified; no phase tags.
 - Blockers: held authenticated WebSocket PENDING Step 1a; T1 latency and physical audio UNVERIFIED.
-- Next: commit/push verified H3 policy; warm-worker ADR; authenticated WebSocket.
+- Next: verify warm-engine support/memory; implement authenticated WebSocket; run held-session gate.
 
 | Step 0 gate | Historical measured result (details in archive) |
 |---|---|
@@ -329,3 +329,16 @@ audit0 passed this session; no frontend changes. H3 cost/gates complete for the
 Linux CPU reference; H4 hosted verification will follow the code push. Named
 config provenance records original hashes/model/engine artifacts and2/4 threads.
 No claim of real authenticated held-WS, warm speech, WER or T1 voice latency.
+
+## Housekeeping completion checkpoint
+
+Code/profile/evidence commit `820e3d8` pushed to origin/main. Hosted
+[run38112629060](https://github.com/avirooppal/Sanctum/actions/runs/38112629060)
+observed all five jobs successful for exact820e3d8 SHA: Rust, web, Linux/Windows/macOS
+source. H1-H4 complete; all original measurements/failures retained. No phase tags.
+
+Step1-pre next: extend proposed ADR0032 with verified upstream library/server
+capabilities, measured resident memory and Flite spawn cost; do not assume a warm
+wrapper can avoid CLI reload. Then1a contract/authenticated WebSocket on guarded
+listener, ticket/Origin/frame/deadline/cancellation tests, actual >=10min held
+sessions and mixed gate. Held WS remains PENDING;1b-1e andStep2 not started.
