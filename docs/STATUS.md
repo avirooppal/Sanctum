@@ -2,7 +2,7 @@
 
 - Authority: [MISSION](MISSION.md), [WRAPUP](WRAPUP.md), ADR0027; feature freeze active.
 - Current: Step U Knowledge upload/cited-answer surface implemented on `ui-hermes-port`.
-- Last hosted-green: `380f4d3610109f06f6059da5d3fcaff934b5856f`, [all5 jobs](https://github.com/avirooppal/Sanctum/actions/runs/38144769774).
+- Last hosted-green: `4d509ea20b3b90f7f595a12d484bb1d7aa0a985c`, [all5 jobs](https://github.com/avirooppal/Sanctum/actions/runs/38145202433).
 - Blockers: none for software; T1/GPU/physical audio/native targets need later verification.
 - Next: history/model/settings screens; isolated reference captures; fidelity/axe/all-screen egress gates.
 - Release: incomplete; no UI merge or phase/release tag.
@@ -80,3 +80,9 @@ Documentation check correction: mixed newline conversion in the inventory caused
 continued to commit. Preserved the failure as wrapup-knowledge-status-whitespace-
 failure.json, normalized only current STATUS (archives unchanged), and reran the
 check. No test, threshold or measured result was removed.
+
+Knowledge implementation b5a285a plus documentation correction4d509ea pushed.
+Exact4d509ea hosted run38145202433/all5 jobs PASS observed this session.
+Extended smoke repeated chat Stop at295.5036ms browser idle (single observation,
+not an engine gate). Working tree has only the three pre-existing untracked owner
+paths; main not merged and no tags created. Full mission remains incomplete.
