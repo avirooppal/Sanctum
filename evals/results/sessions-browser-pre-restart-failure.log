@@ -1,0 +1,16 @@
+node:fs:440
+    return binding.readFileUtf8(path, stringToFlags(options.flag));
+                   ^
+
+Error: ENOENT: no such file or directory, open 'C:\wsl.localhost\Ubuntu-22.04\home\aviroop\.local\share\sanctum-dispatch-smoke\local.token'
+    at readFileSync (node:fs:440:20)
+    at file:///C:/Users/aviroop/Desktop/Sanctum/evals/browser_sessions.mjs:10:13
+    at runNextTicks (node:internal/process/task_queues:65:5)
+    at process.processImmediate (node:internal/timers:472:9) {
+  errno: -4058,
+  code: 'ENOENT',
+  syscall: 'open',
+  path: 'C:\\wsl.localhost\\Ubuntu-22.04\\home\\aviroop\\.local\\share\\sanctum-dispatch-smoke\\local.token'
+}
+
+Node.js v24.14.0

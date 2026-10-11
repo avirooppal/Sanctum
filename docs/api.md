@@ -461,7 +461,7 @@ Runtime HTTP: GET /healthz. Other contracts are foundation diagnostics.
   "openapi": "3.1.0",
   "info": {
     "title": "Sanctum chat core",
-    "version": "0.1.0"
+    "version": "0.2.0"
   },
   "security": [
     {
@@ -590,6 +590,170 @@ Runtime HTTP: GET /healthz. Other contracts are foundation diagnostics.
         "responses": {
           "200": {
             "description": "Owner-scoped persisted turns"
+          }
+        }
+      }
+    },
+    "/v1/sessions": {
+      "post": {
+        "summary": "Owner conversation search, rename and delete; chat lane; 4096-byte body",
+        "security": [
+          {
+            "localBearer": []
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "oneOf": [
+                  {
+                    "type": "object",
+                    "additionalProperties": false,
+                    "required": [
+                      "operation",
+                      "query",
+                      "offset"
+                    ],
+                    "properties": {
+                      "operation": {
+                        "const": "list"
+                      },
+                      "query": {
+                        "type": "string",
+                        "maxLength": 120
+                      },
+                      "offset": {
+                        "type": "integer",
+                        "minimum": 0,
+                        "maximum": 1000000
+                      }
+                    }
+                  },
+                  {
+                    "type": "object",
+                    "additionalProperties": false,
+                    "required": [
+                      "operation",
+                      "id",
+                      "title"
+                    ],
+                    "properties": {
+                      "operation": {
+                        "const": "rename"
+                      },
+                      "id": {
+                        "type": "string",
+                        "minLength": 1,
+                        "maxLength": 64,
+                        "pattern": "^[A-Za-z0-9_-]+$"
+                      },
+                      "title": {
+                        "type": "string",
+                        "minLength": 1,
+                        "maxLength": 120
+                      }
+                    }
+                  },
+                  {
+                    "type": "object",
+                    "additionalProperties": false,
+                    "required": [
+                      "operation",
+                      "id"
+                    ],
+                    "properties": {
+                      "operation": {
+                        "const": "delete"
+                      },
+                      "id": {
+                        "type": "string",
+                        "minLength": 1,
+                        "maxLength": 64,
+                        "pattern": "^[A-Za-z0-9_-]+$"
+                      }
+                    }
+                  }
+                ]
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "List data (id,title),has_more; or changed:true",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "oneOf": [
+                    {
+                      "type": "object",
+                      "additionalProperties": false,
+                      "required": [
+                        "data",
+                        "has_more"
+                      ],
+                      "properties": {
+                        "data": {
+                          "type": "array",
+                          "maxItems": 100,
+                          "items": {
+                            "type": "object",
+                            "additionalProperties": false,
+                            "required": [
+                              "id",
+                              "title"
+                            ],
+                            "properties": {
+                              "id": {
+                                "type": "string"
+                              },
+                              "title": {
+                                "type": "string"
+                              }
+                            }
+                          }
+                        },
+                        "has_more": {
+                          "type": "boolean"
+                        }
+                      }
+                    },
+                    {
+                      "type": "object",
+                      "additionalProperties": false,
+                      "required": [
+                        "changed"
+                      ],
+                      "properties": {
+                        "changed": {
+                          "const": true
+                        }
+                      }
+                    }
+                  ]
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Invalid operation/fields"
+          },
+          "401": {
+            "description": "Owner authentication required"
+          },
+          "404": {
+            "description": "Unknown or unowned conversation"
+          },
+          "413": {
+            "description": "Body exceeds 4096 bytes"
+          },
+          "405": {
+            "description": "POST required"
+          },
+          "500": {
+            "description": "Storage unavailable; no internal details exposed"
           }
         }
       }

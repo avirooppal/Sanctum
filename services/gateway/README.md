@@ -101,3 +101,11 @@ Real tests: `python evals/realtime_transport.py --token-file <path> --output <pa
 `python evals/realtime_held.py --pid <runtime-pid> --runtime-config <config>
 --token-file <path> --seconds 600 --output <path>`; mixed harness adds opt-in
 `--held-websocket` while retaining its original upload workload by default.
+
+## Conversation metadata
+
+POST `/v1/sessions` lists, renames or deletes owner conversations (ADR0063).
+Existing GET conversation/turn responses remain compatible. Migration0001 runs
+idempotently on startup; deletion markers reject late saves. Deletion does not
+securely erase SQLite remnants or backups. Search matches title/ID with SQLite
+ASCII case folding,100 rows per page. Run `cargo test -p sanctum-gateway --test sessions`.

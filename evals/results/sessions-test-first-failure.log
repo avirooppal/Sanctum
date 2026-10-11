@@ -1,0 +1,76 @@
+   Compiling sanctum-gateway v0.1.0 (/mnt/c/Users/aviroop/Desktop/Sanctum/services/gateway)
+error[E0432]: unresolved import `sanctum_gateway::storage::SessionRequest`
+ --> services/gateway/tests/sessions.rs:1:32
+  |
+1 | ...::{Sessi...quest, S...
+  |       ^^^^^...^^^^^ no `SessionRequest` in `storage`
+
+error[E0599]: no method named `sessions` found for struct `Store` in the current scope
+  --> services/gateway/tests/sessions.rs:12:22
+   |
+12 | ...re.sessions("b...
+   |       ^^^^^^^^ method not found in `Store`
+
+error[E0599]: no method named `sessions` found for struct `Store` in the current scope
+  --> services/gateway/tests/sessions.rs:13:22
+   |
+13 | ...re.sessions("a...
+   |       ^^^^^^^^ method not found in `Store`
+
+error[E0599]: no method named `sessions` found for struct `Store` in the current scope
+  --> services/gateway/tests/sessions.rs:14:21
+   |
+14 | ...re.sessions("a...
+   |       ^^^^^^^^ method not found in `Store`
+
+error[E0599]: no method named `sessions` found for struct `Store` in the current scope
+  --> services/gateway/tests/sessions.rs:16:22
+   |
+16 | ...re.sessions("b...
+   |       ^^^^^^^^ method not found in `Store`
+
+error[E0599]: no method named `sessions` found for struct `Store` in the current scope
+  --> services/gateway/tests/sessions.rs:17:19
+   |
+17 | ...re.sessions("a...
+   |       ^^^^^^^^ method not found in `Store`
+
+error[E0599]: no method named `sessions` found for struct `Store` in the current scope
+  --> services/gateway/tests/sessions.rs:25:22
+   |
+25 | ...re.sessions("b...
+   |       ^^^^^^^^ method not found in `Store`
+
+error[E0599]: no method named `sessions` found for struct `Store` in the current scope
+  --> services/gateway/tests/sessions.rs:27:22
+   |
+27 | ...re.sessions("a...
+   |       ^^^^^^^^ method not found in `Store`
+
+error[E0599]: no method named `sessions` found for struct `Store` in the current scope
+  --> services/gateway/tests/sessions.rs:43:15
+   |
+43 | ...re.sessions("a...
+   |       ^^^^^^^^ method not found in `Store`
+
+error[E0599]: no method named `sessions` found for struct `Store` in the current scope
+  --> services/gateway/tests/sessions.rs:46:22
+   |
+46 | ...re.sessions("a...
+   |       ^^^^^^^^ method not found in `Store`
+
+error[E0599]: no method named `sessions` found for struct `Store` in the current scope
+  --> services/gateway/tests/sessions.rs:54:21
+   |
+54 | ...re.sessions("a...
+   |       ^^^^^^^^ method not found in `Store`
+
+error[E0599]: no method named `sessions` found for struct `Store` in the current scope
+  --> services/gateway/tests/sessions.rs:56:20
+   |
+56 | ...re.sessions("a...
+   |       ^^^^^^^^ method not found in `Store`
+
+Some errors have detailed explanations: E0432, E0599.
+For more information about an error, try `rustc --explain E0432`.
+error: could not compile `sanctum-gateway` (test "sessions") due to 12 previous errors

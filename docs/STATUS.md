@@ -1,44 +1,41 @@
 # Current state
 
-- Authority: MISSION.md (Amendment1), WRAPUP.md, ADR0027; feature freeze active.
-- Step: docs-first1a–1c; current-evidence coverage/checklist rewritten; frontend next.
-- Last green source: `7cbc426d13b284856563c6e0a103f202b24557bf`, hosted run38145322030/all5 PASS observed.
-- Baseline: source157/Rust57/web34 PASS;38 denial/startup probes;8 real smoke stages PASS.
-- Additional probes: Linux WS13 PASS; Windows handshake<2s FAILED. Doctor exits1/no-fit at8167555072 bytes. Both retained, no thresholds changed.
-- Open software gates: full UI,live voice,vision,agents/ledger,LAN,crypto,packaging/soak.
-- Next3: commit audit/checklist and verify CI; history search/rename/delete; model/settings and U6 gates.
-- Tags/main: no tags; ui-hermes-port not merged. Three pre-existing owner untracked paths untouched.
+- Authority: MISSION Amendment1, WRAPUP, ADR0027; feature freeze active.
+- Step: frontend history search/rename/delete implemented and locally verified; commit/hosted CI next.
+- Last green commit: `24d60dc15716f93d72578e48e7a00f85c092d30f`; hosted run38147851580/all5 PASS observed.
+- Current slice: source157/Rust62/web36 PASS;38 denial probes;9 real smoke stages PASS;Linux WS13 PASS.
+- Open failures: earlier Windows handshake<2s failure;doctor no-fit at8167555072 bytes. Neither waived.
+- Open gates: remaining UI/fidelity,full voice,vision,agents/ledger,LAN,crypto,packages/soak.
+- Next3: push this slice and verify exact CI;model picker/settings;Markdown/chat controls and U6 gates.
+- Main/tags: UI branch unmerged;no tags;owner untracked artifacts preserved.
 
-## Current work list and evidence
+## Conversation-history slice
 
-[PLAN_COVERAGE](PLAN_COVERAGE.md) is the section-by-section source of current
-claims, with stable row IDs and fresh E1–E8 evidence. [RELEASE_CHECKLIST](RELEASE_CHECKLIST.md)
-tracks support,gates and owner-run commands. Both must change in every affected
-code/test slice. Missing verifier commands are explicit open work,not invented.
-[KNOWN_LIMITS](KNOWN_LIMITS.md) records software gaps and failed probes.
+Source: this commit, based on last green24d60dc. ADR0063/REVIEW_QUEUE records new
+interface bounds and non-forensic deletion semantics. OpenAPI0.2.0 adds sessions;
+legacy conversation responses remain unchanged. Populated/idempotent SQLite
+migration,owner isolation,late-save rejection and invalid bounds are tested.
+Frontend search/rename/confirmed delete uses real storage;HTML-looking titles
+remain inert. Mobile Escape bug found by the new browser test, fixed, same test
+rerun. Desktop/mobile screenshots inspected; this is not a Hermes-fidelity claim.
 
-Commands actually run: `python tools/check.py`, `bash tools/check_rust.sh`,
-`npm test --prefix apps/web`, `npm run typecheck --prefix apps/web`,
-`npm run build --prefix apps/web`, `npm audit --audit-level=low --prefix apps/web`,
-`bash tools/smoke_all.sh`; real meeting/microphone browser runners; Windows and
-WSL `evals/realtime_transport.py`; `python -m sanctum doctor --json`.
-The WSL test environment is /home/aviroop/.local/share/sanctum-dev-venv with
-PYTHONPATH unset; runtime at127.0.0.1:8769 using .sanctum/runtime-dispatch.json.
-Full raw outputs retained as evals/results/audit-refresh-*.
-Linux realtime handshake1.877212s/partial-frame1.870464s PASS; Windows initial
-assertion failure emitted no numeric sample. Doctor's recommendation=null is
-not a successful recommended-profile gate. SDK8 PASS,chat3.5742s,TTFT0.5524s;
-smoke timings are not controlled SLO benchmarks. Meeting5/emulated microphone4
-PASS; no semantic-quality/physical-audio claim. Supervision3/zero survivors.
-No software changed in the docs-first slice and no old long-load gate rerun claimed.
+Commands actually run on the slice:
+- `python tools/check.py`:157 tests,Ruff/format/ty/API docs;26 Python/72 npm licenses,5 font hashes PASS.
+- `bash tools/check_rust.sh`:62 tests,fmt/clippy,92 crate licenses,38 denial/startup probes PASS;supervision3/zero survivors,release0.565742/0.527717/0.566518s.
+- `npm test --prefix apps/web`:34+2 PASS;typecheck/build PASS;`npm audit --audit-level=low --prefix apps/web`:0 advisories.
+- `bash tools/smoke_all.sh`:9 stages PASS,release_complete=false;SDK8/chat0.5694s/TTFT0.4939s/1024 dimensions (not controlled SLOs).
+- `node evals/browser_sessions.mjs <Playwright> <token-file> <output>`:15 named checks PASS,zero foreign requests/page errors;mobile Escape/no-overflow included.
+- WSL `python evals/realtime_transport.py --token-file <owner-token-file> --output evals/results/sessions-realtime-transport.json`:13 PASS,handshake1.872044s,partialframe1.881019s;held gate PENDING,not rerun.
+
+Raw evidence: evals/results/sessions-*; full results indexed as E9 in
+[PLAN_COVERAGE](PLAN_COVERAGE.md), R-UI in [RELEASE_CHECKLIST](RELEASE_CHECKLIST.md).
+Failures preserved: expected tests-first missing API;old runtime413;incorrect
+Windows token path;mobile Escape timeout;WSL formatting filesystem error;
+document encoding/restart command errors. No threshold/timeout changed.
+Actual controlled restart stopped the previous gateway and8owned child PIDs in
+1.507s/zero survivors;this is not the active-engine shutdown acceptance gate.
 
 ## Preserved history
 
-Previous STATUS archived verbatim at
-[pre-audit status](status-archive/2026-10-11-before-coverage-refresh.md), SHA256
-`263e93ebcc8f8996d8d439bf97beaf50f3c32f60e12e7c06a628675d77b0a9e8`.
-Old PLAN_COVERAGE archived verbatim at
-[pre-audit coverage](status-archive/2026-10-11-plan-coverage-before-refresh.md), SHA256
-`3697d6ac2d2a3e76c9f4ef58e3e07b063c2e35e7c3018bec09483eb5b3117932`.
-Earlier measurements remain historical in those archives. The new audit does not
-copy their completion claims. No measurement removed or rewritten.
+Previous status archived verbatim at [docs-first audit](status-archive/2026-10-11-docs-first-audit.md),
+SHA256 `2691f0e3d70673b7886c74bc21fda20728cb0311cb4c05155f4638ebc35ed014`. Earlier archive links and every prior measurement remain there.

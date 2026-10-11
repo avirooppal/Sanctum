@@ -125,3 +125,5 @@ Named failed check retained; no source/test lint exception or quality gate waive
 | [0061](adr/0061-responsive-shell-stage.md) | Source-backed237px/640px chat rail, one sidebar subtree and bounded viewport | New1CSS-pixel geometry tolerance,100dvh/above-fold/focus assertions; server bounds unchanged | Prior250px assertion intentionally updated, all functional flows retained; full fidelity/axe pending |
 
 | [0062](adr/0062-chat-stop-and-wrapup-evidence.md) | Composer Stop and exact wrap-up/archive bytes | No server threshold/timeouts changed; new browser test starts cancellation at request initiation after preserved missed-completion failure | Browser idle timing is not engine-slot release; partial text persistence remains completion-dependent |
+
+| [0063](adr/0063-conversation-management.md) | Owner-scoped history management with idempotent metadata migration and deletion markers | New 4096-byte body,100-row page,120-character title/query,1000000-offset bounds; no existing threshold relaxed | Delete is not forensic erasure; deleted IDs cannot be reused; title/ID search uses SQLite ASCII case folding |

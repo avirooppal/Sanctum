@@ -19,10 +19,11 @@ Previous file archived **verbatim** at
 - Every subsequent slice must update its row IDs here and the matching rows in
   RELEASE_CHECKLIST.md in the **same commit** as code/tests. Preserve failed runs.
 
-All paths below are repository-relative. E1–E8 refer only to this session:
+All paths below are repository-relative. E1–E9 refer only to this session:
 
 | ID | Command / result / raw evidence |
 |---|---|
+| E9 | History slice on this commit (base24d60dc): source157/Rust62/web36 PASS;38 denial probes;9-stage real smoke PASS;SDK8;Linux WS13 PASS. `evals/results/sessions-source-final.log`,`sessions-rust-final.log`,`sessions-web-final.log`,`sessions-build.log`,`sessions-regression-smoke-all-reference.json`,`sessions-realtime-transport.json`. `services/gateway/tests/sessions.rs`5 tests:owner boundaries,atomic deletion/late-save rejection,populated idempotent migration,pagination,invalid bounds. `evals/browser_sessions.mjs`15 real checks with0 foreign requests/errors in `sessions-regression-smoke-ui-sessions.json`;desktop/mobile screenshots inspected. No full fidelity/all-screen egress or release claim. Named failures retained as sessions-*-failure.log. |
 | E1 | `python tools/check.py` under the WSL development venv, PYTHONPATH unset: 157 tests (24 CLI,20 tools,24 Knowledge,69 speech,20 eval), Ruff/format/declared ty scopes, generated API consistency PASS. `evals/results/audit-refresh-source.log`. Registry scans:26 Python/72 npm dependencies;5 font asset/notice hashes. These scans compare reviewed metadata; they are not a fresh upstream legal review. |
 | E2 | `bash tools/check_rust.sh`:57 Rust tests, fmt/clippy -D warnings,92 crate licenses,22 containment +16 runtime/exec-child denial checks PASS. `evals/results/audit-refresh-rust.log`; supervision3 cases,zero survivors,release0.566360/0.539456/0.566059s in `audit-refresh-process-supervision.json`. |
 | E3 | `npm test --prefix apps/web`32+2 PASS; `npm run typecheck --prefix apps/web`; `npm run build --prefix apps/web`; `npm audit --audit-level=low --prefix apps/web`0 advisories. `evals/results/audit-refresh-web.log`. |
@@ -184,7 +185,7 @@ All paths below are repository-relative. E1–E8 refer only to this session:
 | F16d §16 days8–9 structural ingest/hybrid | Partial | K rows; Docling/LanceDB defaults substituted by ADR0009/0010; live folder ingestion not rerun. |
 | F16e §16 day10 30–50 real-document labels/baseline | Partial | Foundation8-case eval passes,E1; required current real-document retrieval baseline absent. |
 | U1 Amendment UI source/license/theme/provenance foundation | Partial | E1 source-inventory/font hash tests,E3 theme tests; upstream legal records not re-audited at source this session. |
-| U2 UI chat/Stop/Knowledge/history/model/settings | Partial | E5 current real Stop/Knowledge/chat; search/rename/delete,fit/license picker,settings,status,Markdown/palette/retry/undo incomplete. |
+| U2 UI chat/Stop/Knowledge/history/model/settings | Partial | E5 current real Stop/Knowledge/chat; E9 verifies real title/ID search,rename,confirmed deletion and restored history;fit/license picker,settings,status,Markdown/palette/retry/undo incomplete. |
 | U3 UI fidelity/axe/keyboard/contrast/full HTTP+WS egress | Partial | E5 Knowledge surface zero foreign requests; no current full reference/fidelity/a11y/all-screen gate. |
 | D1 offline five-modality product plus LAN/encryption/resources | Partial | E4 eight-stage incremental smoke explicitly release_complete=false. |
 | D2 verified dist/installers/Compose/Tauri/signed bundle/checksums/SBOM | Partial | No release artifacts verified this session. |

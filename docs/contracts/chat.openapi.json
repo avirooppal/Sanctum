@@ -1,12 +1,311 @@
 {
- "openapi":"3.1.0", "info":{"title":"Sanctum chat core","version":"0.1.0"},
- "security":[{"localBearer":[]}],
- "paths":{
-  "/v1/models":{"get":{"responses":{"200":{"description":"Configured local model IDs and capabilities"},"401":{"description":"Missing/invalid local token"}}}},
-  "/v1/chat/completions":{"post":{"description":"OpenAI-compatible messages, tools/tool_choice, JSON schema response_format; stream=true returns SSE. X-Sanctum-Conversation selects a local conversation. Unknown model IDs rejected.","requestBody":{"required":true,"content":{"application/json":{"schema":{"type":"object","required":["model","messages"],"properties":{"model":{"type":"string"},"messages":{"type":"array","minItems":1},"stream":{"type":"boolean"},"tools":{"type":"array"},"response_format":{"type":"object"}}}}}},"responses":{"200":{"description":"Chat completion or SSE"},"400":{"description":"Invalid request"},"401":{"description":"Invalid token"},"502":{"description":"Local engine unavailable"}}}},
-  "/v1/embeddings":{"post":{"requestBody":{"required":true,"content":{"application/json":{"schema":{"type":"object","required":["model","input"],"properties":{"model":{"type":"string"},"input":{"type":["string","array"]}}}}}},"responses":{"200":{"description":"OpenAI-compatible embeddings"}}}},
-  "/v1/conversations":{"get":{"responses":{"200":{"description":"Authenticated owner's conversation IDs"}}}},
-  "/v1/conversations/{id}":{"get":{"parameters":[{"name":"id","in":"path","required":true,"schema":{"type":"string"}}],"responses":{"200":{"description":"Owner-scoped persisted turns"}}}}
- },
- "components":{"securitySchemes":{"localBearer":{"type":"http","scheme":"bearer"}}}
+  "openapi": "3.1.0",
+  "info": {
+    "title": "Sanctum chat core",
+    "version": "0.2.0"
+  },
+  "security": [
+    {
+      "localBearer": []
+    }
+  ],
+  "paths": {
+    "/v1/models": {
+      "get": {
+        "responses": {
+          "200": {
+            "description": "Configured local model IDs and capabilities"
+          },
+          "401": {
+            "description": "Missing/invalid local token"
+          }
+        }
+      }
+    },
+    "/v1/chat/completions": {
+      "post": {
+        "description": "OpenAI-compatible messages, tools/tool_choice, JSON schema response_format; stream=true returns SSE. X-Sanctum-Conversation selects a local conversation. Unknown model IDs rejected.",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "required": [
+                  "model",
+                  "messages"
+                ],
+                "properties": {
+                  "model": {
+                    "type": "string"
+                  },
+                  "messages": {
+                    "type": "array",
+                    "minItems": 1
+                  },
+                  "stream": {
+                    "type": "boolean"
+                  },
+                  "tools": {
+                    "type": "array"
+                  },
+                  "response_format": {
+                    "type": "object"
+                  }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Chat completion or SSE"
+          },
+          "400": {
+            "description": "Invalid request"
+          },
+          "401": {
+            "description": "Invalid token"
+          },
+          "502": {
+            "description": "Local engine unavailable"
+          }
+        }
+      }
+    },
+    "/v1/embeddings": {
+      "post": {
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "required": [
+                  "model",
+                  "input"
+                ],
+                "properties": {
+                  "model": {
+                    "type": "string"
+                  },
+                  "input": {
+                    "type": [
+                      "string",
+                      "array"
+                    ]
+                  }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "OpenAI-compatible embeddings"
+          }
+        }
+      }
+    },
+    "/v1/conversations": {
+      "get": {
+        "responses": {
+          "200": {
+            "description": "Authenticated owner's conversation IDs"
+          }
+        }
+      }
+    },
+    "/v1/conversations/{id}": {
+      "get": {
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Owner-scoped persisted turns"
+          }
+        }
+      }
+    },
+    "/v1/sessions": {
+      "post": {
+        "summary": "Owner conversation search, rename and delete; chat lane; 4096-byte body",
+        "security": [
+          {
+            "localBearer": []
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "oneOf": [
+                  {
+                    "type": "object",
+                    "additionalProperties": false,
+                    "required": [
+                      "operation",
+                      "query",
+                      "offset"
+                    ],
+                    "properties": {
+                      "operation": {
+                        "const": "list"
+                      },
+                      "query": {
+                        "type": "string",
+                        "maxLength": 120
+                      },
+                      "offset": {
+                        "type": "integer",
+                        "minimum": 0,
+                        "maximum": 1000000
+                      }
+                    }
+                  },
+                  {
+                    "type": "object",
+                    "additionalProperties": false,
+                    "required": [
+                      "operation",
+                      "id",
+                      "title"
+                    ],
+                    "properties": {
+                      "operation": {
+                        "const": "rename"
+                      },
+                      "id": {
+                        "type": "string",
+                        "minLength": 1,
+                        "maxLength": 64,
+                        "pattern": "^[A-Za-z0-9_-]+$"
+                      },
+                      "title": {
+                        "type": "string",
+                        "minLength": 1,
+                        "maxLength": 120
+                      }
+                    }
+                  },
+                  {
+                    "type": "object",
+                    "additionalProperties": false,
+                    "required": [
+                      "operation",
+                      "id"
+                    ],
+                    "properties": {
+                      "operation": {
+                        "const": "delete"
+                      },
+                      "id": {
+                        "type": "string",
+                        "minLength": 1,
+                        "maxLength": 64,
+                        "pattern": "^[A-Za-z0-9_-]+$"
+                      }
+                    }
+                  }
+                ]
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "List data (id,title),has_more; or changed:true",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "oneOf": [
+                    {
+                      "type": "object",
+                      "additionalProperties": false,
+                      "required": [
+                        "data",
+                        "has_more"
+                      ],
+                      "properties": {
+                        "data": {
+                          "type": "array",
+                          "maxItems": 100,
+                          "items": {
+                            "type": "object",
+                            "additionalProperties": false,
+                            "required": [
+                              "id",
+                              "title"
+                            ],
+                            "properties": {
+                              "id": {
+                                "type": "string"
+                              },
+                              "title": {
+                                "type": "string"
+                              }
+                            }
+                          }
+                        },
+                        "has_more": {
+                          "type": "boolean"
+                        }
+                      }
+                    },
+                    {
+                      "type": "object",
+                      "additionalProperties": false,
+                      "required": [
+                        "changed"
+                      ],
+                      "properties": {
+                        "changed": {
+                          "const": true
+                        }
+                      }
+                    }
+                  ]
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Invalid operation/fields"
+          },
+          "401": {
+            "description": "Owner authentication required"
+          },
+          "404": {
+            "description": "Unknown or unowned conversation"
+          },
+          "413": {
+            "description": "Body exceeds 4096 bytes"
+          },
+          "405": {
+            "description": "POST required"
+          },
+          "500": {
+            "description": "Storage unavailable; no internal details exposed"
+          }
+        }
+      }
+    }
+  },
+  "components": {
+    "securitySchemes": {
+      "localBearer": {
+        "type": "http",
+        "scheme": "bearer"
+      }
+    }
+  }
 }

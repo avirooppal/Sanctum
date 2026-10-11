@@ -25,6 +25,12 @@ fn assigns_lanes_and_preserves_owner_auth() {
     assert!(forwarded.contains("Connection: close"));
     assert!(!forwarded.contains("keep-alive"));
     assert_eq!(inspect(b"GET /healthz HTTP/1.1\r\n\r\n").unwrap().lane, 0);
+    assert_eq!(
+        inspect(b"POST /v1/sessions HTTP/1.1\r\nContent-Length: 0\r\n\r\n")
+            .unwrap()
+            .lane,
+        2
+    );
 }
 
 #[cfg(target_os = "linux")]

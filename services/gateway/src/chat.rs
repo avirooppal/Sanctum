@@ -1,5 +1,5 @@
 use crate::supervised_inference::SupervisedEngine;
-use sanctum_gateway::storage::Store;
+use sanctum_gateway::storage::{SessionRequest, Store};
 use sanctum_inference::{Engine, LocalEngine};
 use serde::Deserialize;
 use serde_json::{json, Value};
@@ -495,6 +495,54 @@ impl Chat {
                     request,
                     503,
                     json!({"error":{"message":"Knowledge worker unavailable"}}),
+                ),
+            };
+        }
+        if path == "/v1/sessions" {
+            if request.method() != &tiny_http::Method::Post {
+                return respond(request, 405, json!({"error":{"message":"POST required"}}));
+            }
+            let mut bytes = Vec::new();
+            request.as_reader().take(4097).read_to_end(&mut bytes)?;
+            if bytes.len() > 4096 {
+                return respond(
+                    request,
+                    413,
+                    json!({"error":{"message":"Request too large"}}),
+                );
+            }
+            let command: SessionRequest = match serde_json::from_slice(&bytes) {
+                Ok(value) => value,
+                Err(_) => {
+                    return respond(
+                        request,
+                        400,
+                        json!({"error":{"message":"Invalid session request"}}),
+                    )
+                }
+            };
+            context.check()?;
+            return match self
+                .store
+                .lock()
+                .map_err(|_| "store lock poisoned")?
+                .sessions("local-owner", command)
+            {
+                Ok(value) if value.get("changed") == Some(&Value::Bool(false)) => respond(
+                    request,
+                    404,
+                    json!({"error":{"message":"Conversation not found"}}),
+                ),
+                Ok(value) => respond(request, 200, value),
+                Err(rusqlite::Error::InvalidQuery) => respond(
+                    request,
+                    400,
+                    json!({"error":{"message":"Invalid session request"}}),
+                ),
+                Err(_) => respond(
+                    request,
+                    500,
+                    json!({"error":{"message":"Conversation storage unavailable"}}),
                 ),
             };
         }

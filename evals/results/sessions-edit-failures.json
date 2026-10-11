@@ -1,0 +1,19 @@
+{
+  "failures": [
+    {
+      "command": "cargo fmt --all",
+      "result": "Error writing files: io error: services/gateway/tests/ingress.rs: Invalid argument (os error 22)",
+      "recovery": "Repeated cargo fmt unchanged; exit 0. Full fmt gate still required."
+    },
+    {
+      "command": "documentation append script reading CHANGELOG.md as UTF-8",
+      "result": "UnicodeDecodeError byte 0x97 position 2438 (two attempts)",
+      "recovery": "Preserved existing bytes, used byte insertion, removed duplicate newly-added README paragraph."
+    },
+    {
+      "command": "initial bash restart one-liner",
+      "result": "bash syntax error near unexpected token 2; exit2 before signaling",
+      "recovery": "Used a local Python script validating /proc/1327/comm before SIGTERM; recorded successful bounded shutdown separately."
+    }
+  ]
+}

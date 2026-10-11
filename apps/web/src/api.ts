@@ -2,6 +2,7 @@
 export type Message = {role:'user'|'assistant'; content:string};
 export type Model = {id:string; capabilities:string[]};
 export type Turn = {request:string; response:string; streaming:boolean};
+export type SessionPage = {data:{id:string;title:string}[];has_more:boolean};
 export type Workspace = {id:string;name:string};
 export type KnowledgeAnswer = {answer:string;abstained:boolean;citations:{source:string;page:number|null;quote:string;document_id:string;chunk_id:string;start:number;end:number}[]};
 type Socket = Pick<WebSocket,'close'|'addEventListener'>;
@@ -79,6 +80,26 @@ export class SanctumClient {
       throw Error('Invalid model response');
     }
     return data.data as Model[];
+  }
+
+  async sessions(query:string,offset:number,signal?:AbortSignal):Promise<SessionPage> {
+    const data:unknown=await (await this.request('/v1/sessions',signal,{operation:'list',query,offset},'POST')).json();
+    signal?.throwIfAborted();
+    if(!record(data)||!Array.isArray(data.data)||typeof data.has_more!=='boolean'||
+      !data.data.every(s=>record(s)&&typeof s.id==='string'&&typeof s.title==='string'))throw Error('Invalid session response');
+    return data as SessionPage;
+  }
+
+  private async mutateSession(body:object,signal?:AbortSignal):Promise<void> {
+    const data:unknown=await (await this.request('/v1/sessions',signal,body,'POST')).json();
+    signal?.throwIfAborted();
+    if(!record(data)||data.changed!==true)throw Error('Invalid session mutation response');
+  }
+  renameSession(id:string,title:string,signal?:AbortSignal):Promise<void> {
+    return this.mutateSession({operation:'rename',id,title},signal);
+  }
+  deleteSession(id:string,signal?:AbortSignal):Promise<void> {
+    return this.mutateSession({operation:'delete',id},signal);
   }
 
   async conversations(signal?:AbortSignal):Promise<string[]> {

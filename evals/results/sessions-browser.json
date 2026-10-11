@@ -1,0 +1,20 @@
+{
+  "suite": "real-conversation-history",
+  "passed": [
+    "owner_auth",
+    "unknown_fields_rejected",
+    "missing_404",
+    "body_limit",
+    "real_chat_saved",
+    "rename",
+    "search",
+    "restore",
+    "dismiss_delete",
+    "confirm_delete",
+    "legacy_turns_deleted",
+    "inert_title",
+    "same_origin"
+  ],
+  "foreign_requests": [],
+  "page_errors": []
+}

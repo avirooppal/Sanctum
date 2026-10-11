@@ -2,6 +2,8 @@
 
 ## Unreleased UI foundation
 
+- Add owner history search, rename and confirmed deletion; preserve legacy APIs and reject late saves to deleted sessions.
+
 - Add same-origin typed adapter, licensed local themes/fonts, notices and responsive shell.
 - Add explicit chat cancellation without automatic retries; retain incomplete-release gates.
 

@@ -175,6 +175,17 @@ def main():
             ],
             None,
         ),
+        (
+            "ui_sessions",
+            [
+                node,
+                "evals/browser_sessions.mjs",
+                package,
+                browser_token,
+                str(directory / "smoke-ui-sessions.json"),
+            ],
+            None,
+        ),
     ]
     record = {
         "suite": "smoke-all-v1",

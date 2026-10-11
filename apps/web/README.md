@@ -78,3 +78,10 @@ gateway for real integration; CLI arguments are documented at the top of the scr
 `evals/browser_microphone.mjs` runs Chromium's emulated microphone through the real
 capture worklet and ASR. It needs full Chromium headless (`channel: chromium`), not
 headless-shell. Physical microphone and speaker verification remains a separate check.
+
+History uses POST /v1/sessions for owner-scoped title/ID search, paginated lists,
+rename and confirmed deletion. Titles render as text. Deletion removes saved
+turns but is not secure erasure of backups or SQLite remnants. Credentials,
+search text and rename drafts remain in memory. Run evals/browser_sessions.mjs
+with the Playwright package path, owner token file and output JSON path; it creates
+and deletes only its own new conversation against the real local engine.

@@ -1,0 +1,18 @@
+node:internal/modules/run_main:107
+    triggerUncaughtException(
+    ^
+
+AssertionError [ERR_ASSERTION]: Expected values to be strictly equal:
+
+413 !== 401
+
+    at file:///C:/Users/aviroop/Desktop/Sanctum/evals/browser_sessions.mjs:18:9 {
+  generatedMessage: true,
+  code: 'ERR_ASSERTION',
+  actual: 413,
+  expected: 401,
+  operator: 'strictEqual',
+  diff: 'simple'
+}
+
+Node.js v24.14.0
