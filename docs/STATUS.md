@@ -1,7 +1,7 @@
 # Current state
 
-- Step: Step 1-pre committed/hosted green; Step1a ticket primitive in progress.
-- Last green commit: `d4e0d62`; all five hosted jobs verified; no phase tags.
+- Step: Step 1-pre committed/hosted green; Step1a internal ticket primitive green; endpoint/transport pending.
+- Last green commit: `cd48941`; all five hosted jobs verified; no phase tags.
 - Blockers: held authenticated WebSocket PENDING Step 1a; T1 latency and physical audio UNVERIFIED.
 - Next: implement authenticated WebSocket; run >=10min held-session/mixed gate; begin Step U source/license audit.
 
@@ -400,3 +400,11 @@ supervisor scenarios/zero survivors (`.sanctum/realtime-ticket-rust.log`). Initi
 contract failure retained; named evidence manifest records log hashes. This is
 only a tested internal primitive, not completion of Step1a. Next: actual ticket endpoint, maintained
 WebSocket transport under guarded admission, then>=600s held gate. No phase tag.
+
+Preparatory ticket commit `cd48941` pushed; hosted
+[run38114800153](https://github.com/avirooppal/Sanctum/actions/runs/38114800153)
+exact SHA observed all five jobs completed/success. Final process inventory found
+no runtime/llama/Parakeet/probe workers. Existing unrelated untracked files retained.
+Next three slices: ticket HTTP endpoint plus versioned WebSocket contract/transport;
+real600s held/mixed gates; Step U source discovery/license audit. Full roadmap and
+final acceptance remain incomplete; no hardware-only label for unbuilt software.

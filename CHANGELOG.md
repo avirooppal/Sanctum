@@ -1,3 +1,7 @@
+## 2026-10-11 - Step 1a preparation
+
+- Add bounded memory-only single-use realtime ticket store and contract/security tests; endpoint and WebSocket transport remain pending. Predeclare limits and held-session criteria in ADR0047.
+
 ## 2026-10-11 - Step 1-pre
 
 - Measure confined Parakeet residency and Flite launch/synthesis cost; update ADR0032 and review queue. Resident product workers and WebSocket remain pending.
