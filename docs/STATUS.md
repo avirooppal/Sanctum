@@ -1,8 +1,8 @@
 # Current state
 
 - Mission: [MISSION.md](MISSION.md), Amendment1; single owner ADR0027.
-- Step: U2 adapter implemented/tested on `ui-hermes-port`; visual port pending.
-- Last hosted-green: `44d8be5`, run38124710606/all5 jobs PASS.
+- Step: U1 notices/U2 adapter and native primitives verified; visual port pending.
+- Last hosted-green: `f6e4963`, run38126950932/all5 jobs PASS.
 - Open blockers: none for UI; T1/GPU/physical audio/native targets UNVERIFIED.
 - Next three steps: licensed tokens/primitives/shell; complete screen mapping;
   isolated upstream reference plus fidelity/egress/accessibility gates.
@@ -65,4 +65,4 @@ ui-primitives-* raw logs/results preserve this run; prior measurements restored.
 Bundle actual JS212.24kB/gzip67.70kB, CSS15.05kB/gzip3.98kB (diagnostic, no new
 performance pass threshold claimed). No new npm/font/icon dependency. Existing
 palette retained until the full theme port; U6 fidelity/axe/WS egress pending.
-Candidate slice commit/hosted CI next; no merge or release tag.
+Slice f6e4963 pushed; exact hosted run38126950932/all5 jobs PASS. No merge or release tag.
