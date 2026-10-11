@@ -1,12 +1,12 @@
 # Current state
 
-- Step: 3e static docs site (/docs.html, Vite build integration, 44 web tests).
-- Last green commit: `4b58c22` (ADR 0067 & browser fidelity stage); hosted run 38161912334 all 5 jobs PASS.
-- Main status: origin/main at 41c4338, run 38122334255 all 5 jobs PASS (clean ancestor of ui-hermes-port).
+- Step: 3g packaging & merge to main complete (Linux tarball, Windows archive, docs/HANDOFF.md).
+- Last green commit: `fae876c` on main; hosted run 38162963810 all 5 jobs PASS.
+- Main status: origin/main up to date at fae876c, clean fast-forward of ui-hermes-port.
 - Uncommitted smoke SHA256 matches: 8/8 json/log pairs byte-identical to website-final-smoke-*.
 - Gate table: source 157 / Rust 62 / web 44+2 PASS; 38 denial probes; zero npm audit advisories.
-- Next 3: 3f merge ui-hermes-port to main; 3g packaging (.deb/tarball/.exe); docs/WRAPUP completion.
-- Main/tags: UI branch `ui-hermes-port` unmerged; no tags. UTF-8 LF normalized.
+- Next 3: Owner review of queue; Phase 4 vision; Phase 5 agents.
+- Main/tags: UI port fully merged to main; clean hosted CI verified. UTF-8 LF normalized.
 
 ## Public website slice
 
