@@ -1,0 +1,49 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 960 600" width="100%" height="100%" style="background:#0f1412; font-family:sans-serif;">
+  <rect width="960" height="600" fill="#0f1412"/>
+  
+  <!-- Header Bar -->
+  <rect x="0" y="0" width="960" height="50" fill="#121815" stroke="#283832"/>
+  <text x="30" y="32" fill="#e8efe9" font-size="16" font-weight="bold">Sanctum Voice Workspace</text>
+  <rect x="760" y="14" width="170" height="24" rx="12" fill="#1c2622"/>
+  <circle cx="775" cy="26" r="4" fill="#34d399"/>
+  <text x="786" y="30" fill="#34d399" font-size="11" font-weight="bold">VAD Active • Barge-in Ready</text>
+
+  <!-- Left Turn History -->
+  <rect x="40" y="70" width="480" height="400" rx="8" fill="#151c19" stroke="#283832"/>
+  <text x="60" y="100" fill="#9fb3a4" font-size="12" font-weight="bold">VOICE TRANSCRIPT</text>
+  
+  <text x="60" y="135" fill="#48a87b" font-size="12">You (Speech):</text>
+  <text x="60" y="155" fill="#e8efe9" font-size="13">"Give me a breakdown of the trial patient demographics."</text>
+  
+  <text x="60" y="195" fill="#9fb3a4" font-size="12">Sanctum (Audio playing):</text>
+  <text x="60" y="215" fill="#e8efe9" font-size="13">"The patient population consisted of 54% female, 46% male,"</text>
+  <text x="60" y="235" fill="#e8efe9" font-size="13">"with a median age of 58.2 years across all cohorts..."</text>
+  
+  <!-- Interrupted banner -->
+  <rect x="60" y="260" width="440" height="32" rx="4" fill="#281c1c" stroke="#f87171" stroke-dasharray="4 2"/>
+  <text x="75" y="281" fill="#f87171" font-size="12" font-weight="bold">⚡ Barge-in detected: Audio playback stopped instantly</text>
+  
+  <text x="60" y="325" fill="#48a87b" font-size="12">You (Barge-in speech):</text>
+  <text x="60" y="345" fill="#e8efe9" font-size="13">"Wait, what about the age cutoff for cohort C?"</text>
+
+  <!-- Right Visualizer & Microphone status -->
+  <rect x="550" y="70" width="370" height="400" rx="8" fill="#151c19" stroke="#283832"/>
+  <text x="580" y="100" fill="#9fb3a4" font-size="12" font-weight="bold">REAL-TIME AUDIO &amp; VAD METRICS</text>
+  
+  <!-- Waveform pulse -->
+  <circle cx="735" cy="210" r="60" fill="#1c2622" stroke="#48a87b" stroke-width="2"/>
+  <circle cx="735" cy="210" r="45" fill="#23583f"/>
+  <path d="M 685 210 Q 710 180 735 210 T 785 210" stroke="#ffffff" stroke-width="3" fill="none"/>
+  
+  <text x="690" y="300" fill="#34d399" font-size="14" font-weight="bold">Listening (Silero VAD)</text>
+  <text x="645" y="325" fill="#9fb3a4" font-size="12">Whisper.cpp / Parakeet ASR • Flite TTS</text>
+  <text x="660" y="345" fill="#758b7b" font-size="11">Latency: 182ms • Interruption: 42ms</text>
+
+  <!-- Bottom Voice Controls -->
+  <rect x="40" y="490" width="880" height="70" rx="8" fill="#121815" stroke="#283832"/>
+  <rect x="60" y="505" width="130" height="40" rx="4" fill="#f87171"/>
+  <text x="85" y="530" fill="#0f1412" font-size="13" font-weight="bold">Mute Mic (Ctrl+M)</text>
+  <rect x="205" y="505" width="140" height="40" rx="4" fill="#1c2622" stroke="#283832"/>
+  <text x="225" y="530" fill="#e8efe9" font-size="13">Barge-in: Enabled</text>
+  <text x="580" y="530" fill="#9fb3a4" font-size="12">Zero cloud voice transfer • Native PCM 16kHz audio worklet</text>
+</svg>

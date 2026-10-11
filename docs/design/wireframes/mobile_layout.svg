@@ -1,0 +1,51 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 390 844" width="100%" height="100%" style="background:#0f1412; font-family:sans-serif;">
+  <rect width="390" height="844" fill="#0f1412"/>
+  
+  <!-- Mobile Status Bar -->
+  <rect x="0" y="0" width="390" height="44" fill="#121815"/>
+  <text x="25" y="28" fill="#e8efe9" font-size="12" font-weight="bold">9:41</text>
+  <rect x="330" y="18" width="24" height="12" rx="3" fill="#e8efe9"/>
+
+  <!-- Top Navigation Header (Height 56px, touch targets >= 44px) -->
+  <rect x="0" y="44" width="390" height="56" fill="#151c19" stroke="#283832"/>
+  <!-- Hamburger menu button -->
+  <rect x="12" y="50" width="44" height="44" rx="6" fill="#1c2622"/>
+  <line x1="22" y1="64" x2="46" y2="64" stroke="#e8efe9" stroke-width="2"/>
+  <line x1="22" y1="72" x2="46" y2="72" stroke="#e8efe9" stroke-width="2"/>
+  <line x1="22" y1="80" x2="46" y2="80" stroke="#e8efe9" stroke-width="2"/>
+  
+  <text x="70" y="77" fill="#e8efe9" font-size="15" font-weight="bold">Clinical Review</text>
+  <rect x="250" y="56" width="125" height="32" rx="16" fill="#1c2622" stroke="#48a87b"/>
+  <text x="265" y="76" fill="#48a87b" font-size="11" font-weight="bold">Qwen 2.5 7B</text>
+
+  <!-- Mobile Chat Stream -->
+  <!-- User Message -->
+  <rect x="80" y="120" width="290" height="60" rx="8" fill="#23583f"/>
+  <text x="95" y="145" fill="#ffffff" font-size="13">What were the trial</text>
+  <text x="95" y="165" fill="#ffffff" font-size="13">inclusion criteria?</text>
+
+  <!-- Assistant Message -->
+  <rect x="15" y="200" width="355" height="180" rx="8" fill="#151c19" stroke="#283832"/>
+  <text x="30" y="225" fill="#9fb3a4" font-size="11">Sanctum • On-device</text>
+  <text x="30" y="250" fill="#e8efe9" font-size="13">Adults aged 18-75 with confirmed</text>
+  <text x="30" y="270" fill="#e8efe9" font-size="13">diagnosis and no prior biologics.</text>
+  <!-- Citation Chip -->
+  <rect x="30" y="290" width="180" height="28" rx="4" fill="#1c2622" stroke="#48a87b"/>
+  <text x="42" y="308" fill="#48a87b" font-size="11" font-weight="bold">[Doc 1: protocol.pdf #3]</text>
+
+  <!-- Mobile Composer Bar (Fixed Bottom) -->
+  <rect x="0" y="730" width="390" height="70" fill="#151c19" stroke="#283832"/>
+  <!-- Attachment / Mic Button (min touch target 44px) -->
+  <rect x="10" y="743" width="44" height="44" rx="6" fill="#1c2622"/>
+  <text x="25" y="771" fill="#48a87b" font-size="18">🎤</text>
+  
+  <rect x="64" y="743" width="250" height="44" rx="6" fill="#0f1412" stroke="#283832"/>
+  <text x="80" y="770" fill="#758b7b" font-size="13">Ask Sanctum...</text>
+  
+  <!-- Send Button (min touch target 44px) -->
+  <rect x="325" y="743" width="48" height="44" rx="6" fill="#48a87b"/>
+  <text x="342" y="770" fill="#0f1412" font-size="16" font-weight="bold">↑</text>
+
+  <!-- Bottom Home Bar Indicator -->
+  <rect x="125" y="828" width="140" height="5" rx="2.5" fill="#e8efe9" opacity="0.4"/>
+</svg>
