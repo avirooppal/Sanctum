@@ -17,6 +17,18 @@ use std::{
 
 type Result<T> = std::result::Result<T, Box<dyn Error + Send + Sync>>;
 
+fn cache_policy(role: &str) -> [&'static str; 3] {
+    [
+        "--cache-ram",
+        "0",
+        if role == "chat" {
+            "--cache-prompt"
+        } else {
+            "--no-cache-prompt"
+        },
+    ]
+}
+
 #[derive(Deserialize)]
 #[serde(deny_unknown_fields)]
 struct Artifact {
@@ -162,7 +174,8 @@ impl Chat {
                 .arg(config.threads.to_string())
                 .arg("--ctx-size")
                 .arg(config.context.to_string())
-                .args(["--parallel", "1", "--cache-ram", "0", "--no-cache-prompt"])
+                .args(["--parallel", "1"])
+                .args(cache_policy(role))
                 .env_clear()
                 .stdin(Stdio::null())
                 .stdout(Stdio::null())
@@ -657,7 +670,16 @@ fn respond(request: tiny_http::Request, status: u16, payload: Value) -> Result<(
 
 #[cfg(test)]
 mod config_tests {
-    use super::Config;
+    use super::{cache_policy, Config};
+
+    #[test]
+    fn fixed_slot_reuse_never_enables_host_snapshots_or_stateless_reuse() {
+        for role in ["chat", "embedding", "reranker"] {
+            let flags = cache_policy(role);
+            assert_eq!(&flags[..2], &["--cache-ram", "0"]);
+            assert_eq!(flags[2] == "--cache-prompt", role == "chat");
+        }
+    }
 
     #[test]
     fn existing_reference_config_remains_valid_without_speech() {

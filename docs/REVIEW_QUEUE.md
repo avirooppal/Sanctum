@@ -55,3 +55,12 @@ Small-corpus evidence only; cache-cost/KV-reuse measurement remains pending.
 | New decision | Evidence / proposed change | Relaxes gate? | Cost |
 |---|---|---|---|
 | [0044](adr/0044-bounded-slot-prefix-reuse.md), proposed | Current prefix reuse disabled; H3 off/on median2.512/0.357s; short-warm RSS+19072/+60704KiB. Propose RAM0 with chat slot reuse only | No; existing complete warmed storm, cancel, shutdown and mixed-load gates must pass before adoption | No snapshot reuse across unrelated conversations; production adoption/resource gate PENDING |
+| [0045](adr/0045-voice-deferral-accounting.md), proposed | Mixed ASR6.598s failed5s; idle2.347–2.619s. Count actual voice-blocked time, not earlier engine waiting, against2500ms deferral | No numeric gate change; timing-accounting semantics change is explicit | Queued chat may wait longer overall; unchanged chat/ASR5s and full real gates must pass |
+| [0046](adr/0046-cpu-inference-thread-experiment.md), experiment | Corrected timer mixed ASR8.550s still failed5s. Test existing inference threads2 instead of4, ASR6 unchanged | No gate/timeout/tolerance change; original profile retained while testing | Slower embedding/rerank possible; measure all gates/throughput before adoption |
+
+2026-10-11 adoption supplement (original proposal rows above retained):0044–0046
+combined configuration passed the final500 cancellations/floods,180s mixed gate,
+active and three repeated shutdowns. Retained RSS7376/14116KiB, bounds unchanged.
+One-input ingestion throughput+22.905242% against original four-thread profile on
+the small real corpus. Both failed mixed candidates remain named evidence. See ADR
+follow-ups and STATUS; this does not waive T1 voice latency or held-WS requirements.

@@ -1,0 +1,33 @@
+{
+  "suite": "five-idle-asr-diagnostics",
+  "audio_sha256": "59dfb9a4acb36fe2a2affc14bacbee2920ff435cb13cc314a08c13f66ba7860e",
+  "model": "asr-parakeet-q4k-reference",
+  "threads": 6,
+  "samples": [
+    {
+      "sample": 0,
+      "seconds": 2.5856628399924375,
+      "text": "And so, my fellow Americans, ask not what your country can do for you, ask what you can do for your country."
+    },
+    {
+      "sample": 1,
+      "seconds": 2.5224426409986336,
+      "text": "And so, my fellow Americans, ask not what your country can do for you, ask what you can do for your country."
+    },
+    {
+      "sample": 2,
+      "seconds": 2.460028923000209,
+      "text": "And so, my fellow Americans, ask not what your country can do for you, ask what you can do for your country."
+    },
+    {
+      "sample": 3,
+      "seconds": 2.6185165719944052,
+      "text": "And so, my fellow Americans, ask not what your country can do for you, ask what you can do for your country."
+    },
+    {
+      "sample": 4,
+      "seconds": 2.346713473001728,
+      "text": "And so, my fellow Americans, ask not what your country can do for you, ask what you can do for your country."
+    }
+  ]
+}

@@ -1,0 +1,261 @@
+{
+  "mode": "reranker",
+  "cancel_method": "explicit",
+  "samples": [
+    {
+      "slot_release_seconds": 0.13816389100975357,
+      "owned_processes_at_cancel": 8,
+      "compute_release_seconds": 1.1690280369948596
+    },
+    {
+      "slot_release_seconds": 0.12225730900536291,
+      "owned_processes_at_cancel": 8,
+      "compute_release_seconds": 1.3774074730172288
+    },
+    {
+      "slot_release_seconds": 0.12255784901208244,
+      "owned_processes_at_cancel": 8,
+      "compute_release_seconds": 1.3191592119983397
+    },
+    {
+      "slot_release_seconds": 0.15179413399891928,
+      "owned_processes_at_cancel": 8,
+      "compute_release_seconds": 1.3720509289996698
+    },
+    {
+      "slot_release_seconds": 0.12203635700279847,
+      "owned_processes_at_cancel": 8,
+      "compute_release_seconds": 1.3035487479937728
+    },
+    {
+      "slot_release_seconds": 0.12240146199474111,
+      "owned_processes_at_cancel": 8,
+      "compute_release_seconds": 1.2703368680085987
+    },
+    {
+      "slot_release_seconds": 0.1389223129954189,
+      "owned_processes_at_cancel": 8,
+      "compute_release_seconds": 1.4829408910009079
+    },
+    {
+      "slot_release_seconds": 0.13676391300396062,
+      "owned_processes_at_cancel": 8,
+      "compute_release_seconds": 1.346883202000754
+    },
+    {
+      "slot_release_seconds": 0.15195741900242865,
+      "owned_processes_at_cancel": 8,
+      "compute_release_seconds": 1.1588558799994644
+    },
+    {
+      "slot_release_seconds": 0.12228831701213494,
+      "owned_processes_at_cancel": 8,
+      "compute_release_seconds": 1.152054008009145
+    },
+    {
+      "slot_release_seconds": 0.13815795900882222,
+      "owned_processes_at_cancel": 8,
+      "compute_release_seconds": 1.196112853998784
+    },
+    {
+      "slot_release_seconds": 0.11937491502612829,
+      "owned_processes_at_cancel": 8,
+      "compute_release_seconds": 1.1965450470161159
+    },
+    {
+      "slot_release_seconds": 0.122179101977963,
+      "owned_processes_at_cancel": 8,
+      "compute_release_seconds": 1.1682474789849948
+    },
+    {
+      "slot_release_seconds": 0.12126059897127561,
+      "owned_processes_at_cancel": 8,
+      "compute_release_seconds": 1.1575246509746648
+    },
+    {
+      "slot_release_seconds": 0.13846535101765767,
+      "owned_processes_at_cancel": 8,
+      "compute_release_seconds": 1.3962641840043943
+    },
+    {
+      "slot_release_seconds": 0.1551369299995713,
+      "owned_processes_at_cancel": 8,
+      "compute_release_seconds": 1.5039558880089317
+    },
+    {
+      "slot_release_seconds": 0.1395201130071655,
+      "owned_processes_at_cancel": 8,
+      "compute_release_seconds": 1.533082423004089
+    },
+    {
+      "slot_release_seconds": 0.1221647769853007,
+      "owned_processes_at_cancel": 8,
+      "compute_release_seconds": 1.4266497159842402
+    },
+    {
+      "slot_release_seconds": 0.14127744297729805,
+      "owned_processes_at_cancel": 8,
+      "compute_release_seconds": 1.4424739879905246
+    },
+    {
+      "slot_release_seconds": 0.12241673201788217,
+      "owned_processes_at_cancel": 8,
+      "compute_release_seconds": 1.2745443329913542
+    },
+    {
+      "slot_release_seconds": 0.11965225500171073,
+      "owned_processes_at_cancel": 8,
+      "compute_release_seconds": 1.1024343740136828
+    },
+    {
+      "slot_release_seconds": 0.12250083399703726,
+      "owned_processes_at_cancel": 8,
+      "compute_release_seconds": 1.1655896570009645
+    },
+    {
+      "slot_release_seconds": 0.12086430302588269,
+      "owned_processes_at_cancel": 8,
+      "compute_release_seconds": 1.3028927610139363
+    },
+    {
+      "slot_release_seconds": 0.12316935902344994,
+      "owned_processes_at_cancel": 8,
+      "compute_release_seconds": 1.2962098280258942
+    },
+    {
+      "slot_release_seconds": 0.13690216300892644,
+      "owned_processes_at_cancel": 8,
+      "compute_release_seconds": 1.3463573009939864
+    },
+    {
+      "slot_release_seconds": 0.12036982399877161,
+      "owned_processes_at_cancel": 8,
+      "compute_release_seconds": 1.3208503729838412
+    },
+    {
+      "slot_release_seconds": 0.12400594700011425,
+      "owned_processes_at_cancel": 8,
+      "compute_release_seconds": 1.2253440950007644
+    },
+    {
+      "slot_release_seconds": 0.13527646198053844,
+      "owned_processes_at_cancel": 8,
+      "compute_release_seconds": 1.2488004459883086
+    },
+    {
+      "slot_release_seconds": 0.13854917301796377,
+      "owned_processes_at_cancel": 8,
+      "compute_release_seconds": 1.3198941720183939
+    },
+    {
+      "slot_release_seconds": 0.11833653599023819,
+      "owned_processes_at_cancel": 8,
+      "compute_release_seconds": 1.1556327090074774
+    },
+    {
+      "slot_release_seconds": 0.11969907899037935,
+      "owned_processes_at_cancel": 8,
+      "compute_release_seconds": 1.1395912019943353
+    },
+    {
+      "slot_release_seconds": 0.12384325300808996,
+      "owned_processes_at_cancel": 8,
+      "compute_release_seconds": 1.1132008309941739
+    },
+    {
+      "slot_release_seconds": 0.14029916300205514,
+      "owned_processes_at_cancel": 8,
+      "compute_release_seconds": 1.2575361659983173
+    },
+    {
+      "slot_release_seconds": 0.12386500200955197,
+      "owned_processes_at_cancel": 8,
+      "compute_release_seconds": 1.2349580220179632
+    },
+    {
+      "slot_release_seconds": 0.13861469400580972,
+      "owned_processes_at_cancel": 8,
+      "compute_release_seconds": 1.1428671790054068
+    },
+    {
+      "slot_release_seconds": 0.13792280800407752,
+      "owned_processes_at_cancel": 8,
+      "compute_release_seconds": 1.1177509489934891
+    },
+    {
+      "slot_release_seconds": 0.12257767899427563,
+      "owned_processes_at_cancel": 8,
+      "compute_release_seconds": 1.2780089429870714
+    },
+    {
+      "slot_release_seconds": 0.1386468110140413,
+      "owned_processes_at_cancel": 8,
+      "compute_release_seconds": 1.2386325389961712
+    },
+    {
+      "slot_release_seconds": 0.12376346500241198,
+      "owned_processes_at_cancel": 8,
+      "compute_release_seconds": 1.1181028700084426
+    },
+    {
+      "slot_release_seconds": 0.13963082499685697,
+      "owned_processes_at_cancel": 8,
+      "compute_release_seconds": 1.272766103997128
+    },
+    {
+      "slot_release_seconds": 0.12351315098931082,
+      "owned_processes_at_cancel": 8,
+      "compute_release_seconds": 1.2087388850050047
+    },
+    {
+      "slot_release_seconds": 0.1228735170152504,
+      "owned_processes_at_cancel": 8,
+      "compute_release_seconds": 1.0895629610167816
+    },
+    {
+      "slot_release_seconds": 0.1366784060082864,
+      "owned_processes_at_cancel": 8,
+      "compute_release_seconds": 1.0828671930066776
+    },
+    {
+      "slot_release_seconds": 0.14061286399373785,
+      "owned_processes_at_cancel": 8,
+      "compute_release_seconds": 1.1579814699944109
+    },
+    {
+      "slot_release_seconds": 0.12463679900974967,
+      "owned_processes_at_cancel": 8,
+      "compute_release_seconds": 1.2021805880067404
+    },
+    {
+      "slot_release_seconds": 0.12251785097760148,
+      "owned_processes_at_cancel": 8,
+      "compute_release_seconds": 1.0736248299945146
+    },
+    {
+      "slot_release_seconds": 0.15402431899565272,
+      "owned_processes_at_cancel": 8,
+      "compute_release_seconds": 1.2013873909891117
+    },
+    {
+      "slot_release_seconds": 0.12492954600020312,
+      "owned_processes_at_cancel": 8,
+      "compute_release_seconds": 1.2034959369921125
+    },
+    {
+      "slot_release_seconds": 0.13871016399934888,
+      "owned_processes_at_cancel": 8,
+      "compute_release_seconds": 1.2965350990125444
+    },
+    {
+      "slot_release_seconds": 0.14361754301353358,
+      "owned_processes_at_cancel": 8,
+      "compute_release_seconds": 1.437322091020178
+    }
+  ],
+  "scope": "Gateway release, real model slot idle or speech PID absence, recovery; not full leak/overload gate",
+  "p95_seconds": 0.15195741900242865,
+  "max_seconds": 0.1551369299995713,
+  "compute_p95_seconds": 1.4829408910009079,
+  "compute_max_seconds": 1.533082423004089
+}

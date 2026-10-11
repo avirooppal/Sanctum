@@ -73,3 +73,10 @@ Mixed gate: `python evals/mixed_engine_overload.py --pid <pid> --token-file
 <state>/local.token --runtime-config <config> --output <result.json>` (>=180s).
 ADR 0041 declares its bounds; ADR 0043 documents measured CPU priority refinements.
 The held-upload actor rotates at its idle deadline; real WebSocket remains Step 1a.
+
+Reference inference policy: RAM snapshots0; fixed chat slot-prefix reuse enabled,
+embedding/rerank stateless. `profiles/runtime-cpu.json` uses two inference threads;
+the measured speech reference retains six. See ADR0044–0046 and
+`docs/contracts/inference-cache-policy-v1.md` for gates, costs and retained failures.
+Voice deferral counts actual blocked intervals and remains capped2500ms; model
+waiting cannot spend it before a voice job begins. Caller deadlines remain absolute.

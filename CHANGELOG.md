@@ -1,5 +1,15 @@
 # Changelog
 
+## 2026-10-11 - Bounded chat prefix reuse and measured CPU budgets
+
+- Enable fixed chat-slot prefix reuse with RAM snapshots disabled; keep embedding
+  and reranking stateless. Count actual voice deferral within the unchanged budget.
+- Select two inference threads in the CPU reference after real cancellation,
+  mixed-load, repeated shutdown, SDK and ingestion-throughput gates.
+- Preserve failed candidates and review decisions; held WebSocket and T1 speech
+  gates remain pending.
+
+
 ## 2026-10-11 - Ingress disconnect cleanup ordering
 
 - Remove idle peer-context association before publishing disconnect; preserve the

@@ -1,9 +1,9 @@
 # Current state
 
-- Step: H3 ingestion/cache cost measurements before Step 1a; Step 0 HTTP reference passed.
-- Last green commit: `21077ec`; all five hosted jobs verified; no phase tags.
+- Step: final H3/H4 adoption checks before Step 1-pre/1a; HTTP gates pass.
+- Last green commit: `16c2b46`; all five hosted jobs verified; no phase tags.
 - Blockers: held authenticated WebSocket PENDING Step 1a; T1 latency and physical audio UNVERIFIED.
-- Next: gate chat slot-only policy; warm-worker ADR; authenticated WebSocket.
+- Next: commit/push verified H3 policy; warm-worker ADR; authenticated WebSocket.
 
 | Step 0 gate | Historical measured result (details in archive) |
 |---|---|
@@ -193,3 +193,139 @@ ingress` PASS5/5; full Linux `bash tools/check_rust.sh` PASS50, fmt/clippy,74 li
 cache-policy test; the ingress correction itself changes no cache flags or tests.
 Candidate binary build PASS; live real-engine gates next, with no binary rebuild
 while helpers run. No failing run counted green or threshold changed.
+
+Candidate real-feature checks: SDK8/8 PASS (chat0.4439s, TTFT0.4355s, dims1024),
+Knowledge upload/ACL retrieval/cited amber answer/empty abstention PASS4/4. Named
+`slot-policy-sdk.json` and `slot-policy-knowledge.json` preserve current results;
+original historical result files restored. One complete20-sensor rerank warmup
+PASS20 hits, exactly one repetition, before the unchanged representative storm
+baseline. Full `engine_storms.py --pid 690 --runtime-config .sanctum/runtime-dispatch.json
+--token-file <state>/local.token --output evals/results/slot-policy-storms.json`
+running; no storm pass claim yet. No runtime binary rebuild while it runs.
+Ingress fix `16c2b46` pushed; run38105565622 observed all five hosted jobs PASS.
+
+## Candidate slot-policy real storm gate
+
+Same recorded `engine_storms.py` command: PASS exit0,500 real cancellations,
+50 per engine/method. Exact process-role/FD/socket restoration, threads within+2,
+worst retained per-role RSS **+13312KiB <=16384** after10s. No tolerance changed.
+Model slot observation for chat/embedding/rerank; actual CLI PID absence for speech
+job cleanup. This is not warm speech, real microphone playback or voice-turn latency.
+
+| Engine / method | Gateway p95 s | Compute/job release p95 s | Maximum s |
+|---|---:|---:|---:|
+| chat disconnect | 0.134418 | 0.169226 | 0.175269 |
+| chat explicit | 0.046148 | 0.075398 | 0.083065 |
+| Knowledge disconnect | 0.199744 | 1.668214 | 1.967204 |
+| Knowledge explicit | 0.150642 | 1.685517 | 1.768396 |
+| reranker disconnect | 0.223562 | 1.318714 | 2.459583 |
+| reranker explicit | 0.151957 | 1.482941 | 1.533082 |
+| ASR disconnect | 0.247569 | 0.260113 | 0.349928 |
+| ASR explicit | 0.155074 | 0.172100 | 0.189335 |
+| TTS disconnect | 0.240726 | 0.251654 | 0.255964 |
+| TTS explicit | 0.162599 | 0.173585 | 0.187457 |
+
+All unchanged absolute bounds pass: p95<=2s/max<3s. Floods:50 disconnect attempts
+(6 started,44 shed),16 slow readers(6 started,10 shed),100 overload attempts
+(4 started,66 shed,30 closed/refused), with resource comparisons passing each.
+Refusals distinct from HTTP503. Every sample/snapshot retained in
+`slot-policy-storms.json` and `slot-policy-storms-<mode>-<method>.json`.
+
+Sustained180s mixed gate running via `mixed_engine_overload.py --pid 690
+--runtime-config .sanctum/runtime-dispatch.json --seconds 180 --token-file
+<state>/local.token --output evals/results/slot-policy-mixed-overload.json`.
+Then active/repeated shutdown. No full candidate gate/pass or production commit yet.
+
+## Candidate mixed-load failure and voice-accounting experiment
+
+Old-timer candidate mixed run FAILED after183.030373s: ASR p95 **6.597817s >5s**.
+Health/models0.015382/0.016322s, chat4.042272s, TTS2.064679s, voice-admission0.123684s;
+no foreground errors;12326 background503s. Named failed JSON preserved. Failure
+occurred before final resource-gate evaluation; do not infer that it passed.
+Five idle real ASR files:2.585663/2.522443/2.460029/2.618517/2.346713s, identical
+transcripts (`slot-policy-idle-asr.json`). Contention diagnosis, not a gate rerun.
+
+ADR0045/REVIEW_QUEUE before implementation. Regression first FAILED:700ms prior
+engine wait left only1.806128s voice protection. Correct accounting charges actual
+voice-blocked intervals to the unchanged2500ms allowance; caller deadline unchanged.
+Original continuous-voice/background tests retained; targeted suite PASS2/2. Full
+Rust gate PASS51, fmt/clippy,74 licenses,38 kernel probes/startup and supervision
+(`.sanctum/voice-accounting-rust.log`). Candidate build PASS; restarting for new
+mixed gate, then rerun complete storms and shutdown with this final code if it passes.
+
+Before rebuilding: real active shutdown PASS0.983114s, listener0.184754s, zero
+survivors (`slot-policy-active-shutdown-before-scheduling-fix.json`). No main
+production-policy commit or phase tag; cache/timer changes remain candidates.
+
+Corrected-timer mixed run FAILED183.519277s: ASR p95 **8.550405s >5s**, chat4.727241s,
+health/models0.013919/0.013831s, TTS2.006524s, voice-admission0.082992s, no foreground
+errors;12615 background503s. Failed named raw result retained. Correct timer
+accounting is contract-verified but did not solve the load tail. No adoption/pass.
+Active shutdown on that code PASS0.832423s, listener0.193139s, zero survivors.
+ADR0046/REVIEW_QUEUE predeclare diagnostic inference threads2 versus4 using existing
+config, ASR6 unchanged. Original config/profile unchanged. New runtime starting,
+then same180s workload; no threshold change or automatic rerun-until-pass.
+
+Two-thread inference diagnostic runtime ready on8769, PID676. Same mixed harness
+now running with `.sanctum/runtime-dispatch-inference-threads2.json`,180s, output
+`evals/results/slot-policy-mixed-overload-inference-threads2.json`. Original4-thread
+config/profile unchanged; ASR6. No gate/pass claim before observed completion.
+
+Two-thread diagnostic mixed run PASS exit0:182.050947s; health/models p95
+0.007744/0.006122s (2916 samples each), chat3.121071s(157), ASR2.552289s(55),
+TTS0.870216s(54), voice admission0.066722s(109).12971 background503s, no foreground
+errors; queue peak2, process peak14, owned RSS peak3416240KiB. Exact role/FD/socket
+return, thread allowance and retained per-role RSS worst+14116KiB <=16384 PASS.
+Raw `slot-policy-mixed-overload-inference-threads2.json`. Original4-thread config
+remains unchanged; this is a candidate, not yet an adopted default.
+
+One complete20-candidate rerank warmup PASS before final fresh storm baseline;
+then unchanged500-cancellation `engine_storms.py --pid 676 --runtime-config
+.sanctum/runtime-dispatch-inference-threads2.json --token-file <state>/local.token
+--output evals/results/slot-policy-final-storms.json` running. All caller/resource
+bounds unchanged. After that: shutdown/repeated cycles and measured ingestion cost
+for the smaller CPU budget, then policy/profile adoption only if all gates pass.
+
+Final2-thread storm PASS exit0:500 cancellations and all floods; worst retained
+per-role RSS+7376KiB <=16384, exact process/FD/socket return, threads+2.
+Named `slot-policy-final-storms*.json` preserve every sample and comparison.
+Fresh SDKchat8/8 PASS (chat0.2989s, TTFT0.3560s); batch17x1024 PASS1.381675s,
+scalar difference0.0, usage126; Knowledge4/4 PASS. ASR/TTS SDK8/8 each PASS,
+first file ASR2.236245s, TTS1.491144s (speech suites also exercised serialized
+concurrent voice requests). Physical playback/voice-turn SLO explicitly unverified.
+Final active/queued/slow-body shutdown PASS0.701486s, listener0.189984s, zero
+survivors. Named results retained; original fixed-path historical files restored.
+
+Now measuring same3-document/23-chunk paired ingestion with inference2 config;
+no gateway running, no other model load test concurrently. Repeated active start/stop
+next; profile/policy adoption still pending these checks.
+
+Smaller-budget ingestion cost experiment PASS: same3 real docs/23 chunks,3 paired
+repetitions, raw `embedding-cost-inference-threads2.json`, vector difference0.0.
+Two-thread whole/one means10.145243/9.923005 documents/min,1.296337/1.267940 chunks/s.
+One-input versus whole cost-2.190560% on that config; one-input versus original
+four-thread one-input throughput **+22.905242%**. All samples preserved (including
+20.699542s first measured scalar run); no selection of only the fastest results.
+Small-corpus evidence only. Three repeated active start/stop cycles now running
+with the tested2-thread config (`slot-policy-final-repeated-shutdown.json`); no
+pass claim yet. Source baseline being rerun before reference-profile adoption.
+
+Three repeated active start/stop cycles PASS exit0: shutdown1.007190/0.770481/
+0.850773s, listener0.163524/0.176209/0.181616s, no survivors in every cycle; actual
+chat/ingest/ASR/queued work/slow body. All owned process resources vanished.
+Raw `slot-policy-final-repeated-shutdown.json` plus numbered result files.
+
+Adopt combined ADR0044-0046 only after these real gates: chat fixed-slot reuse with
+RAM snapshots0; stateless embedding/rerank; actual voice-blocked budget2500ms;
+CPU reference inference2/ASR6. Public reference profile now2; original ignored4-thread
+config preserved under explicit filename, operator smoke config updated to tested2.
+Source baseline PASS143 before profile edit. Final source/Rust checks now running;
+no production commit until those pass. No Step1/phase tags or T1/held-WS claim.
+
+Final post-adoption source `python tools/check.py` PASS143/all checks and Rust
+`bash tools/check_rust.sh` PASS51, fmt/clippy,74 licenses,38 denials/startup and
+supervision (`.sanctum/h3-adoption-final-{source,rust}.log`). Web12/typecheck/build/
+audit0 passed this session; no frontend changes. H3 cost/gates complete for the
+Linux CPU reference; H4 hosted verification will follow the code push. Named
+config provenance records original hashes/model/engine artifacts and2/4 threads.
+No claim of real authenticated held-WS, warm speech, WER or T1 voice latency.

@@ -1,0 +1,118 @@
+{
+  "suite": "embedding-cost-v1",
+  "commit": "16c2b46f038fdb79baaa599145596d6a07fa3719",
+  "config_sha256": "6ada65048726cf3775925b112adfe9a0146139c4a7266e154b21919ade1470b3",
+  "hardware": {
+    "logical_cpus": 12,
+    "meminfo": "MemTotal:        7976128 kB\nMemFree:         4949268 kB\nMemAvailable:    6460380 kB\nBuffers:           74928 kB\nCached:          1452680 kB\nSwapCached:         2140 kB\nActive:           338028 kB\nInactive:        2130940 kB\nActive(anon):     139212 kB\nInactive(anon):   808976 kB\nActive(file):     198816 kB\nInactive(file):  1321964 kB\nUnevictable:           0 kB\nMlocked:               0 kB\nSwapTotal:       2097152 kB\nSwapFree:        1995040 kB\nDirty:               224 kB\nWriteback:            64 kB\nAnonPages:        941064 kB\nMapped:           983400 kB\nShmem:              6768 kB\nKReclaimable:     186332 kB\nSlab:             294020 kB\nSReclaimable:     186332 kB\nSUnreclaim:       107688 kB\nKernelStack:        8112 kB\nPageTables:        10716 kB\nSecPageTables:         0 kB\nNFS_Unstable:          0 kB\nBounce:                0 kB\nWritebackTmp:          0 kB\nCommitLimit:     6085216 kB\nCommitted_AS:    3890628 kB\nVmallocTotal:   34359738367 kB\nVmallocUsed:       37080 kB\nVmallocChunk:          0 kB\nPercpu:             9152 kB\nHardwareCorrupted:     0 kB\nAnonHugePages:         0 kB\nShmemHugePages:        0 kB\nShmemPmdMapped:        0 kB\nFileHugePages:         0 kB\nFilePmdMapped:         0 kB\nUnaccepted:            0 kB\nHugePages_Total:       0\nHugePages_Free:        0\nHugePages_Rsvd:        0\nHugePages_Surp:        0\nHugepagesize:       2048 kB\nHugetlb:               0 kB\nDirectMap4k:      136192 kB\nDirectMap2M:     5996544 kB\nDirectMap1G:    10485760 kB\n"
+  },
+  "corpus": [
+    {
+      "path": "docs/architecture.md",
+      "sha256": "b3c00c77fc90f180665a1f856d7d60e78c0e2eab14767837d4f95aae5b8209d5",
+      "chunks": 9
+    },
+    {
+      "path": "docs/threat-model.md",
+      "sha256": "35ae55e4ef0275bace9513a934c4e7f02e4910591e4d814c05c279a4fd1cc0a6",
+      "chunks": 8
+    },
+    {
+      "path": "docs/profiles.md",
+      "sha256": "22b7cf4bf0f005398c757cd4cd3f3df33a1b984344194d449d9eb46fdae89a8a",
+      "chunks": 6
+    }
+  ],
+  "model": {
+    "id": "embed-small-q8",
+    "artifact": {
+      "path": ".sanctum/artifacts/Qwen3-Embedding-0.6B-Q8_0.gguf",
+      "sha256": "06507c7b42688469c4e7298b0a1e16deff06caf291cf0a5b278c308249c3e439"
+    },
+    "port": 18082
+  },
+  "samples": [
+    {
+      "variant": "whole",
+      "repetition": -1,
+      "warmup": true,
+      "seconds": 25.318480176007142,
+      "documents": 3,
+      "chunks": 23,
+      "documents_per_minute": 7.109431480432051,
+      "chunks_per_second": 0.9084273558329843
+    },
+    {
+      "variant": "one",
+      "repetition": -1,
+      "warmup": true,
+      "seconds": 20.09153368198895,
+      "documents": 3,
+      "chunks": 23,
+      "documents_per_minute": 8.958997498601162,
+      "chunks_per_second": 1.1447607914879263
+    },
+    {
+      "variant": "one",
+      "repetition": 0,
+      "warmup": false,
+      "seconds": 20.69954203700763,
+      "documents": 3,
+      "chunks": 23,
+      "documents_per_minute": 8.695844559178527,
+      "chunks_per_second": 1.1111356936728116
+    },
+    {
+      "variant": "whole",
+      "repetition": 0,
+      "warmup": false,
+      "seconds": 17.796266744990135,
+      "documents": 3,
+      "chunks": 23,
+      "documents_per_minute": 10.114480895307562,
+      "chunks_per_second": 1.2924058921781885
+    },
+    {
+      "variant": "whole",
+      "repetition": 1,
+      "warmup": false,
+      "seconds": 17.29341080598533,
+      "documents": 3,
+      "chunks": 23,
+      "documents_per_minute": 10.408588682673354,
+      "chunks_per_second": 1.3299863316749285
+    },
+    {
+      "variant": "one",
+      "repetition": 1,
+      "warmup": false,
+      "seconds": 16.7270315939968,
+      "documents": 3,
+      "chunks": 23,
+      "documents_per_minute": 10.761024691589666,
+      "chunks_per_second": 1.375019821703124
+    },
+    {
+      "variant": "one",
+      "repetition": 2,
+      "warmup": false,
+      "seconds": 17.45514253998408,
+      "documents": 3,
+      "chunks": 23,
+      "documents_per_minute": 10.31214724186172,
+      "chunks_per_second": 1.3176632586823307
+    },
+    {
+      "variant": "whole",
+      "repetition": 2,
+      "warmup": false,
+      "seconds": 18.158597495988943,
+      "documents": 3,
+      "chunks": 23,
+      "documents_per_minute": 9.912659831782728,
+      "chunks_per_second": 1.2666176451722373
+    }
+  ],
+  "paired_vector_max_difference": 0.0,
+  "production_override": false
+}

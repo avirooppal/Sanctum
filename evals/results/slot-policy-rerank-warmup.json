@@ -1,0 +1,11 @@
+{
+  "suite": "one-complete-rerank-warmup",
+  "passed": true,
+  "hits": 20,
+  "document": {
+    "id": "2abcac6166d4498f948f91b34ba34160",
+    "sha256": "4897210ca7f7dea1364e6c1ad07940e7cb2dee480605a79e703cc23badb6a7ce",
+    "version": 1
+  },
+  "repetitions": 1
+}

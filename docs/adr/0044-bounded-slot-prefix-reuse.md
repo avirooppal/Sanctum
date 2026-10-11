@@ -33,3 +33,14 @@ Sources checked at pinned b11429:
 [argument definitions](https://github.com/ggml-org/llama.cpp/blob/b11429/common/arg.cpp),
 [actual reuse and final slot state](https://github.com/ggml-org/llama.cpp/blob/b11429/tools/server/server-context.cpp).
 This does not satisfy Phase3 voice latency and does not implement resident speech.
+
+## Adoption evidence, 2026-10-11
+
+Adopt chat fixed-slot reuse with RAM snapshots0 together with ADR0045 accounting
+and the measured ADR0046 two-thread inference reference. Four-thread candidate
+mixed failures remain preserved; do not claim cache flags alone met the load gate.
+Final500 real cancellations and all floods PASS, worst retained RSS+7376KiB;
+mixed182.050947s PASS all lanes/resource bounds, retained RSS worst+14116KiB;
+active shutdown0.701486s and repeated1.007190/0.770481/0.850773s, zero survivors.
+Raw `slot-policy-final-*`/`slot-policy-mixed-overload-inference-threads2.json`.
+No timing/resource bound changed. Source/Rust/profile checks and push follow.

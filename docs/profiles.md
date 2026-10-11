@@ -34,3 +34,12 @@ requires the documented local `/opt/sanctum-speech` artifacts and is not a unive
 hardware recommendation. Same-fixture transcripts matched at 2/4/6 thread settings;
 see `evals/results/asr-thread-candidates.json` and ADR 0043. Admission gives voice
 priority over background work and bounds interactive deferral to 2500ms.
+
+The CPU inference reference now uses two threads per engine (ADR0046), measured
+alongside the six-thread ASR reference. Chat reuses its fixed profile-limited slot
+KV prefix with host-RAM snapshots disabled; embeddings/reranking stay stateless
+(ADR0044). The2500ms foreground voice allowance counts voice-blocked intervals,
+not earlier waits behind another inference job (ADR0045). Original bounds remain.
+Three real-document ingestion repetitions improved one-input throughput22.9%
+against four threads;500 cancellation/resource cases and182s mixed load passed.
+This is reference-host evidence, not a universal thread-count recommendation.

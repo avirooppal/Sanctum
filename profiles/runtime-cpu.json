@@ -258,7 +258,7 @@
     },
     "port": 18082
   },
-  "threads": 4,
+  "threads": 2,
   "context": 2048,
   "state_dir": "~/.local/share/sanctum",
   "ui_dir": "apps/web/dist"

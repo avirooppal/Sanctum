@@ -79,17 +79,29 @@ fn wait_execution_kind(
     context: &sanctum_inference::cancellation::Cancellation,
     background: bool,
 ) -> io::Result<File> {
-    let started = std::time::Instant::now();
+    let voice_budget = std::time::Duration::from_millis(2500);
+    let mut voice_wait = std::time::Duration::ZERO;
+    let mut blocked_since: Option<std::time::Instant> = None;
     loop {
         context
             .check()
             .map_err(|error| io::Error::new(io::ErrorKind::ConnectionAborted, error))?;
-        if background || started.elapsed() < std::time::Duration::from_millis(2500) {
+        if background || voice_wait < voice_budget {
             match acquire(root, "voice-priority", 1, false) {
-                Ok(probe) => drop(probe),
+                Ok(probe) => {
+                    drop(probe);
+                    if let Some(started) = blocked_since.take() {
+                        voice_wait = (voice_wait + started.elapsed()).min(voice_budget);
+                    }
+                }
                 Err(error) if error.kind() == io::ErrorKind::WouldBlock => {
-                    std::thread::sleep(std::time::Duration::from_millis(10));
-                    continue;
+                    let started = blocked_since.get_or_insert_with(std::time::Instant::now);
+                    if background || voice_wait + started.elapsed() < voice_budget {
+                        std::thread::sleep(std::time::Duration::from_millis(10));
+                        continue;
+                    }
+                    voice_wait = voice_budget;
+                    blocked_since = None;
                 }
                 Err(error) => return Err(error),
             }

@@ -1,0 +1,6 @@
+{
+  "suite": "threads2-one-complete-rerank-warmup",
+  "passed": true,
+  "hits": 20,
+  "repetitions": 1
+}
