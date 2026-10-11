@@ -1,0 +1,49 @@
+
+> sanctum-web@0.1.0 test
+> tsc --outDir build/tests --noEmit false --target ES2022 --module NodeNext --moduleResolution NodeNext --jsx react-jsx --esModuleInterop src/speech.ts src/pcm.ts src/meeting.ts src/api.ts src/ui/primitives.tsx src/ui/themes.ts src/ui/AppShell.tsx && node --test tests/*.test.mjs && node --test ../../evals/tests/ui-font-metrics.test.mjs
+
+✔ default fetch retains the Window/global receiver (38.0815ms)
+✔ fixed same-origin requests omit cookies, reject redirects and never retry (1.4203ms)
+✔ models are validated and conversation IDs cannot change origin or path structure (1.4313ms)
+✔ stream decodes split Unicode and SSE lines without fabricated text (3.5265ms)
+✔ consumer cancellation releases stream and ignored fetch abort cannot yield stale text (1.1444ms)
+✔ ticket is in subprotocol only and abort closes the socket (1.2279ms)
+✔ invalid ticket and cancellation after ticket never open a socket (1.3905ms)
+✔ abort while waiting for a stalled stream releases the reader (9.0396ms)
+✔ meeting save uses restricted same-origin authenticated request (46.4478ms)
+✔ invalid workspace and oversized or blank input never send requests (1.3559ms)
+✔ failed writes are surfaced without retrying (0.8967ms)
+✔ encodes finite mono PCM16 with accurate WAV header and clamping (2.947ms)
+✔ bounded memory accepts no partial overflow and resets after discard (0.8434ms)
+✔ rejects nonfinite data without mutating captured audio (0.3431ms)
+✔ native button defaults to non-submit, preserves explicit submit and disabled (9.9239ms)
+✔ untrusted titles and field text remain escaped React text (2.5742ms)
+✔ dialog has a named native modal and escaped children without an injected close link (1.9378ms)
+✔ shell has one sidebar and main with explicitly connected native navigation control (1.9067ms)
+✔ uses same-origin multipart and bearer auth without storing credentials (36.5657ms)
+✔ stop discards stale audio even if fetch ignores abort (1.7355ms)
+✔ stop releases playback and next operation cannot reuse it (7.2825ms)
+✔ rejects oversized inputs and unexpected audio content types (6.3743ms)
+✔ core compiler preserves responsive and arbitrary-value application utilities (36.7013ms)
+✔ all pinned desktop and dashboard-only presets are available without upstream branding (1.4957ms)
+✔ pinned canonical palette values and mode pairs are retained (0.6057ms)
+✔ invalid IDs fail, tokens do not leak mutable palette references or remote URLs (2.8309ms)
+✔ worklet itself stops after 30 seconds even if UI messages are not handled (15.3278ms)
+ℹ tests 27
+ℹ suites 0
+ℹ pass 27
+ℹ fail 0
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 234.0121
+✔ identical raster is zero and multiple changed channels count one pixel (1.1336ms)
+✔ unequal, empty and malformed raster inputs fail (0.3528ms)
+ℹ tests 2
+ℹ suites 0
+ℹ pass 2
+ℹ fail 0
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 95.5854

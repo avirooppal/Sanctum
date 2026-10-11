@@ -24,6 +24,7 @@ try {
     const errors=[];
     page.on('pageerror',error=>errors.push(error.message));
     await page.goto(base.href);
+    if(viewport.width < 640)await page.getByRole('button',{name:'Open navigation',exact:true}).click();
     const opener=page.getByRole('button',{name:'Licenses',exact:true});
     await opener.focus(); await page.keyboard.press('Enter');
     const dialog=page.getByRole('dialog',{name:'Licenses',exact:true});

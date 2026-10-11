@@ -121,3 +121,5 @@ waiver; failing whitespace output retained and STATUS archive SHA256 recorded.
 ADR0060 notice-byte supplement: legal/evidence-only Git whitespace attributes
 preserve original upstream OFL trailing spaces and the exact aggregate notice.
 Named failed check retained; no source/test lint exception or quality gate waiver.
+
+| [0061](adr/0061-responsive-shell-stage.md) | Source-backed237px/640px chat rail, one sidebar subtree and bounded viewport | New1CSS-pixel geometry tolerance,100dvh/above-fold/focus assertions; server bounds unchanged | Prior250px assertion intentionally updated, all functional flows retained; full fidelity/axe pending |

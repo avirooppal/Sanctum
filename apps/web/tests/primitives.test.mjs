@@ -3,6 +3,7 @@ import assert from 'node:assert/strict';
 import React from 'react';
 import {renderToStaticMarkup} from 'react-dom/server';
 import {Button,Input,Card,Dialog} from '../build/tests/ui/primitives.js';
+import {AppShell} from '../build/tests/ui/AppShell.js';
 
 test('native button defaults to non-submit, preserves explicit submit and disabled',()=>{
   assert.match(renderToStaticMarkup(React.createElement(Button,{},'Open')),/type="button"/);
@@ -20,4 +21,12 @@ test('dialog has a named native modal and escaped children without an injected c
   const dialog=renderToStaticMarkup(React.createElement(Dialog,{open:false,title:'Licenses',onClose:()=>{}},'<script>run()</script>'));
   assert.match(dialog,/<dialog/);assert.match(dialog,/aria-labelledby=/);
   assert.match(dialog,/Close Licenses/);assert(!dialog.includes('<script>'));
+});
+test('shell has one sidebar and main with explicitly connected native navigation control',()=>{
+  const shell=renderToStaticMarkup(React.createElement(AppShell,{sidebar:'History',header:'Chat'},'Owner content'));
+  assert.equal((shell.match(/<aside/g)||[]).length,1);
+  assert.equal((shell.match(/<main/g)||[]).length,1);
+  assert.match(shell,/aria-controls="sanctum-navigation"/);
+  assert(shell.includes('Owner content'));
+  assert(!/portal|electron|iframe/i.test(shell));
 });

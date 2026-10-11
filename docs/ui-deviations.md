@@ -5,8 +5,8 @@ Reference source pinned in ADR0051; the full UI port is unfinished.
 Palette/token stage (ADR0059) now adapts the11 shared presets, Classic and four
 dashboard-only presets into16 local theme choices. Branded IDs/labels renamed.
 Semantic text uses opaque contrast-adjusted tiers rather than low-alpha desktop
-tiers. Current250px legacy layout and system fonts remain until renderer/font
-migration; this color-control stage is not the completed UI port or fidelity gate.
+tiers. That stage retained250px/system-font layout; ADR0060/61 subsequently admit
+font tiers and237px responsive rail. The full UI port/fidelity gate is unfinished.
 
 - Product identity is Sanctum. Upstream brand marks/names/links are omitted;
   copyright/permission notices remain in legal attribution.

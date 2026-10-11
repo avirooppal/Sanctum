@@ -36,7 +36,7 @@ until a theme is chosen; unverified upstream font and brand assets remain absent
 Theme/Mode controls apply16 pinned local palettes in memory without API writes,
 storage, remote fonts or update calls. `evals/browser_themes.mjs` exercises32
 theme/mode combinations at each of the three prescribed viewports. Current
-system fonts/legacy250px rail remain while full typography/shell fidelity is built.
+shell fonts remain system-provided while full typography/fidelity is built.
 
 Selected OFL fonts are now bundled and applied per component (ADR0060), with
 primary notices/source hashes in profiles/registry.json. No remote fonts or brand
@@ -44,6 +44,13 @@ assets. `python tools/web_font_assets.py` checks all shipped faces/notices offli
 and runs in normal source CI. `evals/browser_fonts.mjs <playwright> <output-json>`
 proves actual decoded faces under the unchanged CSP. Full per-theme typography
 and shell migration still remain; do not interpret this as full fidelity.
+
+The shell now uses the inspected237px desktop rail at640px and wider. On mobile,
+Open navigation shows one inert-background drawer; Escape/Close returns focus.
+Login stays in the first viewport; history and transcript scrolling are bounded.
+`evals/browser_shell.mjs` checks the three target viewports,639/640px boundaries
+and retained theme state through desktop/mobile/desktop resizing. Source and
+spacing decisions are ADR0061; full reference fidelity and axe remain pending.
 Local speech expands optional file dictation and playback controls. Enter configured
 ASR/TTS/voice IDs, choose a mono PCM16 16 kHz WAV, review the draft, then send.
 Read answer synthesizes the last response; Stop audio cancels browser delivery/playback.

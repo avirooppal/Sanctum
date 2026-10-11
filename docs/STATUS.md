@@ -1,77 +1,59 @@
 # Current state
 
 - Mission: [MISSION.md](MISSION.md), Amendment1; single owner ADR0027.
-- Step: U4 palette/token controls implemented on `ui-hermes-port`; full port pending.
-- Last hosted-green: `8d3e98c`, run38132080056/all5 jobs PASS.
+- Step: U4 responsive shell implemented on `ui-hermes-port`; full foundation pending.
+- Last hosted-green: `cf2aa5a`, run38132413786/all5 jobs PASS (font code8d3e98c also green).
 - Blockers: none for UI; T1/GPU/physical audio/native targets UNVERIFIED.
-- Next three steps:237px
-  responsive shell; isolated pinned reference/fidelity/axe/WS egress gates.
+- Next three steps: shell commit/push/exact CI; chat/history/model/knowledge screens;
+  isolated pinned reference, fidelity/axe/WS egress gates before U6 merge.
 
-| Gate | Latest actual results |
+| Gate | Latest observed results |
 |---|---|
-| Linux/Rust |157/57 PASS; fmt/lint/types/clippy;26/72/92 package licenses plus reviewed MIT source |
-| Egress/startup/supervision |38 denial/startup probes PASS;3 supervision scenarios/zero survivors |
-| Web |26 tests +2 metrics PASS; typecheck/build/npm audit0 |
-| Theme browser |96 theme/mode/viewport cases +3 system-mode checks; no foreign HTTP/storage/overflow |
-| Incremental smoke |6 real stages PASS; release_complete=false |
-| Full UI/product/release |NOT DONE; font/shell/fidelity/axe and later roadmap remain; no phase/release tags |
+| Linux/Rust |157/57 PASS; lint/fmt/types/clippy; licenses26/72/92 +5 font hashes |
+| Denial/startup/supervision |38 probes PASS;3 scenarios/zero survivors |
+| Web |27 tests +2 metrics PASS; typecheck/build/audit0 |
+| Real shell/themes/notices |5 viewports +resize PASS;96+system3 theme cases;3 notice cases |
+| Real feature regression |Incremental smoke6 PASS; meeting browser5; emulated microphone4 |
+| Full UI/product/release |NOT DONE; no reference fidelity/axe/packet-ledger/final release claim or tag |
 
 ## Preserved evidence
 
-All preceding STATUS narratives preserved verbatim in
-[native-primitives archive](status-archive/2026-10-11-native-primitives.md), SHA256
-`3c3bf6fbe5be3ac756c3cd0aa1ec69e2285ad3a9d5d6f664444f45cfeb4b25ea`.
-It links all older archives and their hashes, commits, real results and failures.
-No measurement deleted or rewritten. [REVIEW_QUEUE](REVIEW_QUEUE.md) preserves decisions.
+Previous STATUS copied verbatim to
+[font admission archive](status-archive/2026-10-11-font-admission.md), SHA256
+`b66fae25548c19c512cbdf301c84b9e562c03770c429c44981bdbbcd351b0323`.
+It links all older archives, hashes, actual commands/numbers, commits and failures.
+No recorded measurement deleted or rewritten. [REVIEW_QUEUE](REVIEW_QUEUE.md).
 
-Token slice: contract and3 tests first (missing module FAILED), then only pinned
-MIT shared palette/color files copied with exact notices and provenance.16 actual
-choices, in-memory light/dark/system controls; unknown IDs fail. Source registered
-in profiles/registry.json, no npm dependency added. Source hashes include both
-checkout bytes and canonical Git blobs; original checkout report retained.
-ADRs0056/59 describe palette rights, renamed identity and opaque semantic tiers.
-System mode added after its browser assertion FAILED first; listener cleaned up.
-Fonts remain system-provided; legacy250px layout remains until shell migration.
+Shell contract and real geometry test first FAILED against old250px rail. Native
+AppShell implements inspected237px rail/640px dock floor, single sidebar subtree,
+100dvh bounded history/transcript, mobile drawer/inert/focus trap/Escape/return.
+SSR single-sidebar/native-control test PASS. No backend/API capability altered.
+Source geometry hashes/provenance and1CSS-pixel tolerance recorded in ADR0061.
 
-Commands actually run: `npm test/typecheck/build`, `npm audit --audit-level=low`,
-`node evals/browser_themes.mjs <playwright> evals/results/ui-themes-browser.json`,
-`node evals/browser_licenses.mjs <playwright> evals/results/ui-themes-licenses-browser.json`,
-Linux `python tools/check.py`, `bash tools/check_rust.sh`, and full incremental
-`bash tools/smoke_all.sh` after final system-mode changes. All PASS, numbers above.
-Raw ui-themes-release-* and browser JSON preserve final runs; prior smoke/supervision
-measurements restored. Actual text minimum12px/ancestor opacity>=0.7 across96
-cases; system dark/light transitions observed at each viewport; storage0,
-no horizontal overflow. Screenshots inspected; not reference fidelity evidence.
+`node evals/browser_shell.mjs <playwright> evals/results/ui-shell-browser.json`
+PASS1440/820/390 and639/640px boundary cases. Rail237px, login bottom585/725/575.5px
+in the three target views; document height exactly900/1180/844; no horizontal
+or outer vertical growth. Desktop-mobile-desktop retains Rosé and one sidebar.
+Actual screenshot inspection confirms mobile login visible without scrolling.
 
-Legal-notice EOF whitespace initially FAILED; preserved source notices intact by
-adding a nonempty closing explanation after them, rather than editing the notice.
-Unstaged STATUS caused an initial rebase refusal; after committing, retry reported
-up to date against origin/main; no stashing or unrelated-file change. All failures
-recorded; no thresholds loosened. Native notice still matches bundled text exactly.
+Existing browser's250px assertion FAILED first, deliberately updated to inspected
+237px with ADR/review note, all functional assertions kept. Added mobile drawer
+opening for theme/notice controls. Theme96+system3 and notice3-view keyboard/text/
+centering checks rerun PASS. New NodeNext SSR compilation failed extensionless
+import; named failure retained, fixed explicit .js import, web27+2/typecheck/build PASS.
 
-Candidate token slice not yet hosted verified. No merge to main until U6 passes.
-Runtime PID1327 remains active on8769, .sanctum/runtime-dispatch.json, for the next
-UI slice; do not rebuild during real engine measurements. No software gap is
-classified as hardware-only UNVERIFIED. Voice pipeline currently advertises false.
+Full `python tools/check.py`, `bash tools/check_rust.sh`, npm test/typecheck/build/
+audit and full incremental `bash tools/smoke_all.sh` actually ran PASS; raw
+ui-shell-* logs/results retained, prior smoke/supervision records restored.
+`node evals/browser_meeting.mjs <playwright> <token-file>` PASS5 real workspace/
+local-summary-save/transcript-preservation/oversize/mobile checks; semantic_quality=false.
+`node evals/browser_microphone.mjs <playwright> <token-file> jfk.wav <asr>` first
+FAILED hardcoded8766 against current8769; preserved, added optional existing-style
+base override and unmasked error reporting (default/timeouts/assertions unchanged).
+Rerun PASS4 real worklet/emulated-file/ASR/track cleanup/no-upload-on-cancel cases;
+physical_microphone_verified=false. No WER/voice-turn or diarization claim.
 
-Font admission slice: palette1fdf041 exact hosted run38130611442/all5 jobs PASS.
-Four font-gate tests first FAILED on missing module, then PASS4; actual offline
-`python tools/web_font_assets.py` PASS5 exact binaries and primary OFL notices.
-Registry records all source revisions/URLs and binary/notice hashes. Source CI now
-runs this gate; rejects tamper/unregistered/non-OFL/escaping paths. No new npm dep.
-
-`node evals/browser_fonts.mjs <playwright> evals/results/ui-font-assets-browser.json`
-first FAILED absent FontFace registration, then PASS actual decoded5 faces,5 HTTP200
-responses, foreign HTTP0 and identical existing CSP string. Scoped Spectral/Archivo/
-JetBrains tiers applied; layout shells retain system fonts; original brand fonts
-are absent. Full source157/Rust57, fmt/lint/types/clippy/licenses/denial38,
-supervision3/zero survivors and full incremental smoke6 stages PASS after wiring.
-Named ui-font-assets-* raw results; prior smoke/supervision evidence restored.
-Font-dependent themes96 +system3 and native notice3-view keyboard/exact text/
-centering/no-overflow checks rerun PASS. Screenshots inspected. No fidelity claim.
-
-Three exact primary notices have trailing spaces; initial Git whitespace failure
-preserved. ADR0060/REVIEW_QUEUE scopes legal/evidence-only byte-preservation rules;
-no source/test formatting exception or threshold change. Original font bytes and
-names unchanged. Bold/italic/language and full per-theme fidelity remain pending.
-Font8d3e98c pushed; exact hosted run38132080056/all5 jobs PASS. Next responsive shell and reference harness.
+Shell candidate commit/hosted CI next. Full Hermes fidelity, remaining screens,
+real realtime voice and later roadmap still pending; no merge to main yet.
+Runtime PID1327 active on8769 with .sanctum/runtime-dispatch.json for next UI slice;
+source/model datasets previously untracked remain untouched.

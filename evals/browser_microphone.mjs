@@ -26,7 +26,7 @@ const errors = [];
 page.on('request', request => { if (request.url().endsWith('/v1/audio/transcriptions')) uploads++; });
 page.on('pageerror', error => errors.push(error.message));
 try {
-  await page.goto('http://127.0.0.1:8766');
+  await page.goto(process.env.SANCTUM_BASE_URL || 'http://127.0.0.1:8766');
   await page.getByLabel('Local access key').fill(readFileSync(tokenFile,'utf8').trim());
   await page.getByRole('button',{name:'Open workspace'}).click();
   await page.getByText('Local speech',{exact:true}).click();
@@ -56,7 +56,8 @@ try {
   writeFileSync('evals/results/speech-microphone.json',JSON.stringify(record,null,2)+'\n');
   console.log(JSON.stringify(record,null,2));
 } catch (error) {
-  console.error('Speech status:', await page.getByRole('status').textContent());
+  console.error('Original failure:', error.message);
+  console.error('Speech status:', await page.getByRole('status').allTextContents());
   console.error('Page errors:', errors);
   throw error;
 } finally {await browser.close();}

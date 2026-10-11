@@ -16,6 +16,7 @@ try {
       return route.continue();
     });
     const page=await context.newPage();await page.goto(base.href);
+    if(viewport.width < 640)await page.getByRole('button',{name:'Open navigation',exact:true}).click();
     assert.equal(await page.getByLabel('Theme', {exact:true}).count(),1,'Actual theme control missing');
     const ids=await page.getByLabel('Theme',{exact:true}).locator('option').evaluateAll(nodes=>nodes.map(n=>n.value));
     assert.equal(ids.length,16);

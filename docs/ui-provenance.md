@@ -59,3 +59,17 @@ Sanctum binary/notice paths. Original and shipped binary hashes are identical.
 No font is copied from the Hermes package/monorepo; excluded brand files remain
 absent. Asset integrity is now an offline source/CI gate. The notices are also
 included verbatim in the in-app Licenses text.
+
+## Responsive shell geometry
+
+First-party AppShell.tsx/shell.css adapts inspected geometry, not Electron/pane
+implementation code. Upstream pin remains b30f95ac4a80d2f6dbe3aa01001b0524314f6d74.
+
+| Upstream reference | Original SHA256 | Adaptation |
+|---|---|---|
+| apps/desktop/src/store/layout.ts |4ae5310b2f1c0f145baa680483e82698810dbf98d0f6c870f09d33d22b2a3e91|237px rail |
+| apps/desktop/src/app/layout-constants.ts |5feb17140088ae55804d79ac5db27bfb6317a4f0fe9a5b431b11b318f44e0e95|640px dock floor |
+
+Native single-sidebar focus/inert lifecycle and bounded viewport are first-party
+code; MIT reference notices remain included. Other spacing/chrome still require
+reference comparisons; no exact-layout/fidelity claim (ADR0061).

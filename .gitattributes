@@ -10,6 +10,7 @@ evals/results/ui-adapter-fetch-binding-first-failure.txt -text whitespace=cr-at-
 evals/results/ui-adapter-evidence-whitespace-failure.txt -text whitespace=cr-at-eol,-blank-at-eof,-blank-at-eol
 docs/status-archive/2026-10-11-ui-audit-through-adapter.md -text whitespace=cr-at-eol,-blank-at-eof
 docs/status-archive/2026-10-11-native-primitives.md -text whitespace=cr-at-eol,-blank-at-eof
+docs/status-archive/2026-10-11-font-admission.md -text whitespace=cr-at-eol,-blank-at-eof
 # ADR0060: preserve exact primary font notices, including their trailing spaces.
 apps/web/public/licenses/fonts/spectral-OFL.txt -text whitespace=cr-at-eol,-blank-at-eof,-blank-at-eol
 apps/web/public/licenses/fonts/archivo-OFL.txt -text whitespace=cr-at-eol,-blank-at-eof,-blank-at-eol
