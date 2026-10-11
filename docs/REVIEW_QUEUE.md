@@ -129,3 +129,6 @@ Named failed check retained; no source/test lint exception or quality gate waive
 | [0063](adr/0063-conversation-management.md) | Owner-scoped history management with idempotent metadata migration and deletion markers | New 4096-byte body,100-row page,120-character title/query,1000000-offset bounds; no existing threshold relaxed | Delete is not forensic erasure; deleted IDs cannot be reused; title/ID search uses SQLite ASCII case folding |
 
 | [0064](adr/0064-public-website-scope.md) | Owner explicitly adds public website and documentation to the dashboard/chat port | Supersedes marketing exclusion only; no gate or security relaxation | Original artwork and admitted OFL font substitutions; homepage fidelity, docs-site port and installers remain pending |
+
+| [0066](adr/0066-gate-execution-strategy.md) | Standardized clean source gate runner and differentiated cadence | No: relaxes no gate; hosted CI runs full matrix on every push | Docs commits run doc/link checks locally and rely on exact hosted CI; code/test commits run full local regression |
+| [0065](adr/0065-isolated-reference-launcher.md) | Isolated two-phase container reference build and browser mock bridge | No: strictly isolated dev environment; product dependencies untouched | Reference comparison only; Electron binary suppressed; mock Electron bridge used for plain web comparison |

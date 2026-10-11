@@ -1,12 +1,12 @@
 # Current state
 
-- Step: handoff reconciliation complete; 3a reference environment next.
-- Last green commit: `6ec627261abae92de6d8ed8a2247c2d0e4579f8b`; run 38152617896 all 5 PASS.
-- Current slice: handoff baseline source 157 / Rust 62 / web 37 PASS; 38 denial/startup probes; zero audit advisories.
-- Gate table: website functional PASS; full fidelity/axe OPEN; EXE/Linux packages OPEN.
-- Open blockers: native gateway/packages missing; full voice, vision, agents, LAN, crypto unfinished.
-- Next 3: 3a isolated reference launcher build; 3b chat renderer port; 3c dashboard port.
-- Main/tags: UI branch `ui-hermes-port` unmerged; no tags. Doc encoding normalized to UTF-8 LF.
+- Step: 3a isolated reference launcher & mock bridge foundation (ADR 0065/0066).
+- Last green commit: `f1f39908cfdfd6ca27d72c1c65dbe488df634f19`; run 38157696527 all 5 jobs PASS.
+- Main status: origin/main at 41c4338, run 38122334255 all 5 jobs PASS (clean ancestor of ui-hermes-port).
+- Uncommitted smoke SHA256 matches: 8/8 json/log pairs byte-identical to website-final-smoke-*.
+- Gate table: source 157 / Rust 62 / web 39 PASS; 38 denial probes; zero npm audit advisories.
+- Next 3: 3b chat renderer port; 3c dashboard port; 3d fidelity verification with numbers.
+- Main/tags: UI branch `ui-hermes-port` unmerged; no tags. UTF-8 LF normalized.
 
 ## Public website slice
 

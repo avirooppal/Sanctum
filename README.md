@@ -67,7 +67,7 @@ Use that session's printed token-file path and base URL for SDK validation.
 ## Validation
 
 ```sh
-uv run --offline --group knowledge python tools/check.py
+bash tools/run_source_gate.sh
 bash tools/check_rust.sh
 npm run typecheck --prefix apps/web
 npm test --prefix apps/web
