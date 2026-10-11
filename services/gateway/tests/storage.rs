@@ -29,3 +29,24 @@ fn queries_do_not_interpolate_ids() {
         .unwrap();
     assert!(store.turns("stranger", "' OR 1=1 --").unwrap().is_empty());
 }
+
+#[test]
+fn preferences_isolation_and_roundtrip() {
+    let store = Store::memory().unwrap();
+    assert!(store.preferences("owner-a").unwrap().is_none());
+
+    let payload = json!({"theme":"sanctum","density":"compact","accent":"#48a87b"}).to_string();
+    store.save_preferences("owner-a", &payload).unwrap();
+
+    let fetched = store.preferences("owner-a").unwrap();
+    assert_eq!(fetched.as_deref(), Some(payload.as_str()));
+    assert!(store.preferences("owner-b").unwrap().is_none());
+
+    // Update preferences for owner-a
+    let updated = json!({"theme":"github","density":"spacious"}).to_string();
+    store.save_preferences("owner-a", &updated).unwrap();
+    assert_eq!(
+        store.preferences("owner-a").unwrap().as_deref(),
+        Some(updated.as_str())
+    );
+}

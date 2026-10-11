@@ -25,6 +25,7 @@ impl Store {
             CREATE TABLE IF NOT EXISTS conversations(id TEXT PRIMARY KEY, owner TEXT NOT NULL);
             CREATE TABLE IF NOT EXISTS turns(id INTEGER PRIMARY KEY, conversation TEXT NOT NULL REFERENCES conversations(id), request TEXT NOT NULL, response TEXT NOT NULL, streaming INTEGER NOT NULL);")?;
         connection.execute_batch(include_str!("../migrations/0001-session-metadata.sql"))?;
+        connection.execute_batch(include_str!("../migrations/0002-user-preferences.sql"))?;
         Ok(Self { connection })
     }
     pub fn save(
@@ -139,5 +140,24 @@ impl Store {
         let mut statement = self.connection.prepare("SELECT t.request,t.response,t.streaming FROM turns t JOIN conversations c ON c.id=t.conversation WHERE c.owner=?1 AND c.id=?2 ORDER BY t.id")?;
         let rows=statement.query_map(params![owner,id],|r| Ok(json!({"request":r.get::<_,String>(0)?,"response":r.get::<_,String>(1)?,"streaming":r.get::<_,bool>(2)?})))?.collect();
         rows
+    }
+    pub fn preferences(&self, owner: &str) -> rusqlite::Result<Option<String>> {
+        let mut statement = self
+            .connection
+            .prepare("SELECT preferences FROM user_preferences_v1 WHERE owner=?1")?;
+        let mut rows = statement.query_map([owner], |r| r.get(0))?;
+        if let Some(row) = rows.next() {
+            Ok(Some(row?))
+        } else {
+            Ok(None)
+        }
+    }
+
+    pub fn save_preferences(&self, owner: &str, preferences: &str) -> rusqlite::Result<()> {
+        self.connection.execute(
+            "INSERT INTO user_preferences_v1(owner,preferences,updated_at) VALUES(?1,?2,unixepoch()) ON CONFLICT(owner) DO UPDATE SET preferences=excluded.preferences,updated_at=excluded.updated_at",
+            params![owner, preferences],
+        )?;
+        Ok(())
     }
 }

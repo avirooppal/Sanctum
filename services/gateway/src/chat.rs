@@ -548,6 +548,36 @@ impl Chat {
         }
         if request.method() == &tiny_http::Method::Get {
             return match path.as_str() {
+                "/v1/capabilities" => {
+                    let mut caps = vec!["chat", "models", "history", "dashboard", "preferences"];
+                    if self.config.knowledge_python.is_some() {
+                        caps.push("knowledge");
+                    }
+                    if self.config.speech.is_some() {
+                        caps.push("speech");
+                    }
+                    respond(
+                        request,
+                        200,
+                        json!({
+                            "capabilities": caps,
+                            "profile": "default",
+                            "hardware": {
+                                "threads": self.config.threads,
+                                "context": self.config.context
+                            }
+                        }),
+                    )
+                }
+                "/v1/preferences" => {
+                    let store = self.store.lock().map_err(|_| "store lock poisoned")?;
+                    let prefs = store.preferences("local-owner")?;
+                    respond(
+                        request,
+                        200,
+                        json!({"preferences": prefs.and_then(|p| serde_json::from_str::<Value>(&p).ok())}),
+                    )
+                }
                 "/v1/models" => respond(
                     request,
                     200,
@@ -566,11 +596,36 @@ impl Chat {
                 _ => respond(request, 404, json!({"error":{"message":"Not found"}})),
             };
         }
+        if request.method() == &tiny_http::Method::Post && path == "/v1/preferences" {
+            let mut body = Vec::new();
+            request.as_reader().take(65536 + 1).read_to_end(&mut body)?;
+            if body.len() > 65536 {
+                return respond(
+                    request,
+                    413,
+                    json!({"error":{"message":"Preferences payload exceeds 64KB"}}),
+                );
+            }
+            let parsed: Value = match serde_json::from_slice(&body) {
+                Ok(v) if v.is_object() => v,
+                _ => {
+                    return respond(
+                        request,
+                        400,
+                        json!({"error":{"message":"Invalid JSON object for preferences"}}),
+                    )
+                }
+            };
+            let store = self.store.lock().map_err(|_| "store lock poisoned")?;
+            store.save_preferences("local-owner", &parsed.to_string())?;
+            return respond(request, 200, json!({"status":"saved"}));
+        }
         if request.method() != &tiny_http::Method::Post
             || !matches!(path.as_str(), "/v1/chat/completions" | "/v1/embeddings")
         {
             return respond(request, 404, json!({"error":{"message":"Not found"}}));
         }
+
         let mut body = Vec::new();
         request
             .as_reader()
