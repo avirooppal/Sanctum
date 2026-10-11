@@ -1,134 +1,68 @@
 # Current state
 
-- Mission: [MISSION.md](MISSION.md); single owner, ADR0027. No RC or phase tag.
-- Step: 1a transport complete/hosted green; Step U source/license discovery in progress.
-- Last hosted-green commit: `3183f7c`; all5 jobs verified; no phase/RC tag.
-- Blockers: no software blocker; T1/GPU/physical audio/native targets UNVERIFIED.
-- Next: pin upstream/license audit; UI contracts/tokens/shell; fidelity/egress/accessibility gates.
+- Mission: [MISSION.md](MISSION.md), including Amendment1; single owner ADR0027.
+- Step: U1 audit in progress on `ui-hermes-port`; no product UI copied yet.
+- Last hosted-green commit: `41c4338`; exact run38122334255/all5 jobs PASS.
+- Blockers: none for this slice; T1/GPU/physical audio/native targets UNVERIFIED.
+- Next three steps: font render comparisons/remaining asset licenses; typed UI
+  adapter and tokens/primitives; shell plus fidelity/egress/accessibility gates.
 
-| Gate | Current evidence |
+| Gate | This-session evidence |
 |---|---|
-| Linux source baseline | PASS145; lint/format/types, licenses26/72, foundation eval/API docs |
-| Rust/security baseline | PASS54; fmt/clippy, licenses74, denial/startup38, supervision3/zero survivors |
-| Web baseline | PASS12; typecheck/build; audit zero advisories |
-| Real SDK baseline | PASS8; chat0.4114s, streaming TTFT0.4328s, embeddings1024 |
-| Active baseline shutdown | PASS0.793983s; listener0.183991s; zero survivors |
-| Step0 engine storms/mixed | Historical PASS; must rerun after resident workers |
-| Held authenticated WebSocket | PASS600.398s/admit2 of3; held mixed182.553s PASS; details below |
-| Speech WER/T1 voice latency | Not measured; T1 hardware UNVERIFIED |
-| Vision/agents/LAN/packaging/RC acceptance | Not done; no hardware-only exemption for software gaps |
+| Linux source | PASS150 baseline; PASS153 with inventory tests; lint/format/types/licenses |
+| Rust/denial/startup | PASS57; fmt/clippy;92 licenses;38 denial/startup probes;3 supervision scenarios/zero survivors |
+| Web | PASS12; typecheck/build; npm audit zero |
+| Real SDK | PASS8; chat0.4156s/TTFT0.4916s/dimensions1024 |
+| Incremental smoke | PASS6 stages; release_complete=false; pending release software listed |
+| Step U foundation/final product | NOT DONE; no fidelity, new UI egress or release tag claimed |
 
-## Evidence and decisions
+## Preserved history
 
-All previous STATUS narratives preserved verbatim in
-[archive](status-archive/2026-10-11-through-ticket-preparation.md), SHA256
-`8a5e4cd509a551c4761808bd3a30d591085f61cfee6c93584b384b47b6a71e7e`.
-Earlier archives, phase scope table and failed runs are linked inside it.
-[REVIEW_QUEUE](REVIEW_QUEUE.md) preserves decision changes; ADR0047 transport gate pending.
+Previous STATUS preserved verbatim in
+[WebSocket/source-pin archive](status-archive/2026-10-11-websocket-and-source-pin.md).
+SHA256 `a2620d7c3a974962387b0dcd0c3e23a36d62a2befb60510b7ca7bad322f3fbc9`.
+Older archives and real held/mixed/shutdown measurements remain linked there.
+Archive byte preservation uses existing ADR0042 attributes; no measurement changed.
 
-Baseline commands: Linux `python tools/check.py`, `bash tools/check_rust.sh`;
-web `npm test`, `npm run typecheck`, `npm run build`, `npm audit --audit-level=low`;
-`target/debug/sanctum-runtime --config .sanctum/runtime-dispatch.json --port 8769`;
-`python evals/sdk_chat.py --base-url http://127.0.0.1:8769/v1 --token-file <state>/local.token`;
-`python evals/active_shutdown.py --pid 1438 --token-file <state>/local.token --output evals/results/final-mission-baseline-shutdown.json`.
-Logs `.sanctum/final-mission-baseline-{source,rust}.log`; named JSON results in evals/results.
-Hosted mission [run38115384663](https://github.com/avirooppal/Sanctum/actions/runs/38115384663): exact d89feb2, all5 jobs PASS.
-Incorrect quoted PID lookup failed before shutdown; corrected numeric PID run above PASS.
+## Current slice evidence
 
-Step1a contract and Origin test first (missing SessionAuth FAILED, then implemented).
-Endpoint requires owner bearer plus exact canonical gateway Host/Origin, empty POST;
-random256-bit ticket, memory-only hash store, cap32/TTL30s, no-store/503 Retry-After.
-Generated OpenAPI docs updated. Full source rerun first FAILED because VIRTUAL_ENV
-was omitted and ty selected the Windows venv; named failure retained. Corrected
-Linux environment rerun PASS146/all gates. Rust PASS55/fmt/clippy/licenses74,
-38 denial/startup probes/supervision3, zero survivors. Real endpoint PASS6 checks
-(`realtime-ticket-http-reference.json`): missing auth, Origin, method, body limit,
-32 unique random credentials and cap503/Retry-After. Initial real attempt timed out
-before ready observation; named startup failure retained, corrected after ready.
+Mission amendment appended verbatim and pushed as41c4338. Hosted exact-SHA
+[run38122334255](https://github.com/avirooppal/Sanctum/actions/runs/38122334255)
+observed all5 jobs completed/success. No phase or release tag created.
 
-`bash tools/smoke_all.sh` implemented-feature scope PASS exit0 using Windows Git
-Bash/Windows venv and bundled browser, against the confined WSL service on8769.
-ChatSDK8 (0.3720s/TTFT0.4182s), Knowledge4/cited amber, ASR8 (2.983581s), TTS8
-(1.060266s/3.31s WAV), ticket6, browser7/page errors0/mobile no-overflow. Manifest
-`smoke-all-reference.json` explicitly release_complete=false and names pending
-WS voice/diarization, vision, agents/ledger, LAN and fresh-clone/offline bundle.
-ADR0048/REVIEW_QUEUE explains incremental scope; full RC smoke remains not done.
-First smoke failed internal Flite voice name; corrected to configured public ID;
-named failed manifest/log preserved. WSL Windows-node launch then failed exec format;
-preserved log, used existing Windows Git Bash, no WSL reset or check suppression.
-Source after smoke additions PASS148/all checks; web12/typecheck/build/audit0.
-No WebSocket/resident-worker/voice-SLO/physical-audio/RC completion claim. Next:
-commit/push and exact hosted CI, then actual guarded WebSocket/held-session gates.
+Before edits: WSL `python tools/check.py`, `bash tools/check_rust.sh`; web
+`npm test`, `npm run typecheck`, `npm run build`, `npm audit --audit-level=low`.
+Logs .sanctum/amendment-baseline-{source,rust,sdk,smoke}.log.
+Started real confined runtime with .sanctum/runtime-dispatch.json on8769;
+waited for observed ready event before SDK requests. SDK raw evidence
+[amendment-baseline-sdk.json](../evals/results/amendment-baseline-sdk.json).
+Supervision [raw result](../evals/results/amendment-baseline-supervision.json).
 
-Successful smoke invocation: Windows Git Bash `bash tools/smoke_all.sh`,
-SANCTUM_CONFIG=.sanctum/runtime-dispatch.json; SANCTUM_PYTHON=.venv/Scripts/python.exe;
-SANCTUM_NODE/SANCTUM_PLAYWRIGHT=bundled workspace Node/playwright paths;
-SANCTUM_TOKEN_FILE=WSL UNC path to <state>/local.token;
-SANCTUM_TTS_VOICE=tts-flite-slt-reference. Logged
-`.sanctum/realtime-smoke-all-windows.log`; six stage logs/results retained.
-Post-slice active engine/queue/slow-body shutdown PASS0.785774s, listener0.191896s,
-zero survivors (`realtime-endpoint-active-shutdown.json`). No runtime left running.
+Windows Git Bash `bash tools/smoke_all.sh` against the real WSL gateway PASS
+chat/RAG/fileASR/fileTTS/tickets/browser. Raw logs/results are named
+amendment-baseline-smoke-* in evals/results; original smoke evidence restored.
+ASR8 first request4.2908896s, TTS8 first request1.1027608s; browser7/page errors0,
+mobile no overflow. No physical audio or streaming voice-turn latency claim.
+Smoke remains explicitly incremental, not final fresh-clone/LAN acceptance.
 
-Endpoint commit `6d21630` pushed; hosted run38116356790 all5 exact-SHA jobs PASS.
-Candidate direct guarded WebSocket: contract/tests first; missing module FAILED,
-then audio cap/sequence and parent/turn cancellation PASS. Source150/Rust57,
-fmt/clippy,92 reviewed Rust licenses,38 denial/startup probes and supervision PASS.
-Formatting failure preserved before repair. ADR0049 topology and ADR0050 explicit
-r-efi MIT branch recorded; absent/LGPL selection rejection tested. New notices and
-license-file hashes preserved; no permissive-only policy relaxation.
+Inventory contract and3 tests written first: absent implementation failed,
+[preserved failure](../evals/results/ui-inventory-tests-first-failure.txt), then
+PASS3. Real command:
+`.venv/Scripts/python.exe tools/ui_inventory.py --root .sanctum/upstream/hermes-agent --sha b30f95ac4a80d2f6dbe3aa01001b0524314f6d74 --output evals/results/ui-source-inventory.json`.
+PASS4183 target files/105 recognized assets,3.55MB deterministic-format audit.
+WSL-mounted scan was slow and manually terminated; Windows Python rerun completed.
+No product process killed, check skipped or threshold changed. Static candidates
+are not proof of runtime behavior or completed manual route/asset audit.
 
-Actual `python evals/realtime_transport.py --token-file <state>/local.token
---output evals/results/realtime-transport-with-slow-clients.json` PASS13 including
-Origin/ticket/replay/expiry, malformed/fragmented/unmasked/oversize frames, reconnect,
-slowloris/incomplete frames (release1.878895/1.868968s). Speech pipeline explicitly
-false; this is transport, not a voice-turn SLO or resident-worker implementation.
+After changes: full Linux source PASS153/all gates, Rust PASS57/all gates,
+92 Rust/26 Python/72 npm licenses,38 denial/startup and supervision3/zero survivors.
+Named [source log](../evals/results/ui-inventory-source-check.txt) and
+[Rust log](../evals/results/ui-inventory-rust-check.txt). New tooling is not a
+product dependency. Exact MIT reference notice retained; no font binary admitted.
+ADRs0052/53/54 and REVIEW_QUEUE preserve package/font/asset exclusions.
+Pinned primary OFL license hashes: ui-font-license-audit.json; actual render
+comparison, palette origin licenses, product primitives and in-app notices pending.
 
-`python evals/realtime_held.py --pid 691 --runtime-config .sanctum/runtime-dispatch.json
---token-file <state>/local.token --seconds 600 --output evals/results/realtime-held-reference.json`
-PASS600.398101s:2 authenticated sessions, third503 in0.010550s;
-health/models/chat p95 0.007214/0.006611/0.467532s; background503 count40975,
-queue peak1; process roles/FD/socket restored, thread allowance met, worst retained
-per-role RSS+3604KiB <=16384 after10s. Every sample/snapshot retained.
-Old mixed180s baseline now running before extending that harness to held WS.
-Runtime691 remains active; do not rebuild binary during real gates. Candidate
-uncommitted until mixed/regressions/smoke/shutdown verification. No phase/RC tags.
-
-Original mixed baseline PASS181.419s before harness edit (raw named result).
-Opt-in `mixed_engine_overload.py --held-websocket` with same arguments/PID/config
-PASS182.553096s; health/models/chat/ASR/TTS/voice-admission p95
-0.010983/0.011015/3.309382/4.495361/1.619486/0.082271s; background503 count12614,
-queue peak3, owned peak RSS3412312KiB. Original resource/latency bounds unchanged;
-post-quiescence comparison PASS. One real authenticated WS held throughout.
-Raw `realtime-websocket-mixed.json` retains a stale scope-description string from
-the old harness; held_websocket=true and held duration sample are authoritative.
-Future description corrected without rewriting raw evidence. Final regression/
-smoke/shutdown/hosted checks next, then Step U. Speech pipeline remains disabled.
-
-Final source150/Rust57, fmt/clippy, licenses26 Python/72 npm/92 Rust,38 denial/
-startup probes/supervision3 PASS. Web12/typecheck/build/audit0 PASS. Final
-`bash tools/smoke_all.sh` implemented-feature scope PASS6 real stages; fresh raw
-results preserved as `realtime-final-smoke-*`, prior smoke records restored.
-Release_complete remains false. Slow-reader WS flood2000 frames released shared
-voice slot in1.868856s (max<3s unchanged; not a50-sample p95 claim).
-
-`active_shutdown.py --pid 691 --held-websocket ...` PASS1.425506s,
-listener0.184139s, WS close1001, zero survivors; actual active lanes[1,1,2,1],
-queued chat1 and100-continue-confirmed background slow body. Original mode kept;
-new mode honors voice cap2 by moving slow body to background. No timeout relaxed.
-Kernel/transport/software gates passed for Step1a; no speech-loop/RC phase tag.
-Runtime stopped. Last source recheck after harness edits pending; commit/CI next.
-
-Step1a commit3183f7c pushed; [run38121246771](https://github.com/avirooppal/Sanctum/actions/runs/38121246771)
-jobs API observed all5 completed/success for exact SHA. Final source recheck PASS150.
-No runtime running. Step U starts with explicit dev-only shallow clone/audit;
-no upstream code/assets copied before license/brand review. No phase/RC tags.
-
-Step U discovery: shallow clone completed at b30f95ac4a80d2f6dbe3aa01001b0524314f6d74;
-MIT root LICENSE read. Inspected web/package/README/index.css, desktop/package/
-styles/API directories, shared themes/package and plugin-specific notice.
-`npm view @nous-research/ui@0.18.2 ...`, `npm pack --ignore-scripts ...` and
-safe tar extraction verify public MIT declaration, bundled brand fonts and no
-package LICENSE file. ADR0051/REVIEW_QUEUE/ui-deviations record exclusions.
-JetBrains primary OFL verified; upstream Apache comment is not reused as evidence.
-No frontend/dependency/font asset copied; no fidelity/accessibility/egress UI-port
-pass claimed. Actual UI foundation and all later roadmap remain unfinished.
+Candidate slice not yet hosted-verified; record commit/run after push. Runtime
+PID1327 remains active on8769 for following UI verification; do not rebuild it
+while real measurements run. Next: finish U1; no merge to main until U6 gates.

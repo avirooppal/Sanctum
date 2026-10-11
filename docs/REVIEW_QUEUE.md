@@ -96,3 +96,7 @@ Require100-continue to prove admission before SIGTERM (stricter evidence, not
 threshold relaxation). Original mode and5s/250ms bounds retained; WS closes1001.
 
 | [0051](adr/0051-hermes-ui-source-and-asset-boundary.md) | Pin actual upstream b30f95ac; recreate locally instead of importing UI0.18.2 wholesale; exclude unverified brand fonts/assets | Intentional legal/privacy deviation only; no fidelity or quality threshold set/relaxed yet | Font substitutes alter glyph appearance; full asset/token/fidelity audit remains pending |
+
+| [0052](adr/0052-ui-package-audit.md) | Local primitives instead of the published package and unreviewed font/dependency bundle | No quality threshold changed | Exact MIT notice retained; component adaptation remains pending |
+| [0053](adr/0053-ui-font-audit.md) | Exclude Collapse/Rules/Mondwest/Neuebit; review pinned OFL candidates with actual render comparisons before selection | Glyph substitution required by licensing; no fidelity waiver | No binary admitted; comparison and individual font provenance pending |
+| [0054](adr/0054-ui-icons-and-assets-audit.md) | Exclude upstream brand, unverified icons and all bundled assets pending individual admission | Identity deviation required; no scope or gate relaxation | Original icon and license-verified selected assets remain pending |
