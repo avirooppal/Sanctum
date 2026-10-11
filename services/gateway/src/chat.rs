@@ -606,7 +606,7 @@ impl Chat {
                     json!({"error":{"message":"Preferences payload exceeds 64KB"}}),
                 );
             }
-            let parsed: Value = match serde_json::from_slice(&body) {
+            let parsed: Value = match serde_json::from_slice::<Value>(&body) {
                 Ok(v) if v.is_object() => v,
                 _ => {
                     return respond(

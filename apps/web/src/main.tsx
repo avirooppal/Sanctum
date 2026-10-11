@@ -20,6 +20,7 @@ import { SafeMarkdown } from './ui/SafeMarkdown';
 import { DashboardPanel } from './DashboardPanel';
 import { SetupWizard } from './SetupWizard';
 
+import { ThemeControls } from './ui/ThemeControls';
 import { registerPanel, getRegisteredPanels, filterPanelsByCapabilities } from './ui/PanelRegistry';
 import {
   type UserPreferences,
