@@ -1,0 +1,68 @@
+
+> sanctum-web@0.1.0 test
+> tsc --outDir build/tests --noEmit false --target ES2022 --module NodeNext --moduleResolution NodeNext --jsx react-jsx --esModuleInterop src/speech.ts src/pcm.ts src/meeting.ts src/api.ts src/ui/primitives.tsx src/ui/themes.ts src/ui/AppShell.tsx && node --test tests/*.test.mjs && node --test ../../evals/tests/ui-font-metrics.test.mjs
+
+✔ default fetch retains the Window/global receiver (38.8212ms)
+✔ fixed same-origin requests omit cookies, reject redirects and never retry (1.5575ms)
+✔ models are validated and conversation IDs cannot change origin or path structure (1.7422ms)
+✔ stream decodes split Unicode and SSE lines without fabricated text (5.3912ms)
+✔ consumer cancellation releases stream and ignored fetch abort cannot yield stale text (1.5186ms)
+✔ ticket is in subprotocol only and abort closes the socket (1.6414ms)
+✔ invalid ticket and cancellation after ticket never open a socket (1.2792ms)
+✔ abort while waiting for a stalled stream releases the reader (11.836ms)
+✔ meeting save uses restricted same-origin authenticated request (35.664ms)
+✔ invalid workspace and oversized or blank input never send requests (1.069ms)
+✔ failed writes are surfaced without retrying (0.7961ms)
+✔ encodes finite mono PCM16 with accurate WAV header and clamping (6.2228ms)
+✔ bounded memory accepts no partial overflow and resets after discard (0.8639ms)
+✔ rejects nonfinite data without mutating captured audio (0.3568ms)
+✔ native button defaults to non-submit, preserves explicit submit and disabled (9.8563ms)
+✔ untrusted titles and field text remain escaped React text (1.4566ms)
+✔ dialog has a named native modal and escaped children without an injected close link (0.9548ms)
+✔ shell has one sidebar and main with explicitly connected native navigation control (1.1344ms)
+✔ uses same-origin multipart and bearer auth without storing credentials (39.8901ms)
+✔ stop discards stale audio even if fetch ignores abort (1.0913ms)
+✔ stop releases playback and next operation cannot reuse it (6.9164ms)
+✔ rejects oversized inputs and unexpected audio content types (4.7611ms)
+✔ core compiler preserves responsive and arbitrary-value application utilities (39.1072ms)
+✔ all pinned desktop and dashboard-only presets are available without upstream branding (1.5222ms)
+✔ pinned canonical palette values and mode pairs are retained (0.5584ms)
+✔ invalid IDs fail, tokens do not leak mutable palette references or remote URLs (2.5721ms)
+✔ worklet itself stops after 30 seconds even if UI messages are not handled (13.4923ms)
+ℹ tests 27
+ℹ suites 0
+ℹ pass 27
+ℹ fail 0
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 221.3643
+✔ identical raster is zero and multiple changed channels count one pixel (0.7171ms)
+✔ unequal, empty and malformed raster inputs fail (0.3055ms)
+ℹ tests 2
+ℹ suites 0
+ℹ pass 2
+ℹ fail 0
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 79.9426
+
+> sanctum-web@0.1.0 typecheck
+> tsc --noEmit
+
+
+> sanctum-web@0.1.0 build
+> node tools/build-css.mjs && vite build
+
+vite v7.3.7 building client environment for production...
+transforming...
+✓ 46 modules transformed.
+rendering chunks...
+computing gzip size...
+dist/index.html                            0.37 kB │ gzip:  0.27 kB
+dist/assets/capture-worklet-Dbzkoc4Q.js    0.52 kB
+dist/assets/index-Dhj4mc_7.css            18.14 kB │ gzip:  4.61 kB
+dist/assets/index-Dg0927cO.js            256.62 kB │ gzip: 75.13 kB
+✓ built in 909ms
+found 0 vulnerabilities
