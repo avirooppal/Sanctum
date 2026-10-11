@@ -196,6 +196,17 @@ def main():
             ],
             None,
         ),
+        (
+            "ui_fidelity",
+            [
+                node,
+                "evals/browser_fidelity.mjs",
+                package,
+                browser_token,
+                str(directory / "smoke-ui-fidelity.json"),
+            ],
+            None,
+        ),
     ]
     record = {
         "suite": "smoke-all-v1",

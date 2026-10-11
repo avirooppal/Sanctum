@@ -132,3 +132,5 @@ Named failed check retained; no source/test lint exception or quality gate waive
 
 | [0066](adr/0066-gate-execution-strategy.md) | Standardized clean source gate runner and differentiated cadence | No: relaxes no gate; hosted CI runs full matrix on every push | Docs commits run doc/link checks locally and rely on exact hosted CI; code/test commits run full local regression |
 | [0065](adr/0065-isolated-reference-launcher.md) | Isolated two-phase container reference build and browser mock bridge | No: strictly isolated dev environment; product dependencies untouched | Reference comparison only; Electron binary suppressed; mock Electron bridge used for plain web comparison |
+| [0067](adr/0067-ui-fidelity-verification.md) | Programmatic UI design fidelity verification: geometry, token floor, zero egress, contrast | No: establishes explicit objective metrics for UI fidelity | Focuses on structural and token layout; brand artwork and icons replaced with local OFL equivalents |
+
