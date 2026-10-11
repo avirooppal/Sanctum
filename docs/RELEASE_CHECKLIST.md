@@ -61,7 +61,7 @@ platform rows currently combine absent software with unverified target execution
 |---|---|---|
 | R-BASE / D4 | All existing source,Rust,web,SDK,denial checks | PASS within E1–E4 scope:157/57/34,38 probes,8 smoke stages; not final release regression. |
 | R-DOCTOR / PH0,H1 | Correct real tier/profile and readiness | OPEN:8167555072 bytes<configured8GiB; recommendation=null,exit1 (E8). No profile threshold reduced. |
-| R-UI / U1–U3 | Completed real screens,licensed assets,reference fidelity,axe/keyboard/contrast,all-screen HTTP+WS egress,branch merge | OPEN; Stop/Knowledge plus E9 real history search/rename/delete PASS (15 browser checks,0 foreign requests/errors). Full fidelity/axe/all-screen egress/model/settings/Markdown and merge pending. |
+| R-UI / U1–U3 | Completed real screens,licensed assets,reference fidelity,axe/keyboard/contrast,all-screen HTTP+WS egress,branch merge | OPEN; Stop/Knowledge plus E9 real history search/rename/delete PASS (15 browser checks,0 foreign requests/errors). Exact history SHA792080b/all5 hosted jobs PASS (run38149612305). Full fidelity/axe/all-screen egress/model/settings/Markdown and merge pending. |
 | R-RAG / PH2,EV1 | Real-document hybrid/vector ablation,faithfulness,page highlighting | OPEN; current citation smoke does not establish benchmark lift. |
 | R-SPEECH / S1–S14 | Resident workers,streaming TTS,barge-in,diarization/notes,WER/DER/WS latency | OPEN; file ASR/TTS and reviewed notes only. |
 | R-VISION / V1–V4,EV3 | VLM/OCR/tables/figures/citations,n>=100QA/CIs/human subset | OPEN; software/evaluation absent. Optional visual retriever remains off. |
