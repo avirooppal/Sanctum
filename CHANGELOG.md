@@ -1,5 +1,13 @@
 # Changelog
 
+## 2026-10-11 - Ingress disconnect cleanup ordering
+
+- Remove idle peer-context association before publishing disconnect; preserve the
+  original cancellation/removal test and timing bound, and the caught failure.
+- Record real embedding/chat-cache cost comparisons; bounded slot reuse remains
+  proposed pending unchanged engine resource gates.
+
+
 ## 2026-10-10 — Mixed-engine CPU scheduling gate
 
 - Give speech priority over background execution and bound interactive deferral to

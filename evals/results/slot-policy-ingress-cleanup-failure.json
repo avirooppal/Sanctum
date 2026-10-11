@@ -1,0 +1,10 @@
+{
+  "suite": "slot-policy-full-rust",
+  "base_commit": "21077ec",
+  "passed": false,
+  "exit_code": 1,
+  "failed_test": "private_peer_context_observes_client_disconnect_and_is_removed",
+  "failure": "services/gateway/tests/ingress.rs:61 assertion failed: ingress.context(peer).is_none()",
+  "cause": "idle relay published Disconnect before Registration drop removed peer association",
+  "fix": "remove peer association before publishing idle-peer disconnect; retain original test and bounds"
+}

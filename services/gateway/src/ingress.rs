@@ -38,10 +38,17 @@ struct Registration {
     peer: SocketAddr,
     context: Cancellation,
 }
-impl Drop for Registration {
-    fn drop(&mut self) {
+impl Registration {
+    fn disconnected(&self) {
+        // Remove the association before this relay publishes its peer-disconnect
+        // reason; the association must not linger until socket cleanup finishes.
         self.contexts.lock().unwrap().remove(&self.peer);
         self.context.cancel(Reason::Disconnect);
+    }
+}
+impl Drop for Registration {
+    fn drop(&mut self) {
+        self.disconnected();
     }
 }
 
@@ -327,7 +334,7 @@ fn relay(
             context.cancel(Reason::Shutdown);
         }
         if !connected(&client) {
-            context.cancel(Reason::Disconnect);
+            _registration.disconnected();
         }
         if context.check().is_err() {
             break Err(timed_out());

@@ -1,7 +1,7 @@
 # Current state
 
 - Step: H3 ingestion/cache cost measurements before Step 1a; Step 0 HTTP reference passed.
-- Last green commit: `53681c9`; all five hosted jobs verified; no phase tags.
+- Last green commit: `21077ec`; all five hosted jobs verified; no phase tags.
 - Blockers: held authenticated WebSocket PENDING Step 1a; T1 latency and physical audio UNVERIFIED.
 - Next: gate chat slot-only policy; warm-worker ADR; authenticated WebSocket.
 
@@ -174,3 +174,22 @@ Post-fix Linux `python tools/check.py`: PASS143 tests/all source gates
 fmt/clippy/licenses/supervision (`.sanctum/h3b-rust.log`). Production unchanged.
 Next: candidate chat-only slot policy contract/test and full real-engine gate rerun;
 then warm-worker ADR and authenticated WebSocket. No phase tags.
+
+## Candidate slot policy and ingress ordering (under verification)
+
+Base `21077ec`; hosted run38104976909 all five jobs PASS, observed jobs API.
+Candidate cache policy contract/test first: compile FAILED missing cache_policy,
+then implementation keeps RAM0 and enables only chat slot prefixes. No candidate
+production commit until unchanged real gates pass. Full Rust run FAILED existing
+ingress disconnect-removal assertion (named failure JSON retained). The idle relay
+published Disconnect before RAII cleanup removed its association. Fix removes the
+association before publishing that reason; original ingress tests PASS5/5, unchanged
+bounds. Full Rust/security rerun underway; no pass claim yet. Step1 remains pending.
+
+Ingress correction verification: original `cargo test -p sanctum-gateway --test
+ingress` PASS5/5; full Linux `bash tools/check_rust.sh` PASS50, fmt/clippy,74 licenses,
+38 kernel probes/startup self-test and three supervisor scenarios. Log
+`.sanctum/slot-policy-rust-fixed.log`. Count50 includes the uncommitted candidate
+cache-policy test; the ingress correction itself changes no cache flags or tests.
+Candidate binary build PASS; live real-engine gates next, with no binary rebuild
+while helpers run. No failing run counted green or threshold changed.
