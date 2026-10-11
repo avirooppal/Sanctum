@@ -2,7 +2,7 @@
 
 - Authority: [MISSION](MISSION.md), [WRAPUP](WRAPUP.md), ADR0027; feature freeze active.
 - Current: Step U foundation on `ui-hermes-port`; baseline passed before edits.
-- Last hosted-green: `dd727065a7802fe04d4281b5136c1a9ef90ea510`, [all 5 jobs](https://github.com/avirooppal/Sanctum/actions/runs/38133836467).
+- Last hosted-green: `a1781a8f3fad700e137542ada155a35eea116cca`, [all 5 jobs](https://github.com/avirooppal/Sanctum/actions/runs/38144636103).
 - Blockers: no current software blocker; T1/GPU/physical audio/native targets need later verification.
 - Next: chat controls/history; real settings/models/Knowledge screens; isolated reference and U6 gates.
 - Release: incomplete; no merge or tag authorized by measured gates yet.
@@ -86,3 +86,9 @@ changed; rerun with explicit UTF-8, then all checks above. No runtime defect mas
 Documentation5557fd3 hosted run38144333928 all5 PASS. WRAPUP/archive Git newline
 normalization corrected under ADR0062 so committed bytes match their source hashes.
 Next: conversation management and remaining foundation screens, then U6 gates.
+
+Exact a1781a8 hosted CI: all5 jobs PASS, run38144636103. Byte audit initially
+FAILED: Git index reused normalized WRAPUP despite the attribute change. Rewrote
+and restaged exact attachment; staged-byte comparison now PASS (SHA256
+eab241c4b9f2b2f2de21b140db3ce664339c46a974b3204932e80ef45e0d2fba).
+Archive committed-byte SHA256 comparison also PASS. No product code changed.
