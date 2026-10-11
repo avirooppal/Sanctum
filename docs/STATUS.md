@@ -1,12 +1,12 @@
 # Current state
 
 - Step: public website foundation,ADR0064; exact chat/dashboard port still pending.
-- Last green commit: `42f72249ed80434a7163d4f07bdf9cba3c1caf0e`;run38149885761/all5 PASS observed.
+- Last green commit: `6ec627261abae92de6d8ed8a2247c2d0e4579f8b`;run38152617896/all5 PASS observed.
 - Current slice: source157/Rust62/web37 PASS;38 denial/startup probes;website3 viewports PASS.
 - Gate table: website functional PASS;full fidelity/axe OPEN;EXE/Linux packages OPEN.
 - Open blockers: native gateway/packages missing;full voice,vision,agents,LAN,crypto unfinished.
 - Next3: pinned upstream renderer reference;chat/dashboard fidelity;verified packaging.
-- Main/tags: UI branch unmerged;no tags. Extended10-stage smoke PASS;exact-SHA hosted CI pending.
+- Main/tags: UI branch unmerged;no tags. Extended10-stage smoke PASS;exact-SHA hosted CI all5 PASS.
 
 ## Public website slice
 
@@ -33,7 +33,7 @@ unverified. Website-only tests do not satisfy all-screen UI acceptance.
 Baseline and first post-change9-stage real smoke PASS,release_complete=false.
 Raw logs:evals/results/hermes-setup-*.log and website-*.log/json/png.
 The extended10-stage smoke PASS is captured in website-smoke-final.log and
-website-final-smoke-*.json/log;release_complete=false. Exact-SHA hosted CI pending.
+website-final-smoke-*.json/log;release_complete=false. Exact-SHA hosted CI all5 PASS (run38152617896);website-hosted-ci.json.
 Evidence copy error: broad copying included historical smoke outputs;those new
 copies were removed and only observed run logs retained. No historical source
 evidence was deleted (website-evidence-copy-correction.txt).
@@ -51,3 +51,6 @@ Previous status is archived verbatim at
 [history slice](status-archive/2026-10-11-history-before-website.md),SHA256
 `12b35b81b7f2dd902ca8db64fc277329082672cb0d674c7adeaf49bb4a501477`.
 Its older archive links and measurements remain intact.
+
+CI recording UTF-8/Windows-default encoding error preserved in
+website-doc-encoding-failure.txt; corrected with explicit UTF-8.

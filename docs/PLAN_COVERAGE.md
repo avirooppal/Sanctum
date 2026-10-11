@@ -216,3 +216,6 @@ All evidence paths are under evals/results/. This is not full UI fidelity.
 Extended smoke: `bash tools/smoke_all.sh` passed all10 stages,including
 ui_website;release_complete=false. Evidence:evals/results/website-smoke-final.log
 and website-final-smoke-*.json/log. No full release claim.
+
+Website commit `6ec627261abae92de6d8ed8a2247c2d0e4579f8b` pushed;
+hosted run38152617896/all5 jobs PASS observed. Raw:website-hosted-ci.json.
