@@ -1,11 +1,11 @@
 # Current state
 
-- Step: 3b chat renderer port (SafeMarkdown XSS isolation, slash commands, model status badges, 42 web tests).
-- Last green commit: `5ffb613` (reference launcher ADR 0065 & gate hygiene); hosted run 38159618162 all 5 jobs PASS.
+- Step: 3c dashboard port (Local Platform Status, dispatch queues, privacy invariants, 43 web tests).
+- Last green commit: `9fdd33b` (chat renderer SafeMarkdown & slash commands); hosted run 38160918943 all 5 jobs PASS.
 - Main status: origin/main at 41c4338, run 38122334255 all 5 jobs PASS (clean ancestor of ui-hermes-port).
 - Uncommitted smoke SHA256 matches: 8/8 json/log pairs byte-identical to website-final-smoke-*.
-- Gate table: source 157 / Rust 62 / web 42+2 PASS; 38 denial probes; zero npm audit advisories.
-- Next 3: 3c dashboard port; 3d fidelity verification with numbers; 3e static docs site.
+- Gate table: source 157 / Rust 62 / web 43+2 PASS; 38 denial probes; zero npm audit advisories.
+- Next 3: 3d fidelity verification with numbers; 3e static docs site; 3f merge to main.
 - Main/tags: UI branch `ui-hermes-port` unmerged; no tags. UTF-8 LF normalized.
 
 ## Public website slice
