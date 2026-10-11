@@ -1,0 +1,23 @@
+{
+  "suite": "real-realtime-transport-v1",
+  "passed": [
+    "bad_ticket_and_origin",
+    "single_use_replay",
+    "fragmented",
+    "unmasked",
+    "invalid_utf8",
+    "invalid_json",
+    "unknown_command",
+    "oversized",
+    "oversized_json",
+    "controls_reconnect_clean_close",
+    "handshake_slowloris",
+    "incomplete_frame_deadline",
+    "expired_ticket"
+  ],
+  "expiry_wait_seconds": 30.10453726997366,
+  "held_session_gate": "PENDING",
+  "speech_pipeline": false,
+  "handshake_release_seconds": 1.8772120770008769,
+  "incomplete_frame_release_seconds": 1.8704642669763416
+}

@@ -1,0 +1,33 @@
+{
+  "head_sha": "7cbc426d13b284856563c6e0a103f202b24557bf",
+  "status": "completed",
+  "conclusion": "success",
+  "url": "https://github.com/avirooppal/Sanctum/actions/runs/38145322030",
+  "jobs": [
+    {
+      "name": "source-gates (windows-latest)",
+      "status": "completed",
+      "conclusion": "success"
+    },
+    {
+      "name": "source-gates (macos-latest)",
+      "status": "completed",
+      "conclusion": "success"
+    },
+    {
+      "name": "source-gates (ubuntu-22.04)",
+      "status": "completed",
+      "conclusion": "success"
+    },
+    {
+      "name": "web",
+      "status": "completed",
+      "conclusion": "success"
+    },
+    {
+      "name": "rust-foundation",
+      "status": "completed",
+      "conclusion": "success"
+    }
+  ]
+}

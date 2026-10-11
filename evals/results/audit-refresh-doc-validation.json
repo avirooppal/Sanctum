@@ -1,0 +1,7 @@
+{
+  "requirements": 121,
+  "local_doc_links": "PASS",
+  "archive_bytes": "PASS",
+  "missing_verifier_commands": "explicitly open, not executable acceptance",
+  "status_archive_sha256": "263e93ebcc8f8996d8d439bf97beaf50f3c32f60e12e7c06a628675d77b0a9e8"
+}

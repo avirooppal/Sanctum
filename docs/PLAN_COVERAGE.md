@@ -1,256 +1,194 @@
-# Plan coverage audit
+# Plan coverage — current evidence only
 
-Step1a transport **Implemented for Linux x86_64 reference**, with owner ticket,
-Host/Origin binding, guarded direct WebSocket, heartbeat, frame/memory/deadline
-limits, child cancellation, and content-free audit. Evidence:57 Rust/source150,
-13 live security cases,600.398s held gate,182.553s held mixed workload,1.425506s
-active shutdown/1001/zero survivors. Paths:gateway/realtime.rs, ingress.rs,
-inference/cancellation.rs, realtime contract/schema and named realtime eval results.
-Actual WS ASR/LLM/TTS execution remains **Not done**, explicitly disabled in ready;
-transport acceptance does not satisfy Phase3 voice, WER, diarization or RC gates.
+Audit date: 2026-10-11. Verified source: `7cbc426d13b284856563c6e0a103f202b24557bf`
+on `ui-hermes-port`. This replaces the chronological audit, not its evidence.
+Previous file archived **verbatim** at
+[old audit](status-archive/2026-10-11-plan-coverage-before-refresh.md), SHA256
+`3697d6ac2d2a3e76c9f4ef58e3e07b063c2e35e7c3018bec09483eb5b3117932`.
 
-Final-mission continuation: ticket endpoint **Implemented**, scoped to loopback
-owner issuance (`chat.rs`, `realtime_tickets.rs`, Origin/contract tests, six real
-HTTP checks in `realtime-ticket-http-reference.json`). Authenticated WebSocket
-transport/held-session criterion remain **Not done**. Incremental smoke entry point
-**Partial** (`tools/smoke_all.sh`, current real six-stage smoke manifest); full
-five-modality/fresh-clone/LAN/ledger release acceptance is not implemented.
+## Rules and evidence index
 
-2026-10-11 continuation evidence supplement: Step1-pre residency/startup
-measurement implemented (`tools/measure_speech_residency.sh`, native probe,
-`evals/results/speech-residency-reference.json`); this establishes only upstream
-adapter feasibility and the measured small-fixture footprint. Warm supervised
-speech workers, authenticated WebSocket, real held-session acceptance, UI port
-and later roadmap remain **Not done/Partial**, not hardware-only exceptions.
-Step1a internal ticket primitive is contract-tested; no issuing endpoint or
-transport yet. Historical entries below are not a fresh-session acceptance audit.
+- **Implemented** applies only to the narrow requirement named in that row and
+  requires execution observed during this audit session. It is not phase acceptance.
+- **Partial** includes incomplete or entirely absent software, explicitly described
+  in the gap column. It must not be relabeled a hardware exception.
+- **UNVERIFIED** identifies execution not established here; missing implementation
+  is stated separately. Historical measurements do not establish a current pass.
+- **Out of scope by decision** requires an ADR. ADR0027 removes team features, not
+  owner LAN mode, owner ACLs, optional GPU backends or sandbox tiers.
+- Every subsequent slice must update its row IDs here and the matching rows in
+  RELEASE_CHECKLIST.md in the **same commit** as code/tests. Preserve failed runs.
 
-S0-1 context update: `services/inference/src/cancellation.rs` and ingress private-peer
-association share cancellation/deadline state through queued Rust engine entry
-points. Unit and real TCP tests cover terminal state and disconnect propagation.
-End-to-end cancellation is **Partial**: blocking inference/Knowledge/speech and
-their nested engine work are not interrupted yet. S0-2 through S0-8 remain open.
-ADRs 0031/0032 predeclare cleanup gates and future resident speech workers.
+All paths below are repository-relative. E1–E8 refer only to this session:
 
-Step 0 ingress update: connection/lane/header/body bounds and upload stall checks
-are implemented in `services/gateway/src/ingress.rs`, with unit tests and measured
-`evals/results/ingress-{limits,overload}.json`. Three-minute upload-flood health p95
-is 6.386ms. Overall resource governance remains **Partial**: these no-engine
-checks do not establish inference/ASR/ingestion cancellation, response throughput,
-process-tree leak freedom, mixed-engine load, or full graceful shutdown.
-Held authenticated WebSocket criterion is **PENDING Step 1a**.
+| ID | Command / result / raw evidence |
+|---|---|
+| E1 | `python tools/check.py` under the WSL development venv, PYTHONPATH unset: 157 tests (24 CLI,20 tools,24 Knowledge,69 speech,20 eval), Ruff/format/declared ty scopes, generated API consistency PASS. `evals/results/audit-refresh-source.log`. Registry scans:26 Python/72 npm dependencies;5 font asset/notice hashes. These scans compare reviewed metadata; they are not a fresh upstream legal review. |
+| E2 | `bash tools/check_rust.sh`:57 Rust tests, fmt/clippy -D warnings,92 crate licenses,22 containment +16 runtime/exec-child denial checks PASS. `evals/results/audit-refresh-rust.log`; supervision3 cases,zero survivors,release0.566360/0.539456/0.566059s in `audit-refresh-process-supervision.json`. |
+| E3 | `npm test --prefix apps/web`32+2 PASS; `npm run typecheck --prefix apps/web`; `npm run build --prefix apps/web`; `npm audit --audit-level=low --prefix apps/web`0 advisories. `evals/results/audit-refresh-web.log`. |
+| E4 | `bash tools/smoke_all.sh` with runtime-dispatch config and local token:8 real stages PASS; **release_complete=false**. `evals/results/audit-refresh-smoke.log` and `audit-refresh-smoke-all-reference.json`. SDK8 checks,chat3.5742s,TTFT0.5524s,1024-dimensional embeddings: `audit-refresh-smoke-chat.json`. These are smoke timings, not controlled SLO benchmarks. |
+| E5 | Real browser tests in E4: Knowledge6 checks with cited amber answer,empty-workspace abstention,zero foreign HTTP/WS requests on that surface; chat Stop4 checks; file speech UI7 checks. `audit-refresh-smoke-ui-knowledge.json`, `audit-refresh-smoke-ui-chat-stop.json`, `audit-refresh-smoke-ui.log`. |
+| E6 | `node evals/browser_meeting.mjs ...`5 PASS and `node evals/browser_microphone.mjs ...`4 PASS. `audit-refresh-meeting-browser.json`, `audit-refresh-speech-microphone.json`. Summary semantic quality and physical microphone are explicitly **not verified**. |
+| E7 | WSL `python evals/realtime_transport.py --token-file /home/aviroop/.local/share/sanctum-dispatch-smoke/local.token --output .sanctum/audit-refresh-realtime-linux.json`:13 PASS,handshake1.877212s,partial-frame1.870464s,expiry30.104537s. `audit-refresh-realtime-linux.json`. Windows invocation first FAILED existing handshake<2s assertion: `audit-refresh-realtime.log`; no exact elapsed number emitted. Do not count it as a pass. No held-session/load rerun this session. |
+| E8 | `python -m sanctum doctor --json`: Linux x86_64,12 CPUs,8167555072 RAM bytes,no GPU,NPU unknown; recommendation=null,exit1. `audit-refresh-doctor.json`. This is below the configured8GiB floor; no floor relaxed. Hosted exact7cbc426 CI all5 jobs observed successful: [run38145322030](https://github.com/avirooppal/Sanctum/actions/runs/38145322030). |
 
-Step 0 dispatch update: `services/gateway/src/dispatch.rs` and `runtime_main.rs`
-implement bounded admitted-request workers/queues with 503 backpressure and lane
-priority. `gateway-dispatch.json` measures real held-upload health/models and mixed
-chat/ingestion, plus overload. Mark concurrency **Partial**: held WebSocket,
-transport connection bounds, disconnect/engine cancellation and storm leak tests
-are not verified or implemented. This is not Step 0 acceptance.
+## Sections 1–5: product, modes and architecture
 
-## Single-user scope amendment
-
-The following supersedes team-related cells throughout this historical audit.
-Each is **Out of scope by decision**, not implemented: team mode/collaboration,
-shared workspaces/multiple human accounts, Postgres/pgvector/Postgres FTS, team
-queues, OIDC/SAML, multi-user RBAC/tenancy/per-user quotas, multi-user load and the
-20-user gate, Helm/Kubernetes. See [ADR-0027](adr/0027-single-user-scope.md).
-Local ACLs, personal workspace boundaries, optional GPU inference, resource limits,
-single-owner workload/soak tests and signed offline deployment remain required.
-
-Container verification update: Docker recovered; current unsigned offline chat
-bundle reached first answer in 31.7311s on a fresh no-network container. Evidence:
-`evals/results/phase1-clean-install.json`, `tools/clean_install_test.py`. This
-supersedes the socket blocker and old timing; it does not verify a signed air-gap
-release, downloads/build time, or non-Linux engines.
-
-Incremental ASR update: `services/speech/sanctum_speech/incremental.py` provides
-bounded partial replacement snapshots with either verified ASR backend. Real
-isolated evidence in `speech-incremental-{parakeet,whisper}.json`; final decoding
-1.97s / 1.19s. Streaming remains Partial: no hosted WebSocket, persistent native
-streaming state, or engine-process cancellation. No T1 latency claim.
-
-Browser meeting update: `apps/web/src/MeetingPanel.tsx` offers explicit reviewed
-transcript save and plain-text generated notes. `meeting-browser.json` records
-5/5 real browser checks. This supersedes the missing meeting UI note below;
-diarization and semantic summary quality remain incomplete.
-
-Meeting update (2026-10-10): `services/speech/sanctum_speech/hosted_meeting.py`
-connects the authenticated workspace meetings route to local inference and ACL
-ingestion. `evals/results/speech-meeting.json`: 7/7 real API checks, 2.053715s
-summary/ingestion on a short actual ASR transcript. Phase 3 meeting mode remains
-Partial: no diarization or meeting UI, and summary semantics are not quality-gated.
-Unit tests enforce authorization before inference and verbatim action evidence.
-
-Microphone update (2026-10-10): bounded start/finish capture now exists in
-`apps/web/src/microphone.ts`, `capture-worklet.js` and `pcm.ts`. Real worklet to
-local ASR tested with an emulated device: `speech-microphone.json` 4/4. Physical
-microphone UNVERIFIED; this is final-on-commit dictation, not partial streaming ASR.
-
-Browser speech update (2026-10-10): file dictation to draft, WAV playback and client
-stop now exist in `apps/web/src/SpeechPanel.tsx` / `speech.ts`. Real browser 6/6 in
-`speech-browser.json`; warm ASR-chat-TTS full-WAV latency 5.120009s in
-`speech-voice-turn-warm.json`. Streaming ASR, microphone, server-side barge-in,
-diarization and T1 latency remain Partial/UNVERIFIED. This is not Phase 3 acceptance.
-
-Hosted TTS update (2026-10-10): authenticated `/v1/audio/speech` now returns real
-WAV/PCM through the confined worker (`services/gateway/src/speech.rs`,
-`services/speech/worker.py`). `evals/results/speech-sdk-tts.json` records 8/8 SDK
-checks. This implements file synthesis only; streaming output, physical playback,
-barge-in and end-to-end voice SLO remain Partial/UNVERIFIED.
-
-Audit begun 2026-10-10 at `303d16e`; this is a live audit, not final acceptance.
-
-Latest evidence superseding pending cells below: Linux recovered; Rust containment
-reverified; `phase1-sdk.json` now records a fresh 8/8 real chat SDK run. Real whisper.cpp
-file ASR is verified by `speech-jfk-smoke.json` (single public-domain sample, not a
-quality corpus). `/v1/audio/transcriptions` is now implemented for authenticated solo
-multipart uploads: `services/gateway/src/speech.rs`, `services/speech/worker.py`,
-`speech-sdk.json` (8/8 real SDK checks). Other speech routes and full Phase 3 remain
-partial. `docs/contracts/speech-worker-v1.md` states exact limits and context scope.
-File VAD is now implemented by `backends/silero_cpp.py`: `speech-vad-smoke.json`
-records real speech/silence checks and `speech-sdk-vad.json` the HTTP integration.
-Streaming VAD/ASR and voice SLOs remain unverified; file VAD is opt-in.
-`backends/parakeet_cpp.py` now supplies a second real ASREngine. Its isolated file and
-HTTP results are in `speech-parakeet-smoke.json` and `speech-sdk-parakeet.json`.
-Language selection is unforced and timestamps coarse; live streaming remains absent.
-`backends/flite.py` now provides a real opt-in CPU TTSEngine with a versioned profile
-and reviewed permissive voice artifact. `speech-tts-smoke.json` records synthesis;
-physical playback and neural quality remain unverified. TTS HTTP hosting is verified above.
-`Implemented` means the named scope has current executable evidence, not that the
-whole phase is complete. `Partial` includes missing integrations. `UNVERIFIED` means
-implementation/evidence exists but the required execution has not passed this run.
-Historical result files are retained and explicitly identified. README-only service
-directories are `Not done`. No claim is based merely on a protocol or a mock engine.
-
-## Sections 1–4: product scope
-
-| Requirement | Status | Evidence / missing work |
+| ID / requirement | Status | Implementation/evidence and remaining boundary |
 |---|---|---|
-| §1 unified local multimodal product | Partial | Chat reference and Knowledge worker; speech libraries; vision/agents absent |
-| §2 landscape | Reference | Research/inspiration, not acceptance requirements or verified current comparisons |
-| §3 default-deny egress | Partial | `services/policy/src/runtime.rs`, `tools/verify_runtime.py`; Linux only, future services absent |
-| §3 verifiable Privacy Ledger | Not done | No hash-chained ledger or ledger UI |
-| §3 hardware adaptation | Partial | `apps/cli/sanctum/doctor.py`, `profiles/hardware.json`; Windows doctor executed, accelerator coverage incomplete |
-| §3 shared identity/knowledge | Partial | Local bearer authentication, Knowledge ACLs; speech HTTP integration absent |
-| §3 five-minute install / air gap | UNVERIFIED | Historical `phase1-clean-install.json` excludes build/download; signed clean-clone installation not verified |
-| §3 standards | Partial | OpenAI chat, JSON/OpenAPI contracts; OTel/OIDC/MCP not implemented |
-| §3 measured releases | Partial | `evals/`, CI source/profile gates; no full product release gate |
-| §4 Solo/Desktop | Partial | Linux CPU reference; no Tauri shell, native Windows/macOS runtime |
-| §4 Team/Server | Not done | No Compose/Helm team stack, pgvector or SSO |
-| §4 Air-gapped/Regulated | Not done | Unsigned development bundle only |
-| §4 Edge | Not done | Later scope; no NPU appliance profile verified |
+| P1 §1 unified private text/knowledge/speech/vision/agents | Partial | E4 verifies chat,RAG,file speech only. Full live voice,vision,agents absent. |
+| P2 §2 landscape and lessons; §17 inspirations | Partial | Reference context, not executable acceptance. No current competitor/performance assertions verified in this session. Swappable local adapters exist; complete desktop experience and policy do not. |
+| P3a §3 default-deny and explicit per-workspace cloud connectors | Partial | `services/policy/src/runtime.rs`,E2 Linux denial; connectors unavailable,not an implemented logged/revocable allowlist. Future components cannot inherit a verification claim. |
+| P3b §3 verifiable Privacy Ledger | Partial | Ledger,verify command and packet reconciliation absent. Startup denial alone is not a ledger. |
+| P3c §3 hardware adaptation | Partial | `apps/cli/sanctum/doctor.py`,E1 doctor fixtures; E8 actual host has no recommended profile. |
+| P3d §3 shared auth,memory,knowledge,tools,audit | Partial | `services/gateway/src/chat.rs`,E4/E6 owner routes; agents and common audit absent. |
+| P3e §3 signed five-minute install and air gap | Partial | No current clean-install timing or signed product bundle evidence. |
+| P3f §3 standards: OpenAI,MCP,OTel,GGUF/safetensors | Partial | E4 OpenAI+GGUF reference; MCP,OTel and complete safetensors engine support absent. |
+| P3g §3 measured releases | Partial | E1–E7 scoped tests; no full RAG/WER/DER/visual/agent/soak release measurement. |
+| P4a §4 solo/desktop | Partial | Linux CPU runtime and browser E4/E5; Tauri/native packages absent. |
+| P4b §4 team mode,SSO,multiple accounts/sharing,Postgres/pgvector,team queues,Helm,multi-user quota/load | Out of scope by decision | [ADR0027](adr/0027-single-user-scope.md). Owner LAN/resources/ACLs retained. |
+| P4c §4 air-gapped mode | Partial | Signed offline install and audit export absent. Unsigned development tools are not release artifacts. |
+| P4d §4 edge/appliance,NPU | Partial | Plan marks later; no validated appliance implementation. No scope cut is inferred. |
+| P5a §5 separate swappable services/versioned contracts | Partial | `docs/contracts/`,`services/inference/src/lib.rs`,Knowledge/speech worker interfaces,E1/E2; no complete gRPC surface or vision/agents. |
+| P5b §5 gateway-only ingress / allowlisted egress | Partial | E2 isolated runtime/exec-child probes; full product proxy and connector governance absent. |
+| P5c §5 request envelope validation | Implemented | `services/gateway/tests/contracts.rs::shared_envelope_fixtures_match_contract`,E2; CLI `test_envelope_rejects_missing_identity_and_invalid_traces`,E1. End-to-end propagation to absent services is not claimed. |
 
-## Sections 5–6: architecture and modules
+## Section 6.1: inference
 
-| Requirement | Status | Evidence / missing work |
+| ID / requirement | Status | Implementation/evidence and remaining boundary |
 |---|---|---|
-| §5 only gateway ingress; isolated engine processes | Implemented (Linux reference) | `runtime_main.rs`, `chat.rs`; fresh `tools/check_rust.sh`: HTTP health + 16 denial probes |
-| §5 every module behind versioned HTTP/gRPC | Partial | `docs/contracts/`; Knowledge JSONL worker, speech in-process protocols; no universal gRPC |
-| §5 request envelope and trace ID validation | Implemented (contract) | `services/gateway/tests/contracts.rs`, CLI envelope fixtures passed; not distributed tracing |
-| §6.1 llama.cpp | UNVERIFIED (current run) | `LocalEngine`, historical SDK result; fresh inference check pending |
-| §6.1 MLX, vLLM/SGLang | Not done | No concrete adapter/profile execution |
-| §6.1 CPU/GPU/RAM/NPU discovery, quantization/context/KV | Partial | `doctor.py`, hardware profiles; NPU/Apple/NVIDIA execution unverified |
-| §6.1 registry/task routing | Partial | Licensed capability registry; static chat/embedding routing, no planner routing |
-| §6.1 priority queue/lazy load/keep-warm/LRU | Not done | Engines start eagerly; no resource-aware scheduler |
-| §6.1 batching/cache/speculation/reasoning | Partial | Upstream llama.cpp capabilities; no controlled product configuration or verification |
-| §6.1 structured output/tool calls | UNVERIFIED (current run) | `evals/sdk_chat.py`; fresh real test pending |
-| §6.1 local/HF sourcing/hash checks/fit estimate | Implemented (provisioning scope) | `apps/cli/tests/test_provisioning.py` passed; speed remains unmeasured |
-| §6.1 signed model bundles / multi-LoRA | Not done | Hash checks only; multi-LoRA later |
-| §6.2 VAD→streaming ASR→diarization→LLM→streaming TTS | Partial | `services/speech/sanctum_speech/`; protocols and fake-engine tests only |
-| §6.2 Parakeet/faster-whisper/whisper.cpp | Partial | whisper.cpp file adapter, hash pins; real inference pending; other engines absent |
-| §6.2 language/hardware auto selection | Not done | Explicit local profile only |
-| §6.2 live captions/PTT/meeting/diarization | Partial | Bounded dictation and meeting ingestion libraries; no microphone, diarizer, UI or listener |
-| §6.2 hotwords/wake word | Partial | Prompt forwarded; no hotword decoder; wake word optional and absent |
-| §6.2 TTS/voice cloning policy | Partial | Voice registry contract and fake synthesis; no real TTS backend; no cloning feature |
-| §6.2 voice latency/barge-in/WER | UNVERIFIED | Evaluator tests pass; T1 corpus and live voice measurements absent |
-| §6.2 OpenAI audio/WebRTC/WebSocket | Partial | OpenAPI/events only; no served audio endpoints |
-| §6.3 VLM chat / images/charts | Not done | `services/vision-docs/README.md` is a placeholder |
-| §6.3 structural parser/OCR/table/figure/formula/reading order | Partial | Markdown/text-PDF parser only (ADRs 0009/0010); no scanned OCR or VLM captions |
-| §6.3 UI/receipt/handwriting/video | Not done | Video is stretch scope |
-| §6.4 folder/upload connectors | Partial | Polling watcher and upload worker; fresh tests pass, real request pending |
-| §6.4 Git/vault/email/WebDAV/SMB/S3/export connectors | Partial | Markdown vault files can be watched; dedicated connectors absent |
-| §6.4 structure/parent-child/context enrichment | Partial | `parsing.py` and retrieval tests passed; no LLM chunk enrichment |
-| §6.4 dedup/version/incremental index | Implemented (catalog) | `test_acl.py`, watcher tests; Windows symlink test skipped for privilege |
-| §6.4 ACL/classification prefilter/revocation | Implemented (library) | `test_acl.py`, `test_vectors_prefilter_before_top_k`, meeting ACL integration passed |
-| §6.4 rewrite/dense/BM25/RRF/rerank/parents | Partial | Hybrid pipeline exists; no rewrite/decomposition; concrete model rerun pending |
-| §6.4 citations/highlights/groundedness | Partial | Quote validation, abstention and local judge; page-region UI absent; quote presence is not entailment |
-| §6.4 embeddings/reranker/Matryoshka | Partial | Registered Qwen GGUFs; no dimension selection validation |
-| §6.4 visual retrieval/compression | Not done | Optional, off |
-| §6.4 graph/agentic RAG/SQL | Not done | Graph is later scope |
-| §6.4 LanceDB/pgvector store abstraction | Partial | SQLite-vec adapter under ADR 0010; pgvector absent |
-| §6.4 source/confidence/missing-evidence UX | Partial | API citations and abstention; web only supports chat |
-| §6.5 agent loop/budgets/MCP/tools | Not done | `services/agents/README.md` placeholder |
-| §6.5 container/gVisor/Firecracker sandbox quotas | Not done | Linux runtime containment is not an agent sandbox |
-| §6.5 memory/workflows/approvals | Not done | Chat SQLite history only; no governed agent memory or workflow runner |
-| §6.6 local accounts/OIDC/SAML/scoped API keys | Partial | Single local bearer credential; no multi-user identity or scoped keys |
-| §6.6 RBAC/ABAC/allowlists/OPA/Cedar | Partial | Knowledge owner/membership/class validation; no declarative data-flow policy |
-| §6.6 append-only hash-chained ledger and export/UI | Not done | No complete model/tool/retrieval/egress audit |
-| §6.6 namespaces/firewall/DNS/proxy/self-test | Partial | Namespace/seccomp denial verified; cloud connectors absent, no egress proxy |
-| §6.6 encryption/TLS/mTLS/keychain | Not done | Loopback bearer transport; private file permissions are not encryption |
-| §6.6 signed images/SBOM/reproducible releases | Partial | Dependency licenses/hashes scanned; signing and release SBOM absent |
+| I1 llama.cpp CPU adapter / OpenAI chat,streaming,embeddings,models | Implemented | `services/inference/src/lib.rs`,`services/gateway/src/chat.rs`; `evals/sdk_chat.py`,E4 real8 checks. Scope is installed Linux CPU reference. |
+| I2 MLX / vLLM or SGLang / accelerator offload | Partial | Concrete alternative adapters and full hardware verification absent. Do not describe this as hardware-only. |
+| I3 CPU/GPU/VRAM/RAM/NPU discovery and quant/context/KV profile selection | Partial | `doctor.py`,`profiles/hardware.json`; E1 boundary/probe tests, E8 no-fit,NPU unknown; accelerator/native probes not established. |
+| I4 capability registry,task/classifier/reasoning routing | Partial | `profiles/registry.json`,E1 registry tests; current chat/embed routes do not implement planner routing. |
+| I5 priority queue and admission | Partial | `services/gateway/src/dispatch.rs`,`services/gateway/src/engine_admission.rs`,E2 unit/contracts. Current mixed-engine load not rerun; full owner scheduling absent. |
+| I6 lazy load,keep-warm,LRU,memory guards | Partial | Engines launched eagerly; complete memory-aware lifecycle absent. |
+| I7 batching,prefix/KV cache,speculative decoding,reasoning toggle,multi-LoRA | Partial | Upstream capability is not product acceptance; cache/role code exists, no current feature benchmarks. Multi-LoRA is later. |
+| I8 JSON schema and tool-call output | Implemented | `evals/sdk_chat.py` json_schema/tools real checks,E4. This is structured output,not governed tool execution. |
+| I9 local mirror/HF download,hash validation,fit/speed estimates | Partial | `apps/cli/tests/test_provisioning.py` hash mismatch/offline import/network-explicit/speed-not-fabricated,E1. Actual download and fit UI not verified; speed not measured. |
+| I10 signed models/bundles and quarterly family refresh | Partial | Registry/hash checks exist,E1; signatures and measured profile refresh absent. Example model names are not claimed current/appropriate. |
 
-## Sections 7–17: profiles, assurance and delivery
+## Section 6.2: speech
 
-| Requirement | Status | Evidence / missing work |
+| ID / requirement | Status | Implementation/evidence and remaining boundary |
 |---|---|---|
-| §7 T0–T3 configured profiles / fit UX | Partial | Hardware fixture evaluation 8/8; CLI fit, no UI download estimate or measured full tier matrix |
-| §8 accidental cloud leakage | Partial | Runtime rejects cloud enablement; no opt-in connector path |
-| §8 prompt injection/tool exfiltration/malicious MCP | Not done | No complete adversarial agent/data-flow suite |
-| §8 cross-tenant RAG | Implemented (library) | ACL/pre-filter/revocation tests pass; broader product penetration test absent |
-| §8 poisoned weights | Partial | SHA-256 validation; signatures/bundle scanning absent |
-| §8 insider/disk theft | Not done | No workspace encryption/break-glass policy |
-| §9 Rust/Python/React stack and §13 directories | Implemented (layout) | Cargo workspace, uv lock, React/Tailwind web build; placeholders clearly identified |
-| §9 Tauri/PWA/gRPC/MCP/queue/OPA/OIDC/OTel | Not done | Future integrations, not inferred from chosen stack |
-| §10 Phase 0 gate | Partial | Current doctor and Linux probes pass; hosted CI and full service/platform matrix unverified |
-| §10 Phase 1 gate | Partial | Fresh clone reaches answer, SDK 8/8 (`fresh-checkout-sdk.json`); staged artifacts/toolchain used, cold-machine <5min not established |
-| §10 Phase 2 gate | UNVERIFIED | Historical synthetic v6 +0.40 recall lift; current real-document benchmark required |
-| §10 Phase 3 gate | Partial | Real Whisper/Parakeet/VAD/TTS and browser dictation verified; streaming, diarization and T1 WER/<800ms incomplete |
-| §10 Phase 4 gate | Not done | No measured visual QA lift |
-| §10 Phase 5 gate | Not done | No agent red-team suite or Privacy Ledger |
-| §10 Phase 6 gate | Not done | No 20-user reference server or signed air-gap install |
-| §10 Phase 7 | Not done | Optional; deferred until 0–6 verified |
-| §11 retrieval/answers evaluation | Partial | Existing synthetic datasets and local judge; no current real-corpus/human review |
-| §11 visual/ASR/voice/inference/agents/privacy metrics | Partial | Speech scoring and SDK timing harnesses; most real measurements absent |
-| §11 regression thresholds/CI profile checks | Implemented (foundation) | `tools/tests/test_evals.py`, `evals/run.py`; 5% and security zero tolerance (ADR 0004) |
-| §12 chat/embedding/models routes | Implemented (reference) | `fresh-checkout-sdk.json` and `phase1-sdk.json`, real SDK 8/8 in this session |
-| §12 workspaces/documents/search/ask | UNVERIFIED (current run) | Implemented gateway/worker; real rerun pending |
-| §12 rerank/audio/realtime/agent/ledger/policy/MCP | Partial | Some schemas only; no complete public implementation |
-| §14 differentiators | Partial | Aggregate goals, dependent on incomplete modules above |
-| §15 risk mitigations | Partial | ADRs/license gates/default-deny exist; hardware CI, external security review and quarterly refresh absent |
-| §16 first ten days | Partial | Doctor/chat/UI/isolation/Knowledge source exists; signed install and real 30–50-question corpus missing |
-| §17 references | Reference | Inspiration, not shipped dependencies or verified-current claims |
+| S1 VAD→streaming ASR→diarization→LLM→streaming TTS | Partial | `services/speech/sanctum_speech/` interfaces,E1; full resident WebSocket pipeline absent. |
+| S2 Parakeet file ASR | Implemented | `backends/parakeet_cpp.py`,gateway speech worker; E4 real SDK8 cases on hash-identified JFK fixture. No corpus-quality claim. |
+| S3 whisper.cpp / faster-whisper | Partial | `backends/whisper_cpp.py`,E1 adapter tests; Whisper real engine not rerun; faster-whisper blocked under [ADR0017](adr/0017-speech-asr-engine-license-gate.md),not implemented. |
+| S4 language/hardware auto-selection,pinning,hotwords | Partial | Explicit configured IDs; no validated automatic multilingual routing/hotword quality. |
+| S5 file/streaming VAD,EOU,live captions | Partial | VAD/incremental source tests,E1; real VAD/streaming path not established by current smoke. |
+| S6 push-to-talk anywhere / microphone | Partial | `apps/web/src/microphone.ts`,`pcm.ts`,E6 real worklet with emulated input. Desktop-global dictation absent; physical audio UNVERIFIED. |
+| S7 meeting summary/action items into Knowledge | Partial | `hosted_meeting.py`,`MeetingPanel.tsx`,E6 5 browser checks; no diarization,editable speaker labels or semantic-quality gate. |
+| S8 TTS voices / cloning policy | Partial | Flite file synthesis verified8 SDK cases,E4; resident/streaming neural TTS and voice cloning governance absent. Cloning not exposed. |
+| S9 barge-in,playback acknowledgement,history truncation,echo handling | Partial | Client Stop exists,E5; complete voice barge-in absent. |
+| S10 <800ms T1 EOS-to-first-audio / WER / DER | Partial | Evaluation functions tested,E1. Real>=50-turn WS and corpus/DER gates not implemented/measured; T1 hardware result UNVERIFIED,not the only gap. |
+| S11 audio HTTP endpoints | Implemented | `services/gateway/src/speech.rs`,`services/speech/worker.py`; E4 ASR8/TTS8 SDK checks. File modes only. |
+| S12 authenticated WebSocket transport | Implemented | `services/gateway/src/realtime.rs`,E7 13 Linux transport checks and E2 contracts; speech_pipeline=false. Windows-side deadline failure retained. |
+| S13 held sessions/overload under voice caps | UNVERIFIED | Existing `evals/realtime_held.py`; not rerun this session. Prior results remain archived,not current acceptance. |
+| S14 optional wake word | Partial | Not implemented; optional,not silently counted complete. |
 
-## Final acceptance still required
+## Sections 6.3–6.4: vision and Knowledge
 
-Fresh clone → README → first answer; full clean regression and security suites;
-last egress self-test plus ledger reconciliation; complete per-phase real features.
-The ledger is absent, so "zero unexpected outbound connections in the ledger" cannot
-currently be asserted. No final acceptance or fully green phase tags are implied.
-
-## Step 0 cancellation evidence (2026-10-10)
-
-Partial: shared context, owned process groups and cancellable engine I/O are tested
-in `services/gateway/tests/cancellable_io.rs`, `tools/verify_supervision.py`, and
-`evals/cancellation_release.py`. `evals/results/cancel-{chat,knowledge,asr,tts}.json`
-records 50 actual samples per engine. This does not establish response-throughput,
-engine-wide admission, full resource storm, active shutdown or mixed overload gates.
-
-## Step 0 hardening progress
-
-| Requirement | State | Current evidence |
+| ID / requirement | Status | Implementation/evidence and remaining boundary |
 |---|---|---|
-| Shared context and owned process cleanup | Implemented for HTTP reference paths | cancellation-v1/process-supervision-v1 contracts; Rust tests and 38 denial probes |
-| Cancellable engine I/O | Implemented reference | engine-storms-verified-* 500 real disconnect/explicit samples, observed actual model slot idle/CLI absence, all p95/max gates passed |
-| Response/upload throughput | Implemented reference | response-flow tests and response-backpressure.json actual embedding/SSE/upload probes |
-| Active/queued bounded shutdown | Implemented reference | repeated-shutdown.json three active/queued cycles max 1.198612s, zero survivors |
-| Cross-caller engine limits | Implemented reference | engine_admission Rust/Python interoperability and engine-admission.json actual 503/Retry-After |
-| Real engine crash recovery | Implemented reference | engine-crash-storage.json: queued/next requests succeed, affected turn not saved, old PID absent and resources restored |
-| Resource storms | Implemented reference | engine-storms-verified.json and 500 per-engine/method samples; exact restoration and worst retained RSS +13248KiB |
-| Mixed-engine sustained overload | Implemented reference | mixed-engine-overload.json 181.527s; all predeclared lane/resource gates passed, zero foreground errors |
-| Held authenticated WebSocket | PENDING Step 1a | No authenticated WebSocket implemented yet |
+| V1 VLM images/screenshots/charts,multi-image/capability/size/EXIF controls | Partial | Vision implementation and corresponding UI absent. |
+| V2 OCR,structural tables/figures/formulas/reading order,captions | Partial | Markdown/text-PDF parser only; [ADR0009](adr/0009-knowledge-parser-license-boundary.md) selection; OCR/VLM/layout/bbox output absent. |
+| V3 receipt/invoice structured extraction,handwriting,agent UI understanding | Partial | No real pipeline/evidence. |
+| V4 video sampling + ASR timeline | Partial | Stretch requirement; not implemented,not a release claim. |
+| K1 upload | Implemented | `services/knowledge/worker.py`,`apps/web/src/KnowledgePanel.tsx`; E4/E5 real restricted document upload/cited answer. Markdown scope tested live. |
+| K2 local folder watch / Markdown vault | Partial | `services/knowledge/watch.py`,E1 root confinement/content-hash/size tests; no current live watcher run. |
+| K3 Git,email/IMAP,WebDAV,SMB,S3,Confluence/Notion exports | Partial | Dedicated connectors absent; file import is not equivalent to authenticated connectors. |
+| K4 structural chunks,parent-child,enrichment | Partial | `sanctum_knowledge/parsing.py`,E1 heading/parent/untrusted markup tests; LLM contextual enrichment and full PDF layout absent. |
+| K5 dedup/version/incremental catalog | Implemented | `sanctum_knowledge/store.py`,E1 `test_dedup_version_and_parent_expansion_acl`; catalog scope,not all connector workflows. |
+| K6 document ACL/classification inheritance,prefilter,revocation | Implemented | `test_document_acl_and_revocation_apply_before_candidates`,`test_vectors_prefilter_before_top_k`,`test_cross_workspace_and_membership_are_denied`,E1; E4 real authorized retrieval. No independent penetration-test claim. |
+| K7 rewrite/decomposition,dense+BM25,RRF,rerank,parent context/dedupe | Partial | `sanctum_knowledge/retrieval.py`,E1 RRF/parent/ACL tests and E4 real ask; rewrite/decomposition absent; comparative quality gate not rerun. |
+| K8 citations and abstention | Implemented | `local_models.py`,E1 unknown chunk/nonverbatim quote tests; `KnowledgePanel.tsx`,E5 source/quote display and empty-workspace abstention. Entailment accuracy not established. |
+| K9 page/region highlights,confidence,missing-evidence UX | Partial | Source/page/quote fields exist; actual page-region overlays and calibrated confidence absent. |
+| K10 embeddings/reranker, multilingual/Matryoshka dims | Partial | E4 real1024-d embeddings and RAG; multilingual/dimension-reduction quality unmeasured. |
+| K11 visual retriever/fusion/compression | Partial | Optional and absent/off; no measured lift. |
+| K12 graph/global query,agentic searches/citation following,SQL tables | Partial | Graph is later; agentic RAG/SQL absent. |
+| K13 embedded vector abstraction | Implemented | `sanctum_knowledge/vectors.py`,E1 prefilter tests/E4 local RAG using sqlite-vec substitution under ADR0010; no LanceDB claim. |
+| K14 LanceDB default | Partial | [ADR0010](adr/0010-permissive-vector-adapter.md) substitution; default adapter not restored. |
 
-Step 0 final local verification: 49 Rust and 138 source tests, 38 kernel denial
-probes, 500 per-engine disconnect/explicit samples, three active start/stop cycles,
-and the 181.527s mixed-engine gate pass. `final-priority-active-shutdown.json`
-records the final 0.759479s stop with zero surviving owned PIDs. Real authenticated
-WebSocket remains explicitly PENDING Step 1a; this does not complete Phase 3.
+## Sections 6.5–6.6: agents, governance and security
+
+| ID / requirement | Status | Implementation/evidence and remaining boundary |
+|---|---|---|
+| A1 plan/tool/observe/reflect loop and step/token/time/compute budgets | Partial | No production agent loop. |
+| A2 MCP client/server,stdio/HTTP,knowledge/transcribe/OCR/code tools | Partial | No complete MCP implementation. |
+| A3 pinned/signed manifests,scope,name-shadow/rug-pull defense | Partial | Absent. |
+| A4 scoped file ops,code,browser proxy,calendar/email,read-only SQL | Partial | Governed built-in tools absent. |
+| A5 container/gVisor/Firecracker,egress/CPU/RAM/disk/time quotas,ephemeral FS | Partial | Trusted-engine confinement E2 is not a hostile-code sandbox; agent sandbox absent. KVM availability alone cannot complete it. |
+| A6 editable/exportable user/project memory | Partial | `storage.rs` conversation turns exist; governed persistent agent memory absent. |
+| A7 visual workflow builder,event/scheduled triggers | Partial | Absent. Upstream Hermes cron is omitted; Sanctum's plan workflow requirement is not silently removed. |
+| A8 exact-argument approvals,diff preview,timeout deny/replay defense | Partial | Absent. |
+| G1 local owner auth | Implemented | `chat.rs`,E4 real auth/unknown-model SDK checks; single owner only. |
+| G2 scoped API keys / data-class model-tool rules | Partial | Single owner token and Knowledge ACLs; declarative model/tool data-flow policy absent. |
+| G3 OPA/Rego or Cedar,taint tracking,review before memory write | Partial | Absent. No model-level prompt-injection immunity claimed. |
+| G4 hash ledger,query/export/UI,signed checkpoints,tamper verification | Partial | Absent. No claim of zero unexpected outbound traffic reconciled with a ledger. |
+| G5 namespace/seccomp/startup deny | Implemented | `services/policy/src/runtime.rs`,`tools/verify_containment.py`,`verify_runtime.py`,E2 38 Linux checks. Scoped to tested reference processes. |
+| G6 DNS sinkhole,allowlist proxy,per-workspace connector enable/revoke/logging | Partial | Explicit connector path absent; no broad platform completion claim. |
+| G7 encryption at rest,rotation,keychain,sealed secrets,backup | Partial | File permissions are not encryption. Implementation absent. |
+| G8 TLS LAN,Host/Origin allowlist,lockout,LAN ledger;internal mTLS | Partial | Loopback auth/Origin tests E2/E7; owner LAN TLS absent. Team identity remains excluded by ADR0027. |
+| G9 signed images/models,reproducible artifacts,SBOM | Partial | Hash/license gates E1/E2; release signing/SBOM and reproducibility unverified. |
+
+## Sections 7–9: profiles, threat model and stack
+
+| ID / requirement | Status | Implementation/evidence and remaining boundary |
+|---|---|---|
+| H1 config-based T0/T1/T2 profiles and fit/speed UX | Partial | `profiles/hardware.json`,`doctor.py`,E1 fixtures; E8 no-fit on host; UI fit/license estimates absent. |
+| H2 accelerator hardware matrix and NPU | UNVERIFIED | Hardware execution not established; E8 reports NPU unknown. Missing adapters remain I2 Partial. |
+| H3 T3/team defaults | Out of scope by decision | ADR0027 team product removed; optional owner NVIDIA backend retained in I2. |
+| T1 accidental cloud leak / prompt injection / authorized-tool exfil / malicious MCP | Partial | E2 denial and E1 untrusted retrieval tests; complete policy/red-team/ledger absent. |
+| T2 cross-workspace retrieval isolation | Implemented | K6/E1 scoped tests; team isolation is out of scope under ADR0027. |
+| T3 poisoned weights and supply chain | Partial | E1 rejects bad hashes/noncommercial metadata; signature and adversarial weight/bundle audit absent. |
+| T4 insider/disk theft | Partial | Encryption and audit absent; multi-human RBAC excluded ADR0027. |
+| ST1 Rust/Python/React/Tailwind/SQLite/local queue | Implemented | `Cargo.toml`,`pyproject.toml`,`apps/web/package.json`; E1–E4 builds/tests. This is stack selection,not all module behavior. |
+| ST2 Tauri/PWA/gRPC/MCP/policy/OTel/Prometheus/dashboard | Partial | No complete implemented/verified stack for these integrations. |
+| ST3 Postgres/pgvector/NATS/Redis/team OIDC/Helm | Out of scope by decision | ADR0027; owner equivalents remain open elsewhere. |
+
+## Sections 10–13: phase gates, evaluations, APIs and layout
+
+| ID / requirement | Status | Implementation/evidence and remaining boundary |
+|---|---|---|
+| PH0 foundations,contracts,doctor,egress | Partial | E1/E2 foundation tests pass; E8 actual doctor recommendation=null. No phase tag. |
+| PH1 chat,downloads,UI,auth,SQLite / <5min clean install | Partial | I1/I8/G1 implemented scope; no fresh clean-machine timing this session,MLX/UI incomplete. |
+| PH2 hybrid beats baseline,recall/faithfulness,page highlights | Partial | K rows; no current real-document ablation/human review results. |
+| PH3 voice WER and T1 latency | Partial | S rows; full voice pipeline and corpus acceptance absent. |
+| PH4 measured visual-QA lift | Partial | V rows absent; optional visual retrieval stays off. |
+| PH5 red-team and zero unexpected ledger egress | Partial | A/G rows absent; no attack-success table yet. |
+| PH6 single-owner install/encryption/bundle/one-hour soak | Partial | ADR0027 replacement; no verified packages/full workload soak.20-user gate excluded. |
+| PH7 PWA,IDE/plugin SDK/templates,demos,benchmark site/leaderboard | Partial | Optional/later; no completion claim. Desktop installer retained in PH6. |
+| EV1 RAG recall/MRR/nDCG,faithfulness,citation precision,abstention/local judge/human review | Partial | E1 evaluator/local judge tests and E5 narrow real citation/abstention; no current quality corpus measurements. |
+| EV2 WER/CER/RTF,DER,voice EOS latency/barge-in | Partial | `evals/speech_eval.py`,`run_speech_asr.py`,E1 tests; full required corpus/voice evaluation absent. |
+| EV3 visual accuracy/CIs,agent success/budget/safety,privacy packet capture | Partial | Required real evaluation and human-reviewed subset absent. |
+| EV4 inference TTFT/tokens/sec/throughput/VRAM | Partial | E4 single smoke TTFT; no controlled per-tier benchmark. |
+| EV5 regression threshold and security zero tolerance | Implemented | `tools/tests/test_evals.py::test_regression_and_missing_metrics_fail`, `test_security_has_zero_tolerance`,E1; [ADR0004](adr/0004-eval-thresholds.md). Foundation scope,not missing eval suites. |
+| API1 chat/embedding/models | Implemented | I1/I8,E4. |
+| API2 audio HTTP / realtime voice | Partial | S11 HTTP and S12 transport implemented; actual WS voice absent. |
+| API3 public rerank | Partial | Internal reranker exists; public `/v1/rerank` not verified/claimed. |
+| API4 workspaces/documents/search/ask | Implemented | `worker.py`,`chat.rs`,E4 real upload/search/cited answer/empty abstention; E5 UI. |
+| API5 agents/runs/SSE,ledger,policies,MCP | Partial | Not implemented. |
+| L1 §13 monorepo layout | Implemented | `apps/`,`services/`,`profiles/`,`evals/`,`deploy/`,`docs/`,`tools/`; E1/E2/E3 resolve source/contracts/builds. Empty service READMEs do not mean implemented engines. |
+| L2 remove placeholders / per-service operational docs | Partial | Final cleanup still required; agents/vision/desktop incomplete. |
+
+## Sections 14–17 and mission delivery
+
+| ID / requirement | Status | Implementation/evidence and remaining boundary |
+|---|---|---|
+| D14 §14 privacy,unified modalities,adaptive profiles,RAG,agents,signed bundles,public evals | Partial | Aggregate of P3,H1,K,A,G,EV,PH6; no SOTA/exactness claim. |
+| R15 §15 scope gates/engine churn/hardware matrix/storage cost/latency/licensing/privacy/maintained libraries | Partial | E1/E2 registry gates and interfaces exist; quarterly refresh,complete hardware CI and third-party security review absent. No scope cut declared in this slice. |
+| F16a §16 days1–2 foundations | Partial | P5c/E1/E2,doctor gap E8. |
+| F16b §16 days3–5 chat/UI/SQLite | Implemented | I1,E4/E5; basic UI scope,not completed Hermes port. |
+| F16c §16 days6–7 egress/self-test | Implemented | G5/E2 Linux reference scope. |
+| F16d §16 days8–9 structural ingest/hybrid | Partial | K rows; Docling/LanceDB defaults substituted by ADR0009/0010; live folder ingestion not rerun. |
+| F16e §16 day10 30–50 real-document labels/baseline | Partial | Foundation8-case eval passes,E1; required current real-document retrieval baseline absent. |
+| U1 Amendment UI source/license/theme/provenance foundation | Partial | E1 source-inventory/font hash tests,E3 theme tests; upstream legal records not re-audited at source this session. |
+| U2 UI chat/Stop/Knowledge/history/model/settings | Partial | E5 current real Stop/Knowledge/chat; search/rename/delete,fit/license picker,settings,status,Markdown/palette/retry/undo incomplete. |
+| U3 UI fidelity/axe/keyboard/contrast/full HTTP+WS egress | Partial | E5 Knowledge surface zero foreign requests; no current full reference/fidelity/a11y/all-screen gate. |
+| D1 offline five-modality product plus LAN/encryption/resources | Partial | E4 eight-stage incremental smoke explicitly release_complete=false. |
+| D2 verified dist/installers/Compose/Tauri/signed bundle/checksums/SBOM | Partial | No release artifacts verified this session. |
+| D3 complete repo/in-app user/developer/API/security/ADR/notices/release docs | Partial | E1 API generation consistency; full guide and release docs incomplete. |
+| D4 lint/tests/audit/coverage/unused code/red-team/soak/UI gates | Partial | E1–E7 scoped results; coverage,Rust vulnerability audit,full security/eval/soak/UI gates absent. |
+| D5 coverage/support matrix/exact verification commands | Partial | This live audit and RELEASE_CHECKLIST now track gaps; blank commands explicitly block acceptance until real runners exist. |
+| D6 clean-clone loopback+LAN acceptance,packet-ledger reconciliation,tags,handoff | Partial | Not executed; no release/phase tags justified. |

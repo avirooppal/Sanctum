@@ -1,0 +1,7 @@
+Traceback (most recent call last):
+  File "C:\Users\aviroop\Desktop\Sanctum\evals\realtime_transport.py", line 178, in <module>
+    main()
+  File "C:\Users\aviroop\Desktop\Sanctum\evals\realtime_transport.py", line 144, in main
+    assert handshake_release < 2
+           ^^^^^^^^^^^^^^^^^^^^^
+AssertionError
