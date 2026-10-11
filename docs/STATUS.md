@@ -1,8 +1,8 @@
 # Current state
 
-- Step: 3g packaging & merge to main complete (Linux tarball, Windows archive, docs/HANDOFF.md).
-- Last green commit: `fae876c` on main; hosted run 38162963810 all 5 jobs PASS.
-- Main status: origin/main up to date at fae876c, clean fast-forward of ui-hermes-port.
+- Step: Hermes UI & Setup Walkthrough UX parity complete (SetupWizard walkthrough, starter prompt suggestions, response copy action, loopback auto-connect explanation, live connection indicator).
+- Last green commit: `c5690bd` on main; hosted run 38163334774 all 5 jobs PASS.
+- Main status: origin/main up to date; local branch clean and validated.
 - Uncommitted smoke SHA256 matches: 8/8 json/log pairs byte-identical to website-final-smoke-*.
 - Gate table: source 157 / Rust 62 / web 44+2 PASS; 38 denial probes; zero npm audit advisories.
 - Next 3: Owner review of queue; Phase 4 vision; Phase 5 agents.
