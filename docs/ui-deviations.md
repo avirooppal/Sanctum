@@ -25,3 +25,7 @@ font tiers and237px responsive rail. The full UI port/fidelity gate is unfinishe
   are removed. Product is same-origin/offline and uses memory-only credentials.
 - Fidelity, theme-by-theme screenshots, token comparisons, accessibility and
   browser egress gates are **Not done**. No exact-match claim or invented percentage.
+- Knowledge currently uses the native dialog and existing real workspace/upload/
+  ask API. Citations show source, page when available, and supporting quote as
+  inert text. A document browser, OCR and region overlays are not claimed. This
+  functional surface has not passed the upstream layout fidelity gate.

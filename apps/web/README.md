@@ -1,5 +1,16 @@
 # Web client
 
+Knowledge opens a local workspace/upload/question surface. It supports Markdown
+and text-based PDF (10 MiB), owner-only restricted uploads, cited answers and
+explicit abstention. Source text is inert; citations are not remote links. Closing
+the dialog cancels outstanding UI requests. OCR and page-region overlays remain
+pending. Contract: docs/contracts/knowledge-ui-v1.md. Real verification:
+`node evals/browser_knowledge.mjs PLAYWRIGHT_PACKAGE TOKEN_FILE OUTPUT_JSON`.
+
+Stop generation aborts the active chat without retrying; partial text remains
+visible but is not guaranteed saved. Test with `evals/browser_chat_stop.mjs` using
+the same arguments. Both real flows run in `bash tools/smoke_all.sh`.
+
 Build uses pinned Tailwind 4 core with a local literal-class collector, without the
 v3 scanner tree or optional native integrations (ADR 0025). `npm run build` generates
 ignored `build/styles.css` from TS/TSX and index.html before Vite bundles the app.

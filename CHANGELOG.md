@@ -1,3 +1,5 @@
+- Add real owner Knowledge workspace/upload/cited-answer UI and eight-stage smoke.
+
 ## Unreleased UI foundation
 
 - Add same-origin typed adapter, licensed local themes/fonts, notices and responsive shell.

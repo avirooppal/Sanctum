@@ -153,6 +153,28 @@ def main():
             ],
             "speech-browser.json",
         ),
+        (
+            "ui_knowledge",
+            [
+                node,
+                "evals/browser_knowledge.mjs",
+                package,
+                browser_token,
+                str(directory / "smoke-ui-knowledge.json"),
+            ],
+            None,
+        ),
+        (
+            "ui_chat_stop",
+            [
+                node,
+                "evals/browser_chat_stop.mjs",
+                package,
+                browser_token,
+                str(directory / "smoke-ui-chat-stop.json"),
+            ],
+            None,
+        ),
     ]
     record = {
         "suite": "smoke-all-v1",

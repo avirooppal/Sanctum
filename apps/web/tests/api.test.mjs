@@ -2,6 +2,32 @@ import {test} from 'node:test';
 import assert from 'node:assert/strict';
 import {SanctumClient} from '../build/tests/api.js';
 
+test('Knowledge uses authenticated fixed paths and owner-only restricted uploads', async()=>{
+  const calls=[];
+  const client=new SanctumClient('owner',async(path,options)=>{
+    calls.push({path,options});
+    if(path==='/v1/workspaces'&&options.method==='GET')return Response.json({data:[{id:'w',name:'Private'}]});
+    return Response.json({id:'document'});
+  });
+  assert.deepEqual(await client.workspaces(),[{id:'w',name:'Private'}]);
+  assert.equal(await client.createWorkspace('Private'),'document');
+  assert.equal(await client.uploadDocument('w/x','notes.md',new TextEncoder().encode('private')),'document');
+  assert.equal(calls[2].path,'/v1/workspaces/w%2Fx/documents');
+  const body=JSON.parse(calls[2].options.body);
+  assert.deepEqual(body.readers,[]);assert.equal(body.data_class,'restricted');
+  assert.equal(atob(body.content_base64),'private');
+  assert(calls.every(c=>c.options.credentials==='omit'&&c.options.redirect==='error'));
+});
+
+test('Knowledge validates answers and rejects unsupported uploads before sending',async()=>{
+  let calls=0;
+  const client=new SanctumClient('owner',async()=>{calls++;return Response.json({answer:'x',abstained:false,citations:[{source:42}]});});
+  await assert.rejects(client.askKnowledge('w','q'),/Invalid Knowledge/);
+  await assert.rejects(client.uploadDocument('w','image.png',new Uint8Array(1)),/Markdown|PDF/);
+  await assert.rejects(client.uploadDocument('w','large.md',new Uint8Array(10*1024*1024+1)),/10 MiB/);
+  assert.equal(calls,1);
+});
+
 test('default fetch retains the Window/global receiver', async () => {
   const previous=globalThis.fetch;
   globalThis.fetch=async function(){

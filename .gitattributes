@@ -19,3 +19,5 @@ THIRD_PARTY_NOTICES.md -text whitespace=cr-at-eol,-blank-at-eof,-blank-at-eol
 evals/results/ui-font-assets-notice-whitespace-failure.txt -text whitespace=cr-at-eol,-blank-at-eof,-blank-at-eol
 docs/WRAPUP.md -text whitespace=cr-at-eol,-blank-at-eof
 docs/status-archive/2026-10-11-responsive-shell.md -text whitespace=cr-at-eol,-blank-at-eof
+
+docs/status-archive/2026-10-11-wrapup-baseline-and-chat-stop.md -text whitespace=cr-at-eol,-blank-at-eof

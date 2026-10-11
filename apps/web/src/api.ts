@@ -2,6 +2,8 @@
 export type Message = {role:'user'|'assistant'; content:string};
 export type Model = {id:string; capabilities:string[]};
 export type Turn = {request:string; response:string; streaming:boolean};
+export type Workspace = {id:string;name:string};
+export type KnowledgeAnswer = {answer:string;abstained:boolean;citations:{source:string;page:number|null;quote:string;document_id:string;chunk_id:string;start:number;end:number}[]};
 type Socket = Pick<WebSocket,'close'|'addEventListener'>;
 type SocketFactory = (url:string, protocols:string[])=>Socket;
 
@@ -32,6 +34,41 @@ export class SanctumClient {
       throw Error(`Gateway request failed (${response.status})`);
     }
     return response;
+  }
+
+  async workspaces(signal?:AbortSignal):Promise<Workspace[]> {
+    const data:unknown=await (await this.request('/v1/workspaces',signal)).json();
+    signal?.throwIfAborted();
+    if(!record(data)||!Array.isArray(data.data)||!data.data.every(w=>record(w)&&typeof w.id==='string'&&typeof w.name==='string'))throw Error('Invalid Knowledge workspaces');
+    return data.data as Workspace[];
+  }
+
+  async createWorkspace(name:string,signal?:AbortSignal):Promise<string> {
+    const data:unknown=await (await this.request('/v1/workspaces',signal,{name},'POST')).json();
+    signal?.throwIfAborted();
+    if(!record(data)||typeof data.id!=='string')throw Error('Invalid Knowledge workspace');
+    return data.id;
+  }
+
+  async uploadDocument(workspace:string,name:string,bytes:Uint8Array,signal?:AbortSignal):Promise<string> {
+    if(!/\.(md|pdf)$/i.test(name))throw Error('Choose Markdown or a text-based PDF.');
+    if(bytes.byteLength>10*1024*1024)throw Error('Document exceeds 10 MiB.');
+    signal?.throwIfAborted();
+    let binary='';for(let i=0;i<bytes.length;i+=8192)binary+=String.fromCharCode(...bytes.subarray(i,i+8192));
+    const data:unknown=await (await this.request(`/v1/workspaces/${encodeURIComponent(workspace)}/documents`,signal,
+      {name,content_base64:btoa(binary),readers:[],data_class:'restricted'},'POST')).json();
+    signal?.throwIfAborted();
+    if(!record(data)||typeof data.id!=='string')throw Error('Invalid Knowledge document');
+    return data.id;
+  }
+
+  async askKnowledge(workspace:string,query:string,signal?:AbortSignal):Promise<KnowledgeAnswer> {
+    const data:unknown=await (await this.request(`/v1/workspaces/${encodeURIComponent(workspace)}/ask`,signal,{query},'POST')).json();
+    signal?.throwIfAborted();
+    if(!record(data)||typeof data.answer!=='string'||typeof data.abstained!=='boolean'||!Array.isArray(data.citations)||
+      !data.citations.every(c=>record(c)&&typeof c.source==='string'&&typeof c.quote==='string'&&typeof c.document_id==='string'&&typeof c.chunk_id==='string'&&
+        (c.page===null||(Number.isInteger(c.page)&&Number(c.page)>0))&&Number.isInteger(c.start)&&Number.isInteger(c.end)))throw Error('Invalid Knowledge answer');
+    return data as KnowledgeAnswer;
   }
 
   async models(signal?:AbortSignal):Promise<Model[]> {

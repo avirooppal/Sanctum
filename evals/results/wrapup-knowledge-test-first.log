@@ -1,0 +1,66 @@
+
+> sanctum-web@0.1.0 test
+> tsc --outDir build/tests --noEmit false --target ES2022 --module NodeNext --moduleResolution NodeNext --jsx react-jsx --esModuleInterop src/speech.ts src/pcm.ts src/meeting.ts src/api.ts src/chat-run.ts src/ui/primitives.tsx src/ui/themes.ts src/ui/AppShell.tsx && node --test tests/*.test.mjs && node --test ../../evals/tests/ui-font-metrics.test.mjs
+
+✖ Knowledge uses authenticated fixed paths and owner-only restricted uploads (2.6818ms)
+✖ Knowledge validates answers and rejects unsupported uploads before sending (0.559ms)
+✔ default fetch retains the Window/global receiver (36.1587ms)
+✔ fixed same-origin requests omit cookies, reject redirects and never retry (1.79ms)
+✔ models are validated and conversation IDs cannot change origin or path structure (1.8798ms)
+✔ stream decodes split Unicode and SSE lines without fabricated text (5.1125ms)
+✔ consumer cancellation releases stream and ignored fetch abort cannot yield stale text (1.3846ms)
+✔ ticket is in subprotocol only and abort closes the socket (1.592ms)
+✔ invalid ticket and cancellation after ticket never open a socket (1.5176ms)
+✔ abort while waiting for a stalled stream releases the reader (14.2093ms)
+✔ stop aborts the admitted run, suppresses late output and never retries (5.3629ms)
+✔ overlapping starts are refused; an explicit next run has a fresh signal (1.1799ms)
+✔ abort rejection is stopped but real engine failures are preserved (0.5302ms)
+✔ meeting save uses restricted same-origin authenticated request (39.0989ms)
+✔ invalid workspace and oversized or blank input never send requests (1.4008ms)
+✔ failed writes are surfaced without retrying (0.966ms)
+✔ encodes finite mono PCM16 with accurate WAV header and clamping (6.0454ms)
+✔ bounded memory accepts no partial overflow and resets after discard (0.9256ms)
+✔ rejects nonfinite data without mutating captured audio (0.297ms)
+✔ native button defaults to non-submit, preserves explicit submit and disabled (8.1491ms)
+✔ untrusted titles and field text remain escaped React text (2.0964ms)
+✔ dialog has a named native modal and escaped children without an injected close link (1.4246ms)
+✔ shell has one sidebar and main with explicitly connected native navigation control (1.8676ms)
+✔ uses same-origin multipart and bearer auth without storing credentials (36.4116ms)
+✔ stop discards stale audio even if fetch ignores abort (1.1954ms)
+✔ stop releases playback and next operation cannot reuse it (4.7425ms)
+✔ rejects oversized inputs and unexpected audio content types (4.0573ms)
+✔ core compiler preserves responsive and arbitrary-value application utilities (35.9094ms)
+✔ all pinned desktop and dashboard-only presets are available without upstream branding (1.3939ms)
+✔ pinned canonical palette values and mode pairs are retained (0.3204ms)
+✔ invalid IDs fail, tokens do not leak mutable palette references or remote URLs (1.6423ms)
+✔ worklet itself stops after 30 seconds even if UI messages are not handled (11.2772ms)
+ℹ tests 32
+ℹ suites 0
+ℹ pass 30
+ℹ fail 2
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 227.998
+
+✖ failing tests:
+
+test at tests\api.test.mjs:5:1
+✖ Knowledge uses authenticated fixed paths and owner-only restricted uploads (2.6818ms)
+  TypeError: client.workspaces is not a function
+      at TestContext.<anonymous> (file:///C:/Users/aviroop/Desktop/Sanctum/apps/web/tests/api.test.mjs:12:33)
+      at Test.runInAsyncScope (node:async_hooks:228:14)
+      at Test.run (node:internal/test_runner/test:1118:25)
+      at Test.start (node:internal/test_runner/test:1015:17)
+      at startSubtestAfterBootstrap (node:internal/test_runner/harness:358:17)
+
+test at tests\api.test.mjs:22:1
+✖ Knowledge validates answers and rejects unsupported uploads before sending (0.559ms)
+  TypeError: client.askKnowledge is not a function
+      at TestContext.<anonymous> (file:///C:/Users/aviroop/Desktop/Sanctum/apps/web/tests/api.test.mjs:25:31)
+      at Test.runInAsyncScope (node:async_hooks:228:14)
+      at Test.run (node:internal/test_runner/test:1118:25)
+      at Test.processPendingSubtests (node:internal/test_runner/test:787:18)
+      at Test.postRun (node:internal/test_runner/test:1247:19)
+      at Test.run (node:internal/test_runner/test:1175:12)
+      at async startSubtestAfterBootstrap (node:internal/test_runner/harness:358:3)

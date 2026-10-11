@@ -1,0 +1,45 @@
+/** Real local upload, citation and abstention through the authenticated UI. */
+import {createRequire} from 'node:module';
+import {readFileSync,writeFileSync} from 'node:fs';
+import assert from 'node:assert/strict';
+const [packagePath,tokenFile,output]=process.argv.slice(2);
+const {chromium}=createRequire(import.meta.url)(packagePath);
+const base=new URL(process.env.SANCTUM_BASE_URL??'http://127.0.0.1:8769');
+const browser=await chromium.launch({headless:true});const context=await browser.newContext();
+const foreign=[];const errors=[];
+await context.route('**/*',route=>{const url=new URL(route.request().url());if(url.origin!==base.origin){foreign.push(url.origin);return route.abort();}return route.continue();});
+await context.routeWebSocket('**/*',socket=>{const url=new URL(socket.url());url.protocol=url.protocol==='wss:'?'https:':'http:';
+  if(url.origin!==base.origin){foreign.push(url.origin);socket.close();}else socket.connectToServer();});
+const page=await context.newPage();page.on('pageerror',e=>errors.push(e.message));
+try {
+  await page.goto(base.href);await page.getByLabel('Local access key').fill(readFileSync(tokenFile,'utf8').trim());
+  await page.getByRole('button',{name:'Open workspace',exact:true}).click();
+  await page.getByRole('button',{name:'Knowledge',exact:true}).click();
+  const name=`Knowledge browser ${Date.now()}`;
+  await page.getByLabel('New Knowledge workspace',{exact:true}).fill(name);
+  await page.getByRole('button',{name:'Create Knowledge workspace',exact:true}).click();
+  await page.waitForFunction(name=>document.querySelector('.knowledge-panel select')?.selectedOptions[0]?.textContent===name,name);
+  await page.getByLabel('Knowledge document',{exact:true}).setInputFiles({name:'harbour.md',mimeType:'text/markdown',buffer:Buffer.from('# Harbour guide\n\nThe lighthouse color is amber.\n')});
+  await page.getByRole('button',{name:'Upload document',exact:true}).click();
+  await page.getByRole('status').filter({hasText:'Document indexed:'}).waitFor();
+  await page.getByLabel('Knowledge question',{exact:true}).fill('What color is the lighthouse?');
+  await page.getByRole('button',{name:'Ask Knowledge',exact:true}).click();
+  const answer=page.getByRole('region',{name:'Knowledge answer',exact:true});
+  await answer.waitFor();const cited=await answer.innerText();assert(cited.includes('amber'));assert(cited.includes('harbour.md'));
+  assert((await answer.locator('blockquote').innerText()).includes('amber'));
+  await page.screenshot({path:'.sanctum/wrapup-knowledge-desktop.png'});
+  await page.getByLabel('New Knowledge workspace',{exact:true}).fill(name+' empty');
+  await page.getByRole('button',{name:'Create Knowledge workspace',exact:true}).click();
+  await page.waitForFunction(name=>document.querySelector('.knowledge-panel select')?.selectedOptions[0]?.textContent===name,name+' empty');
+  await page.getByRole('button',{name:'Ask Knowledge',exact:true}).click();
+  await page.getByRole('heading',{name:'No supported answer found',exact:true}).waitFor();
+  assert.equal(await answer.locator('blockquote').count(),0);
+  await page.setViewportSize({width:390,height:844});
+  assert(await page.evaluate(()=>document.documentElement.scrollWidth<=innerWidth));
+  assert(await page.getByRole('dialog',{name:'Knowledge',exact:true}).evaluate(e=>e.scrollWidth<=e.clientWidth));
+  await page.screenshot({path:'.sanctum/wrapup-knowledge-mobile.png'});
+  await page.keyboard.press('Escape');assert.equal(await page.getByRole('dialog',{name:'Knowledge',exact:true}).isVisible(),false);
+  assert.deepEqual(errors,[]);assert.deepEqual(foreign,[]);
+  const result={suite:'real-knowledge-browser',passed:['workspace_create','document_upload','cited_answer','empty_workspace_abstention','mobile_no_overflow','escape_closes'],cited_answer:cited,foreign_requests:foreign,page_errors:errors};
+  writeFileSync(output,JSON.stringify(result,null,2)+'\n');console.log(JSON.stringify(result,null,2));
+} finally {await browser.close();}

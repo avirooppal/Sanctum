@@ -1,0 +1,7 @@
+.knowledge-panel { display:grid;gap:16px;overflow-wrap:anywhere; }
+.knowledge-panel form { display:grid;gap:12px; }
+.knowledge-panel label { display:grid;gap:6px;margin:12px 0; }
+.knowledge-panel select,.knowledge-panel textarea { width:100%;min-width:0;padding:10px;border:1px solid var(--ui-border);border-radius:4px;background:var(--ui-surface);color:var(--ui-text-primary); }
+.knowledge-panel input { min-width:0;max-width:100%; }
+.knowledge-panel blockquote { border-left:2px solid var(--ui-border);padding-left:12px; }
+.knowledge-panel li { margin:12px 0; }
