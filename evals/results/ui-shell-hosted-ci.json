@@ -1,0 +1,12 @@
+{
+  "sha": "7691ad5f57b63dffea712fb4cef64464141e10bd",
+  "jobs": [
+    "web",
+    "rust-foundation",
+    "source-gates (ubuntu-22.04)",
+    "source-gates (windows-latest)",
+    "source-gates (macos-latest)"
+  ],
+  "run_id": 38133630223,
+  "conclusion": "success"
+}

@@ -2,9 +2,9 @@
 
 - Mission: [MISSION.md](MISSION.md), Amendment1; single owner ADR0027.
 - Step: U4 responsive shell implemented on `ui-hermes-port`; full foundation pending.
-- Last hosted-green: `cf2aa5a`, run38132413786/all5 jobs PASS (font code8d3e98c also green).
+- Last hosted-green: `7691ad5`, run38133630223/all5 jobs PASS.
 - Blockers: none for UI; T1/GPU/physical audio/native targets UNVERIFIED.
-- Next three steps: shell commit/push/exact CI; chat/history/model/knowledge screens;
+- Next three steps: chat/history/model/knowledge screens; reference launcher;
   isolated pinned reference, fidelity/axe/WS egress gates before U6 merge.
 
 | Gate | Latest observed results |
@@ -53,7 +53,7 @@ base override and unmasked error reporting (default/timeouts/assertions unchange
 Rerun PASS4 real worklet/emulated-file/ASR/track cleanup/no-upload-on-cancel cases;
 physical_microphone_verified=false. No WER/voice-turn or diarization claim.
 
-Shell candidate commit/hosted CI next. Full Hermes fidelity, remaining screens,
+Shell7691ad5 pushed; exact hosted run38133630223/all5 jobs PASS. Full Hermes fidelity, remaining screens,
 real realtime voice and later roadmap still pending; no merge to main yet.
 Runtime PID1327 active on8769 with .sanctum/runtime-dispatch.json for next UI slice;
 source/model datasets previously untracked remain untouched.
