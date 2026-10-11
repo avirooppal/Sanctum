@@ -1,9 +1,9 @@
 # Current state
 
-- Step: housekeeping H1-H4 complete; Step 1-pre/1a next; HTTP gates pass.
-- Last green commit: `820e3d8`; all five hosted jobs verified; no phase tags.
+- Step: Step 1-pre measurement/ADR complete locally; authenticated WebSocket next.
+- Last green commit: `0404340`; all five hosted jobs verified; new slice awaiting push/CI; no phase tags.
 - Blockers: held authenticated WebSocket PENDING Step 1a; T1 latency and physical audio UNVERIFIED.
-- Next: verify warm-engine support/memory; implement authenticated WebSocket; run held-session gate.
+- Next: implement authenticated WebSocket; run >=10min held-session/mixed gate; begin Step U source/license audit.
 
 | Step 0 gate | Historical measured result (details in archive) |
 |---|---|
@@ -342,3 +342,42 @@ capabilities, measured resident memory and Flite spawn cost; do not assume a war
 wrapper can avoid CLI reload. Then1a contract/authenticated WebSocket on guarded
 listener, ticket/Origin/frame/deadline/cancellation tests, actual >=10min held
 sessions and mixed gate. Held WS remains PENDING;1b-1e andStep2 not started.
+
+## Master completion baseline and Step 1-pre (2026-10-11)
+
+Read plan and STATUS; checkout already at0404340, no destructive reset. GitHub
+run38112869927 exact SHA observed all five jobs completed/success.
+Fresh baseline before editing: Linux `python tools/check.py` PASS143 tests,
+lint/format/types,26 Python/72 npm licenses and eval/API docs; Linux
+`CARGO_BUILD_JOBS=1 bash tools/check_rust.sh` PASS51 tests,fmt/clippy,74 licenses,
+38 denial/startup probes and3 supervisor scenarios with zero survivors. Web
+`npm test`,typecheck,build,audit low PASS12/12/zero vulnerabilities.
+Logs `.sanctum/completion-baseline-{source,rust}.log`. Initial source launch lacked
+python on PATH; preserved launch failure and reran explicit interpreter, not a pass.
+Real runtime configured8769 ready; official SDK PASS8,chat0.2873s/TTFT0.3584s/1024dims
+(`completion-baseline-sdk.json`). Active shutdown with real lanes[1,1,2,1], queued
+chat1 and slow upload PASS1.111996s/listener0.192273s/zero survivors. First shutdown
+invocation rejected unsupported --runtime-config; no test ran on that attempt.
+
+Step1-pre contract/tests first: missing module FAILED, then2 tests PASS. Native
+probe compiled against pinned upstream; confined launcher verified8 denial checks.
+`target/debug/examples/speech_residency target/debug/sanctum-runtime
+<dev-venv>/bin/python --probe .sanctum/speech-residency-probe --model
+/opt/sanctum-speech/parakeet-q4_k.bin --audio .sanctum/speech-smoke/jfk.wav
+--flite /opt/sanctum-speech/flite/bin/flite --output
+evals/results/speech-residency-reference.json` PASS exit0.
+One model load0.393086s/RSS421024KiB; three real resident decodes
+1.035570/0.938416/0.855571s; peak507168KiB. Thirty Flite version launches
+p50/p95 0.002845489/0.004290530s; short synthesis0.016095147/0.017940378s.
+All samples, hashes and native transcript logs preserved. No physical/T1/voice SLO.
+ADR0032/REVIEW_QUEUE updated: library adapter for Parakeet, CLI Flite retained;
+existing proposed caps unchanged, actual cap enforcement pending Step1b.
+Offline runnable script `tools/measure_speech_residency.sh` includes compilation.
+
+Failed Flite-version check=True run preserved named result; pinned source returns1
+for version, now exact-code+output validated. Source rerun first FAILED unreviewed
+cloudpickle inherited via PYTHONPATH; removed inherited path, reran unchanged scan.
+Post-change full source PASS145/all gates; Rust PASS51/all gates and containment/
+supervision, `.sanctum/speech-residency-{source,rust}.log`. No new dependencies.
+Final inventory no runtime/engine/probe survivors. Held WS remains PENDING; Step1a
+and entire later roadmap unfinished. No tag. Slice commit and hosted CI below.

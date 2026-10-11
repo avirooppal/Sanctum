@@ -1,0 +1,10 @@
+verified 8 containment checks
+Traceback (most recent call last):
+  File "/mnt/c/Users/aviroop/Desktop/Sanctum/evals/speech_residency.py", line 71, in <module>
+    main()
+  File "/mnt/c/Users/aviroop/Desktop/Sanctum/evals/speech_residency.py", line 53, in main
+    subprocess.run(
+  File "/home/aviroop/.local/share/uv/python/cpython-3.12.13-linux-x86_64-gnu/lib/python3.12/subprocess.py", line 571, in run
+    raise CalledProcessError(retcode, process.args,
+subprocess.CalledProcessError: Command '['/opt/sanctum-speech/flite/bin/flite', '--version']' returned non-zero exit status 1.
+Error: "speech residency experiment failed"

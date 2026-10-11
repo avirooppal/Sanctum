@@ -1,3 +1,7 @@
+## 2026-10-11 - Step 1-pre
+
+- Measure confined Parakeet residency and Flite launch/synthesis cost; update ADR0032 and review queue. Resident product workers and WebSocket remain pending.
+
 # Changelog
 
 ## 2026-10-11 - Bounded chat prefix reuse and measured CPU budgets

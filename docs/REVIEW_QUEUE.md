@@ -64,3 +64,10 @@ active and three repeated shutdowns. Retained RSS7376/14116KiB, bounds unchanged
 One-input ingestion throughput+22.905242% against original four-thread profile on
 the small real corpus. Both failed mixed candidates remain named evidence. See ADR
 follow-ups and STATUS; this does not waive T1 voice latency or held-WS requirements.
+
+Step1-pre ADR0032 supplement: measured Parakeet507168KiB peak versus unchanged
+proposed ASR1GiB cap; shared budget/OS25% still proposed enforcement for Step1b.
+Choose reusable upstream library (bundled server is Whisper-only), retain Flite
+per-request after short-text p95 17.940ms. No SLO/tolerance relaxation; long-audio
+peak, enforced caps, supervised IPC and T1 measurements remain pending. Version
+probe exit1 accepted only with exact upstream version output; failed run retained.

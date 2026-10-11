@@ -1,0 +1,120 @@
+{
+  "suite": "speech-residency-v1",
+  "physical_audio": false,
+  "artifacts": {
+    "probe": {
+      "path": ".sanctum/speech-residency-probe",
+      "sha256": "e822c07311cc8a26f4c9547d82e568074bf3f5ac683925ec086ea11e56a8029a"
+    },
+    "model": {
+      "path": "/opt/sanctum-speech/parakeet-q4_k.bin",
+      "sha256": "8b205b8b39c6535e153de6fb11c51db46125d45c4f16ba496fe41a0fe71b885e"
+    },
+    "audio": {
+      "path": ".sanctum/speech-smoke/jfk.wav",
+      "sha256": "59dfb9a4acb36fe2a2affc14bacbee2920ff435cb13cc314a08c13f66ba7860e"
+    },
+    "flite": {
+      "path": "/opt/sanctum-speech/flite/bin/flite",
+      "sha256": "8a199f912d921c6a60cbf955042156b1044bb5e74b179a12829877720df004c9"
+    }
+  },
+  "parakeet": {
+    "load_seconds": 0.393086,
+    "loaded_rss_kib": 421024,
+    "decodes": [
+      {
+        "ok": true,
+        "seconds": 1.03557,
+        "rss_kib": 506528,
+        "segments": 1
+      },
+      {
+        "ok": true,
+        "seconds": 0.938416,
+        "rss_kib": 507168,
+        "segments": 1
+      },
+      {
+        "ok": true,
+        "seconds": 0.855571,
+        "rss_kib": 507168,
+        "segments": 1
+      }
+    ],
+    "peak_rss_kib": 507168
+  },
+  "native_stderr": "parakeet_init_from_file_with_params_no_state: loading model from '/opt/sanctum-speech/parakeet-q4_k.bin'\nparakeet_init_with_params_no_state: use gpu    = 0\nparakeet_init_with_params_no_state: gpu_device = 0\nparakeet_init_with_params_no_state: devices    = 1\nparakeet_init_with_params_no_state: backends   = 1\nparakeet_model_load: loading model\nparakeet_model_load: arch                   = Parakeet TDT\nparakeet_model_load: n_vocab                = 8192\nparakeet_model_load: n_audio_ctx            = 5000\nparakeet_model_load: n_audio_state          = 1024\nparakeet_model_load: n_audio_head           = 8\nparakeet_model_load: n_audio_layer          = 24\nparakeet_model_load: n_mels                 = 128\nparakeet_model_load: n_fft                  = 512\nparakeet_model_load: eps                    = 0.000010\nparakeet_model_load: ftype                  = 12\nparakeet_model_load: qntvr                  = 2\nparakeet_model_load: subsampling_factor     = 8\nparakeet_model_load: n_subsampling_channels = 256\nparakeet_model_load: n_conv_kernel          = 9\nparakeet_model_load: n_pred_dim             = 640\nparakeet_model_load: n_pred_layers          = 2\nparakeet_model_load: n_tdt_durations        = 5\nparakeet_model_load: n_max_tokens           = 10\nparakeet_model_load: loaded window function with 400 samples\nparakeet_model_load: loaded tdt_durations: [0 1 2 3 4 ]\nparakeet_model_load: loaded vocab with 8192 tokens (blank_id=8192, unk=0, bos=4, eos=3)\nparakeet_model_load:   CPU_REPACK total size =   300.00 MB\nparakeet_model_load:          CPU total size =   115.36 MB\nrepack: repack tensor enc_pre_out_w with q4_K_8x8\nrepack: repack tensor enc_0_ff1_linear1_w with q4_K_8x8\nrepack: repack tensor enc_0_ff1_linear2_w with q4_K_8x8\nrepack: repack tensor  with q4_K_8x8\nrepack: repack tensor  with q4_K_8x8\nrepack: repack tensor  with q4_K_8x8\nrepack: repack tensor  with q4_K_8x8\nrepack: repack tensor enc_0_attn_pos_w with q4_K_8x8\nrepack: repack tensor  with q4_K_8x8\nrepack: repack tensor  with q4_K_8x8\nrepack: repack tensor enc_1_ff1_linear1_w with q4_K_8x8\nrepack: repack tensor enc_1_ff1_linear2_w with q4_K_8x8\nrepack: repack tensor  with q4_K_8x8\nrepack: repack tensor  with q4_K_8x8\nrepack: repack tensor  with q4_K_8x8\nrepack: repack tensor  with q4_K_8x8\nrepack: repack tensor enc_1_attn_pos_w with q4_K_8x8\nrepack: repack tensor  with q4_K_8x8\nrepack: repack tensor  with q4_K_8x8\nrepack: repack tensor enc_2_ff1_linear1_w with q4_K_8x8\nrepack: repack tensor enc_2_ff1_linear2_w with q4_K_8x8\nrepack: repack tensor  with q4_K_8x8\nrepack: repack tensor  with q4_K_8x8\nrepack: repack tensor  with q4_K_8x8\nrepack: repack tensor  with q4_K_8x8\nrepack: repack tensor enc_2_attn_pos_w with q4_K_8x8\nrepack: repack tensor  with q4_K_8x8\nrepack: repack tensor  with q4_K_8x8\nrepack: repack tensor enc_3_ff1_linear1_w with q4_K_8x8\nrepack: repack tensor enc_3_ff1_linear2_w with q4_K_8x8\nrepack: repack tensor  with q4_K_8x8\nrepack: repack tensor  with q4_K_8x8\nrepack: repack tensor  with q4_K_8x8\nrepack: repack tensor  with q4_K_8x8\nrepack: repack tensor enc_3_attn_pos_w with q4_K_8x8\nrepack: repack tensor  with q4_K_8x8\nrepack: repack tensor  with q4_K_8x8\nrepack: repack tensor enc_4_ff1_linear1_w with q4_K_8x8\nrepack: repack tensor enc_4_ff1_linear2_w with q4_K_8x8\nrepack: repack tensor  with q4_K_8x8\nrepack: repack tensor  with q4_K_8x8\nrepack: repack tensor  with q4_K_8x8\nrepack: repack tensor  with q4_K_8x8\nrepack: repack tensor enc_4_attn_pos_w with q4_K_8x8\nrepack: repack tensor  with q4_K_8x8\nrepack: repack tensor  with q4_K_8x8\nrepack: repack tensor enc_5_ff1_linear1_w with q4_K_8x8\nrepack: repack tensor enc_5_ff1_linear2_w with q4_K_8x8\nrepack: repack tensor  with q4_K_8x8\nrepack: repack tensor  with q4_K_8x8\nrepack: repack tensor  with q4_K_8x8\nrepack: repack tensor  with q4_K_8x8\nrepack: repack tensor enc_5_attn_pos_w with q4_K_8x8\nrepack: repack tensor  with q4_K_8x8\nrepack: repack tensor  with q4_K_8x8\nrepack: repack tensor enc_6_ff1_linear1_w with q4_K_8x8\nrepack: repack tensor enc_6_ff1_linear2_w with q4_K_8x8\nrepack: repack tensor  with q4_K_8x8\nrepack: repack tensor  with q4_K_8x8\nrepack: repack tensor  with q4_K_8x8\nrepack: repack tensor  with q4_K_8x8\nrepack: repack tensor enc_6_attn_pos_w with q4_K_8x8\nrepack: repack tensor  with q4_K_8x8\nrepack: repack tensor  with q4_K_8x8\nrepack: repack tensor enc_7_ff1_linear1_w with q4_K_8x8\nrepack: repack tensor enc_7_ff1_linear2_w with q4_K_8x8\nrepack: repack tensor  with q4_K_8x8\nrepack: repack tensor  with q4_K_8x8\nrepack: repack tensor  with q4_K_8x8\nrepack: repack tensor  with q4_K_8x8\nrepack: repack tensor enc_7_attn_pos_w with q4_K_8x8\nrepack: repack tensor  with q4_K_8x8\nrepack: repack tensor  with q4_K_8x8\nrepack: repack tensor enc_8_ff1_linear1_w with q4_K_8x8\nrepack: repack tensor enc_8_ff1_linear2_w with q4_K_8x8\nrepack: repack tensor  with q4_K_8x8\nrepack: repack tensor  with q4_K_8x8\nrepack: repack tensor  with q4_K_8x8\nrepack: repack tensor  with q4_K_8x8\nrepack: repack tensor enc_8_attn_pos_w with q4_K_8x8\nrepack: repack tensor  with q4_K_8x8\nrepack: repack tensor  with q4_K_8x8\nrepack: repack tensor enc_9_ff1_linear1_w with q4_K_8x8\nrepack: repack tensor enc_9_ff1_linear2_w with q4_K_8x8\nrepack: repack tensor  with q4_K_8x8\nrepack: repack tensor  with q4_K_8x8\nrepack: repack tensor  with q4_K_8x8\nrepack: repack tensor  with q4_K_8x8\nrepack: repack tensor enc_9_attn_pos_w with q4_K_8x8\nrepack: repack tensor  with q4_K_8x8\nrepack: repack tensor  with q4_K_8x8\nrepack: repack tensor enc_10_ff1_linear1_w with q4_K_8x8\nrepack: repack tensor enc_10_ff1_linear2_w with q4_K_8x8\nrepack: repack tensor  with q4_K_8x8\nrepack: repack tensor  with q4_K_8x8\nrepack: repack tensor  with q4_K_8x8\nrepack: repack tensor  with q4_K_8x8\nrepack: repack tensor enc_10_attn_pos_w with q4_K_8x8\nrepack: repack tensor  with q4_K_8x8\nrepack: repack tensor  with q4_K_8x8\nrepack: repack tensor enc_11_ff1_linear1_w with q4_K_8x8\nrepack: repack tensor enc_11_ff1_linear2_w with q4_K_8x8\nrepack: repack tensor  with q4_K_8x8\nrepack: repack tensor  with q4_K_8x8\nrepack: repack tensor  with q4_K_8x8\nrepack: repack tensor  with q4_K_8x8\nrepack: repack tensor enc_11_attn_pos_w with q4_K_8x8\nrepack: repack tensor  with q4_K_8x8\nrepack: repack tensor  with q4_K_8x8\nrepack: repack tensor enc_12_ff1_linear1_w with q4_K_8x8\nrepack: repack tensor enc_12_ff1_linear2_w with q4_K_8x8\nrepack: repack tensor  with q4_K_8x8\nrepack: repack tensor  with q4_K_8x8\nrepack: repack tensor  with q4_K_8x8\nrepack: repack tensor  with q4_K_8x8\nrepack: repack tensor enc_12_attn_pos_w with q4_K_8x8\nrepack: repack tensor  with q4_K_8x8\nrepack: repack tensor  with q4_K_8x8\nrepack: repack tensor enc_13_ff1_linear1_w with q4_K_8x8\nrepack: repack tensor enc_13_ff1_linear2_w with q4_K_8x8\nrepack: repack tensor  with q4_K_8x8\nrepack: repack tensor  with q4_K_8x8\nrepack: repack tensor  with q4_K_8x8\nrepack: repack tensor  with q4_K_8x8\nrepack: repack tensor enc_13_attn_pos_w with q4_K_8x8\nrepack: repack tensor  with q4_K_8x8\nrepack: repack tensor  with q4_K_8x8\nrepack: repack tensor enc_14_ff1_linear1_w with q4_K_8x8\nrepack: repack tensor enc_14_ff1_linear2_w with q4_K_8x8\nrepack: repack tensor  with q4_K_8x8\nrepack: repack tensor  with q4_K_8x8\nrepack: repack tensor  with q4_K_8x8\nrepack: repack tensor  with q4_K_8x8\nrepack: repack tensor enc_14_attn_pos_w with q4_K_8x8\nrepack: repack tensor  with q4_K_8x8\nrepack: repack tensor  with q4_K_8x8\nrepack: repack tensor enc_15_ff1_linear1_w with q4_K_8x8\nrepack: repack tensor enc_15_ff1_linear2_w with q4_K_8x8\nrepack: repack tensor  with q4_K_8x8\nrepack: repack tensor  with q4_K_8x8\nrepack: repack tensor  with q4_K_8x8\nrepack: repack tensor  with q4_K_8x8\nrepack: repack tensor enc_15_attn_pos_w with q4_K_8x8\nrepack: repack tensor  with q4_K_8x8\nrepack: repack tensor  with q4_K_8x8\nrepack: repack tensor enc_16_ff1_linear1_w with q4_K_8x8\nrepack: repack tensor enc_16_ff1_linear2_w with q4_K_8x8\nrepack: repack tensor  with q4_K_8x8\nrepack: repack tensor  with q4_K_8x8\nrepack: repack tensor  with q4_K_8x8\nrepack: repack tensor  with q4_K_8x8\nrepack: repack tensor enc_16_attn_pos_w with q4_K_8x8\nrepack: repack tensor  with q4_K_8x8\nrepack: repack tensor  with q4_K_8x8\nrepack: repack tensor enc_17_ff1_linear1_w with q4_K_8x8\nrepack: repack tensor enc_17_ff1_linear2_w with q4_K_8x8\nrepack: repack tensor  with q4_K_8x8\nrepack: repack tensor  with q4_K_8x8\nrepack: repack tensor  with q4_K_8x8\nrepack: repack tensor  with q4_K_8x8\nrepack: repack tensor enc_17_attn_pos_w with q4_K_8x8\nrepack: repack tensor  with q4_K_8x8\nrepack: repack tensor  with q4_K_8x8\nrepack: repack tensor enc_18_ff1_linear1_w with q4_K_8x8\nrepack: repack tensor enc_18_ff1_linear2_w with q4_K_8x8\nrepack: repack tensor  with q4_K_8x8\nrepack: repack tensor  with q4_K_8x8\nrepack: repack tensor  with q4_K_8x8\nrepack: repack tensor  with q4_K_8x8\nrepack: repack tensor enc_18_attn_pos_w with q4_K_8x8\nrepack: repack tensor  with q4_K_8x8\nrepack: repack tensor  with q4_K_8x8\nrepack: repack tensor enc_19_ff1_linear1_w with q4_K_8x8\nrepack: repack tensor enc_19_ff1_linear2_w with q4_K_8x8\nrepack: repack tensor  with q4_K_8x8\nrepack: repack tensor  with q4_K_8x8\nrepack: repack tensor  with q4_K_8x8\nrepack: repack tensor  with q4_K_8x8\nrepack: repack tensor enc_19_attn_pos_w with q4_K_8x8\nrepack: repack tensor  with q4_K_8x8\nrepack: repack tensor  with q4_K_8x8\nrepack: repack tensor enc_20_ff1_linear1_w with q4_K_8x8\nrepack: repack tensor enc_20_ff1_linear2_w with q4_K_8x8\nrepack: repack tensor  with q4_K_8x8\nrepack: repack tensor  with q4_K_8x8\nrepack: repack tensor  with q4_K_8x8\nrepack: repack tensor  with q4_K_8x8\nrepack: repack tensor enc_20_attn_pos_w with q4_K_8x8\nrepack: repack tensor  with q4_K_8x8\nrepack: repack tensor  with q4_K_8x8\nrepack: repack tensor enc_21_ff1_linear1_w with q4_K_8x8\nrepack: repack tensor enc_21_ff1_linear2_w with q4_K_8x8\nrepack: repack tensor  with q4_K_8x8\nrepack: repack tensor  with q4_K_8x8\nrepack: repack tensor  with q4_K_8x8\nrepack: repack tensor  with q4_K_8x8\nrepack: repack tensor enc_21_attn_pos_w with q4_K_8x8\nrepack: repack tensor  with q4_K_8x8\nrepack: repack tensor  with q4_K_8x8\nrepack: repack tensor enc_22_ff1_linear1_w with q4_K_8x8\nrepack: repack tensor enc_22_ff1_linear2_w with q4_K_8x8\nrepack: repack tensor  with q4_K_8x8\nrepack: repack tensor  with q4_K_8x8\nrepack: repack tensor  with q4_K_8x8\nrepack: repack tensor  with q4_K_8x8\nrepack: repack tensor enc_22_attn_pos_w with q4_K_8x8\nrepack: repack tensor  with q4_K_8x8\nrepack: repack tensor  with q4_K_8x8\nrepack: repack tensor enc_23_ff1_linear1_w with q4_K_8x8\nrepack: repack tensor enc_23_ff1_linear2_w with q4_K_8x8\nrepack: repack tensor  with q4_K_8x8\nrepack: repack tensor  with q4_K_8x8\nrepack: repack tensor  with q4_K_8x8\nrepack: repack tensor  with q4_K_8x8\nrepack: repack tensor enc_23_attn_pos_w with q4_K_8x8\nrepack: repack tensor  with q4_K_8x8\nrepack: repack tensor  with q4_K_8x8\nrepack: repack tensor enc_w with q4_K_8x8\nparakeet_model_load: model size    =  415.36 MB\nparakeet_init_with_params_no_state: initialized mel cache with n_fft = 512\nparakeet_backend_init_gpu: no GPU found\nparakeet_init_state: enc_out state:    0.00 MB (meta) +    2.44 MB (data)\nparakeet_init_state: lstm state:    0.00 MB (meta) +    0.01 MB (data)\nparakeet_init_state: pred state:    0.00 MB (meta) +    0.00 MB (data)\nparakeet_init_state: compute buffer (encode) =  337.79 MB\nparakeet_init_state: compute buffer (decode) =   67.12 MB\nread_audio_data: reading audio data from '.sanctum/speech-smoke/jfk.wav' ...\nread_audio_data: trying to decode with miniaudio\nAnd so, my fellow Americans, ask not what your country can do for you, ask what you can do for your country.\nAnd so, my fellow Americans, ask not what your country can do for you, ask what you can do for your country.\nAnd so, my fellow Americans, ask not what your country can do for you, ask what you can do for your country.\n",
+  "version": {
+    "seconds": [
+      0.004290529992431402,
+      0.003084314987063408,
+      0.0031539659830741584,
+      0.002843399008270353,
+      0.002719368989346549,
+      0.002845489012543112,
+      0.0028132580046076328,
+      0.003344607015606016,
+      0.002684922976186499,
+      0.002748596976744011,
+      0.002757112990366295,
+      0.002642687992192805,
+      0.005660105001879856,
+      0.0028368769853841513,
+      0.002968668006360531,
+      0.0030109650106169283,
+      0.0030070680077187717,
+      0.0029713709955103695,
+      0.0028193829930387437,
+      0.0029797180031891912,
+      0.00394218901055865,
+      0.0027149050147272646,
+      0.0026781149790622294,
+      0.002613687014672905,
+      0.0026735879946500063,
+      0.002886745991418138,
+      0.002963000995805487,
+      0.0028875569987576455,
+      0.00305346300592646,
+      0.0028251050098333508
+    ],
+    "p50_seconds": 0.002845489012543112,
+    "p95_seconds": 0.004290529992431402
+  },
+  "synthesis": {
+    "seconds": [
+      0.016069690987933427,
+      0.01592885298305191,
+      0.015828754985705018,
+      0.015264232992194593,
+      0.016172317002201453,
+      0.01591140602249652,
+      0.015463508025277406,
+      0.01601903699338436,
+      0.016098865016829222,
+      0.015780538000399247,
+      0.016147914982866496,
+      0.016551190987229347,
+      0.01660017401445657,
+      0.016004052013158798,
+      0.015965789993060753,
+      0.015910326997982338,
+      0.015847122005652636,
+      0.0163215089996811,
+      0.01692049199482426,
+      0.017940377991180867,
+      0.016095146973384544,
+      0.016924035007832572,
+      0.018473470001481473,
+      0.01677541297976859,
+      0.01740050400258042,
+      0.01616208499763161,
+      0.016985372989438474,
+      0.015649643988581374,
+      0.01661814597900957,
+      0.01609449600800872
+    ],
+    "p50_seconds": 0.016095146973384544,
+    "p95_seconds": 0.017940377991180867
+  }
+}
