@@ -1,3 +1,8 @@
+## Unreleased UI foundation
+
+- Add same-origin typed adapter, licensed local themes/fonts, notices and responsive shell.
+- Add explicit chat cancellation without automatic retries; retain incomplete-release gates.
+
 ## 2026-10-11 - Step 1a authenticated transport
 
 - Add directly admitted WebSocket transport, strict ticket/Origin/frame controls, heartbeat, bounded PCM and hierarchical turn cancellation.

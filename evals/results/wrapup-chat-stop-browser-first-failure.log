@@ -1,0 +1,24 @@
+node:internal/modules/run_main:107
+    triggerUncaughtException(
+    ^
+
+locator.click: Timeout 30000ms exceeded.
+Call log:
+  - waiting for getByRole('button', { name: 'Stop generation', exact: true })
+    - locator resolved to <button class="" type="button" data-ui-button="outline">Stop generation</button>
+  - attempting click action
+    - waiting for element to be visible, enabled and stable
+  - element was detached from the DOM, retrying
+
+    at C:\Users\aviroop\Desktop\Sanctum\evals\browser_chat_stop.mjs:22:70 {
+  log: [
+    "  - waiting for getByRole('button', { name: 'Stop generation', exact: true })",
+    '    - locator resolved to <button class="" type="button" data-ui-button="outline">Stop generation</button>',
+    '  - attempting click action',
+    '    - waiting for element to be visible, enabled and stable',
+    '  - element was detached from the DOM, retrying'
+  ],
+  name: 'TimeoutError'
+}
+
+Node.js v24.14.0

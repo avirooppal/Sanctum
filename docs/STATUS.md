@@ -66,3 +66,23 @@ Previous STATUS archived verbatim as [responsive shell](status-archive/2026-10-1
 SHA256 `d2efe17f413fadf952659223277e9912a05b4912503bff01a73ebdc45e114657`.
 Older archives and measurements remain linked there. Existing untracked owner files
 are untouched. No failed measurements removed or thresholds changed.
+
+## Step U: composer cancellation
+
+Contract/tests first: new controller suite failed while module was absent (named
+wrapup-chat-stop-test-first.log). Implemented one owned AbortController, Stop,
+late-output suppression, overlap refusal, unmount cancellation and explicit recovery.
+Tests now 30 web +2 font metrics PASS. Typecheck/build/audit0 PASS. Full Linux157,
+Rust57,38 denial/startup and3 supervision cases/zero survivors PASS again; all6
+real incremental smoke stages PASS. Raw commands/results: wrapup-chat-stop-*.
+
+Real browser initially missed Stop after response completion; failure preserved.
+New request-initiation trigger (ADR0062) observes aborted HTTP request, no retry,
+no visible cancellation error and successful explicit next Send:4 PASS. Browser
+stop-to-idle333.7183ms, single observation; NOT engine-slot timing or p95.
+Editing helper's initial Windows-default decoding failed before main.tsx was
+changed; rerun with explicit UTF-8, then all checks above. No runtime defect masked.
+
+Documentation5557fd3 hosted run38144333928 all5 PASS. WRAPUP/archive Git newline
+normalization corrected under ADR0062 so committed bytes match their source hashes.
+Next: conversation management and remaining foundation screens, then U6 gates.

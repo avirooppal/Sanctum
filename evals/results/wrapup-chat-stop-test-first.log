@@ -1,0 +1,66 @@
+
+> sanctum-web@0.1.0 test
+> tsc --outDir build/tests --noEmit false --target ES2022 --module NodeNext --moduleResolution NodeNext --jsx react-jsx --esModuleInterop src/speech.ts src/pcm.ts src/meeting.ts src/api.ts src/ui/primitives.tsx src/ui/themes.ts src/ui/AppShell.tsx && node --test tests/*.test.mjs && node --test ../../evals/tests/ui-font-metrics.test.mjs
+
+✔ default fetch retains the Window/global receiver (38.2553ms)
+✔ fixed same-origin requests omit cookies, reject redirects and never retry (1.3629ms)
+✔ models are validated and conversation IDs cannot change origin or path structure (1.5314ms)
+✔ stream decodes split Unicode and SSE lines without fabricated text (4.4179ms)
+✔ consumer cancellation releases stream and ignored fetch abort cannot yield stale text (1.25ms)
+✔ ticket is in subprotocol only and abort closes the socket (1.4049ms)
+✔ invalid ticket and cancellation after ticket never open a socket (1.3064ms)
+✔ abort while waiting for a stalled stream releases the reader (8.0406ms)
+node:internal/modules/esm/resolve:275
+    throw new ERR_MODULE_NOT_FOUND(
+          ^
+
+Error [ERR_MODULE_NOT_FOUND]: Cannot find module 'C:\Users\aviroop\Desktop\Sanctum\apps\web\build\tests\chat-run.js' imported from C:\Users\aviroop\Desktop\Sanctum\apps\web\tests\chat-run.test.mjs
+    at finalizeResolution (node:internal/modules/esm/resolve:275:11)
+    at moduleResolve (node:internal/modules/esm/resolve:865:10)
+    at defaultResolve (node:internal/modules/esm/resolve:991:11)
+    at #cachedDefaultResolve (node:internal/modules/esm/loader:719:20)
+    at #resolveAndMaybeBlockOnLoaderThread (node:internal/modules/esm/loader:736:38)
+    at ModuleLoader.resolveSync (node:internal/modules/esm/loader:765:52)
+    at #resolve (node:internal/modules/esm/loader:701:17)
+    at ModuleLoader.getOrCreateModuleJob (node:internal/modules/esm/loader:621:35)
+    at ModuleJob.syncLink (node:internal/modules/esm/module_job:160:33)
+    at ModuleJob.link (node:internal/modules/esm/module_job:245:17) {
+  code: 'ERR_MODULE_NOT_FOUND',
+  url: 'file:///C:/Users/aviroop/Desktop/Sanctum/apps/web/build/tests/chat-run.js'
+}
+
+Node.js v24.14.0
+✖ tests\chat-run.test.mjs (89.4264ms)
+✔ meeting save uses restricted same-origin authenticated request (41.0766ms)
+✔ invalid workspace and oversized or blank input never send requests (1.3473ms)
+✔ failed writes are surfaced without retrying (0.8784ms)
+✔ encodes finite mono PCM16 with accurate WAV header and clamping (4.6695ms)
+✔ bounded memory accepts no partial overflow and resets after discard (0.7733ms)
+✔ rejects nonfinite data without mutating captured audio (0.2907ms)
+✔ native button defaults to non-submit, preserves explicit submit and disabled (9.6108ms)
+✔ untrusted titles and field text remain escaped React text (2.0359ms)
+✔ dialog has a named native modal and escaped children without an injected close link (1.4029ms)
+✔ shell has one sidebar and main with explicitly connected native navigation control (1.7676ms)
+✔ uses same-origin multipart and bearer auth without storing credentials (35.7737ms)
+✔ stop discards stale audio even if fetch ignores abort (1.0288ms)
+✔ stop releases playback and next operation cannot reuse it (5.9786ms)
+✔ rejects oversized inputs and unexpected audio content types (4.5575ms)
+✔ core compiler preserves responsive and arbitrary-value application utilities (32.6021ms)
+✔ all pinned desktop and dashboard-only presets are available without upstream branding (1.0425ms)
+✔ pinned canonical palette values and mode pairs are retained (0.2889ms)
+✔ invalid IDs fail, tokens do not leak mutable palette references or remote URLs (1.739ms)
+✔ worklet itself stops after 30 seconds even if UI messages are not handled (9.461ms)
+ℹ tests 28
+ℹ suites 0
+ℹ pass 27
+ℹ fail 1
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 228.1938
+
+✖ failing tests:
+
+test at tests\chat-run.test.mjs:1:1
+✖ tests\chat-run.test.mjs (89.4264ms)
+  'test failed'
