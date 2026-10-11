@@ -2,9 +2,9 @@
 
 - Mission: [MISSION.md](MISSION.md), Amendment1; single owner ADR0027.
 - Step: U4 palette/token controls implemented on `ui-hermes-port`; full port pending.
-- Last hosted-green: `1fdf041`, run38130611442/all5 jobs PASS.
+- Last hosted-green: `8d3e98c`, run38132080056/all5 jobs PASS.
 - Blockers: none for UI; T1/GPU/physical audio/native targets UNVERIFIED.
-- Next three steps: font commit/push/exact CI;237px
+- Next three steps:237px
   responsive shell; isolated pinned reference/fidelity/axe/WS egress gates.
 
 | Gate | Latest actual results |
@@ -74,4 +74,4 @@ Three exact primary notices have trailing spaces; initial Git whitespace failure
 preserved. ADR0060/REVIEW_QUEUE scopes legal/evidence-only byte-preservation rules;
 no source/test formatting exception or threshold change. Original font bytes and
 names unchanged. Bold/italic/language and full per-theme fidelity remain pending.
-Candidate font commit/hosted CI next, then responsive shell and reference harness.
+Font8d3e98c pushed; exact hosted run38132080056/all5 jobs PASS. Next responsive shell and reference harness.
