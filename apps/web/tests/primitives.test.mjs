@@ -1,0 +1,23 @@
+import {test} from 'node:test';
+import assert from 'node:assert/strict';
+import React from 'react';
+import {renderToStaticMarkup} from 'react-dom/server';
+import {Button,Input,Card,Dialog} from '../build/tests/ui/primitives.js';
+
+test('native button defaults to non-submit, preserves explicit submit and disabled',()=>{
+  assert.match(renderToStaticMarkup(React.createElement(Button,{},'Open')),/type="button"/);
+  const submit=renderToStaticMarkup(React.createElement(Button,{type:'submit',disabled:true},'Send'));
+  assert.match(submit,/type="submit"/);assert.match(submit,/disabled=""/);
+});
+test('untrusted titles and field text remain escaped React text',()=>{
+  const payload='<img src="https://foreign.test" onerror="alert(1)">';
+  const card=renderToStaticMarkup(React.createElement(Card,{title:payload},payload));
+  assert(!card.includes('<img'));assert(card.includes('&lt;img'));
+  const field=renderToStaticMarkup(React.createElement(Input,{'aria-label':'Owner key',type:'password',value:payload,onChange:()=>{}}));
+  assert.match(field,/aria-label="Owner key"/);assert(!field.includes('<img'));
+});
+test('dialog has a named native modal and escaped children without an injected close link',()=>{
+  const dialog=renderToStaticMarkup(React.createElement(Dialog,{open:false,title:'Licenses',onClose:()=>{}},'<script>run()</script>'));
+  assert.match(dialog,/<dialog/);assert.match(dialog,/aria-labelledby=/);
+  assert.match(dialog,/Close Licenses/);assert(!dialog.includes('<script>'));
+});

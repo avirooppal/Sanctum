@@ -24,6 +24,14 @@ compiled adapter against actual local chat/storage and ticket WebSocket ingress;
 arguments: Playwright package path, owner token file, result JSON path. Optional
 SANCTUM_BASE_URL selects the already-running gateway (default loopback8769).
 The same-origin test-module interception is harness-only, not a product endpoint.
+
+Licenses opens a native modal with the exact bundled THIRD_PARTY_NOTICES text.
+Keyboard Enter/Close/Escape restore focus; notice text is not interpreted as HTML
+or fetched from another origin. Contract: `docs/contracts/web-primitives-v1.md`.
+`evals/browser_licenses.mjs <playwright-package> <output-json>` verifies the actual
+served dialog at desktop/tablet/mobile sizes. This does not complete full Hermes
+theme/renderer fidelity or axe checks. Native primitives use the existing palette
+until that migration lands; unverified upstream font and brand assets remain absent.
 Local speech expands optional file dictation and playback controls. Enter configured
 ASR/TTS/voice IDs, choose a mono PCM16 16 kHz WAV, review the draft, then send.
 Read answer synthesizes the last response; Stop audio cancels browser delivery/playback.

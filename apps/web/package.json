@@ -7,7 +7,7 @@
   "scripts": {
     "build": "node tools/build-css.mjs && vite build",
     "typecheck": "tsc --noEmit",
-    "test": "tsc --outDir build/tests --noEmit false --target ES2022 --module NodeNext --moduleResolution NodeNext src/speech.ts src/pcm.ts src/meeting.ts src/api.ts && node --test tests/*.test.mjs && node --test ../../evals/tests/ui-font-metrics.test.mjs"
+    "test": "tsc --outDir build/tests --noEmit false --target ES2022 --module NodeNext --moduleResolution NodeNext --jsx react-jsx --esModuleInterop src/speech.ts src/pcm.ts src/meeting.ts src/api.ts src/ui/primitives.tsx && node --test tests/*.test.mjs && node --test ../../evals/tests/ui-font-metrics.test.mjs"
   },
   "dependencies": {
     "react": "19.1.1",

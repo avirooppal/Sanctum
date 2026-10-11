@@ -113,3 +113,5 @@ test, timeout, benchmark or fidelity threshold exception.
 ADR0057 evidence supplement: preserve Node's raw failed assertion formatter's
 trailing spaces using a single-file Git whitespace exception. No source or test
 waiver; failing whitespace output retained and STATUS archive SHA256 recorded.
+
+| [0058](adr/0058-native-license-surface.md) | Native in-app exact notices and initial primitives; palette/theme migration remains pending | New geometry860px/32px gutter/720px or86dvh, centering1CSS px;12px floor/opacity1/reduced motion0s | Legal surface only, not full fidelity/axe; screenshot-discovered top-left regression preserved before fixing |
