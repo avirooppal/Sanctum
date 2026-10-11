@@ -45,3 +45,9 @@ Other ADRs audited: 0008/0025 build dependency repair, 0019 classification vocab
 0030 managed Python CI. They do not alter a timeout/threshold/tolerance or roadmap
 gate; retain their original records. H1 archive uses ADR0042's existing byte policy.
 No past ADR was modified to create this queue. H3 cost measurements are pending.
+
+H3a follow-up evidence (does not change ADR0040): three real reference documents,
+23 chunks, three paired full-ingestion repetitions: whole-document 8.243297 docs/min,
+1.053310 chunks/s; one-input 8.073704 docs/min, 1.031640 chunks/s. Throughput -2.057341%,
+paired vector difference0.0. Raw `evals/results/embedding-cost-reference.json`.
+Small-corpus evidence only; cache-cost/KV-reuse measurement remains pending.

@@ -1,7 +1,7 @@
 # Current state
 
-- Step: H1â€“H4 housekeeping before Step 1a; Step 0 HTTP reference passed.
-- Last green commit: `cf75ca9`; baseline rerun below; no phase tags.
+- Step: H3 ingestion/cache cost measurements before Step 1a; Step 0 HTTP reference passed.
+- Last green commit: `9e09f0e`; all five hosted jobs verified; no phase tags.
 - Blockers: held authenticated WebSocket PENDING Step 1a; T1 latency and physical audio UNVERIFIED.
 - Next: measure embedding throughput; measure chat cache cost/KV reuse; Step 1-pre/1a.
 
@@ -66,3 +66,60 @@ and scope changes, costs and failing evidence. Setup/baseline exceptions and hum
 review substitution are explicitly labelled; no original ADR changed. Link/required
 entry checks and raw archive SHA256 PASS after correcting Windows validation text
 encoding to UTF-8 (initial decode failure was not a pass). H1 correction `017ba95` pushed.
+
+## H3a: measured embedding-batch ingestion cost
+
+Contract `docs/contracts/embedding-cost-v1.md` and two tests preceded implementation;
+initial test failed on missing module. Implemented evaluation-only historical adapter
+and isolated Rust example; production one-input bound untouched. Command:
+
+```sh
+cargo build --locked --offline -p sanctum-gateway --example embedding_cost
+target/debug/examples/embedding_cost .sanctum/runtime-dispatch.json \
+  /home/aviroop/.local/share/sanctum-dev-venv/bin/python \
+  target/debug/sanctum-runtime evals/results/embedding-cost-reference.json
+```
+
+PASS exit 0: three real repository documents (`architecture`, `threat-model`,
+`profiles`), 23 structure-aware chunks, fresh SQLite catalog/vector stores,
+three paired repetitions with alternating order after one warmup each. Full
+parse/embed/publish timing, not embedding-only. Before = historical whole-document
+HTTP batches; after = production one-input adapter. Model/config/corpus hashes,
+base commit `9e09f0e`, CPU/memory and every sample in result JSON; launcher/harness
+source is included in the commit containing this record.
+
+| Variant | Measured seconds (three repetitions) | Mean documents/min | Mean chunks/s |
+|---|---|---:|---:|
+| Before, whole-document | 21.579137 / 22.246736 / 21.693477 | 8.243297 | 1.053310 |
+| After, one-input | 22.425413 / 21.892479 / 22.577603 | 8.073704 | 1.031640 |
+
+Throughput change **-2.057341%** on this small corpus, below ADR0004's 5%
+regression threshold. Paired two-input vectors: maximum absolute difference **0.0**.
+This is limited reference evidence, not a large-corpus throughput guarantee.
+Existing cancel/RSS gates unchanged; no less-safe batch override added to production.
+
+First launch using nsenter failed the child's host-Unix-socket denial check because
+joining a namespace does not inherit seccomp. Preserved named failure JSON; no
+samples counted. Recovery installs existing namespace/filter in the dedicated
+example and uses the owned supervisor. Eight kernel checks passed before work.
+Log `.sanctum/embedding-cost-isolated.log`. Gateway was stopped before the experiment.
+
+H3b cache-on/off six-turn TTFT and actual per-slot KV reuse remain **PENDING**.
+Inspection of pinned [upstream arguments](https://github.com/ggml-org/llama.cpp/blob/b11429/common/arg.cpp)
+and [prefix reuse](https://github.com/ggml-org/llama.cpp/blob/b11429/tools/server/server-context.cpp)
+shows `--no-cache-prompt` controls prefix reuse separately from `--cache-ram 0`.
+Do not assert current per-slot reuse; measure current and proposed configurations
+and rerun unchanged leak tolerances before adopting any alternative. No Step 1 code.
+
+H4 current committed head `9e09f0e`: [run 38074564003](https://github.com/avirooppal/Sanctum/actions/runs/38074564003),
+jobs API observed all five jobs completed successfully. Later commit needs its own
+hosted verification. No prior gate measurement rewritten or new phase tag.
+
+H3a post-change gates: Linux `python tools/check.py` PASS **140 tests**, lint,
+format, types, licenses, eval/API docs (`.sanctum/h3-source.log`). Linux
+`bash tools/check_rust.sh` PASS **49 tests**, fmt/clippy, 74 licenses,
+38 kernel denial probes/startup self-test and three supervisor scenarios
+(`.sanctum/h3-rust.log`); separate all-target clippy PASS including example.
+Final process inventory found no embedding_cost/runtime/llama-server processes.
+Current-state heading encoding corrected without modifying archive bytes.
+Next slice: H3b six-turn cache comparison, KV reuse, and unchanged resource gates.

@@ -1,0 +1,10 @@
+{
+  "suite": "embedding-cost-v1-launch",
+  "base_commit": "9e09f0e96d219aa9c24f3cb9c2177c48e8896c18",
+  "passed": false,
+  "exit_code": 1,
+  "output": "sanctum-runtime: missing syscall denial: host_unix_socket",
+  "cause": "nsenter joins a network namespace without inheriting the gateway seccomp filter",
+  "recovery": "dedicated Rust example installs the existing runtime containment before launching supervised benchmark work",
+  "benchmark_samples": 0
+}
