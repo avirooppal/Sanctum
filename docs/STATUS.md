@@ -1,9 +1,9 @@
 # Current state
 
 - Step: H3 ingestion/cache cost measurements before Step 1a; Step 0 HTTP reference passed.
-- Last green commit: `9e09f0e`; all five hosted jobs verified; no phase tags.
+- Last green commit: `53681c9`; all five hosted jobs verified; no phase tags.
 - Blockers: held authenticated WebSocket PENDING Step 1a; T1 latency and physical audio UNVERIFIED.
-- Next: measure embedding throughput; measure chat cache cost/KV reuse; Step 1-pre/1a.
+- Next: gate chat slot-only policy; warm-worker ADR; authenticated WebSocket.
 
 | Step 0 gate | Historical measured result (details in archive) |
 |---|---|
@@ -123,3 +123,54 @@ format, types, licenses, eval/API docs (`.sanctum/h3-source.log`). Linux
 Final process inventory found no embedding_cost/runtime/llama-server processes.
 Current-state heading encoding corrected without modifying archive bytes.
 Next slice: H3b six-turn cache comparison, KV reuse, and unchanged resource gates.
+
+## H3b experiment in progress (not an acceptance pass)
+
+Contract/tests first: missing-module test failed, then tests for content-only TTFT
+and actual integer cache counters passed. First real cache-off trial FAILED because
+process lookup matched both supervisor and engine aliases. Named failed result
+retained; no conversation samples claimed. Added guardian-exclusion regression
+(failed missing helper before implementation, then PASS three tests). Isolated
+launcher supports only three explicit evaluation variants; production flags unchanged.
+Corrected cache-off experiment running, then cache-on and RAM0/slot-reuse variant.
+Source gate initially PASS142; after regression test requires rerun. Rust gate PASS49
+with 38 denial probes, licenses/clippy/fmt and supervision; `.sanctum/h3b-rust.log`.
+No Step 1 or new phase tags. H3a commit `53681c9` pushed; [hosted run 38104426653](https://github.com/avirooppal/Sanctum/actions/runs/38104426653)
+verified all five jobs successful. Full H3b result and resource gate still pending.
+
+## H3b measured cache cost (production adoption gate pending)
+
+Command for each sequential variant:
+```sh
+target/debug/examples/embedding_cost .sanctum/runtime-dispatch.json \
+  /home/aviroop/.local/share/sanctum-dev-venv/bin/python \
+  target/debug/sanctum-runtime evals/results/chat-cache-VARIANT.json VARIANT
+```
+VARIANT `cache-off`, `cache-on`, `slot-only` (raw files use off/on/slot-only).
+Each exit0: three six-turn growing-prefix real OpenAI chat conversations,18 turns,
+temperature0/max16, pinned b11429/Qwen reference, context/threads/hardware in JSON.
+Engine HTTP TTFT excludes gateway equally; not a voice-turn latency measurement.
+
+| Flags | TTFT p50 / p95 s | Actual repeated-prompt reuse | Preliminary RSS delta KiB |
+|---|---:|---|---:|
+| Current RAM0/no-cache-prompt | 2.511719 / 3.103626 | 0 ->0; chat cache_n always0 | +19072 FAIL <=16384 |
+| RAM8192/cache-prompt | 0.357319 / 1.889318 | 0 ->220 | +60704 FAIL <=16384 |
+| Proposed RAM0/cache-prompt | 0.385307 / 1.871570 | 0 ->220 | +12800 within16384 |
+
+Short-warmup snapshots are preliminary, not the complete warmed storm gate.
+No RSS tolerance changed. Fixed slot reuse with RAM cache off is verified in the
+proposed configuration; current production flags do NOT reuse slot prefixes.
+[ADR0044](adr/0044-bounded-slot-prefix-reuse.md) proposes the bounded alternative;
+adoption pending full unchanged cancellation/storm/shutdown/mixed-load measurements.
+
+Counter mistake preserved: off/on raw `slot_reuse_observed` was derived from final
+slot-state `tokens_cached`. Source inspection established `timings.cache_n` as actual
+reuse; regression first FAILED then PASS. Separate `chat-cache-analysis.json`
+references raw SHA256 and actual counters; raw files untouched. OpenAI usage/timings
+independently show reuse. No inference retry/discarded sample or kernel modification.
+
+Post-fix Linux `python tools/check.py`: PASS143 tests/all source gates
+(`.sanctum/h3b-source-counter-fix.log`). Full Rust/security PASS49/38 denial probes,
+fmt/clippy/licenses/supervision (`.sanctum/h3b-rust.log`). Production unchanged.
+Next: candidate chat-only slot policy contract/test and full real-engine gate rerun;
+then warm-worker ADR and authenticated WebSocket. No phase tags.

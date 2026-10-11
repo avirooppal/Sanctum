@@ -1,0 +1,11 @@
+{
+  "suite": "chat-cache-cost-v1",
+  "variant": "cache-off",
+  "base_commit": "53681c94b4579cd601cba86aae20eb17afeee124",
+  "passed": false,
+  "exit_code": 1,
+  "failure": "assert len(candidates) == 1: [1256, 1259]",
+  "cause": "guardian and model worker both contain --alias",
+  "measured_conversation_turns": 0,
+  "fix": "require process comm llama-server in addition to alias; regression test added"
+}

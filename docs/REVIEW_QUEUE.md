@@ -51,3 +51,7 @@ H3a follow-up evidence (does not change ADR0040): three real reference documents
 1.053310 chunks/s; one-input 8.073704 docs/min, 1.031640 chunks/s. Throughput -2.057341%,
 paired vector difference0.0. Raw `evals/results/embedding-cost-reference.json`.
 Small-corpus evidence only; cache-cost/KV-reuse measurement remains pending.
+
+| New decision | Evidence / proposed change | Relaxes gate? | Cost |
+|---|---|---|---|
+| [0044](adr/0044-bounded-slot-prefix-reuse.md), proposed | Current prefix reuse disabled; H3 off/on median2.512/0.357s; short-warm RSS+19072/+60704KiB. Propose RAM0 with chat slot reuse only | No; existing complete warmed storm, cancel, shutdown and mixed-load gates must pass before adoption | No snapshot reuse across unrelated conversations; production adoption/resource gate PENDING |

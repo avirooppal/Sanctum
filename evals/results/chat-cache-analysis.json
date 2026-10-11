@@ -1,0 +1,46 @@
+{
+  "suite": "chat-cache-cost-v1-analysis",
+  "erratum": "Ignore initial derived raw slot_reuse_observed; timings.cache_n measures actual reuse, tokens_cached is final slot state.",
+  "rows": [
+    {
+      "variant": "cache-off",
+      "ttft_p50_seconds": 2.511719163012458,
+      "ttft_p95_seconds": 3.103626305004582,
+      "retained_rss_delta_kib": 19072,
+      "actual_native_reused_tokens": [
+        0,
+        0
+      ],
+      "actual_slot_reuse_observed": false,
+      "raw_sha256": "91aee9bd3ad72aca31641e8e2c00de1e4308480300338fe8bf585eebf128cf80",
+      "preliminary_rss_bound_pass": false
+    },
+    {
+      "variant": "cache-on",
+      "ttft_p50_seconds": 0.35731866900459863,
+      "ttft_p95_seconds": 1.889317940978799,
+      "retained_rss_delta_kib": 60704,
+      "actual_native_reused_tokens": [
+        0,
+        220
+      ],
+      "actual_slot_reuse_observed": true,
+      "raw_sha256": "ad8ef878236389395af6e5228f8c2f5783a1c253feded8dd55f5d8f58df72f0a",
+      "preliminary_rss_bound_pass": false
+    },
+    {
+      "variant": "slot-only",
+      "ttft_p50_seconds": 0.3853065259754658,
+      "ttft_p95_seconds": 1.8715695069986396,
+      "retained_rss_delta_kib": 12800,
+      "actual_native_reused_tokens": [
+        0,
+        220
+      ],
+      "actual_slot_reuse_observed": true,
+      "raw_sha256": "3eb32ba81aa7fa415bb96b387c2dc66202dac08b018cf02bfd9f0da5e09d910b",
+      "preliminary_rss_bound_pass": true
+    }
+  ],
+  "resource_gate": "Preliminary only: short warmup does not replace full representative warmed storm."
+}
