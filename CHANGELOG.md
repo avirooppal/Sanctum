@@ -47,7 +47,7 @@
   proposed pending unchanged engine resource gates.
 
 
-## 2026-10-10 — Mixed-engine CPU scheduling gate
+## 2026-10-10 â€” Mixed-engine CPU scheduling gate
 
 - Give speech priority over background execution and bound interactive deferral to
   2500ms; keep health/control available and every wait cancellable.
@@ -55,7 +55,7 @@
   mixed-engine lane/resource gate. Preserve all three failed runs and decisions.
 - Keep real authenticated WebSocket and voice-turn acceptance pending Step 1a.
 
-## 2026-10-10 — Engine cancellation and crash hardening
+## 2026-10-10 â€” Engine cancellation and crash hardening
 
 - Add bounded resident engine restart, cancellable execution admission and readiness waits.
 - Bound embedding and rerank subrequests; preserve embedding indices, usage and pair ranking.
@@ -64,25 +64,25 @@
 - Extend real engine/cancellation/resource/crash/overload harnesses; preserve failed evidence
   and explicit setup exceptions. Step 0 gate verification remains in progress.
 
-## 2026-10-10 — Shared engine admission
+## 2026-10-10 â€” Shared engine admission
 
 - Bound engine admission across Rust and Python callers with shared lifetime leases
   and reserved interactive capacity; shed excess with 503 and Retry-After.
 - Verify cross-process limits and actual HTTP saturation/recovery without weakening
   containment. Sustained mixed-load and engine-crash gates remain open.
 
-## 2026-10-10 — Active shutdown evidence
+## 2026-10-10 â€” Active shutdown evidence
 
 - Add real engine shutdown checks with chat, ingestion, ASR, queued work and a slow
   upload; assert listener closure, five-second exit and zero surviving owned PIDs.
 
-## 2026-10-10 — Response backpressure
+## 2026-10-10 â€” Response backpressure
 
 - Bound fixed and streaming response writes with cancellation, idle/block deadlines
   and delivery throughput windows; exclude model generation pauses.
 - Apply rolling upload throughput checks and add real slow-reader regressions.
 
-## 2026-10-10 — Cancellable engine I/O
+## 2026-10-10 â€” Cancellable engine I/O
 
 - Interrupt Knowledge pipes, speech waits and inference HTTP through shared contexts
   and owned process cleanup; retain resident inference servers and safe next-request recovery.

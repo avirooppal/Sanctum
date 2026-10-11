@@ -1,0 +1,8 @@
+Using CPython 3.13.14
+Creating virtual environment at: .venv-wsl
+  × Failed to download `rpds-py==0.30.0`
+  ╰─▶ Network connectivity is disabled, but the
+      requested data wasn't found in the cache for:
+      `https://files.pythonhosted.org/packages/b7/de/f7192e12b21b9e9a68a6d0f249b4af3fdcdff8418be0767a627564afa1f1/rpds_py-0.30.0-cp313-cp313-manylinux_2_17_x86_64.manylinux2014_x86_64.whl`
+
+hint: `rpds-py` (v0.30.0) was included because `sanctum-local:dev` (v0.1.0) depends on `rpds-py`EXIT=1

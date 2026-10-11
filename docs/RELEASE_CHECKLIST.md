@@ -1,4 +1,4 @@
-# Release checklist â€” live, not a release approval
+# Release checklist — live, not a release approval
 
 Evidence date: 2026-10-11; baseline `7cbc426d13b284856563c6e0a103f202b24557bf`.
 Authoritative row IDs and fresh evidence: [PLAN_COVERAGE](PLAN_COVERAGE.md).
@@ -20,7 +20,7 @@ Feature freeze and release rules: [WRAPUP](WRAPUP.md), [MISSION](MISSION.md).
 | Platform / scope | Verified in this session | Remaining support boundary |
 |---|---|---|
 | Linux x86_64, WSL Ubuntu22.04, CPU reference | Source157,Rust62,38 denial/startup probes;9 real smoke stages;13 WS transport checks (E9) | Development configuration with pre-provisioned models. Not a verified installable release. No full WS voice/vision/agents/LAN/encryption. |
-| Windows host Chromium UI â†’ WSL gateway | Web34 tests/build/typecheck/audit0; real chat,Knowledge,file speech,meeting/emulated microphone | Native Windows gateway absent. Windows-side raw WS handshake deadline probe FAILED; E7 preserves it. |
+| Windows host Chromium UI → WSL gateway | Web34 tests/build/typecheck/audit0; real chat,Knowledge,file speech,meeting/emulated microphone | Native Windows gateway absent. Windows-side raw WS handshake deadline probe FAILED; E7 preserves it. |
 | Ubuntu/macOS/Windows hosted source CI | Exact7cbc426 all5 jobs PASS observed via GitHub API | Source CI does not verify native engines,containment,installers or audio. |
 | T1 recommended hardware voice | UNVERIFIED | Full WS speech pipeline and>=50-turn runner also missing; software remains Partial. |
 | NVIDIA owner vLLM/SGLang | UNVERIFIED | Adapter not implemented; no real GPU serving claim. |
@@ -42,12 +42,12 @@ Never paste the token itself into a command or report.
 | ID / coverage | UNVERIFIED item | Exact owner-run command | Missing prerequisite / acceptance |
 |---|---|---|---|
 | U-HOLD / S13 | Current ten-minute held-session gate | `python evals/realtime_held.py --pid "$SANCTUM_RUNTIME_PID" --token-file "$SANCTUM_TOKEN_FILE" --runtime-config "$SANCTUM_CONFIG" --output evals/results/owner-held.json --seconds 600` | Provisioned Linux runtime; not run in this audit. Does not verify voice execution. |
-| U-T1 / S10,H2 | T1 EOS-to-first-audio p95<800ms,>=50 warm/cold turns | â€” | Full authenticated WS voice path and runner pending. Do not substitute sdk_voice_turn.py's file-output measurement. |
-| U-NVIDIA / I2,H2 | NVIDIA/vLLM or SGLang serving | â€” | Adapter,allowlist/ledger and real serving verifier pending. |
-| U-AUDIO / S6,S9 | Physical microphone/playback,barge-in and echo | â€” | Manual/physical duplex runner pending. browser_microphone.mjs intentionally emulates a file and does not close this row. |
-| U-KVM / A5 | Firecracker/KVM and gVisor sandbox | â€” | Sandbox implementation and escape/resource/egress runner pending. |
-| U-MAC / I2,H2,PH6 | Native macOS/MLX/desktop | â€” | Runtime/adapter/build/install runner pending. |
-| U-WIN / PH6 | Native Windows runtime/desktop | â€” | Native containment/build/install runner pending. |
+| U-T1 / S10,H2 | T1 EOS-to-first-audio p95<800ms,>=50 warm/cold turns | — | Full authenticated WS voice path and runner pending. Do not substitute sdk_voice_turn.py's file-output measurement. |
+| U-NVIDIA / I2,H2 | NVIDIA/vLLM or SGLang serving | — | Adapter,allowlist/ledger and real serving verifier pending. |
+| U-AUDIO / S6,S9 | Physical microphone/playback,barge-in and echo | — | Manual/physical duplex runner pending. browser_microphone.mjs intentionally emulates a file and does not close this row. |
+| U-KVM / A5 | Firecracker/KVM and gVisor sandbox | — | Sandbox implementation and escape/resource/egress runner pending. |
+| U-MAC / I2,H2,PH6 | Native macOS/MLX/desktop | — | Runtime/adapter/build/install runner pending. |
+| U-WIN / PH6 | Native Windows runtime/desktop | — | Native containment/build/install runner pending. |
 | U-NPU / H2 | NPU and non-NVIDIA accelerator discovery | `python -m sanctum doctor --json` | Inventory only; current report says NPU unknown. This command cannot establish engine performance or support. |
 | U-WS-WIN / S12 | Windows-to-WSL handshake deadline regression | `python evals/realtime_transport.py --token-file "$SANCTUM_TOKEN_FILE" --output evals/results/owner-windows-realtime.json` | Run from Windows against forwarded8769. This session FAILED handshake<2s; Linux rerun passed unchanged. Cause not established; no pass inferred. |
 
@@ -59,14 +59,14 @@ platform rows currently combine absent software with unverified target execution
 
 | ID / coverage | Acceptance | Current result / evidence |
 |---|---|---|
-| R-BASE / D4 | All existing source,Rust,web,SDK,denial checks | PASS within E1â€“E4 scope:157/57/34,38 probes,8 smoke stages; not final release regression. |
+| R-BASE / D4 | All existing source,Rust,web,SDK,denial checks | PASS within E1–E4 scope:157/57/34,38 probes,8 smoke stages; not final release regression. |
 | R-DOCTOR / PH0,H1 | Correct real tier/profile and readiness | OPEN:8167555072 bytes<configured8GiB; recommendation=null,exit1 (E8). No profile threshold reduced. |
-| R-UI / U1â€“U3 | Completed real screens,licensed assets,reference fidelity,axe/keyboard/contrast,all-screen HTTP+WS egress,branch merge | OPEN; Stop/Knowledge plus E9 real history search/rename/delete PASS (15 browser checks,0 foreign requests/errors). Exact history SHA792080b/all5 hosted jobs PASS (run38149612305). Full fidelity/axe/all-screen egress/model/settings/Markdown and merge pending. |
+| R-UI / U1–U3 | Completed real screens,licensed assets,reference fidelity,axe/keyboard/contrast,all-screen HTTP+WS egress,branch merge | OPEN; Stop/Knowledge plus E9 real history search/rename/delete PASS (15 browser checks,0 foreign requests/errors). Exact history SHA792080b/all5 hosted jobs PASS (run38149612305). Full fidelity/axe/all-screen egress/model/settings/Markdown and merge pending. |
 | R-RAG / PH2,EV1 | Real-document hybrid/vector ablation,faithfulness,page highlighting | OPEN; current citation smoke does not establish benchmark lift. |
-| R-SPEECH / S1â€“S14 | Resident workers,streaming TTS,barge-in,diarization/notes,WER/DER/WS latency | OPEN; file ASR/TTS and reviewed notes only. |
-| R-VISION / V1â€“V4,EV3 | VLM/OCR/tables/figures/citations,n>=100QA/CIs/human subset | OPEN; software/evaluation absent. Optional visual retriever remains off. |
-| R-AGENTS / A1â€“A8,G2â€“G4 | MCP/policy/taint/budgets/sandboxes/approvals/ledger;critical bypasses0 | OPEN; no full agent runtime/red-team suite. |
-| R-PRIVACY / G4â€“G6,D1 | Packet/netns capture reconciled with ledger,final startup self-test | OPEN;38 denial probes PASS is narrower than this requirement. |
+| R-SPEECH / S1–S14 | Resident workers,streaming TTS,barge-in,diarization/notes,WER/DER/WS latency | OPEN; file ASR/TTS and reviewed notes only. |
+| R-VISION / V1–V4,EV3 | VLM/OCR/tables/figures/citations,n>=100QA/CIs/human subset | OPEN; software/evaluation absent. Optional visual retriever remains off. |
+| R-AGENTS / A1–A8,G2–G4 | MCP/policy/taint/budgets/sandboxes/approvals/ledger;critical bypasses0 | OPEN; no full agent runtime/red-team suite. |
+| R-PRIVACY / G4–G6,D1 | Packet/netns capture reconciled with ledger,final startup self-test | OPEN;38 denial probes PASS is narrower than this requirement. |
 | R-RESOURCES / I5,I6 | Priority/preemption/RAM/VRAM/lifecycle/owner caps | OPEN; bounded admission exists; complete governance absent. |
 | R-LAN / G8 | TLS owner-only LAN,Host/Origin/lockout/ledger,second-netns tests | OPEN; absent. |
 | R-CRYPTO / G7 | Lock/unlock,wrong-key/canary/rotation/backup/overhead | OPEN; absent. File permissions do not pass this gate. |
@@ -81,7 +81,7 @@ platform rows currently combine absent software with unverified target execution
 
 See [KNOWN_LIMITS](KNOWN_LIMITS.md). This session does not reapprove old long-load,
 leak-storm,benchmark or clean-install results. All commands/results used as current
-evidence are indexed in PLAN_COVERAGE E1â€“E8. No gate is relaxed or optional feature
+evidence are indexed in PLAN_COVERAGE E1–E8. No gate is relaxed or optional feature
 silently removed. Phase/release tags remain withheld because software gaps remain.
 
 ## Website slice (ADR0064 / E10)

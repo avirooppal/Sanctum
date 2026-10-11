@@ -3,9 +3,9 @@
 Accepted 2026-10-10. First >=180s mixed run FAILED file-ASR p95: 8.121609s >5s.
 No foreground errors; health/models/chat passed, queued peak three, owned RSS peak
 3404240KiB. Retain `mixed-engine-overload-asr-failure.json`. Idle five-file timings
-3.502–4.283s show compute contention rather than dispatch: voice admission p95
+3.502â€“4.283s show compute contention rather than dispatch: voice admission p95
 was 75.422ms. Measured thread candidates (same transcript in every case): four
-threads 3.004–3.345s; six threads 2.559–2.852s on this 12-logical-CPU reference.
+threads 3.004â€“3.345s; six threads 2.559â€“2.852s on this 12-logical-CPU reference.
 
 Use six threads in the named reference ASR profile; record the actual profile in
 the test result. Other hardware must select an appropriate profile, not assume six.

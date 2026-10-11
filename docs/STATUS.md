@@ -1,12 +1,12 @@
 # Current state
 
-- Step: public website foundation,ADR0064; exact chat/dashboard port still pending.
-- Last green commit: `6ec627261abae92de6d8ed8a2247c2d0e4579f8b`;run38152617896/all5 PASS observed.
-- Current slice: source157/Rust62/web37 PASS;38 denial/startup probes;website3 viewports PASS.
-- Gate table: website functional PASS;full fidelity/axe OPEN;EXE/Linux packages OPEN.
-- Open blockers: native gateway/packages missing;full voice,vision,agents,LAN,crypto unfinished.
-- Next3: pinned upstream renderer reference;chat/dashboard fidelity;verified packaging.
-- Main/tags: UI branch unmerged;no tags. Extended10-stage smoke PASS;exact-SHA hosted CI all5 PASS.
+- Step: handoff reconciliation complete; 3a reference environment next.
+- Last green commit: `6ec627261abae92de6d8ed8a2247c2d0e4579f8b`; run 38152617896 all 5 PASS.
+- Current slice: handoff baseline source 157 / Rust 62 / web 37 PASS; 38 denial/startup probes; zero audit advisories.
+- Gate table: website functional PASS; full fidelity/axe OPEN; EXE/Linux packages OPEN.
+- Open blockers: native gateway/packages missing; full voice, vision, agents, LAN, crypto unfinished.
+- Next 3: 3a isolated reference launcher build; 3b chat renderer port; 3c dashboard port.
+- Main/tags: UI branch `ui-hermes-port` unmerged; no tags. Doc encoding normalized to UTF-8 LF.
 
 ## Public website slice
 

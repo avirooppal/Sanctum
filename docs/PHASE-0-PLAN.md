@@ -1,4 +1,4 @@
-# Phase 0 â€” slice 1: offline doctor and foundation contracts
+# Phase 0 — slice 1: offline doctor and foundation contracts
 
 Tasks: preserve plan; establish section 13 directories; specify request envelope,
 diagnostic JSON and registry; implement hardware probes/profile selection; add early
