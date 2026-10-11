@@ -1,0 +1,19 @@
+{
+  "suite": "real-realtime-transport-v1",
+  "passed": [
+    "bad_ticket_and_origin",
+    "single_use_replay",
+    "fragmented",
+    "unmasked",
+    "invalid_utf8",
+    "invalid_json",
+    "unknown_command",
+    "oversized",
+    "oversized_json",
+    "controls_reconnect_clean_close",
+    "expired_ticket"
+  ],
+  "expiry_wait_seconds": 30.102882350998698,
+  "held_session_gate": "PENDING",
+  "speech_pipeline": false
+}

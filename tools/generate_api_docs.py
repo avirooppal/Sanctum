@@ -20,6 +20,10 @@ def render():
     lines.extend(["## Runtime OpenAPI", "", "```json", json.dumps(runtime, indent=2), "```", ""])
     tickets = json.loads((ROOT / "docs/contracts/realtime-ticket.openapi.json").read_text())
     lines.extend(["## Realtime tickets", "", "```json", json.dumps(tickets, indent=2), "```", ""])
+    realtime = json.loads((ROOT / "docs/contracts/realtime-control-v1.schema.json").read_text())
+    lines.extend(
+        ["## Realtime control v1", "", "```json", json.dumps(realtime, indent=2), "```", ""]
+    )
     chat = json.loads((ROOT / "docs/contracts/chat.openapi.json").read_text())
     lines.extend(["## Chat OpenAPI", "", "```json", json.dumps(chat, indent=2), "```", ""])
     knowledge = json.loads((ROOT / "docs/contracts/knowledge.openapi.json").read_text())

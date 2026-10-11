@@ -86,7 +86,18 @@ waiting cannot spend it before a voice job begins. Caller deadlines remain absol
 `realtime_tickets` is a bounded, memory-only credential store. Authenticated empty
 POST `/v1/realtime/tickets` requires exact canonical gateway Host and Origin;
 returns a no-store single-use ticket with30s expiry, cap32/503 Retry-After.
-WebSocket consumption/transport remains pending. See
+The candidate GET `/v1/realtime` consumes the ticket through subprotocol
+`sanctum.realtime.v1, ticket.<hex>`, with exact Host/Origin and no URL credentials.
+It runs directly in guarded ingress (overall24/voice2), not tiny_http dispatch.
+Frames64KiB/JSON4KiB, no fragmentation/compression, ping15s/pong30s, session900s,
+bounded PCM30s and inherited read/write deadlines. Ready advertises transport only;
+ASR/LLM/TTS voice integration is not yet enabled. See
 `docs/contracts/realtime-tickets-v1.md` and ADR0047. Run its contract/security tests
 with `cargo test --locked --offline -p sanctum-gateway --test realtime_tickets`;
-the full gate remains `bash tools/check_rust.sh`. Held-session acceptance is pending.
+the full gate remains `bash tools/check_rust.sh`. Real held-session/mixed gates
+are recorded in STATUS; speech integration remains Step1b.
+
+Real tests: `python evals/realtime_transport.py --token-file <path> --output <path>`;
+`python evals/realtime_held.py --pid <runtime-pid> --runtime-config <config>
+--token-file <path> --seconds 600 --output <path>`; mixed harness adds opt-in
+`--held-websocket` while retaining its original upload workload by default.

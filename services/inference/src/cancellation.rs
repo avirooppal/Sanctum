@@ -25,6 +25,7 @@ impl std::error::Error for Reason {}
 struct State {
     deadline: Instant,
     reason: AtomicU8,
+    parent: Option<Arc<State>>,
 }
 #[derive(Clone)]
 pub struct Cancellation(Arc<State>);
@@ -33,6 +34,14 @@ impl Cancellation {
         Self(Arc::new(State {
             deadline,
             reason: AtomicU8::new(0),
+            parent: None,
+        }))
+    }
+    pub fn child(&self, deadline: Instant) -> Self {
+        Self(Arc::new(State {
+            deadline: deadline.min(self.0.deadline),
+            reason: AtomicU8::new(0),
+            parent: Some(self.0.clone()),
         }))
     }
     pub fn cancel(&self, reason: Reason) {
@@ -42,6 +51,11 @@ impl Cancellation {
                 .compare_exchange(0, reason as u8, Ordering::AcqRel, Ordering::Acquire);
     }
     pub fn check(&self) -> Result<(), Reason> {
+        if let Some(parent) = &self.0.parent {
+            if let Err(reason) = Self(parent.clone()).check() {
+                self.cancel(reason);
+            }
+        }
         if Instant::now() >= self.0.deadline {
             self.cancel(Reason::Deadline);
         }

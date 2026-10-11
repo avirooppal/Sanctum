@@ -81,3 +81,16 @@ Entire prior STATUS copied verbatim; no recorded measurement rewritten or delete
 Formatting exemption remains archive-only, with no executable check relaxed.
 
 | [0048](adr/0048-incremental-smoke-entry-point.md) | smoke_all initially runs all currently implemented real flows; manifest lists release gaps, strict release mode refuses success | No final gate relaxed; user explicitly requires extending smoke as features land | Requires provisioned running runtime/browser initially; file speech is not WS voice, and full fresh-clone RC acceptance remains pending |
+
+| [0049](adr/0049-guarded-websocket-transport.md) | Direct admitted WS handler and hierarchical turn cancellation; raw-frame parser, bounded memory, inherited upload/write bounds | No numeric gate relaxed; topology and additive cancellation API change | New audited Rust codec dependencies; actual speech integration remains later |
+| [0050](adr/0050-explicit-mit-choice-for-r-efi.md) | Record and enforce MIT selection for exact upstream MIT OR Apache OR LGPL alternative | No permissive-only rule relaxed; reject absent/LGPL selection | Extra explicit license metadata required; UEFI dependency is not a tested runtime platform |
+
+ADR0049 measurement supplement: opt-in mixed --held-websocket after original
+181.419s baseline PASS; default workload/every threshold retained. One held WS
+leaves one voice connection for real ASR/TTS. Client250ms read polling does not
+expire the connection or alter the15s/30s heartbeat policy.
+
+ADR0049 shutdown measurement supplement: opt-in held WS plus active real jobs;
+move the slow-body probe to background lane in this mode so voice cap2 is honored.
+Require100-continue to prove admission before SIGTERM (stricter evidence, not
+threshold relaxation). Original mode and5s/250ms bounds retained; WS closes1001.

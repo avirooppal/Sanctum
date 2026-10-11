@@ -394,6 +394,66 @@ Runtime HTTP: GET /healthz. Other contracts are foundation diagnostics.
 }
 ```
 
+## Realtime control v1
+
+```json
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "oneOf": [
+    {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "type"
+      ],
+      "properties": {
+        "type": {
+          "enum": [
+            "start",
+            "stop",
+            "interrupt",
+            "metrics"
+          ]
+        }
+      }
+    },
+    {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "type",
+        "sample_rate"
+      ],
+      "properties": {
+        "type": {
+          "const": "config"
+        },
+        "sample_rate": {
+          "const": 16000
+        }
+      }
+    },
+    {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "type",
+        "sequence"
+      ],
+      "properties": {
+        "type": {
+          "const": "playback"
+        },
+        "sequence": {
+          "type": "integer",
+          "minimum": 0
+        }
+      }
+    }
+  ]
+}
+```
+
 ## Chat OpenAPI
 
 ```json

@@ -147,20 +147,22 @@ fn run() -> Result<(), Box<dyn std::error::Error + Send + Sync>> {
         std::io::stdout().write_all(&child.stdout)?;
         return Ok(());
     }
+    let realtime = std::sync::Arc::new(sanctum_gateway::realtime_tickets::SessionAuth::new(port));
     let chat = if let Some(index) = args.iter().position(|a| a == "--config") {
         let mut configured = chat::Chat::load(std::path::Path::new(
             args.get(index + 1).ok_or("missing config")?,
         ))?;
-        configured.enable_realtime(std::sync::Arc::new(
-            sanctum_gateway::realtime_tickets::SessionAuth::new(port),
-        ));
+        configured.enable_realtime(realtime.clone());
         Some(configured)
     } else {
         None
     };
     let private_listener = TcpListener::bind(("127.0.0.1", 0))?;
-    let ingress =
-        sanctum_gateway::ingress::Ingress::start(listener, private_listener.local_addr()?)?;
+    let ingress = sanctum_gateway::ingress::Ingress::start_realtime(
+        listener,
+        private_listener.local_addr()?,
+        chat.as_ref().map(|_| realtime),
+    )?;
     let server = tiny_http::Server::from_listener(private_listener, None)?;
     println!(
         "{}",

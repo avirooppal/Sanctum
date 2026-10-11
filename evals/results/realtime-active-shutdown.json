@@ -1,0 +1,35 @@
+{
+  "held_websocket": true,
+  "active_lanes": [
+    1,
+    1,
+    2,
+    1
+  ],
+  "queued_lanes": [
+    0,
+    0,
+    1,
+    0
+  ],
+  "owned_pids": [
+    990,
+    991,
+    992,
+    993,
+    994,
+    995,
+    1047,
+    1048,
+    132798,
+    132799,
+    132805,
+    132808,
+    132927
+  ],
+  "slow_upload": true,
+  "shutdown_seconds": 1.425506272003986,
+  "listener_closed_seconds": 0.1841386780142784,
+  "surviving_pids": [],
+  "websocket_close_code": 1001
+}

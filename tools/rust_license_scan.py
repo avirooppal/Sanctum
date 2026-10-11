@@ -20,6 +20,13 @@ PERMISSIVE = {
 }
 
 
+def permissive(expression, entry):
+    return expression in PERMISSIVE or (
+        expression == "MIT OR Apache-2.0 OR LGPL-2.1-or-later"
+        and entry.get("selected_license") == "MIT"
+    )
+
+
 def scan(metadata):
     entries = json.loads((ROOT / "profiles/registry.json").read_text())["dependencies"]
     registered = {
@@ -30,7 +37,7 @@ def scan(metadata):
     packages = [p for p in metadata["packages"] if p["source"] is not None]
     for package in packages:
         entry = registered[(package["name"], package["version"])]
-        if entry["license"] != package["license"] or package["license"] not in PERMISSIVE:
+        if entry["license"] != package["license"] or not permissive(package["license"], entry):
             raise ValueError(f"unreviewed Rust license: {package['name']}")
         source = Path(package["manifest_path"]).parent
         archive = (

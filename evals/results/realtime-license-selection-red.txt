@@ -1,0 +1,14 @@
+E..
+======================================================================
+ERROR: test_dual_license_requires_explicit_permissive_selection (test_rust_licenses.RustLicenseTests.test_dual_license_requires_explicit_permissive_selection)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/mnt/c/Users/aviroop/Desktop/Sanctum/tools/tests/test_rust_licenses.py", line 16, in test_dual_license_requires_explicit_permissive_selection
+    self.assertFalse(scanner.permissive(expression, {}))
+                     ^^^^^^^^^^^^^^^^^^
+AttributeError: module 'rust_license_scan' has no attribute 'permissive'
+
+----------------------------------------------------------------------
+Ran 3 tests in 0.020s
+
+FAILED (errors=1)

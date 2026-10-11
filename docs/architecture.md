@@ -50,3 +50,12 @@ while new interactive execution defers at most 2500ms before proceeding. Health
 and control stay independent. All waits use cancellation/deadlines, with no model
 request replay. Reference file-speech latency is distinct from the future real
 WebSocket voice-turn gate. See ADR 0043 and the measured status evidence.
+# Guarded realtime transport (Step1a candidate)
+
+The public bounded ingress handles authenticated WebSocket sessions directly;
+idle sessions consume a connection lease, not a dispatcher or engine worker.
+Owner-authorized HTTP issues memory-only single-use Origin-bound tickets. Frames
+use the pinned library codec, then strict protocol/audio checks and the existing
+bounded response writer. Session cancellation parents per-turn cancellation, so
+turn interruption cannot cancel the parent; parent disconnect/shutdown propagates.
+Actual resident speech/model/TTS work is a later slice and is not advertised yet.

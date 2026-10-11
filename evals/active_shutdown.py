@@ -8,6 +8,7 @@ from pathlib import Path
 import signal
 import socket
 import time
+from realtime_transport import ticket, connect, receive
 
 import httpx2
 from cancellation_release import descendants, executable
@@ -18,6 +19,7 @@ def main():
     parser.add_argument("--pid", type=int, required=True)
     parser.add_argument("--token-file", type=Path, required=True)
     parser.add_argument("--output", type=Path, required=True)
+    parser.add_argument("--held-websocket", action="store_true")
     args = parser.parse_args()
     assert executable(args.pid) == "sanctum-runtime"
     token = args.token_file.read_text().strip()
@@ -40,6 +42,12 @@ def main():
         return connection
 
     try:
+        held = None
+        if args.held_websocket:
+            held, code = connect(ticket(token))
+            assert code == 101 and receive(held)[0] == 1
+            connections.append(held)
+            result["held_websocket"] = True
         workspace = client.post("/v1/workspaces", json={"name": "Active shutdown"})
         workspace.raise_for_status()
         chat = send(
@@ -114,7 +122,21 @@ def main():
         assert any(executable(pid) == "parakeet-cli" for pid in owned)
         slow = socket.create_connection(("127.0.0.1", 8769), timeout=2)
         connections.append(slow)
-        slow.sendall(b"POST /v1/audio/transcriptions HTTP/1.1\r\nContent-Length: 100000\r\n\r\nx")
+        route = (
+            f"/v1/workspaces/{workspace.json()['id']}/documents"
+            if args.held_websocket
+            else "/v1/audio/transcriptions"
+        )
+        slow.sendall(
+            f"POST {route} HTTP/1.1\r\nContent-Length: 100000\r\nExpect: 100-continue\r\n\r\n".encode()
+        )
+        acknowledgement = b""
+        while not acknowledgement.endswith(b"\r\n\r\n"):
+            part = slow.recv(1)
+            assert part, "slow body was not admitted"
+            acknowledgement += part
+        assert acknowledgement.startswith(b"HTTP/1.1 100 ")
+        slow.sendall(b"x")
         owned |= descendants(args.pid)
         result.update(
             active_lanes=active,
@@ -144,6 +166,10 @@ def main():
         )
         assert closed is not None and closed < 0.25, result
         assert not survivors and result["shutdown_seconds"] < 5, result
+        if held:
+            opcode, payload = receive(held)
+            assert opcode == 8 and int.from_bytes(payload[:2], "big") == 1001
+            result["websocket_close_code"] = 1001
         print(json.dumps(result, indent=2))
     finally:
         for connection in connections:

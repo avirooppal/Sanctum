@@ -14,6 +14,7 @@ import time
 import httpx2
 from cancellation_release import descendants
 from engine_storms import snapshot, compare
+from realtime_transport import ticket, connect, receive, send
 
 
 def owned_sample(pid):
@@ -42,6 +43,7 @@ def main():
     parser.add_argument("--output", type=Path, required=True)
     parser.add_argument("--runtime-config", type=Path, required=True)
     parser.add_argument("--seconds", type=float, default=180)
+    parser.add_argument("--held-websocket", action="store_true")
     args = parser.parse_args()
     assert args.seconds >= 180
     token = args.token_file.read_text().strip()
@@ -94,7 +96,12 @@ def main():
     results = {
         "baseline": baseline,
         "seconds_requested": args.seconds,
-        "scope": "Real CPU chat/ingestion/file-speech overload; held upload rotates at idle bound, real WebSocket PENDING Step 1a",
+        "scope": (
+            "Real CPU chat/ingestion/file-speech overload with authenticated held WebSocket"
+            if args.held_websocket
+            else "Real CPU chat/ingestion/file-speech overload; held upload rotates at idle bound"
+        ),
+        "held_websocket": args.held_websocket,
     }
     runtime_config = json.loads(args.runtime_config.read_text())
     speech_profile = json.loads(Path(runtime_config["speech"]["profile"]).read_text())
@@ -111,6 +118,7 @@ def main():
             "voice_admission",
             "shed",
             "held_upload",
+            "held_websocket",
         ]
     }
     observation = []
@@ -219,6 +227,26 @@ def main():
             time.sleep(0.1)
 
     def held():
+        if args.held_websocket:
+            connection, code = connect(ticket(token))
+            assert code == 101
+            assert receive(connection)[0] == 1
+            connection.settimeout(0.25)
+            began = time.monotonic()
+            try:
+                while time.monotonic() < until and not stop.is_set():
+                    try:
+                        opcode, payload = receive(connection)
+                    except socket.timeout:
+                        continue
+                    if opcode == 9:
+                        send(connection, payload, opcode=10)
+                    elif opcode == 8:
+                        raise AssertionError("held WebSocket closed early")
+                append("held_websocket", time.monotonic() - began)
+            finally:
+                connection.close()
+            return
         while time.monotonic() < until and not stop.is_set():
             with socket.create_connection(("127.0.0.1", 8769), timeout=3) as connection:
                 connection.sendall(

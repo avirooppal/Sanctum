@@ -1,0 +1,10 @@
+{
+  "base_commit": "6d21630",
+  "runtime_binary_sha256": "b667e24bca46d8bd16f9b323412f251755649a40213975f354fdc4b5ec0dcada",
+  "runtime_config_sha256": "6ada65048726cf3775925b112adfe9a0146139c4a7266e154b21919ade1470b3",
+  "held_harness_sha256": "2b637b3b83cd95dc9568542762b4ea0cf5d5760d8f725f57807e9a1d7e010442",
+  "transport_harness_sha256": "210c5d694dd242269810d9ca7838d7b394ba842b1deeed68e9df2d4468cdefb6",
+  "cargo_lock_sha256": "e5681700ad5619451a22d1a136c9fd3b0d39c89d8da27789850769d478875118",
+  "speech_pipeline": false,
+  "note": "Candidate source uncommitted during these real transport/held gates; binary hash identifies executed artifact."
+}

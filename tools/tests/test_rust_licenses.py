@@ -11,6 +11,12 @@ SPEC.loader.exec_module(scanner)
 
 
 class RustLicenseTests(unittest.TestCase):
+    def test_dual_license_requires_explicit_permissive_selection(self):
+        expression = "MIT OR Apache-2.0 OR LGPL-2.1-or-later"
+        self.assertFalse(scanner.permissive(expression, {}))
+        self.assertTrue(scanner.permissive(expression, {"selected_license": "MIT"}))
+        self.assertFalse(scanner.permissive(expression, {"selected_license": "LGPL-2.1-or-later"}))
+
     def test_missing_registry_entry_is_rejected(self):
         with patch.object(scanner.json, "loads", return_value={"dependencies": []}):
             with self.assertRaises(KeyError):

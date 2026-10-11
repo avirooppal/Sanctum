@@ -1,0 +1,8 @@
+{
+  "suite": "real-ws-slow-reader-v1",
+  "slot_release_seconds": 1.8688561570015736,
+  "response_stall_bound_seconds": 1.8,
+  "max_release_bound_seconds": 3,
+  "frames_sent": 2000,
+  "socket_receive_buffer": 2304
+}

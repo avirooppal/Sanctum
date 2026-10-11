@@ -1,3 +1,9 @@
+## 2026-10-11 - Step 1a authenticated transport
+
+- Add directly admitted WebSocket transport, strict ticket/Origin/frame controls, heartbeat, bounded PCM and hierarchical turn cancellation.
+- Verify real 600-second held sessions, mixed engine overload, slow clients and active shutdown; speech pipeline remains disabled pending Step 1b.
+- Pin and audit WebSocket dependencies with explicit MIT selection and preserved notices.
+
 ## 2026-10-11 - Step 1a ticket HTTP admission
 
 - Add owner-authenticated, exact-Origin/Host, no-store ticket endpoint with bounded single-use store; generated contract and real HTTP checks.

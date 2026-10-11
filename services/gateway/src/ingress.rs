@@ -57,6 +57,7 @@ pub struct Head {
     pub length: usize,
     pub forwarded: Vec<u8>,
     expect: bool,
+    websocket: bool,
 }
 pub fn inspect(bytes: &[u8]) -> Result<Head, u16> {
     if bytes.len() > 16384 {
@@ -83,6 +84,7 @@ pub fn inspect(bytes: &[u8]) -> Result<Head, u16> {
     };
     let mut length = None;
     let mut expect = false;
+    let mut websocket = false;
     let mut forwarded =
         format!("{} {path} HTTP/1.1\r\n", parsed.method.ok_or(400u16)?).into_bytes();
     for header in parsed.headers.iter() {
@@ -90,7 +92,13 @@ pub fn inspect(bytes: &[u8]) -> Result<Head, u16> {
             return Err(411);
         }
         if header.name.eq_ignore_ascii_case("Upgrade") {
-            return Err(501);
+            if route != "/v1/realtime" {
+                return Err(501);
+            }
+            if websocket || path != route || parsed.method != Some("GET") {
+                return Err(400);
+            }
+            websocket = true;
         }
         if header.name.eq_ignore_ascii_case("Content-Length") {
             if length.is_some() {
@@ -122,6 +130,9 @@ pub fn inspect(bytes: &[u8]) -> Result<Head, u16> {
     }
     forwarded.extend_from_slice(b"Connection: close\r\n\r\n");
     let length = length.unwrap_or(0);
+    if websocket && (length != 0 || expect) {
+        return Err(400);
+    }
     let limit = match lane {
         1 if route == "/v1/audio/transcriptions" => 8 * 1024 * 1024,
         1 | 2 => 1024 * 1024,
@@ -136,6 +147,7 @@ pub fn inspect(bytes: &[u8]) -> Result<Head, u16> {
         length,
         forwarded,
         expect,
+        websocket,
     })
 }
 
@@ -232,6 +244,7 @@ fn relay(
     lanes: [Arc<AtomicUsize>; 4],
     pending: Lease,
     contexts: Contexts,
+    realtime: Option<Arc<crate::realtime_tickets::SessionAuth>>,
 ) -> io::Result<()> {
     client.set_read_timeout(Some(Duration::from_millis(100)))?;
     client.set_write_timeout(Some(Duration::from_secs(2)))?;
@@ -255,6 +268,7 @@ fn relay(
         }
         head.push(byte[0]);
     }
+    let original_head = head.clone();
     let head = match inspect(&head) {
         Ok(head) => head,
         Err(code) => {
@@ -267,6 +281,15 @@ fn relay(
         return Ok(());
     };
     drop(pending);
+    if head.websocket {
+        return match realtime {
+            Some(auth) => crate::realtime::serve(client, &original_head, &auth, stop),
+            None => {
+                reject(&mut client, 503);
+                Ok(())
+            }
+        };
+    }
     if head.expect {
         client.write_all(b"HTTP/1.1 100 Continue\r\n\r\n")?;
     }
@@ -408,6 +431,13 @@ pub struct Ingress {
 }
 impl Ingress {
     pub fn start(listener: TcpListener, backend: SocketAddr) -> io::Result<Self> {
+        Self::start_realtime(listener, backend, None)
+    }
+    pub fn start_realtime(
+        listener: TcpListener,
+        backend: SocketAddr,
+        realtime: Option<Arc<crate::realtime_tickets::SessionAuth>>,
+    ) -> io::Result<Self> {
         listener.set_nonblocking(true)?;
         // SAFETY: live bound TCP listener; adjust only the pending accept backlog.
         if unsafe { libc::listen(listener.as_raw_fd(), 32) } != 0 {
@@ -439,9 +469,13 @@ impl Ingress {
                         if let Some((overall, header)) = leases {
                             let (running, lanes, contexts) =
                                 (running.clone(), lanes.clone(), associations.clone());
+                            let realtime = realtime.clone();
                             tasks.push(thread::spawn(move || {
                                 let _overall = overall;
-                                if relay(stream, backend, running, lanes, header, contexts).is_err()
+                                if relay(
+                                    stream, backend, running, lanes, header, contexts, realtime,
+                                )
+                                .is_err()
                                 {
                                     log_rejection(408);
                                 }

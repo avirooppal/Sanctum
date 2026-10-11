@@ -1,5 +1,14 @@
 # Plan coverage audit
 
+Step1a transport **Implemented for Linux x86_64 reference**, with owner ticket,
+Host/Origin binding, guarded direct WebSocket, heartbeat, frame/memory/deadline
+limits, child cancellation, and content-free audit. Evidence:57 Rust/source150,
+13 live security cases,600.398s held gate,182.553s held mixed workload,1.425506s
+active shutdown/1001/zero survivors. Paths:gateway/realtime.rs, ingress.rs,
+inference/cancellation.rs, realtime contract/schema and named realtime eval results.
+Actual WS ASR/LLM/TTS execution remains **Not done**, explicitly disabled in ready;
+transport acceptance does not satisfy Phase3 voice, WER, diarization or RC gates.
+
 Final-mission continuation: ticket endpoint **Implemented**, scoped to loopback
 owner issuance (`chat.rs`, `realtime_tickets.rs`, Origin/contract tests, six real
 HTTP checks in `realtime-ticket-http-reference.json`). Authenticated WebSocket

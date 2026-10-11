@@ -1,10 +1,10 @@
 # Current state
 
 - Mission: [MISSION.md](MISSION.md); single owner, ADR0027. No RC or phase tag.
-- Step: 1a ticket HTTP endpoint under verification; WebSocket transport pending.
-- Last hosted-green commit: `d89feb2` (mission); baseline below rerun this session.
+- Step: 1a transport gates PASS; final source/push/hosted CI pending. Warm speech next after Step U.
+- Last hosted-green commit: `6d21630`; all5 jobs verified; candidate not yet committed.
 - Blockers: no software blocker; T1/GPU/physical audio/native targets UNVERIFIED.
-- Next: finish endpoint checks/push; guarded WebSocket; real >=600s held/mixed gates.
+- Next: push/hosted CI; Step U source/license audit; UI foundation/fidelity verification.
 
 | Gate | Current evidence |
 |---|---|
@@ -14,7 +14,7 @@
 | Real SDK baseline | PASS8; chat0.4114s, streaming TTFT0.4328s, embeddings1024 |
 | Active baseline shutdown | PASS0.793983s; listener0.183991s; zero survivors |
 | Step0 engine storms/mixed | Historical PASS; must rerun after resident workers |
-| Held authenticated WebSocket | PENDING; no real transport yet |
+| Held authenticated WebSocket | PASS600.398s/admit2 of3; held mixed182.553s PASS; details below |
 | Speech WER/T1 voice latency | Not measured; T1 hardware UNVERIFIED |
 | Vision/agents/LAN/packaging/RC acceptance | Not done; no hardware-only exemption for software gaps |
 
@@ -68,3 +68,52 @@ SANCTUM_TTS_VOICE=tts-flite-slt-reference. Logged
 `.sanctum/realtime-smoke-all-windows.log`; six stage logs/results retained.
 Post-slice active engine/queue/slow-body shutdown PASS0.785774s, listener0.191896s,
 zero survivors (`realtime-endpoint-active-shutdown.json`). No runtime left running.
+
+Endpoint commit `6d21630` pushed; hosted run38116356790 all5 exact-SHA jobs PASS.
+Candidate direct guarded WebSocket: contract/tests first; missing module FAILED,
+then audio cap/sequence and parent/turn cancellation PASS. Source150/Rust57,
+fmt/clippy,92 reviewed Rust licenses,38 denial/startup probes and supervision PASS.
+Formatting failure preserved before repair. ADR0049 topology and ADR0050 explicit
+r-efi MIT branch recorded; absent/LGPL selection rejection tested. New notices and
+license-file hashes preserved; no permissive-only policy relaxation.
+
+Actual `python evals/realtime_transport.py --token-file <state>/local.token
+--output evals/results/realtime-transport-with-slow-clients.json` PASS13 including
+Origin/ticket/replay/expiry, malformed/fragmented/unmasked/oversize frames, reconnect,
+slowloris/incomplete frames (release1.878895/1.868968s). Speech pipeline explicitly
+false; this is transport, not a voice-turn SLO or resident-worker implementation.
+
+`python evals/realtime_held.py --pid 691 --runtime-config .sanctum/runtime-dispatch.json
+--token-file <state>/local.token --seconds 600 --output evals/results/realtime-held-reference.json`
+PASS600.398101s:2 authenticated sessions, third503 in0.010550s;
+health/models/chat p95 0.007214/0.006611/0.467532s; background503 count40975,
+queue peak1; process roles/FD/socket restored, thread allowance met, worst retained
+per-role RSS+3604KiB <=16384 after10s. Every sample/snapshot retained.
+Old mixed180s baseline now running before extending that harness to held WS.
+Runtime691 remains active; do not rebuild binary during real gates. Candidate
+uncommitted until mixed/regressions/smoke/shutdown verification. No phase/RC tags.
+
+Original mixed baseline PASS181.419s before harness edit (raw named result).
+Opt-in `mixed_engine_overload.py --held-websocket` with same arguments/PID/config
+PASS182.553096s; health/models/chat/ASR/TTS/voice-admission p95
+0.010983/0.011015/3.309382/4.495361/1.619486/0.082271s; background503 count12614,
+queue peak3, owned peak RSS3412312KiB. Original resource/latency bounds unchanged;
+post-quiescence comparison PASS. One real authenticated WS held throughout.
+Raw `realtime-websocket-mixed.json` retains a stale scope-description string from
+the old harness; held_websocket=true and held duration sample are authoritative.
+Future description corrected without rewriting raw evidence. Final regression/
+smoke/shutdown/hosted checks next, then Step U. Speech pipeline remains disabled.
+
+Final source150/Rust57, fmt/clippy, licenses26 Python/72 npm/92 Rust,38 denial/
+startup probes/supervision3 PASS. Web12/typecheck/build/audit0 PASS. Final
+`bash tools/smoke_all.sh` implemented-feature scope PASS6 real stages; fresh raw
+results preserved as `realtime-final-smoke-*`, prior smoke records restored.
+Release_complete remains false. Slow-reader WS flood2000 frames released shared
+voice slot in1.868856s (max<3s unchanged; not a50-sample p95 claim).
+
+`active_shutdown.py --pid 691 --held-websocket ...` PASS1.425506s,
+listener0.184139s, WS close1001, zero survivors; actual active lanes[1,1,2,1],
+queued chat1 and100-continue-confirmed background slow body. Original mode kept;
+new mode honors voice cap2 by moving slow body to background. No timeout relaxed.
+Kernel/transport/software gates passed for Step1a; no speech-loop/RC phase tag.
+Runtime stopped. Last source recheck after harness edits pending; commit/CI next.
