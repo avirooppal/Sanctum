@@ -94,3 +94,5 @@ ADR0049 shutdown measurement supplement: opt-in held WS plus active real jobs;
 move the slow-body probe to background lane in this mode so voice cap2 is honored.
 Require100-continue to prove admission before SIGTERM (stricter evidence, not
 threshold relaxation). Original mode and5s/250ms bounds retained; WS closes1001.
+
+| [0051](adr/0051-hermes-ui-source-and-asset-boundary.md) | Pin actual upstream b30f95ac; recreate locally instead of importing UI0.18.2 wholesale; exclude unverified brand fonts/assets | Intentional legal/privacy deviation only; no fidelity or quality threshold set/relaxed yet | Font substitutes alter glyph appearance; full asset/token/fidelity audit remains pending |

@@ -1,10 +1,10 @@
 # Current state
 
 - Mission: [MISSION.md](MISSION.md); single owner, ADR0027. No RC or phase tag.
-- Step: 1a transport gates PASS; final source/push/hosted CI pending. Warm speech next after Step U.
-- Last hosted-green commit: `6d21630`; all5 jobs verified; candidate not yet committed.
+- Step: 1a transport complete/hosted green; Step U source/license discovery in progress.
+- Last hosted-green commit: `3183f7c`; all5 jobs verified; no phase/RC tag.
 - Blockers: no software blocker; T1/GPU/physical audio/native targets UNVERIFIED.
-- Next: push/hosted CI; Step U source/license audit; UI foundation/fidelity verification.
+- Next: pin upstream/license audit; UI contracts/tokens/shell; fidelity/egress/accessibility gates.
 
 | Gate | Current evidence |
 |---|---|
@@ -117,3 +117,18 @@ queued chat1 and100-continue-confirmed background slow body. Original mode kept;
 new mode honors voice cap2 by moving slow body to background. No timeout relaxed.
 Kernel/transport/software gates passed for Step1a; no speech-loop/RC phase tag.
 Runtime stopped. Last source recheck after harness edits pending; commit/CI next.
+
+Step1a commit3183f7c pushed; [run38121246771](https://github.com/avirooppal/Sanctum/actions/runs/38121246771)
+jobs API observed all5 completed/success for exact SHA. Final source recheck PASS150.
+No runtime running. Step U starts with explicit dev-only shallow clone/audit;
+no upstream code/assets copied before license/brand review. No phase/RC tags.
+
+Step U discovery: shallow clone completed at b30f95ac4a80d2f6dbe3aa01001b0524314f6d74;
+MIT root LICENSE read. Inspected web/package/README/index.css, desktop/package/
+styles/API directories, shared themes/package and plugin-specific notice.
+`npm view @nous-research/ui@0.18.2 ...`, `npm pack --ignore-scripts ...` and
+safe tar extraction verify public MIT declaration, bundled brand fonts and no
+package LICENSE file. ADR0051/REVIEW_QUEUE/ui-deviations record exclusions.
+JetBrains primary OFL verified; upstream Apache comment is not reused as evidence.
+No frontend/dependency/font asset copied; no fidelity/accessibility/egress UI-port
+pass claimed. Actual UI foundation and all later roadmap remain unfinished.
