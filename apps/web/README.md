@@ -15,14 +15,25 @@ Run `npm ci --prefix apps/web`, `npm run typecheck --prefix apps/web`, and
 `npm run build --prefix apps/web`. Browser smoke test: log in, send a prompt, create
 a new conversation, restore the prior conversation. Verified against real inference.
 
-`npm test --prefix apps/web` runs the speech controller's cancellation/transport tests.
+`npm test --prefix apps/web` runs speech/meeting/compiler, HTTP/realtime adapter
+and font raster-metric tests. The existing chat/history/model screen uses
+`src/api.ts`: fixed same-origin routes, memory-only bearer, cookie omission,
+redirect refusal, no retries, runtime response checks and cancellable SSE reads.
+Contract: `docs/contracts/web-adapter-v1.md`. `evals/browser_adapter.mjs` runs the
+compiled adapter against actual local chat/storage and ticket WebSocket ingress;
+arguments: Playwright package path, owner token file, result JSON path. Optional
+SANCTUM_BASE_URL selects the already-running gateway (default loopback8769).
+The same-origin test-module interception is harness-only, not a product endpoint.
 Local speech expands optional file dictation and playback controls. Enter configured
 ASR/TTS/voice IDs, choose a mono PCM16 16 kHz WAV, review the draft, then send.
 Read answer synthesizes the last response; Stop audio cancels browser delivery/playback.
 Start microphone requests device access only on click. Finish dictation closes the
 device and transcribes up to 30 seconds; Stop audio discards capture. The worklet
 and capture buffer enforce the limit independently. Unsupported device/browser
-formats fail explicitly. Server-side cancellation is not yet provided. Contract:
+formats fail explicitly. Server request disconnect/deadline cancellation is owned
+by the common cancellation context and process supervisor (Step0). Resident
+speech, streaming TTS and the voice loop are still pending; realtime currently
+advertises transport only and speech_pipeline=false. Contract:
 `docs/contracts/web-speech-v1.md`. Run `evals/browser_speech.mjs` against a configured
 gateway for real integration; CLI arguments are documented at the top of the script.
 

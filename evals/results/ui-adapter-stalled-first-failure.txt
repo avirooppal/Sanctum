@@ -1,0 +1,21 @@
+✔ fixed same-origin requests omit cookies, reject redirects and never retry (22.3396ms)
+✔ models are validated and conversation IDs cannot change origin or path structure (1.8515ms)
+✔ stream decodes split Unicode and SSE lines without fabricated text (2.1732ms)
+✔ consumer cancellation releases stream and ignored fetch abort cannot yield stale text (0.593ms)
+✔ ticket is in subprotocol only and abort closes the socket (0.7026ms)
+✔ invalid ticket and cancellation after ticket never open a socket (0.6091ms)
+✖ abort while waiting for a stalled stream releases the reader (2009.4242ms)
+ℹ tests 7
+ℹ suites 0
+ℹ pass 6
+ℹ fail 0
+ℹ cancelled 1
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 2131.4824
+
+✖ failing tests:
+
+test at apps\web\tests\api.test.mjs:72:1
+✖ abort while waiting for a stalled stream releases the reader (2009.4242ms)
+  'test timed out after 2000ms'

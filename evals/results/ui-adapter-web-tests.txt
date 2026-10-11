@@ -1,0 +1,42 @@
+
+> sanctum-web@0.1.0 test
+> tsc --outDir build/tests --noEmit false --target ES2022 --module NodeNext --moduleResolution NodeNext src/speech.ts src/pcm.ts src/meeting.ts src/api.ts && node --test tests/*.test.mjs && node --test ../../evals/tests/ui-font-metrics.test.mjs
+
+✔ default fetch retains the Window/global receiver (73.5412ms)
+✔ fixed same-origin requests omit cookies, reject redirects and never retry (1.8477ms)
+✔ models are validated and conversation IDs cannot change origin or path structure (1.9325ms)
+✔ stream decodes split Unicode and SSE lines without fabricated text (6.102ms)
+✔ consumer cancellation releases stream and ignored fetch abort cannot yield stale text (1.7023ms)
+✔ ticket is in subprotocol only and abort closes the socket (1.8923ms)
+✔ invalid ticket and cancellation after ticket never open a socket (1.8486ms)
+✔ abort while waiting for a stalled stream releases the reader (7.781ms)
+✔ meeting save uses restricted same-origin authenticated request (53.9729ms)
+✔ invalid workspace and oversized or blank input never send requests (1.4785ms)
+✔ failed writes are surfaced without retrying (0.6753ms)
+✔ encodes finite mono PCM16 with accurate WAV header and clamping (6.2829ms)
+✔ bounded memory accepts no partial overflow and resets after discard (1.2085ms)
+✔ rejects nonfinite data without mutating captured audio (0.3888ms)
+✔ uses same-origin multipart and bearer auth without storing credentials (31.7713ms)
+✔ stop discards stale audio even if fetch ignores abort (1.2413ms)
+✔ stop releases playback and next operation cannot reuse it (6.9114ms)
+✔ rejects oversized inputs and unexpected audio content types (4.8656ms)
+✔ core compiler preserves responsive and arbitrary-value application utilities (33.3568ms)
+✔ worklet itself stops after 30 seconds even if UI messages are not handled (14.4806ms)
+ℹ tests 20
+ℹ suites 0
+ℹ pass 20
+ℹ fail 0
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 270.9171
+✔ identical raster is zero and multiple changed channels count one pixel (1.2152ms)
+✔ unequal, empty and malformed raster inputs fail (0.4639ms)
+ℹ tests 2
+ℹ suites 0
+ℹ pass 2
+ℹ fail 0
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 98.7875

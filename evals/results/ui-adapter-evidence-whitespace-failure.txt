@@ -1,0 +1,4 @@
+evals/results/ui-adapter-fetch-binding-first-failure.txt:40: trailing whitespace.
++  
+evals/results/ui-adapter-fetch-binding-first-failure.txt:72: trailing whitespace.
++  

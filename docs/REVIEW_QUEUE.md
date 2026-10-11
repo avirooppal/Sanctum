@@ -107,3 +107,9 @@ ADR0056 exact-notice supplement: path-specific Git trailing-blank exception for
 the original Solarized copyright notice only; named whitespace failure retained.
 Do not rewrite a primary license to satisfy code whitespace rules. No code,
 test, timeout, benchmark or fidelity threshold exception.
+
+| [0057](adr/0057-web-adapter-and-cancellation.md) | Existing screen uses first-party typed HTTP adapter; guarded ticket WS helper |2000ms tests-first hang guard only; server deadlines unchanged | Full UI egress/fidelity and speech integration still pending; real native-fetch failure retained and fixed |
+
+ADR0057 evidence supplement: preserve Node's raw failed assertion formatter's
+trailing spaces using a single-file Git whitespace exception. No source or test
+waiver; failing whitespace output retained and STATUS archive SHA256 recorded.

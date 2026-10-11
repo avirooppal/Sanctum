@@ -1,10 +1,10 @@
-import React, {useState, useEffect} from 'react';
+import React, {useState, useEffect, useMemo} from 'react';
 import {createRoot} from 'react-dom/client';
 import './style.css';
 import {SpeechPanel} from './SpeechPanel';
 import {MeetingPanel} from './MeetingPanel';
 
-type Message={role:'user'|'assistant',content:string};
+import {SanctumClient, type Message} from './api';
 function App(){
  const [token,setToken]=useState('');
  const [keyInput,setKeyInput]=useState('');
@@ -16,13 +16,13 @@ function App(){
  const [error,setError]=useState('');
  const [conversation,setConversation]=useState<string>(crypto.randomUUID());
  const [history,setHistory]=useState<string[]>([]);
- const headers=()=>({'Authorization':`Bearer ${token}`,'Content-Type':'application/json','X-Sanctum-Conversation':conversation});
- async function refresh(){const r=await fetch('/v1/conversations',{headers:headers()});if(r.ok)setHistory((await r.json()).data);}
- useEffect(()=>{if(!token)return;fetch('/v1/models',{headers:{Authorization:`Bearer ${token}`}}).then(async r=>{if(!r.ok)throw Error('The local access key was not accepted.');const data=await r.json();setModels(data.data.filter((m:{capabilities:string[]})=>m.capabilities?.includes('text')).map((m:{id:string})=>m.id));setModel(data.data[0].id);refresh();}).catch(e=>{setError(e.message);setToken('');});},[token]);
+ const api=useMemo(()=>new SanctumClient(token),[token]);
+ async function refresh(){setHistory(await api.conversations());}
+ useEffect(()=>{if(!token)return;api.models().then(async data=>{const textModels=data.filter(m=>m.capabilities.includes('text')).map(m=>m.id);setModels(textModels);setModel(textModels[0]||'');await refresh();}).catch(e=>{setError(e.message);setToken('');});},[token]);
  async function send(e:React.FormEvent){e.preventDefault();if(!prompt.trim()||busy)return;setError('');setBusy(true);const next:Message[]=[...messages,{role:'user',content:prompt}];setMessages([...next,{role:'assistant',content:''}]);setPrompt('');let answer='';
-  try {const response=await fetch('/v1/chat/completions',{method:'POST',headers:headers(),body:JSON.stringify({model,messages:next,stream:true,max_tokens:256})});if(!response.ok)throw Error((await response.json()).error?.message||'Request failed');const reader=response.body!.getReader();const decoder=new TextDecoder();let pending='';for(;;){const {value,done}=await reader.read();if(done)break;pending+=decoder.decode(value,{stream:true});const lines=pending.split('\n');pending=lines.pop()||'';for(const line of lines){if(!line.startsWith('data: ')||line.trim()==='data: [DONE]')continue;const event=JSON.parse(line.slice(6));answer+=event.choices?.[0]?.delta?.content||'';}setMessages([...next,{role:'assistant',content:answer}]);}await refresh();}
+  try {for await(const delta of api.chat(model,next,conversation)){answer+=delta;setMessages([...next,{role:'assistant',content:answer}]);}await refresh();}
   catch(e){setError(e instanceof Error?e.message:'Request failed');}finally{setBusy(false);}}
- async function load(id:string){if(busy)return;setConversation(id);setError('');try{const response=await fetch(`/v1/conversations/${encodeURIComponent(id)}`,{headers:headers()});if(!response.ok)throw Error('Could not load conversation');const data=await response.json();const all:Message[]=[];for(const turn of data.data){const request=JSON.parse(turn.request);const last=request.messages.filter((m:Message)=>m.role==='user').at(-1);if(last)all.push(last);let answer='';if(turn.streaming){for(const line of turn.response.split('\n')){if(line.startsWith('data: ')&&line.trim()!=='data: [DONE]'){const event=JSON.parse(line.slice(6));answer+=event.choices?.[0]?.delta?.content||'';}}}else answer=JSON.parse(turn.response).choices?.[0]?.message?.content||'';all.push({role:'assistant',content:answer});}setMessages(all);}catch(e){setError(String(e));}}
+ async function load(id:string){if(busy)return;setConversation(id);setError('');try{const turns=await api.turns(id);const all:Message[]=[];for(const turn of turns){const request=JSON.parse(turn.request);const last=request.messages.filter((m:Message)=>m.role==='user').at(-1);if(last)all.push(last);let answer='';if(turn.streaming){for(const line of turn.response.split('\n')){if(line.startsWith('data: ')&&line.trim()!=='data: [DONE]'){const event=JSON.parse(line.slice(6));answer+=event.choices?.[0]?.delta?.content||'';}}}else answer=JSON.parse(turn.response).choices?.[0]?.message?.content||'';all.push({role:'assistant',content:answer});}setMessages(all);}catch(e){setError(String(e));}}
  return <div className="min-h-screen md:grid md:grid-cols-[250px_1fr]">
   <aside className="bg-[#163e32] text-[#e6eee8] p-7 flex flex-col md:min-h-screen"><div className="text-2xl tracking-tight font-semibold">◈ Sanctum</div><p className="text-xs text-[#a6c5b5] mt-2 uppercase tracking-[.18em]">A private place to think</p><button disabled={busy} className="mt-10 border border-[#77998a] rounded-lg px-4 py-3 text-left hover:bg-[#24513f]" onClick={()=>{setConversation(crypto.randomUUID());setMessages([]);setError('');}}>＋ New conversation</button><p className="mt-9 mb-3 text-xs uppercase tracking-wider text-[#a6c5b5]">Your conversations</p><nav className="space-y-2">{history.map((id,i)=><button disabled={busy} key={id} onClick={()=>load(id)} className={`block rounded px-3 py-2 w-full text-left text-sm ${conversation===id?'bg-[#2c5746]':''}`}>Conversation {history.length-i}</button>)}</nav><div className="mt-auto pt-10 text-xs text-[#b2cabc] leading-6">● Local models only<br/>Cloud connections disabled</div></aside>
   <main className="flex flex-col max-w-5xl w-full mx-auto px-6 md:px-16 py-9 min-h-screen"><header className="flex justify-between items-center border-b border-[#d7dcd5] pb-6"><span className="text-sm text-[#617568]">Your workspace / Chat</span>{model&&<select aria-label="Model" className="bg-white rounded-lg border border-[#ccd7ce] p-2 text-sm" value={model} disabled={busy} onChange={e=>setModel(e.target.value)}>{models.map(id=><option key={id}>{id}</option>)}</select>}</header>

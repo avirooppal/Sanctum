@@ -5,3 +5,7 @@ docs/status-archive/2026-10-11-through-ticket-preparation.md -text whitespace=cr
 docs/status-archive/2026-10-11-websocket-and-source-pin.md -text whitespace=cr-at-eol,-blank-at-eof
 # ADR0056: preserve the primary copyright notice's original trailing blank line.
 docs/licenses/altercation-solarized-MIT.txt -text whitespace=cr-at-eol,-blank-at-eof
+# ADR0057: raw failed-run console evidence, never edited to pass whitespace checks.
+evals/results/ui-adapter-fetch-binding-first-failure.txt -text whitespace=cr-at-eol,-blank-at-eof,-blank-at-eol
+evals/results/ui-adapter-evidence-whitespace-failure.txt -text whitespace=cr-at-eol,-blank-at-eof,-blank-at-eol
+docs/status-archive/2026-10-11-ui-audit-through-adapter.md -text whitespace=cr-at-eol,-blank-at-eof

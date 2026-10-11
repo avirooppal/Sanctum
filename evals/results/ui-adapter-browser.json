@@ -1,0 +1,20 @@
+{
+  "suite": "real-browser-adapter-v1",
+  "results": {
+    "models": 2,
+    "characters": 31,
+    "saved_turns": 1,
+    "protocol": "sanctum.realtime.v1",
+    "capabilities": {
+      "capabilities": [
+        "transport"
+      ],
+      "speech_pipeline": false
+    },
+    "close_code": 1000,
+    "local_storage_entries": 0,
+    "session_storage_entries": 0
+  },
+  "foreign_origins": [],
+  "scope": "HTTP chat/history and authenticated WebSocket transport; no speech pipeline claim"
+}
