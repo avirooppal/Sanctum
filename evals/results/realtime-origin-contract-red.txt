@@ -1,0 +1,11 @@
+   Compiling sanctum-gateway v0.1.0 (/mnt/c/Users/aviroop/Desktop/Sanctum/services/gateway)
+error[E0432]: unresolved import `sanctum_gateway::realtime_tickets::SessionAuth`
+ --> services/gateway/tests/realtime_origin.rs:1:5
+  |
+1 | use sanct...nAuth;
+  |     ^^^^^...-----
+  |                                        |
+  |                                        no `SessionAuth` in `realtime_tickets`
+
+For more information about this error, try `rustc --explain E0432`.
+error: could not compile `sanctum-gateway` (test "realtime_origin") due to 1 previous error

@@ -1,0 +1,9 @@
+{
+  "suite": "realtime-ticket-http-v1",
+  "passed": false,
+  "stage": "first unauthenticated request",
+  "error": "TimeoutError: timed out",
+  "request_timeout_seconds": 3,
+  "runtime_ready_observed_before_request": false,
+  "note": "Setup attempt is not a feature pass; wait for actual ready event before rerun."
+}

@@ -1,3 +1,9 @@
+## 2026-10-11 - Step 1a ticket HTTP admission
+
+- Add owner-authenticated, exact-Origin/Host, no-store ticket endpoint with bounded single-use store; generated contract and real HTTP checks.
+- Add incremental real smoke command covering implemented chat/RAG/file speech/tickets/UI, explicitly recording remaining release requirements.
+- Archive prior STATUS verbatim; preserve failed setup, voice-selection and WSL interop runs.
+
 ## 2026-10-11 - Step 1a preparation
 
 - Add bounded memory-only single-use realtime ticket store and contract/security tests; endpoint and WebSocket transport remain pending. Predeclare limits and held-session criteria in ADR0047.

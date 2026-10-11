@@ -79,3 +79,18 @@ SDK validation requires the running reference runtime. See [status](docs/STATUS.
 [architecture](docs/architecture.md), [threat model](docs/threat-model.md),
 [profiles](docs/profiles.md), and [API contracts](docs/api.md).
 
+## Implemented-feature smoke
+
+With the configured local service running on8769, run `bash tools/smoke_all.sh`.
+Supply `SANCTUM_CONFIG`, `SANCTUM_TOKEN_FILE` (file path, never the key itself),
+`SANCTUM_AUDIO` (16kHz mono recorded WAV), `SANCTUM_PYTHON` (provisioned dev venv),
+`SANCTUM_NODE`, `SANCTUM_PLAYWRIGHT` (installed package path) and
+`SANCTUM_TTS_VOICE` (public voice ID from the configured TTS profile).
+The command runs real chat, cited RAG, file ASR/TTS, ticket admission and browser
+dictation/playback/mobile checks, preserving historical results.
+
+This initial scope is not release acceptance: authenticated WebSocket voice and
+barge-in, diarization, vision, agents/ledger, LAN and fresh-clone offline bundles
+remain unfinished. The result names these gaps. `SANCTUM_RELEASE_GATE=1` refuses
+release success until they are implemented. Missing prerequisites fail the smoke;
+no browser or speech test is skipped. See ADR0048 and docs/contracts/smoke-all-v1.md.

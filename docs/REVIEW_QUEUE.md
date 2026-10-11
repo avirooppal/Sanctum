@@ -73,3 +73,11 @@ peak, enforced caps, supervised IPC and T1 measurements remain pending. Version
 probe exit1 accepted only with exact upstream version output; failed run retained.
 
 | [0047](adr/0047-realtime-admission-and-tickets.md), proposed | Tickets30s/cap32; WS900s hard lifetime, ping15s/pong30s, frame64KiB; held3 attempts/admit2 for600s | New WS transport bounds; HTTP330s unchanged; no lane/cancel/resource gate relaxed | Memory-only primitive first; actual endpoint/transport/held gate still pending |
+
+Final mission milestone: ADR0042 byte-preserving archive rule extended to
+`2026-10-11-through-ticket-preparation.md`; SHA256
+8a5e4cd509a551c4761808bd3a30d591085f61cfee6c93584b384b47b6a71e7e.
+Entire prior STATUS copied verbatim; no recorded measurement rewritten or deleted.
+Formatting exemption remains archive-only, with no executable check relaxed.
+
+| [0048](adr/0048-incremental-smoke-entry-point.md) | smoke_all initially runs all currently implemented real flows; manifest lists release gaps, strict release mode refuses success | No final gate relaxed; user explicitly requires extending smoke as features land | Requires provisioned running runtime/browser initially; file speech is not WS voice, and full fresh-clone RC acceptance remains pending |

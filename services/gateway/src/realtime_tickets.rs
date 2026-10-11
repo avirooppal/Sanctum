@@ -13,6 +13,26 @@ struct Entry {
 #[derive(Default)]
 pub struct Tickets(Mutex<HashMap<[u8; 32], Entry>>);
 
+pub struct SessionAuth {
+    pub tickets: Tickets,
+    port: u16,
+}
+impl SessionAuth {
+    pub fn new(port: u16) -> Self {
+        Self {
+            tickets: Tickets::default(),
+            port,
+        }
+    }
+    pub fn allowed(&self, host: &str, origin: &str) -> bool {
+        canonical_origin(origin)
+            && origin == format!("http://{host}")
+            && host
+                .rsplit_once(':')
+                .is_some_and(|(_, port)| port == self.port.to_string())
+    }
+}
+
 fn canonical_origin(origin: &str) -> bool {
     let Some(value) = origin.strip_prefix("http://") else {
         return false;

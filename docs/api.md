@@ -307,6 +307,93 @@ Runtime HTTP: GET /healthz. Other contracts are foundation diagnostics.
 }
 ```
 
+## Realtime tickets
+
+```json
+{
+  "openapi": "3.1.0",
+  "info": {
+    "title": "Sanctum realtime admission",
+    "version": "1.0.0"
+  },
+  "paths": {
+    "/v1/realtime/tickets": {
+      "post": {
+        "operationId": "issueRealtimeTicket",
+        "security": [
+          {
+            "localOwner": []
+          }
+        ],
+        "parameters": [
+          {
+            "in": "header",
+            "name": "Origin",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Memory-only single-use ticket; Cache-Control: no-store",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "additionalProperties": false,
+                  "required": [
+                    "ticket",
+                    "expires_in",
+                    "protocol"
+                  ],
+                  "properties": {
+                    "ticket": {
+                      "type": "string",
+                      "pattern": "^[0-9a-f]{64}$"
+                    },
+                    "expires_in": {
+                      "const": 30
+                    },
+                    "protocol": {
+                      "const": "sanctum.realtime.v1"
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Missing or invalid owner authorization"
+          },
+          "403": {
+            "description": "Origin/Host not exact canonical gateway loopback origin"
+          },
+          "405": {
+            "description": "POST required"
+          },
+          "413": {
+            "description": "Nonempty body refused"
+          },
+          "503": {
+            "description": "Pending ticket cap; Retry-After: 1"
+          }
+        }
+      }
+    }
+  },
+  "components": {
+    "securitySchemes": {
+      "localOwner": {
+        "type": "http",
+        "scheme": "bearer"
+      }
+    }
+  }
+}
+```
+
 ## Chat OpenAPI
 
 ```json

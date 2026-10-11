@@ -1,0 +1,14 @@
+All checks passed!
+128 files already formatted
+WARN Failed to resolve the `home` value in the `pyvenv.cfg` file at `/mnt/c/Users/aviroop/Desktop/Sanctum/.venv/pyvenv.cfg`. Goto-definition for stdlib-defined items will not be able to jump to the real implementation. Underlying error: No such file or directory (os error 2)
+ty failed
+  Cause: Failed to discover the site-packages directory
+  Cause: Invalid local virtual environment `/mnt/c/Users/aviroop/Desktop/Sanctum/.venv`: Could not find a `site-packages` directory for this Python installation/executable
+Traceback (most recent call last):
+  File "/mnt/c/Users/aviroop/Desktop/Sanctum/tools/check.py", line 35, in <module>
+    main()
+  File "/mnt/c/Users/aviroop/Desktop/Sanctum/tools/check.py", line 28, in main
+    subprocess.run([sys.executable, *args], check=True, cwd=ROOT)
+  File "/home/aviroop/.local/share/uv/python/cpython-3.12.13-linux-x86_64-gnu/lib/python3.12/subprocess.py", line 571, in run
+    raise CalledProcessError(retcode, process.args,
+subprocess.CalledProcessError: Command '['/home/aviroop/.local/share/sanctum-dev-venv/bin/python', '-m', 'ty', 'check', 'apps/cli/sanctum', 'services/speech/sanctum_speech']' returned non-zero exit status 2.

@@ -100,6 +100,7 @@ pub struct Chat {
     embedding: SupervisedEngine,
     _engines: Engines,
     knowledge: Option<Mutex<crate::knowledge::Knowledge>>,
+    realtime: Option<Arc<sanctum_gateway::realtime_tickets::SessionAuth>>,
 }
 
 impl Chat {
@@ -245,10 +246,14 @@ impl Chat {
             embedding,
             _engines: engines,
             knowledge: knowledge.map(Mutex::new),
+            realtime: None,
         })
     }
     pub fn token_path(&self) -> PathBuf {
         self.config.state_dir.join("local.token")
+    }
+    pub fn enable_realtime(&mut self, auth: Arc<sanctum_gateway::realtime_tickets::SessionAuth>) {
+        self.realtime = Some(auth);
     }
     pub fn authorized(&self, request: &tiny_http::Request) -> bool {
         let given = request
@@ -282,6 +287,45 @@ impl Chat {
                 401,
                 json!({"error":{"message":"Invalid local API token","type":"authentication_error"}}),
             );
+        }
+        if path == "/v1/realtime/tickets" {
+            if request.method() != &tiny_http::Method::Post {
+                return respond(request, 405, json!({"error":"POST_required"}));
+            }
+            let Some(auth) = &self.realtime else {
+                return respond(request, 503, json!({"error":"realtime_unavailable"}));
+            };
+            let headers = |name| {
+                request
+                    .headers()
+                    .iter()
+                    .filter(|h| h.field.equiv(name))
+                    .map(|h| h.value.as_str())
+                    .collect::<Vec<_>>()
+            };
+            let origins = headers("Origin");
+            let hosts = headers("Host");
+            if origins.len() != 1 || hosts.len() != 1 || !auth.allowed(hosts[0], origins[0]) {
+                return respond(request, 403, json!({"error":"origin_rejected"}));
+            }
+            let origin = origins[0].to_owned();
+            if request.body_length().unwrap_or(0) != 0 {
+                return respond(request, 413, json!({"error":"empty_body_required"}));
+            }
+            let mut secret = [0u8; 32];
+            fs::File::open("/dev/urandom")?.read_exact(&mut secret)?;
+            if !auth.tickets.issue(&secret, &origin, Instant::now()) {
+                return respond(request, 503, json!({"error":"ticket_capacity"}));
+            }
+            let ticket: String = secret.iter().map(|b| format!("{b:02x}")).collect();
+            let response = tiny_http::Response::from_string(
+                json!({"ticket":ticket,"expires_in":30,"protocol":"sanctum.realtime.v1"})
+                    .to_string(),
+            )
+            .with_header(tiny_http::Header::from_bytes("Content-Type", "application/json").unwrap())
+            .with_header(tiny_http::Header::from_bytes("Cache-Control", "no-store").unwrap());
+            request.respond(response)?;
+            return Ok(());
         }
         if path == "/v1/audio/transcriptions" || path == "/v1/audio/speech" {
             let synthesize = path == "/v1/audio/speech";

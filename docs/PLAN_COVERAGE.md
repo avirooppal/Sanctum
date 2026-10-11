@@ -1,5 +1,12 @@
 # Plan coverage audit
 
+Final-mission continuation: ticket endpoint **Implemented**, scoped to loopback
+owner issuance (`chat.rs`, `realtime_tickets.rs`, Origin/contract tests, six real
+HTTP checks in `realtime-ticket-http-reference.json`). Authenticated WebSocket
+transport/held-session criterion remain **Not done**. Incremental smoke entry point
+**Partial** (`tools/smoke_all.sh`, current real six-stage smoke manifest); full
+five-modality/fresh-clone/LAN/ledger release acceptance is not implemented.
+
 2026-10-11 continuation evidence supplement: Step1-pre residency/startup
 measurement implemented (`tools/measure_speech_residency.sh`, native probe,
 `evals/results/speech-residency-reference.json`); this establishes only upstream

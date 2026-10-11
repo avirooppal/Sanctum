@@ -1,0 +1,20 @@
+E
+======================================================================
+ERROR: test_smoke_all (unittest.loader._FailedTest.test_smoke_all)
+----------------------------------------------------------------------
+ImportError: Failed to import test module: test_smoke_all
+Traceback (most recent call last):
+  File "/home/aviroop/.local/share/uv/python/cpython-3.12.13-linux-x86_64-gnu/lib/python3.12/unittest/loader.py", line 396, in _find_test_path
+    module = self._get_module_from_name(name)
+             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/aviroop/.local/share/uv/python/cpython-3.12.13-linux-x86_64-gnu/lib/python3.12/unittest/loader.py", line 339, in _get_module_from_name
+    __import__(name)
+  File "/mnt/c/Users/aviroop/Desktop/Sanctum/tools/tests/test_smoke_all.py", line 7, in <module>
+    from smoke_all import preserve_result
+ModuleNotFoundError: No module named 'smoke_all'
+
+
+----------------------------------------------------------------------
+Ran 1 test in 0.001s
+
+FAILED (errors=1)

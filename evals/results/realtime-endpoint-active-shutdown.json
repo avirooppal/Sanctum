@@ -1,0 +1,33 @@
+{
+  "active_lanes": [
+    1,
+    1,
+    2,
+    1
+  ],
+  "queued_lanes": [
+    0,
+    0,
+    1,
+    0
+  ],
+  "owned_pids": [
+    1016,
+    1017,
+    1018,
+    1019,
+    1020,
+    1021,
+    1088,
+    1089,
+    7648,
+    7649,
+    7655,
+    7658,
+    7709
+  ],
+  "slow_upload": true,
+  "shutdown_seconds": 0.7857736910227686,
+  "listener_closed_seconds": 0.19189637299859896,
+  "surviving_pids": []
+}

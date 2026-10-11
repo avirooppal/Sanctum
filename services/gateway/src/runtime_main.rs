@@ -148,9 +148,13 @@ fn run() -> Result<(), Box<dyn std::error::Error + Send + Sync>> {
         return Ok(());
     }
     let chat = if let Some(index) = args.iter().position(|a| a == "--config") {
-        Some(chat::Chat::load(std::path::Path::new(
+        let mut configured = chat::Chat::load(std::path::Path::new(
             args.get(index + 1).ok_or("missing config")?,
-        ))?)
+        ))?;
+        configured.enable_realtime(std::sync::Arc::new(
+            sanctum_gateway::realtime_tickets::SessionAuth::new(port),
+        ));
+        Some(configured)
     } else {
         None
     };
