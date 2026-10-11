@@ -130,3 +130,34 @@ test('session mutations never retry and malformed lists are rejected',async()=>{
  const malformed=new SanctumClient('owner',async()=>Response.json({data:[{id:'one',title:12}],has_more:false}));
  await assert.rejects(malformed.sessions('',0),/Invalid session/);
 });
+
+test('capabilities and preferences endpoints validate payload and authenticate owner', async () => {
+  const calls = [];
+  const client = new SanctumClient('owner-token', async (path, options) => {
+    calls.push({ path, options });
+    if (path === '/v1/capabilities') {
+      return Response.json({ capabilities: ['chat', 'knowledge', 'speech'], profile: 'default' });
+    }
+    if (path === '/v1/preferences' && options.method === 'GET') {
+      return Response.json({ preferences: { theme: 'sanctum', density: 'compact' } });
+    }
+    if (path === '/v1/preferences' && options.method === 'POST') {
+      return Response.json({ status: 'saved' });
+    }
+    return new Response('{}', { status: 404 });
+  });
+
+  const caps = await client.capabilities();
+  assert.deepEqual(caps.capabilities, ['chat', 'knowledge', 'speech']);
+
+  const prefs = await client.preferences();
+  assert.equal(prefs?.theme, 'sanctum');
+
+  await client.savePreferences({ theme: 'github', density: 'spacious' });
+  assert.equal(calls.length, 3);
+  assert.equal(calls[2].path, '/v1/preferences');
+  assert.equal(calls[2].options.method, 'POST');
+  assert.equal(calls[2].options.headers['Content-Type'], 'application/json');
+  assert.equal(calls[2].options.headers['Authorization'], 'Bearer owner-token');
+});
+

@@ -174,4 +174,25 @@ export class SanctumClient {
     if (signal?.aborted) socket.close();
     return socket;
   }
+
+  async capabilities(signal?: AbortSignal): Promise<{ capabilities: string[]; profile: string; hardware?: { threads: number; context: number } }> {
+    const res = await this.request('/v1/capabilities', signal);
+    const data: unknown = await res.json();
+    if (!record(data) || !Array.isArray(data.capabilities)) throw Error('Invalid capabilities response');
+    return data as { capabilities: string[]; profile: string; hardware?: { threads: number; context: number } };
+  }
+
+  async preferences(signal?: AbortSignal): Promise<Record<string, unknown> | null> {
+    const res = await this.request('/v1/preferences', signal);
+    const data: unknown = await res.json();
+    if (!record(data)) throw Error('Invalid preferences response');
+    return (data.preferences as Record<string, unknown> | null) ?? null;
+  }
+
+  async savePreferences(preferences: Record<string, unknown>, signal?: AbortSignal): Promise<void> {
+    const body = JSON.stringify(preferences);
+    const res = await this.request('/v1/preferences', signal, { 'Content-Type': 'application/json' }, 'POST', body);
+    if (!res.ok) throw Error(`Failed to save preferences: ${res.status}`);
+  }
 }
+

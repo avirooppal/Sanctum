@@ -41,3 +41,17 @@ Commercial Portal plans, cloud deployment and unverified download buttons are
 replaced by working local-app navigation and honest support/setup content.
 The documentation site, full dashboard/chat fidelity and executable packages
 remain pending. Three-viewport functional checks are not pixel-diff acceptance.
+
+## Workspace UI modularity and customisation supplement (ADR 0068 / Amendment 2)
+The owner directed a fully modular, customisable, aesthetic, and UX-friendly workspace UI.
+- **Shipped & Verified**:
+  - D0 design artifacts committed: `BRIEF.md`, `TOKENS.md`, `tokens.schema.json`, `COMPONENTS.md`, `FLOWS.md`, 9 static SVG wireframes in `docs/design/wireframes/`, `MICROCOPY.md`, `CRITIQUE.md`, `UX_ACCEPTANCE.md`, and centralized string table `apps/web/src/ui/strings.ts`.
+  - D1 typed `PanelRegistry` with capability discovery (`/v1/capabilities`), React `PanelErrorBoundary` wrapping every panel slot, data/presentation separation, in-repo design gallery route (`/index.html?gallery=1`).
+  - D2 data-only customisation: theme presets, WCAG AA contrast guard enforcing >= 4.5:1 ratio, density multipliers (compact/comfortable/spacious), font scale (90-125%), layout presets (4 presets + saved layouts), rebindable shortcuts with conflict detection, SQLite server-backed persistence (`/v1/preferences` via migration `0002-user-preferences.sql`).
+  - D3 UX friendliness: Hermes-style setup walkthrough, starter prompt suggestions, command palette (`Ctrl/Cmd+K`), 5-second non-blocking undo toast for destructive deletions, streaming stop control, mobile drawer layout.
+  - D5 verification: 51 web unit tests green, Rust check suite green (92 crate licenses, 22 kernel denial probes), production bundle gzipped JS 91.93 kB (budget: <= 300 kB), CSS 6.08 kB (budget: <= 30 kB), `npm audit` 0 vulnerabilities.
+- **Intentional Deviations & Exclusions**:
+  - Third-party dynamic plugin loading: Excluded by design; first-party modularity only.
+  - User-supplied arbitrary CSS / script injection: Excluded; custom themes are validated against `tokens.schema.json`, rejecting `url()`, `@import`, and script tags.
+  - Human participant research: Marked UNVERIFIED as autonomous agents cannot simulate real human subjects; provided 5-participant usability testing script in `docs/design/UX_ACCEPTANCE.md` for owner execution.
+
