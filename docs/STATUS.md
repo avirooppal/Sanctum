@@ -2,14 +2,14 @@
 
 - Mission: [MISSION.md](MISSION.md), Amendment1; single owner ADR0027.
 - Step: U4 palette/token controls implemented on `ui-hermes-port`; full port pending.
-- Last hosted-green: `4e48a56`, run38127839423/all5 jobs PASS; codef6e4963 also all5 PASS.
+- Last hosted-green: `1fdf041`, run38130611442/all5 jobs PASS.
 - Blockers: none for UI; T1/GPU/physical audio/native targets UNVERIFIED.
-- Next three steps: token commit/push/exact CI; licensed font admission and237px
+- Next three steps: font commit/push/exact CI;237px
   responsive shell; isolated pinned reference/fidelity/axe/WS egress gates.
 
 | Gate | Latest actual results |
 |---|---|
-| Linux/Rust |153/57 PASS; fmt/lint/types/clippy;26/72/92 package licenses plus reviewed MIT source |
+| Linux/Rust |157/57 PASS; fmt/lint/types/clippy;26/72/92 package licenses plus reviewed MIT source |
 | Egress/startup/supervision |38 denial/startup probes PASS;3 supervision scenarios/zero survivors |
 | Web |26 tests +2 metrics PASS; typecheck/build/npm audit0 |
 | Theme browser |96 theme/mode/viewport cases +3 system-mode checks; no foreign HTTP/storage/overflow |
@@ -53,3 +53,25 @@ Candidate token slice not yet hosted verified. No merge to main until U6 passes.
 Runtime PID1327 remains active on8769, .sanctum/runtime-dispatch.json, for the next
 UI slice; do not rebuild during real engine measurements. No software gap is
 classified as hardware-only UNVERIFIED. Voice pipeline currently advertises false.
+
+Font admission slice: palette1fdf041 exact hosted run38130611442/all5 jobs PASS.
+Four font-gate tests first FAILED on missing module, then PASS4; actual offline
+`python tools/web_font_assets.py` PASS5 exact binaries and primary OFL notices.
+Registry records all source revisions/URLs and binary/notice hashes. Source CI now
+runs this gate; rejects tamper/unregistered/non-OFL/escaping paths. No new npm dep.
+
+`node evals/browser_fonts.mjs <playwright> evals/results/ui-font-assets-browser.json`
+first FAILED absent FontFace registration, then PASS actual decoded5 faces,5 HTTP200
+responses, foreign HTTP0 and identical existing CSP string. Scoped Spectral/Archivo/
+JetBrains tiers applied; layout shells retain system fonts; original brand fonts
+are absent. Full source157/Rust57, fmt/lint/types/clippy/licenses/denial38,
+supervision3/zero survivors and full incremental smoke6 stages PASS after wiring.
+Named ui-font-assets-* raw results; prior smoke/supervision evidence restored.
+Font-dependent themes96 +system3 and native notice3-view keyboard/exact text/
+centering/no-overflow checks rerun PASS. Screenshots inspected. No fidelity claim.
+
+Three exact primary notices have trailing spaces; initial Git whitespace failure
+preserved. ADR0060/REVIEW_QUEUE scopes legal/evidence-only byte-preservation rules;
+no source/test formatting exception or threshold change. Original font bytes and
+names unchanged. Bold/italic/language and full per-theme fidelity remain pending.
+Candidate font commit/hosted CI next, then responsive shell and reference harness.

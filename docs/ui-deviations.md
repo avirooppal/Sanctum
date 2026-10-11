@@ -13,7 +13,9 @@ migration; this color-control stage is not the completed UI port or fidelity gat
 - Unverified Collapse, Rules, Mondwest and Neuebit font files are excluded.
   ADR0055 selects OFL Spectral/Archivo/League Gothic/VT323 from120 measured local
   render comparisons. Mean width differences5.14%-24.61% remain intentional legal
-  deviations, not exact-match claims; product file admission/styles still pending.
+  deviations, not exact-match claims; full font fidelity is still pending.
+  ADR0060 now admits the five exact selected OFL files and scoped styles; full
+  per-theme font/bold/italic/language fidelity remains pending.
 - Do not ship the upstream UI package wholesale, despite MIT metadata, because
   bundled font assets lack separately verified redistribution permission.
 - ui-tui, marketing, messaging, cron, Honcho, terminal/PTY and desktop plugins

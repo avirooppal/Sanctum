@@ -8,7 +8,8 @@ source inventory is audit evidence, not a vendored implementation. Subsequent
 needed adaptations are listed below. Append one entry per
 adapted file before admission: upstream path, reference SHA, original byte SHA256,
 modified yes/no, Sanctum path, applicable exact notice and asset license evidence.
-Font candidates are pending actual binary selection and render comparison.
+The initial font candidates were pending selection/comparison; subsequent exact
+admission and the recorded comparisons are documented below.
 
 The source-excerpt inventory is covered by the MIT root notice copied verbatim
 from upstream LICENSE to docs/licenses/hermes-agent-MIT.txt, also reproduced in
@@ -48,3 +49,13 @@ separately; the two shared files' canonical hashes match the listed hashes above
 No remote font URLs, custom skin
 CSS, network/IPC code or upstream package dependencies copied. Semantic contrast
 tiers are a deliberate mission-driven change (ADR0059); typography still pending.
+
+## Bundled font files
+
+Five unmodified binaries and exact primary notices are admitted by ADR0060.
+Each entry in profiles/registry.json with scope web-font records original source
+path/URL at the pinned Google/fonts revision, byte SHA256, family, license and
+Sanctum binary/notice paths. Original and shipped binary hashes are identical.
+No font is copied from the Hermes package/monorepo; excluded brand files remain
+absent. Asset integrity is now an offline source/CI gate. The notices are also
+included verbatim in the in-app Licenses text.

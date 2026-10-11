@@ -1,0 +1,12 @@
+/* Exact unmodified OFL binaries/notices are registered and hash-checked offline. */
+@font-face { font-family:'Spectral';font-style:normal;font-weight:400;font-display:swap;src:url('/fonts/spectral.ttf') format('truetype'); }
+@font-face { font-family:'Archivo';font-style:normal;font-weight:100 900;font-display:swap;src:url('/fonts/archivo.ttf') format('truetype'); }
+@font-face { font-family:'League Gothic';font-style:normal;font-weight:400;font-display:swap;src:url('/fonts/leaguegothic.ttf') format('truetype'); }
+@font-face { font-family:'VT323';font-style:normal;font-weight:400;font-display:swap;src:url('/fonts/vt323.ttf') format('truetype'); }
+@font-face { font-family:'JetBrains Mono';font-style:normal;font-weight:100 800;font-display:swap;src:url('/fonts/jetbrainsmono.ttf') format('truetype'); }
+.ui-wordmark,.ui-brand-chrome,.ui-theme-controls label,.ui-card,.ui-card-title { font-family:'Spectral',Georgia,serif; }
+.ui-theme-controls select { font-family:system-ui,sans-serif; }
+main h1,.ui-dialog-heading h2 { font-family:'Archivo',system-ui,sans-serif;font-variation-settings:'wdth' 125; }
+.ui-licenses,select[aria-label='Model'],.speech-controls input { font-family:'JetBrains Mono',ui-monospace,monospace; }
+.ui-condensed { font-family:'League Gothic',sans-serif; }
+.ui-pixel { font-family:'VT323',monospace; }

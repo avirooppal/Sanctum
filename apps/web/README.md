@@ -37,6 +37,13 @@ Theme/Mode controls apply16 pinned local palettes in memory without API writes,
 storage, remote fonts or update calls. `evals/browser_themes.mjs` exercises32
 theme/mode combinations at each of the three prescribed viewports. Current
 system fonts/legacy250px rail remain while full typography/shell fidelity is built.
+
+Selected OFL fonts are now bundled and applied per component (ADR0060), with
+primary notices/source hashes in profiles/registry.json. No remote fonts or brand
+assets. `python tools/web_font_assets.py` checks all shipped faces/notices offline
+and runs in normal source CI. `evals/browser_fonts.mjs <playwright> <output-json>`
+proves actual decoded faces under the unchanged CSP. Full per-theme typography
+and shell migration still remain; do not interpret this as full fidelity.
 Local speech expands optional file dictation and playback controls. Enter configured
 ASR/TTS/voice IDs, choose a mono PCM16 16 kHz WAV, review the draft, then send.
 Read answer synthesizes the last response; Stop audio cancels browser delivery/playback.

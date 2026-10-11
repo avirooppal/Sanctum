@@ -1,0 +1,23 @@
+E
+======================================================================
+ERROR: test_web_font_assets (unittest.loader._FailedTest.test_web_font_assets)
+----------------------------------------------------------------------
+ImportError: Failed to import test module: test_web_font_assets
+Traceback (most recent call last):
+  File "/home/aviroop/.local/share/uv/python/cpython-3.12.13-linux-x86_64-gnu/lib/python3.12/unittest/loader.py", line 396, in _find_test_path
+    module = self._get_module_from_name(name)
+             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/aviroop/.local/share/uv/python/cpython-3.12.13-linux-x86_64-gnu/lib/python3.12/unittest/loader.py", line 339, in _get_module_from_name
+    __import__(name)
+  File "/mnt/c/Users/aviroop/Desktop/Sanctum/tools/tests/test_web_font_assets.py", line 12, in <module>
+    SPEC.loader.exec_module(assets)
+  File "<frozen importlib._bootstrap_external>", line 995, in exec_module
+  File "<frozen importlib._bootstrap_external>", line 1132, in get_code
+  File "<frozen importlib._bootstrap_external>", line 1190, in get_data
+FileNotFoundError: [Errno 2] No such file or directory: '/mnt/c/Users/aviroop/Desktop/Sanctum/tools/web_font_assets.py'
+
+
+----------------------------------------------------------------------
+Ran 1 test in 0.002s
+
+FAILED (errors=1)
