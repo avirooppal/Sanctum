@@ -1,0 +1,1 @@
+During evidence collection, a broad copy included historical smoke outputs. Those newly created copies were removed. Baseline smoke is evidenced only by hermes-setup-smoke.log; the subsequent full smoke is preserved separately. No historical originals were deleted.

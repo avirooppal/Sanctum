@@ -29,3 +29,15 @@ font tiers and237px responsive rail. The full UI port/fidelity gate is unfinishe
   ask API. Citations show source, page when available, and supporting quote as
   inert text. A document browser, OCR and region overlays are not claimed. This
   functional surface has not passed the upstream layout fidelity gate.
+# Public website scope supplement (ADR0064)
+
+The owner explicitly requested all surfaces with Sanctum information. The pinned
+repository's website/ is documentation, while the live marketing homepage is
+separate. /website.html is an initial same-origin adaptation of its split blue
+hero, platform cards, features and FAQ structure. Original CSS arch artwork
+replaces unverified upstream illustrations; existing OFL League Gothic, Archivo
+and JetBrains Mono replace unverified homepage fonts. No remote asset is copied.
+Commercial Portal plans, cloud deployment and unverified download buttons are
+replaced by working local-app navigation and honest support/setup content.
+The documentation site, full dashboard/chat fidelity and executable packages
+remain pending. Three-viewport functional checks are not pixel-diff acceptance.

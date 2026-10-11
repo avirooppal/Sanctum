@@ -186,6 +186,16 @@ def main():
             ],
             None,
         ),
+        (
+            "ui_website",
+            [
+                node,
+                "evals/browser_website.mjs",
+                package,
+                str(directory / "smoke-ui-website.json"),
+            ],
+            None,
+        ),
     ]
     record = {
         "suite": "smoke-all-v1",

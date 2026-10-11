@@ -331,3 +331,11 @@ Added grounded quote fallback, configurable loopback-only folder polling, and a 
 
 ## Phase 2 retrieval and ingestion update — 2026-10-09
 Added grounded quote fallback, configurable loopback-only folder polling, and frozen 480-passage v5 retrieval/citation evidence. Citation and abstention checks pass; hybrid recall-gain gate remains failed.
+
+### Public website foundation
+
+- Add an offline product overview with Sanctum content,original CSS artwork,
+  admitted local fonts,working app links and explicit platform limitations.
+- Add website contract,three-viewport browser checks and smoke-suite stage.
+- Record the owner's expanded website scope in ADR0064;exact fidelity and
+  native executable/Linux packaging remain pending.

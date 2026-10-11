@@ -13,3 +13,8 @@ fresh-clone installation are still pending. The result explicitly lists them;
 `SANCTUM_RELEASE_GATE=1` refuses success while any remain. Extend the command
 as those backends land; final acceptance still requires all five offline flows.
 Missing browser/assets/runtime is a failure, never a skipped test.
+
+Public-website v1 adds ui_website: three responsive viewports, same-origin
+request blocking, no WebSockets, local anchor integrity, FAQ interaction,
+keyboard skip navigation, reduced motion and navigation into the real app.
+It is not a substitute for full UI fidelity or accessibility acceptance.

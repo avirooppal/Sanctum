@@ -85,3 +85,13 @@ turns but is not secure erasure of backups or SQLite remnants. Credentials,
 search text and rename drafts remain in memory. Run evals/browser_sessions.mjs
 with the Playwright package path, owner token file and output JSON path; it creates
 and deletes only its own new conversation against the real local engine.
+# Public website entry
+
+The same Vite build emits website.html alongside the existing chat index.html.
+Open /website.html on the configured gateway for the offline product overview;
+the application remains at /. This static entry adds no JavaScript dependencies,
+credentials or browser storage. Contract: docs/contracts/public-website-v1.md.
+Run node evals/browser_website.mjs with the Playwright package path and output
+JSON path against SANCTUM_BASE_URL (default http://127.0.0.1:8769).
+The source website and application assets can share a future desktop bundle;
+this does not establish native gateway or installer support.

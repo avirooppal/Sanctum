@@ -94,3 +94,10 @@ barge-in, diarization, vision, agents/ledger, LAN and fresh-clone offline bundle
 remain unfinished. The result names these gaps. `SANCTUM_RELEASE_GATE=1` refuses
 release success until they are implemented. Missing prerequisites fail the smoke;
 no browser or speech test is skipped. See ADR0048 and docs/contracts/smoke-all-v1.md.
+
+## Product overview
+
+The web build also includes `/website.html` on your local gateway. It presents
+Sanctum setup,features and current support with bundled fonts and no external
+requests. The chat application remains at `/`. Desktop installers and the full
+Hermes-inspired documentation/dashboard port are still in development.

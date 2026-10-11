@@ -127,3 +127,5 @@ Named failed check retained; no source/test lint exception or quality gate waive
 | [0062](adr/0062-chat-stop-and-wrapup-evidence.md) | Composer Stop and exact wrap-up/archive bytes | No server threshold/timeouts changed; new browser test starts cancellation at request initiation after preserved missed-completion failure | Browser idle timing is not engine-slot release; partial text persistence remains completion-dependent |
 
 | [0063](adr/0063-conversation-management.md) | Owner-scoped history management with idempotent metadata migration and deletion markers | New 4096-byte body,100-row page,120-character title/query,1000000-offset bounds; no existing threshold relaxed | Delete is not forensic erasure; deleted IDs cannot be reused; title/ID search uses SQLite ASCII case folding |
+
+| [0064](adr/0064-public-website-scope.md) | Owner explicitly adds public website and documentation to the dashboard/chat port | Supersedes marketing exclusion only; no gate or security relaxation | Original artwork and admitted OFL font substitutions; homepage fidelity, docs-site port and installers remain pending |
