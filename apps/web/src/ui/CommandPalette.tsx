@@ -15,6 +15,24 @@ interface Props {
   actions: CommandAction[];
 }
 
+function fuzzyMatch(text: string, pattern: string): { matched: boolean; score: number } {
+  if (!pattern) return { matched: true, score: 0 };
+  const lowerText = text.toLowerCase();
+  const lowerPattern = pattern.toLowerCase().trim();
+  if (lowerText.includes(lowerPattern)) {
+    return { matched: true, score: 100 - lowerText.indexOf(lowerPattern) };
+  }
+  let patternIdx = 0;
+  let score = 0;
+  for (let i = 0; i < lowerText.length && patternIdx < lowerPattern.length; i++) {
+    if (lowerText[i] === lowerPattern[patternIdx]) {
+      patternIdx++;
+      score += 10;
+    }
+  }
+  return { matched: patternIdx === lowerPattern.length, score };
+}
+
 export function CommandPalette({ isOpen, onClose, actions }: Props) {
   const [query, setQuery] = useState('');
   const [selectedIndex, setSelectedIndex] = useState(0);
@@ -28,11 +46,17 @@ export function CommandPalette({ isOpen, onClose, actions }: Props) {
     }
   }, [isOpen]);
 
-  const filtered = actions.filter(
-    a =>
-      a.title.toLowerCase().includes(query.toLowerCase()) ||
-      a.category.toLowerCase().includes(query.toLowerCase())
-  );
+  const filtered = actions
+    .map(a => {
+      const titleMatch = fuzzyMatch(a.title, query);
+      const catMatch = fuzzyMatch(a.category, query);
+      const matched = titleMatch.matched || catMatch.matched;
+      const score = Math.max(titleMatch.score, catMatch.score);
+      return { action: a, matched, score };
+    })
+    .filter(item => item.matched)
+    .sort((a, b) => b.score - a.score)
+    .map(item => item.action);
 
   useEffect(() => {
     setSelectedIndex(0);

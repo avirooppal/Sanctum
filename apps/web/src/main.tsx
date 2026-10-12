@@ -339,11 +339,121 @@ function App() {
       },
     },
     {
+      id: 'clear',
+      category: 'Session',
+      title: 'Clear Conversation',
+      onSelect: () => setMessages([]),
+    },
+    {
+      id: 'stop_generation',
+      category: 'Session',
+      title: 'Stop Generation',
+      shortcut: 'Escape',
+      onSelect: () => {
+        if (chatRun.active) chatRun.stop();
+      },
+    },
+    {
       id: 'settings',
       category: 'Preferences',
       title: STRINGS.navigation.settings,
       shortcut: 'Ctrl+,',
       onSelect: () => setSettingsOpen(true),
+    },
+    {
+      id: 'settings_profiles',
+      category: 'Preferences',
+      title: 'Open Assistant Profiles',
+      onSelect: () => setSettingsOpen(true),
+    },
+    {
+      id: 'settings_models',
+      category: 'Preferences',
+      title: 'Open Model Role Allocations',
+      onSelect: () => setSettingsOpen(true),
+    },
+    {
+      id: 'toggle_mode',
+      category: 'Appearance',
+      title: `Toggle Theme Mode (Current: ${preferences.mode})`,
+      onSelect: () => {
+        updatePreferences({
+          mode: preferences.mode === 'dark' ? 'light' : 'dark',
+        });
+      },
+    },
+    {
+      id: 'theme_sanctum',
+      category: 'Theme',
+      title: 'Switch Theme: Sanctum (Default)',
+      onSelect: () => updatePreferences({ theme: 'sanctum' }),
+    },
+    {
+      id: 'theme_nord',
+      category: 'Theme',
+      title: 'Switch Theme: Nord',
+      onSelect: () => updatePreferences({ theme: 'nord' }),
+    },
+    {
+      id: 'theme_solarized_dark',
+      category: 'Theme',
+      title: 'Switch Theme: Solarized Dark',
+      onSelect: () => updatePreferences({ theme: 'solarized-dark' }),
+    },
+    {
+      id: 'theme_solarized_light',
+      category: 'Theme',
+      title: 'Switch Theme: Solarized Light',
+      onSelect: () => updatePreferences({ theme: 'solarized-light' }),
+    },
+    {
+      id: 'theme_gruvbox',
+      category: 'Theme',
+      title: 'Switch Theme: Gruvbox',
+      onSelect: () => updatePreferences({ theme: 'gruvbox' }),
+    },
+    {
+      id: 'theme_tokyo_night',
+      category: 'Theme',
+      title: 'Switch Theme: Tokyo Night',
+      onSelect: () => updatePreferences({ theme: 'tokyo-night' }),
+    },
+    {
+      id: 'theme_catppuccin',
+      category: 'Theme',
+      title: 'Switch Theme: Catppuccin Mocha',
+      onSelect: () => updatePreferences({ theme: 'catppuccin-mocha' }),
+    },
+    {
+      id: 'layout_default',
+      category: 'Layout',
+      title: 'Apply Layout: Default',
+      onSelect: () => updatePreferences({ activeLayout: 'default' }),
+    },
+    {
+      id: 'layout_focus',
+      category: 'Layout',
+      title: 'Apply Layout: Focus Mode',
+      onSelect: () => updatePreferences({ activeLayout: 'focus' }),
+    },
+    {
+      id: 'layout_quad',
+      category: 'Layout',
+      title: 'Apply Layout: Quad Panes',
+      onSelect: () => updatePreferences({ activeLayout: 'quad' }),
+    },
+    {
+      id: 'layout_console',
+      category: 'Layout',
+      title: 'Apply Layout: Console View',
+      onSelect: () => updatePreferences({ activeLayout: 'console' }),
+    },
+    {
+      id: 'toggle_right_rail',
+      category: 'Layout',
+      title: STRINGS.shell.toggleRightRail,
+      shortcut: 'Ctrl+J',
+      onSelect: () => setRightRailOpen(open => !open),
     },
     {
       id: 'dashboard',
@@ -358,19 +468,12 @@ function App() {
       onSelect: () => setKnowledgeOpen(true),
     },
     {
-      id: 'clear',
-      category: 'Session',
-      title: 'Clear Conversation',
-      onSelect: () => setMessages([]),
+      id: 'licenses',
+      category: 'Navigation',
+      title: 'Third-Party Notices & Licenses',
+      onSelect: () => setLicensesOpen(true),
     },
-    {
-      id: 'toggle_right_rail',
-      category: 'Layout',
-      title: STRINGS.shell.toggleRightRail,
-      shortcut: 'Ctrl+J',
-      onSelect: () => setRightRailOpen(open => !open),
-    },
-  ], []);
+  ], [preferences.mode]);
 
   return (
     <div data-density={preferences.density} style={{ fontSize: `${preferences.fontSizeScale}%` }}>
@@ -509,9 +612,10 @@ function App() {
           showWizard ? (
             <div className="m-auto w-full max-w-2xl py-6">
               <SetupWizard
-                onComplete={t => {
+                onComplete={(t, initialPrompt) => {
                   setToken(t);
                   setShowWizard(false);
+                  if (initialPrompt) setPrompt(initialPrompt);
                 }}
                 defaultToken={keyInput}
               />
