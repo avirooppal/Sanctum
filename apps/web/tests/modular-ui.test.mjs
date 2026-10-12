@@ -15,6 +15,7 @@ import {
   enforceContrastGuard,
   sanitizePreferences,
   DEFAULT_PREFERENCES,
+  DEFAULT_SHORTCUTS,
 } from '../build/tests/ui/Customization.js';
 import { PanelErrorBoundary } from '../build/tests/ui/ErrorBoundary.js';
 import { STRINGS } from '../build/tests/ui/strings.js';
@@ -191,4 +192,17 @@ test('Centralized string table contains required top-level categories and non-em
   assert.ok(STRINGS.dashboard.status);
   assert.ok(STRINGS.errors.engineOfflineTitle);
   assert.ok(STRINGS.commandPalette.searchPlaceholder);
+});
+
+test('Layout engine presets and keyboard shortcuts match ADR 0069 specification', () => {
+  assert.equal(DEFAULT_SHORTCUTS.toggle_sidebar, 'Ctrl+B');
+  assert.equal(DEFAULT_SHORTCUTS.toggle_right_rail, 'Ctrl+J');
+  assert.equal(DEFAULT_SHORTCUTS.cycle_tabs, 'Ctrl+Tab');
+  assert.equal(DEFAULT_SHORTCUTS.close_tab, 'Ctrl+W');
+
+  const layoutIds = DEFAULT_PREFERENCES.savedLayouts.map(l => l.id);
+  assert.ok(layoutIds.includes('default'), 'Must register default layout');
+  assert.ok(layoutIds.includes('focus'), 'Must register focus layout');
+  assert.ok(layoutIds.includes('quad'), 'Must register quad layout');
+  assert.ok(layoutIds.includes('console'), 'Must register console layout');
 });
