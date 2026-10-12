@@ -76,6 +76,7 @@ function App() {
   const [capabilities, setCapabilities] = useState<string[]>(['chat', 'models', 'history', 'dashboard', 'preferences', 'knowledge', 'speech']);
   const [toasts, setToasts] = useState<ToastItem[]>([]);
   const [lastDeletedSession, setLastDeletedSession] = useState<{ id: string; title?: string } | null>(null);
+  const [activeProfileId, setActiveProfileId] = useState<string | null>(null);
 
   const api = useMemo(() => new SanctumClient(token), [token]);
   const composerRef = useRef<HTMLTextAreaElement>(null);
@@ -270,7 +271,7 @@ function App() {
     let answer = '';
     try {
       const result = await chatRun.start(
-        signal => api.chat(model, next, conversation, signal),
+        signal => api.chat(model, next, conversation, signal, activeProfileId || undefined),
         delta => {
           answer += delta;
           setMessages([...next, { role: 'assistant', content: answer }]);
@@ -637,6 +638,19 @@ function App() {
         preferences={preferences}
         onUpdatePreferences={updatePreferences}
         onResetPreferences={() => updatePreferences(DEFAULT_PREFERENCES)}
+        api={api}
+        token={token}
+        conversationId={conversation}
+        messages={messages}
+        models={modelObjects}
+        activeProfileId={activeProfileId}
+        onSelectProfile={id => setActiveProfileId(id)}
+        onPurgeComplete={() => {
+          setConversation(crypto.randomUUID());
+          setMessages([]);
+          refresh();
+        }}
+        thirdPartyNoticesText={thirdPartyNotices}
       />
       <CommandPalette
         isOpen={paletteOpen}

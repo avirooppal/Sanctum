@@ -583,6 +583,14 @@ impl Chat {
                     200,
                     json!({"object":"list","data":[{"id":self.config.chat.id,"object":"model","created":0,"owned_by":"local","capabilities":["text","tools"],"context_length":self.config.context,"license":"Apache-2.0"},{"id":self.config.embedding.id,"object":"model","created":0,"owned_by":"local","capabilities":["embedding"],"context_length":self.config.context,"license":"Apache-2.0"}]}),
                 ),
+                "/v1/profiles" => {
+                    let profiles = self
+                        .store
+                        .lock()
+                        .map_err(|_| "store lock poisoned")?
+                        .profiles("local-owner")?;
+                    respond(request, 200, json!({"data": profiles}))
+                }
                 "/v1/conversations" => respond(
                     request,
                     200,
@@ -630,6 +638,97 @@ impl Chat {
             let store = self.store.lock().map_err(|_| "store lock poisoned")?;
             store.save_preferences("local-owner", &parsed.to_string())?;
             return respond(request, 200, json!({"status":"saved"}));
+        }
+        if request.method() == &tiny_http::Method::Post && path == "/v1/profiles" {
+            let mut body = Vec::new();
+            request.as_reader().take(65536 + 1).read_to_end(&mut body)?;
+            if body.len() > 65536 {
+                return respond(
+                    request,
+                    413,
+                    json!({"error":{"message":"Profile payload exceeds 64KB"}}),
+                );
+            }
+            let parsed: Value = match serde_json::from_slice::<Value>(&body) {
+                Ok(v) if v.is_object() => v,
+                _ => {
+                    return respond(
+                        request,
+                        400,
+                        json!({"error":{"message":"Invalid JSON object for profile"}}),
+                    )
+                }
+            };
+            let operation = parsed
+                .get("operation")
+                .and_then(|o| o.as_str())
+                .unwrap_or("save");
+            let store = self.store.lock().map_err(|_| "store lock poisoned")?;
+            if operation == "delete" {
+                let id = parsed.get("id").and_then(|i| i.as_str()).unwrap_or("");
+                let deleted = store.delete_profile("local-owner", id)?;
+                return respond(request, 200, json!({"deleted": deleted}));
+            }
+            let name = parsed
+                .get("name")
+                .and_then(|n| n.as_str())
+                .unwrap_or("")
+                .trim();
+            if name.is_empty() {
+                return respond(
+                    request,
+                    400,
+                    json!({"error":{"message":"Profile name required"}}),
+                );
+            }
+            let id = parsed
+                .get("id")
+                .and_then(|i| i.as_str())
+                .filter(|s| !s.is_empty())
+                .map(|s| s.to_owned())
+                .unwrap_or_else(|| random_id().unwrap_or_else(|_| "prof-1".to_owned()));
+            let prompt = parsed
+                .get("system_prompt")
+                .and_then(|p| p.as_str())
+                .unwrap_or("");
+            let scope = parsed
+                .get("scope")
+                .and_then(|s| s.as_str())
+                .unwrap_or("global");
+            store.save_profile("local-owner", &id, name, prompt, scope)?;
+            return respond(request, 200, json!({"saved": true, "id": id}));
+        }
+        if request.method() == &tiny_http::Method::Post && path == "/v1/purge" {
+            let mut body = Vec::new();
+            request.as_reader().take(1024 + 1).read_to_end(&mut body)?;
+            let parsed: Value = match serde_json::from_slice::<Value>(&body) {
+                Ok(v) if v.is_object() => v,
+                _ => {
+                    return respond(
+                        request,
+                        400,
+                        json!({"error":{"message":"Invalid JSON object for purge"}}),
+                    )
+                }
+            };
+            let confirm = parsed.get("confirm").and_then(|c| c.as_str()).unwrap_or("");
+            if confirm != "PURGE ALL SANCTUM DATA" {
+                return respond(
+                    request,
+                    400,
+                    json!({"error":{"message":"Confirmation token PURGE ALL SANCTUM DATA required"}}),
+                );
+            }
+            let store = self.store.lock().map_err(|_| "store lock poisoned")?;
+            store.purge_all("local-owner")?;
+            drop(store);
+
+            let knowledge_dir = self.config.state_dir.join("knowledge");
+            if knowledge_dir.exists() {
+                let _ = fs::remove_dir_all(&knowledge_dir);
+                let _ = fs::create_dir_all(&knowledge_dir);
+            }
+            return respond(request, 200, json!({"purged": true}));
         }
         if request.method() != &tiny_http::Method::Post
             || !matches!(path.as_str(), "/v1/chat/completions" | "/v1/embeddings")
@@ -691,6 +790,27 @@ impl Chat {
             );
         }
         if is_chat {
+            if let Some(prof_id) = payload.get("profile").and_then(Value::as_str) {
+                if let Ok(store) = self.store.lock() {
+                    if let Ok(profiles) = store.profiles("local-owner") {
+                        if let Some(prof) = profiles
+                            .iter()
+                            .find(|p| p.get("id").and_then(Value::as_str) == Some(prof_id))
+                        {
+                            if let Some(prompt) = prof.get("system_prompt").and_then(Value::as_str)
+                            {
+                                if !prompt.is_empty() {
+                                    if let Some(arr) =
+                                        payload.get_mut("messages").and_then(Value::as_array_mut)
+                                    {
+                                        arr.insert(0, json!({"role": "system", "content": prompt}));
+                                    }
+                                }
+                            }
+                        }
+                    }
+                }
+            }
             if payload.get("max_tokens").is_none() {
                 payload["max_tokens"] = json!(256);
             }

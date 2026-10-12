@@ -278,3 +278,100 @@ fn conversation_token_usage_accounting() {
     assert_eq!(usage["total_tokens"], 20);
     assert_eq!(usage["context_length"], 4096);
 }
+
+#[test]
+fn assistant_profiles_crud() {
+    let store = Store::memory().unwrap();
+    let initial = store.profiles("owner").unwrap();
+    assert_eq!(initial.len(), 0);
+
+    // Save profile
+    store
+        .save_profile(
+            "owner",
+            "p1",
+            "Research Assistant",
+            "You are a rigorous researcher.",
+            "global",
+        )
+        .unwrap();
+
+    let profiles = store.profiles("owner").unwrap();
+    assert_eq!(profiles.len(), 1);
+    assert_eq!(profiles[0]["id"], "p1");
+    assert_eq!(profiles[0]["name"], "Research Assistant");
+    assert_eq!(
+        profiles[0]["system_prompt"],
+        "You are a rigorous researcher."
+    );
+    assert_eq!(profiles[0]["scope"], "global");
+
+    // Update profile
+    store
+        .save_profile(
+            "owner",
+            "p1",
+            "Updated Researcher",
+            "You are an updated assistant.",
+            "session",
+        )
+        .unwrap();
+    let updated = store.profiles("owner").unwrap();
+    assert_eq!(updated.len(), 1);
+    assert_eq!(updated[0]["name"], "Updated Researcher");
+    assert_eq!(updated[0]["scope"], "session");
+
+    // Delete profile
+    let deleted = store.delete_profile("owner", "p1").unwrap();
+    assert!(deleted);
+    let after_delete = store.profiles("owner").unwrap();
+    assert_eq!(after_delete.len(), 0);
+}
+
+#[test]
+fn full_purge_wipes_all_data_and_preferences() {
+    let mut store = Store::memory().unwrap();
+
+    // Populate conversations, turns, preferences, pins, and profiles
+    store
+        .save(
+            "owner",
+            "c1",
+            &json!({"prompt": "test"}),
+            "{\"response\": \"ok\"}",
+            false,
+        )
+        .unwrap();
+    store
+        .save_preferences("owner", "{\"theme\": \"dark\"}")
+        .unwrap();
+    store
+        .sessions(
+            "owner",
+            command(json!({"operation": "pin", "id": "c1", "pinned": true})),
+        )
+        .unwrap();
+    store
+        .save_profile("owner", "p1", "Profile 1", "System prompt", "global")
+        .unwrap();
+
+    assert_eq!(store.conversations("owner").unwrap().len(), 1);
+    assert!(store.preferences("owner").unwrap().is_some());
+    assert_eq!(store.profiles("owner").unwrap().len(), 1);
+
+    // Run Full Purge
+    store.purge_all("owner").unwrap();
+
+    // Verify EVERYTHING is gone
+    assert_eq!(store.conversations("owner").unwrap().len(), 0);
+    assert_eq!(store.turns("owner", "c1").unwrap().len(), 0);
+    assert!(store.preferences("owner").unwrap().is_none());
+    assert_eq!(store.profiles("owner").unwrap().len(), 0);
+    let sessions = store
+        .sessions(
+            "owner",
+            command(json!({"operation": "list", "query": "", "offset": 0})),
+        )
+        .unwrap();
+    assert_eq!(sessions["data"].as_array().unwrap().len(), 0);
+}

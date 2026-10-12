@@ -161,3 +161,45 @@ test('capabilities and preferences endpoints validate payload and authenticate o
   assert.equal(calls[2].options.headers['Authorization'], 'Bearer owner-token');
 });
 
+test('profiles and full purge endpoints authenticate owner and reject invalid payloads', async () => {
+  const calls = [];
+  const client = new SanctumClient('owner-token', async (path, options) => {
+    calls.push({ path, options });
+    if (path === '/v1/profiles' && options.method === 'GET') {
+      return Response.json({ data: [{ id: 'p1', name: 'Researcher', system_prompt: 'Be concise', scope: 'global' }] });
+    }
+    if (path === '/v1/profiles' && options.method === 'POST') {
+      const body = JSON.parse(options.body);
+      if (body.operation === 'delete') {
+        return Response.json({ deleted: true });
+      }
+      return Response.json({ saved: true, id: body.id || 'p2' });
+    }
+    if (path === '/v1/purge' && options.method === 'POST') {
+      const body = JSON.parse(options.body);
+      if (body.confirm === 'PURGE ALL SANCTUM DATA') {
+        return Response.json({ purged: true });
+      }
+      return new Response('{"error": "Invalid confirm"}', { status: 400 });
+    }
+    return new Response('{}', { status: 404 });
+  });
+
+  const profs = await client.profiles();
+  assert.equal(profs.length, 1);
+  assert.equal(profs[0].name, 'Researcher');
+
+  const savedId = await client.saveProfile({ name: 'Writer', system_prompt: 'Draft well', scope: 'session' });
+  assert.equal(savedId, 'p2');
+
+  await client.deleteProfile('p1');
+  assert.equal(calls[2].path, '/v1/profiles');
+  assert.equal(JSON.parse(calls[2].options.body).operation, 'delete');
+
+  await client.fullPurge('PURGE ALL SANCTUM DATA');
+  assert.equal(calls[3].path, '/v1/purge');
+
+  await assert.rejects(client.fullPurge('wrong'), /400/);
+});
+
+

@@ -6,6 +6,7 @@ export type SessionPage = {data:{id:string;title:string;pinned?:boolean}[];has_m
 export type Workspace = {id:string;name:string};
 export type KnowledgeAnswer = {answer:string;abstained:boolean;citations:{source:string;page:number|null;quote:string;document_id:string;chunk_id:string;start:number;end:number}[]};
 export type ConversationUsage = {conversation_id:string;prompt_tokens:number;completion_tokens:number;total_tokens:number;context_length:number;has_data:boolean};
+export type AssistantProfile = {id:string;name:string;system_prompt:string;scope:string;created_at?:number;updated_at?:number};
 type Socket = Pick<WebSocket,'close'|'addEventListener'>;
 type SocketFactory = (url:string, protocols:string[])=>Socket;
 
@@ -134,9 +135,11 @@ export class SanctumClient {
     return data as {conversation_id:string;prompt_tokens:number;completion_tokens:number;total_tokens:number;context_length:number;has_data:boolean};
   }
 
-  async *chat(model:string,messages:Message[],conversation:string,signal?:AbortSignal):AsyncGenerator<string> {
+  async *chat(model:string,messages:Message[],conversation:string,signal?:AbortSignal,profile?:string):AsyncGenerator<string> {
+    const payload: Record<string, unknown> = {model,messages,stream:true,max_tokens:256};
+    if (profile) payload.profile = profile;
     const response=await this.request('/v1/chat/completions',signal,
-      {model,messages,stream:true,max_tokens:256},'POST',conversation);
+      payload,'POST',conversation);
     if (!response.body) throw Error('Missing chat stream');
     const reader=response.body.getReader();
     const cancel=()=>{void reader.cancel().catch(()=>{});};
@@ -206,6 +209,32 @@ export class SanctumClient {
     const body = JSON.stringify(preferences);
     const res = await this.request('/v1/preferences', signal, { 'Content-Type': 'application/json' }, 'POST', body);
     if (!res.ok) throw Error(`Failed to save preferences: ${res.status}`);
+  }
+
+  async profiles(signal?: AbortSignal): Promise<AssistantProfile[]> {
+    const res = await this.request('/v1/profiles', signal);
+    const data: unknown = await res.json();
+    if (!record(data) || !Array.isArray(data.data)) throw Error('Invalid profiles response');
+    return data.data as AssistantProfile[];
+  }
+
+  async saveProfile(profile: { id?: string; name: string; system_prompt: string; scope: string }, signal?: AbortSignal): Promise<string> {
+    const res = await this.request('/v1/profiles', signal, { operation: 'save', ...profile }, 'POST');
+    const data: unknown = await res.json();
+    if (!record(data) || typeof data.id !== 'string') throw Error('Invalid save profile response');
+    return data.id as string;
+  }
+
+  async deleteProfile(id: string, signal?: AbortSignal): Promise<void> {
+    const res = await this.request('/v1/profiles', signal, { operation: 'delete', id }, 'POST');
+    const data: unknown = await res.json();
+    if (!record(data) || data.deleted !== true) throw Error('Invalid delete profile response');
+  }
+
+  async fullPurge(confirm: string, signal?: AbortSignal): Promise<void> {
+    const res = await this.request('/v1/purge', signal, { confirm }, 'POST');
+    const data: unknown = await res.json();
+    if (!record(data) || data.purged !== true) throw Error('Invalid purge response');
   }
 }
 

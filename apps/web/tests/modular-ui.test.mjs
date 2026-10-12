@@ -19,7 +19,7 @@ import {
 } from '../build/tests/ui/Customization.js';
 import { PanelErrorBoundary } from '../build/tests/ui/ErrorBoundary.js';
 import { STRINGS } from '../build/tests/ui/strings.js';
-
+import { SettingsModal } from '../build/tests/ui/SettingsModal.js';
 
 test('PanelRegistry registers dummy panel and enforces capabilities filter', () => {
   clearRegistry();
@@ -205,4 +205,35 @@ test('Layout engine presets and keyboard shortcuts match ADR 0069 specification'
   assert.ok(layoutIds.includes('focus'), 'Must register focus layout');
   assert.ok(layoutIds.includes('quad'), 'Must register quad layout');
   assert.ok(layoutIds.includes('console'), 'Must register console layout');
+
+  assert.ok(DEFAULT_PREFERENCES.modelRoles, 'Must define modelRoles');
+  assert.ok(DEFAULT_PREFERENCES.modelRoles.embeddings, 'Must allocate embeddings role');
+  assert.ok(DEFAULT_PREFERENCES.modelRoles.reranker, 'Must allocate reranker role');
+});
+
+test('SettingsModal renders with all A7 specification tabs without throwing', () => {
+  const el = React.createElement(SettingsModal, {
+    isOpen: true,
+    onClose: () => {},
+    preferences: DEFAULT_PREFERENCES,
+    onUpdatePreferences: () => {},
+    onResetPreferences: () => {},
+    conversationId: 'c-test',
+    messages: [
+      { role: 'user', content: 'hello' },
+      { role: 'assistant', content: 'world' },
+    ],
+    models: [{ id: 'qwen2.5-coder-7b-instruct', context_length: 32768 }],
+    thirdPartyNoticesText: 'MIT License',
+  });
+  const html = renderToString(el);
+  assert.ok(html.includes(STRINGS.settings.title), 'Must render settings title');
+  assert.ok(html.includes(STRINGS.settings.appearance.replace(/&/g, '&amp;')), 'Must render appearance tab');
+  assert.ok(html.includes(STRINGS.settings.layouts), 'Must render layouts tab');
+  assert.ok(html.includes(STRINGS.settings.shortcuts), 'Must render shortcuts tab');
+  assert.ok(html.includes(STRINGS.settings.profiles), 'Must render profiles tab');
+  assert.ok(html.includes(STRINGS.settings.models.replace(/&/g, '&amp;')), 'Must render models tab');
+  assert.ok(html.includes(STRINGS.settings.data), 'Must render data tab');
+  assert.ok(html.includes(STRINGS.settings.licenses.replace(/&/g, '&amp;')), 'Must render licenses tab');
+  assert.ok(html.includes('WCAG AA'), 'Must render WCAG AA contrast guard info');
 });

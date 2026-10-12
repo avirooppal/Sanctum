@@ -757,6 +757,124 @@ Runtime HTTP: GET /healthz. Other contracts are foundation diagnostics.
           }
         }
       }
+    },
+    "/v1/preferences": {
+      "get": {
+        "description": "Get stored UI preferences for authenticated owner",
+        "responses": {
+          "200": {
+            "description": "User preferences JSON"
+          },
+          "401": {
+            "description": "Owner authentication required"
+          }
+        }
+      },
+      "put": {
+        "description": "Save validated UI preferences JSON for authenticated owner",
+        "responses": {
+          "200": {
+            "description": "Preferences saved"
+          },
+          "400": {
+            "description": "Invalid preferences schema or forbidden token"
+          },
+          "401": {
+            "description": "Owner authentication required"
+          }
+        }
+      }
+    },
+    "/v1/capabilities": {
+      "get": {
+        "description": "List available runtime capabilities based on active configuration and services",
+        "responses": {
+          "200": {
+            "description": "Array of capability string identifiers"
+          },
+          "401": {
+            "description": "Owner authentication required"
+          }
+        }
+      }
+    },
+    "/v1/conversations/{id}/usage": {
+      "get": {
+        "description": "Token usage and context length accounting for conversation",
+        "responses": {
+          "200": {
+            "description": "Prompt, completion, and total tokens used"
+          },
+          "401": {
+            "description": "Owner authentication required"
+          },
+          "404": {
+            "description": "Conversation not found"
+          }
+        }
+      }
+    },
+    "/v1/profiles": {
+      "get": {
+        "description": "List assistant profiles for authenticated owner",
+        "responses": {
+          "200": {
+            "description": "Array of AssistantProfile objects"
+          },
+          "401": {
+            "description": "Owner authentication required"
+          }
+        }
+      },
+      "post": {
+        "description": "Save or delete assistant profile",
+        "responses": {
+          "200": {
+            "description": "Profile mutation acknowledged"
+          },
+          "400": {
+            "description": "Invalid operation or missing fields"
+          },
+          "401": {
+            "description": "Owner authentication required"
+          }
+        }
+      }
+    },
+    "/v1/purge": {
+      "post": {
+        "description": "Full workspace purge: permanently wipes all turns, knowledge stores, indexes, preferences, and profiles. Requires exact confirmation token.",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "required": [
+                  "confirm"
+                ],
+                "properties": {
+                  "confirm": {
+                    "type": "string",
+                    "const": "PURGE ALL SANCTUM DATA"
+                  }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "All workspace data purged"
+          },
+          "400": {
+            "description": "Invalid confirmation string"
+          },
+          "401": {
+            "description": "Owner authentication required"
+          }
+        }
+      }
     }
   },
   "components": {

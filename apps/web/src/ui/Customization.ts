@@ -39,6 +39,7 @@ export interface UserPreferences {
   activeLayout: string;
   savedLayouts: SavedLayout[];
   shortcuts: Record<string, string>;
+  modelRoles?: Record<string, string>;
 }
 
 export const DEFAULT_SHORTCUTS: Record<string, string> = Object.freeze({
@@ -93,6 +94,13 @@ export const DEFAULT_PREFERENCES: UserPreferences = Object.freeze({
     },
   ],
   shortcuts: { ...DEFAULT_SHORTCUTS },
+  modelRoles: {
+    chat: '',
+    embeddings: 'nomic-embed-text-v1.5',
+    reranker: 'bge-reranker-v2-m3',
+    asr: 'whisper',
+    tts: 'kokoro',
+  },
 });
 
 const HEX_COLOR_REGEX = /^#([A-Fa-f0-9]{6}|[A-Fa-f0-9]{8}|[A-Fa-f0-9]{3})$/;
@@ -227,6 +235,7 @@ export function sanitizePreferences(raw: unknown): { preferences: UserPreference
       activeLayout: typeof obj.activeLayout === 'string' ? obj.activeLayout : DEFAULT_PREFERENCES.activeLayout,
       savedLayouts: Array.isArray(obj.savedLayouts) && obj.savedLayouts.length > 0 ? (obj.savedLayouts as SavedLayout[]) : DEFAULT_PREFERENCES.savedLayouts,
       shortcuts: typeof obj.shortcuts === 'object' && obj.shortcuts ? { ...DEFAULT_SHORTCUTS, ...(obj.shortcuts as Record<string, string>) } : { ...DEFAULT_SHORTCUTS },
+      modelRoles: typeof obj.modelRoles === 'object' && obj.modelRoles ? { ...DEFAULT_PREFERENCES.modelRoles, ...(obj.modelRoles as Record<string, string>) } : DEFAULT_PREFERENCES.modelRoles,
     },
     wasRecovered: recovered,
   };

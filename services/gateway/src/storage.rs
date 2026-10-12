@@ -28,6 +28,7 @@ impl Store {
         connection.execute_batch(include_str!("../migrations/0001-session-metadata.sql"))?;
         connection.execute_batch(include_str!("../migrations/0002-user-preferences.sql"))?;
         connection.execute_batch(include_str!("../migrations/0003-session-pins.sql"))?;
+        connection.execute_batch(include_str!("../migrations/0004-assistant-profiles.sql"))?;
         Ok(Self { connection })
     }
     pub fn save(
@@ -242,6 +243,86 @@ impl Store {
             "INSERT INTO user_preferences_v1(owner,preferences,updated_at) VALUES(?1,?2,unixepoch()) ON CONFLICT(owner) DO UPDATE SET preferences=excluded.preferences,updated_at=excluded.updated_at",
             params![owner, preferences],
         )?;
+        Ok(())
+    }
+
+    pub fn profiles(&self, owner: &str) -> rusqlite::Result<Vec<Value>> {
+        let mut statement = self.connection.prepare(
+            "SELECT id, name, system_prompt, scope, created_at, updated_at FROM assistant_profiles_v1 WHERE owner=?1 ORDER BY updated_at DESC",
+        )?;
+        let rows = statement
+            .query_map([owner], |r| {
+                Ok(json!({
+                    "id": r.get::<_, String>(0)?,
+                    "name": r.get::<_, String>(1)?,
+                    "system_prompt": r.get::<_, String>(2)?,
+                    "scope": r.get::<_, String>(3)?,
+                    "created_at": r.get::<_, i64>(4)?,
+                    "updated_at": r.get::<_, i64>(5)?
+                }))
+            })?
+            .collect::<Result<Vec<Value>, _>>()?;
+        Ok(rows)
+    }
+
+    pub fn save_profile(
+        &self,
+        owner: &str,
+        id: &str,
+        name: &str,
+        system_prompt: &str,
+        scope: &str,
+    ) -> rusqlite::Result<()> {
+        self.connection.execute(
+            "INSERT INTO assistant_profiles_v1(id, owner, name, system_prompt, scope, created_at, updated_at) \
+             VALUES(?1, ?2, ?3, ?4, ?5, unixepoch(), unixepoch()) \
+             ON CONFLICT(id) DO UPDATE SET \
+                name=excluded.name, \
+                system_prompt=excluded.system_prompt, \
+                scope=excluded.scope, \
+                updated_at=excluded.updated_at \
+             WHERE owner=excluded.owner",
+            params![id, owner, name, system_prompt, scope],
+        )?;
+        Ok(())
+    }
+
+    pub fn delete_profile(&self, owner: &str, id: &str) -> rusqlite::Result<bool> {
+        let count = self.connection.execute(
+            "DELETE FROM assistant_profiles_v1 WHERE id=?1 AND owner=?2",
+            params![id, owner],
+        )?;
+        Ok(count > 0)
+    }
+
+    pub fn purge_all(&self, owner: &str) -> rusqlite::Result<()> {
+        let tx = self.connection.unchecked_transaction()?;
+        tx.execute(
+            "DELETE FROM turns WHERE conversation IN (SELECT id FROM conversations WHERE owner=?1)",
+            params![owner],
+        )?;
+        tx.execute(
+            "DELETE FROM conversation_titles_v1 WHERE id IN (SELECT id FROM conversations WHERE owner=?1)",
+            params![owner],
+        )?;
+        tx.execute(
+            "DELETE FROM conversation_pins_v1 WHERE id IN (SELECT id FROM conversations WHERE owner=?1)",
+            params![owner],
+        )?;
+        tx.execute(
+            "DELETE FROM conversation_tombstones_v1 WHERE owner=?1",
+            params![owner],
+        )?;
+        tx.execute(
+            "DELETE FROM user_preferences_v1 WHERE owner=?1",
+            params![owner],
+        )?;
+        tx.execute(
+            "DELETE FROM assistant_profiles_v1 WHERE owner=?1",
+            params![owner],
+        )?;
+        tx.execute("DELETE FROM conversations WHERE owner=?1", params![owner])?;
+        tx.commit()?;
         Ok(())
     }
 }
