@@ -102,8 +102,11 @@ export function parseMarkdownBlocks(text: string): MarkdownBlock[] {
   return blocks;
 }
 
-function renderInline(text: string): React.ReactNode[] {
-  // Parse inline elements: `code`, **bold**, *italic*, [link](url)
+function renderInline(
+  text: string,
+  onCitationClick?: (citation: string) => void
+): React.ReactNode[] {
+  // Parse inline elements: `code`, **bold**, *italic*, [link](url), [^citation]
   const parts: React.ReactNode[] = [];
   let remaining = text;
   let key = 0;
@@ -134,6 +137,27 @@ function renderInline(text: string): React.ReactNode[] {
     if (italicMatch) {
       parts.push(<em key={key++}>{italicMatch[1]}</em>);
       remaining = remaining.slice(italicMatch[0].length);
+      continue;
+    }
+
+    // Citation chips [^1] or [source: ...]
+    const citeMatch = remaining.match(/^\[\^([0-9]+)\]/) || remaining.match(/^\[source:\s*([^\]]+)\]/);
+    if (citeMatch) {
+      const label = citeMatch[1];
+      const isNum = /^[0-9]+$/.test(label);
+      parts.push(
+        <button
+          key={key++}
+          type="button"
+          onClick={() => onCitationClick?.(label)}
+          className="ui-citation-chip inline-flex items-center gap-1 mx-1 px-1.5 py-0.5 text-[11px] font-mono rounded bg-accent/10 border border-accent/20 text-accent hover:underline cursor-pointer"
+          title={`View citation: ${label}`}
+          aria-label={`Citation ${label}`}
+        >
+          <span>◈</span> {isNum ? `[${label}]` : label}
+        </button>
+      );
+      remaining = remaining.slice(citeMatch[0].length);
       continue;
     }
 
@@ -179,7 +203,13 @@ function renderInline(text: string): React.ReactNode[] {
   return parts;
 }
 
-export function SafeMarkdown({ content }: { content: string }) {
+export function SafeMarkdown({
+  content,
+  onCitationClick,
+}: {
+  content: string;
+  onCitationClick?: (citation: string) => void;
+}) {
   if (!content) return null;
   const blocks = parseMarkdownBlocks(content);
 
@@ -187,26 +217,48 @@ export function SafeMarkdown({ content }: { content: string }) {
     <div className="ui-markdown space-y-3">
       {blocks.map((block, idx) => {
         if (block.type === 'code') {
-          return (
-            <div key={idx} className="ui-code-block rounded-lg p-3 my-2 border ui-border">
-              {block.language && (
-                <div className="text-[11px] text-display ui-text-secondary mb-1">
-                  {block.language}
-                </div>
-              )}
-              <pre className="text-xs overflow-x-auto font-mono">
-                <code>{block.content}</code>
-              </pre>
-            </div>
-          );
+          return <CodeBlock key={idx} code={block.content} language={block.language} />;
         }
 
         return (
           <p key={idx} className="leading-relaxed whitespace-pre-wrap">
-            {renderInline(block.content)}
+            {renderInline(block.content, onCitationClick)}
           </p>
         );
       })}
+    </div>
+  );
+}
+
+function CodeBlock({ code, language }: { code: string; language?: string }) {
+  const [copied, setCopied] = React.useState(false);
+  const handleCopy = () => {
+    if (typeof navigator !== 'undefined' && navigator.clipboard) {
+      navigator.clipboard.writeText(code).then(() => {
+        setCopied(true);
+        setTimeout(() => setCopied(false), 2000);
+      }).catch(() => {});
+    }
+  };
+
+  return (
+    <div className="ui-code-block rounded-lg p-3 my-2 border ui-border bg-black/5 dark:bg-white/5">
+      <div className="flex items-center justify-between mb-2">
+        <span className="text-[11px] font-mono text-display ui-text-secondary">
+          {language || 'code'}
+        </span>
+        <button
+          type="button"
+          onClick={handleCopy}
+          aria-label="Copy code"
+          className="text-[11px] px-2 py-0.5 rounded border ui-border ui-surface ui-text-secondary hover:text-foreground transition-colors"
+        >
+          {copied ? '✓ Copied' : 'Copy'}
+        </button>
+      </div>
+      <pre className="text-xs overflow-x-auto font-mono">
+        <code>{code}</code>
+      </pre>
     </div>
   );
 }

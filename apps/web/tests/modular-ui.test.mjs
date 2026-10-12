@@ -15,10 +15,12 @@ import {
   enforceContrastGuard,
   sanitizePreferences,
   DEFAULT_PREFERENCES,
+  DEFAULT_SHORTCUTS,
 } from '../build/tests/ui/Customization.js';
 import { PanelErrorBoundary } from '../build/tests/ui/ErrorBoundary.js';
 import { STRINGS } from '../build/tests/ui/strings.js';
-
+import { SettingsModal } from '../build/tests/ui/SettingsModal.js';
+import { DashboardPage } from '../build/tests/ui/DashboardPage.js';
 
 test('PanelRegistry registers dummy panel and enforces capabilities filter', () => {
   clearRegistry();
@@ -182,6 +184,143 @@ test('Centralized string table contains required top-level categories and non-em
   assert.ok(STRINGS.app.name);
   assert.ok(STRINGS.onboarding.egressStatement.includes('0 outbound connections'));
   assert.ok(STRINGS.settings.contrastPass);
+  assert.ok(STRINGS.settings.profiles);
+  assert.ok(STRINGS.settings.fullPurge);
+  assert.ok(STRINGS.shell.presetQuad);
+  assert.ok(STRINGS.tabs.quadPane);
+  assert.ok(STRINGS.rightRail.artifacts);
+  assert.ok(STRINGS.statusBar.offlineBadge);
+  assert.ok(STRINGS.dashboard.status);
   assert.ok(STRINGS.errors.engineOfflineTitle);
   assert.ok(STRINGS.commandPalette.searchPlaceholder);
+});
+
+test('Layout engine presets and keyboard shortcuts match ADR 0069 specification', () => {
+  assert.equal(DEFAULT_SHORTCUTS.toggle_sidebar, 'Ctrl+B');
+  assert.equal(DEFAULT_SHORTCUTS.toggle_right_rail, 'Ctrl+J');
+  assert.equal(DEFAULT_SHORTCUTS.cycle_tabs, 'Ctrl+Tab');
+  assert.equal(DEFAULT_SHORTCUTS.close_tab, 'Ctrl+W');
+
+  const layoutIds = DEFAULT_PREFERENCES.savedLayouts.map(l => l.id);
+  assert.ok(layoutIds.includes('default'), 'Must register default layout');
+  assert.ok(layoutIds.includes('focus'), 'Must register focus layout');
+  assert.ok(layoutIds.includes('quad'), 'Must register quad layout');
+  assert.ok(layoutIds.includes('console'), 'Must register console layout');
+
+  assert.ok(DEFAULT_PREFERENCES.modelRoles, 'Must define modelRoles');
+  assert.ok(DEFAULT_PREFERENCES.modelRoles.embeddings, 'Must allocate embeddings role');
+  assert.ok(DEFAULT_PREFERENCES.modelRoles.reranker, 'Must allocate reranker role');
+});
+
+test('SettingsModal renders with all A7 specification tabs without throwing', () => {
+  const el = React.createElement(SettingsModal, {
+    isOpen: true,
+    onClose: () => {},
+    preferences: DEFAULT_PREFERENCES,
+    onUpdatePreferences: () => {},
+    onResetPreferences: () => {},
+    conversationId: 'c-test',
+    messages: [
+      { role: 'user', content: 'hello' },
+      { role: 'assistant', content: 'world' },
+    ],
+    models: [{ id: 'qwen2.5-coder-7b-instruct', context_length: 32768 }],
+    thirdPartyNoticesText: 'MIT License',
+  });
+  const html = renderToString(el);
+  assert.ok(html.includes(STRINGS.settings.title), 'Must render settings title');
+  assert.ok(html.includes(STRINGS.settings.appearance.replace(/&/g, '&amp;')), 'Must render appearance tab');
+  assert.ok(html.includes(STRINGS.settings.layouts), 'Must render layouts tab');
+  assert.ok(html.includes(STRINGS.settings.shortcuts), 'Must render shortcuts tab');
+  assert.ok(html.includes(STRINGS.settings.profiles), 'Must render profiles tab');
+  assert.ok(html.includes(STRINGS.settings.models.replace(/&/g, '&amp;')), 'Must render models tab');
+  assert.ok(html.includes(STRINGS.settings.data), 'Must render data tab');
+  assert.ok(html.includes(STRINGS.settings.licenses.replace(/&/g, '&amp;')), 'Must render licenses tab');
+  assert.ok(html.includes('WCAG AA'), 'Must render WCAG AA contrast guard info');
+});
+
+test('DashboardPage renders routed Hermes-mirrored pages without throwing', () => {
+  const dummyApi = {
+    models: async () => [{ id: 'qwen3-0.6b', name: 'Qwen 3', capabilities: ['text'], context_length: 2048, license: 'Apache-2.0' }],
+    sessions: async () => [{ id: 's-123', title: 'Test Session', pinned: true, updated_at: 1728000000 }],
+  };
+
+  // Status subpage
+  const statusEl = React.createElement(DashboardPage, {
+    token: 'tok-test',
+    activeSubpage: 'status',
+    onNavigateSubpage: () => {},
+    onBackToWorkspace: () => {},
+    api: dummyApi,
+    activeModel: 'qwen3-0.6b',
+  });
+  const statusHtml = renderToString(statusEl);
+  assert.ok(statusHtml.includes('Runtime Overview &amp; Status') || statusHtml.includes('Runtime Overview & Status'));
+  assert.ok(statusHtml.includes('Active Model'));
+  assert.ok(statusHtml.includes('Network Egress'));
+  assert.ok(statusHtml.includes('DENIED'));
+  assert.ok(statusHtml.includes('Engine Dispatch Queues'));
+
+  // Models subpage
+  const modelsEl = React.createElement(DashboardPage, {
+    token: 'tok-test',
+    activeSubpage: 'models',
+    onNavigateSubpage: () => {},
+    onBackToWorkspace: () => {},
+    api: dummyApi,
+  });
+  const modelsHtml = renderToString(modelsEl);
+  assert.ok(modelsHtml.includes('Registered Local Models'));
+  assert.ok(modelsHtml.includes('Discovered Models'));
+
+  // Sessions subpage
+  const sessionsEl = React.createElement(DashboardPage, {
+    token: 'tok-test',
+    activeSubpage: 'sessions',
+    onNavigateSubpage: () => {},
+    onBackToWorkspace: () => {},
+    api: dummyApi,
+  });
+  const sessionsHtml = renderToString(sessionsEl);
+  assert.ok(sessionsHtml.includes('Conversation Sessions'));
+  assert.ok(sessionsHtml.includes('Saved Sessions'));
+
+  // Resources subpage
+  const resEl = React.createElement(DashboardPage, {
+    token: 'tok-test',
+    activeSubpage: 'resources',
+    onNavigateSubpage: () => {},
+    onBackToWorkspace: () => {},
+    api: dummyApi,
+  });
+  const resHtml = renderToString(resEl);
+  assert.ok(resHtml.includes('Engine Resources &amp; Queue Lanes') || resHtml.includes('Engine Resources & Queue Lanes'));
+  assert.ok(resHtml.includes('Resident Engine RAM'));
+  assert.ok(resHtml.includes('Tier 1 CPU'));
+
+  // Config subpage
+  const cfgEl = React.createElement(DashboardPage, {
+    token: 'tok-test',
+    activeSubpage: 'config',
+    onNavigateSubpage: () => {},
+    onBackToWorkspace: () => {},
+    api: dummyApi,
+  });
+  const cfgHtml = renderToString(cfgEl);
+  assert.ok(cfgHtml.includes('Gateway Configuration'));
+  assert.ok(cfgHtml.includes('127.0.0.1'));
+  assert.ok(cfgHtml.includes('Default-Deny (Loopback Bound)'));
+
+  // Licenses subpage
+  const licEl = React.createElement(DashboardPage, {
+    token: 'tok-test',
+    activeSubpage: 'licenses',
+    onNavigateSubpage: () => {},
+    onBackToWorkspace: () => {},
+    api: dummyApi,
+    thirdPartyNoticesText: 'Permission is hereby granted, free of charge...',
+  });
+  const licHtml = renderToString(licEl);
+  assert.ok(licHtml.includes('Third-Party Notices &amp; Licenses') || licHtml.includes('Third-Party Notices & Licenses'));
+  assert.ok(licHtml.includes('Permission is hereby granted'));
 });

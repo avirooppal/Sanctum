@@ -4,8 +4,11 @@ import './style.css';
 import { SpeechPanel } from './SpeechPanel';
 import { MeetingPanel } from './MeetingPanel';
 
-import { SanctumClient, type Message } from './api';
+import { SanctumClient, type Message, type Model } from './api';
 import { ChatRun } from './chat-run';
+import { ChatView } from './ui/ChatView';
+import { RightRail } from './ui/RightRail';
+import { StatusBar } from './ui/StatusBar';
 import { KnowledgePanel } from './KnowledgePanel';
 import { HistoryPanel } from './HistoryPanel';
 import './ui/knowledge.css';
@@ -18,6 +21,7 @@ import { AppShell } from './ui/AppShell';
 import './ui/shell.css';
 import { SafeMarkdown } from './ui/SafeMarkdown';
 import { DashboardPanel } from './DashboardPanel';
+import { DashboardPage, type DashboardSubpage } from './ui/DashboardPage';
 import { SetupWizard } from './SetupWizard';
 
 import { ThemeControls } from './ui/ThemeControls';
@@ -47,11 +51,12 @@ function App() {
   const [keyInput, setKeyInput] = useState('');
   const [model, setModel] = useState('');
   const [models, setModels] = useState<string[]>([]);
+  const [modelObjects, setModelObjects] = useState<Model[]>([]);
   const [messages, setMessages] = useState<Message[]>([]);
   const [prompt, setPrompt] = useState('');
   const [busy, setBusy] = useState(false);
   const [chatStatus, setChatStatus] = useState('');
-  const [showWizard, setShowWizard] = useState(false);
+  const [showWizard, setShowWizard] = useState(() => typeof window !== 'undefined' && window.location.search.includes('wizard=1'));
   const [copiedIndex, setCopiedIndex] = useState<number | null>(null);
   const chatRun = useMemo(() => new ChatRun(), []);
   useEffect(() => () => chatRun.stop(), [chatRun]);
@@ -59,18 +64,62 @@ function App() {
   const [conversation, setConversation] = useState<string>(crypto.randomUUID());
   const [historyRevision, setHistoryRevision] = useState(0);
 
-  // Overlays
+  // Overlays & Routing
   const [licensesOpen, setLicensesOpen] = useState(false);
   const [knowledgeOpen, setKnowledgeOpen] = useState(false);
-  const [dashboardOpen, setDashboardOpen] = useState(false);
+  const [route, setRoute] = useState<'workspace' | 'dashboard'>('workspace');
+  const [dashboardSubpage, setDashboardSubpage] = useState<DashboardSubpage>('status');
   const [settingsOpen, setSettingsOpen] = useState(false);
   const [paletteOpen, setPaletteOpen] = useState(false);
+  const [rightRailOpen, setRightRailOpen] = useState(false);
+
+  useEffect(() => {
+    const syncRouteFromHash = () => {
+      const hash = typeof window !== 'undefined' ? window.location.hash : '';
+      if (hash.startsWith('#/dashboard')) {
+        setRoute('dashboard');
+        const parts = hash.split('/');
+        const sub = parts[2] as DashboardSubpage;
+        if (['status', 'models', 'sessions', 'resources', 'config', 'licenses'].includes(sub)) {
+          setDashboardSubpage(sub);
+        } else {
+          setDashboardSubpage('status');
+        }
+      } else {
+        setRoute('workspace');
+      }
+    };
+
+    syncRouteFromHash();
+    if (typeof window !== 'undefined') {
+      window.addEventListener('hashchange', syncRouteFromHash);
+      return () => window.removeEventListener('hashchange', syncRouteFromHash);
+    }
+  }, []);
+
+  const navigateToDashboard = (subpage: DashboardSubpage = 'status') => {
+    if (typeof window !== 'undefined') {
+      window.location.hash = `#/dashboard/${subpage}`;
+    } else {
+      setRoute('dashboard');
+      setDashboardSubpage(subpage);
+    }
+  };
+
+  const navigateToWorkspace = () => {
+    if (typeof window !== 'undefined') {
+      window.location.hash = '#/';
+    } else {
+      setRoute('workspace');
+    }
+  };
 
   // Preferences & Capabilities
   const [preferences, setPreferences] = useState<UserPreferences>(DEFAULT_PREFERENCES);
   const [capabilities, setCapabilities] = useState<string[]>(['chat', 'models', 'history', 'dashboard', 'preferences', 'knowledge', 'speech']);
   const [toasts, setToasts] = useState<ToastItem[]>([]);
   const [lastDeletedSession, setLastDeletedSession] = useState<{ id: string; title?: string } | null>(null);
+  const [activeProfileId, setActiveProfileId] = useState<string | null>(null);
 
   const api = useMemo(() => new SanctumClient(token), [token]);
   const composerRef = useRef<HTMLTextAreaElement>(null);
@@ -99,6 +148,7 @@ function App() {
 
     api.models()
       .then(async data => {
+        setModelObjects(data);
         const textModels = data.filter(m => m.capabilities.includes('text')).map(m => m.id);
         setModels(textModels);
         setModel(textModels[0] || '');
@@ -159,6 +209,12 @@ function App() {
       if ((e.ctrlKey || e.metaKey) && e.key === '/') {
         e.preventDefault();
         composerRef.current?.focus();
+        return;
+      }
+      // Toggle Right Rail (Ctrl+J or Cmd+J)
+      if ((e.ctrlKey || e.metaKey) && e.key.toLowerCase() === 'j') {
+        e.preventDefault();
+        setRightRailOpen(open => !open);
         return;
       }
     };
@@ -258,7 +314,7 @@ function App() {
     let answer = '';
     try {
       const result = await chatRun.start(
-        signal => api.chat(model, next, conversation, signal),
+        signal => api.chat(model, next, conversation, signal, activeProfileId || undefined),
         delta => {
           answer += delta;
           setMessages([...next, { role: 'assistant', content: answer }]);
@@ -326,6 +382,21 @@ function App() {
       },
     },
     {
+      id: 'clear',
+      category: 'Session',
+      title: 'Clear Conversation',
+      onSelect: () => setMessages([]),
+    },
+    {
+      id: 'stop_generation',
+      category: 'Session',
+      title: 'Stop Generation',
+      shortcut: 'Escape',
+      onSelect: () => {
+        if (chatRun.active) chatRun.stop();
+      },
+    },
+    {
       id: 'settings',
       category: 'Preferences',
       title: STRINGS.navigation.settings,
@@ -333,10 +404,135 @@ function App() {
       onSelect: () => setSettingsOpen(true),
     },
     {
+      id: 'settings_profiles',
+      category: 'Preferences',
+      title: 'Open Assistant Profiles',
+      onSelect: () => setSettingsOpen(true),
+    },
+    {
+      id: 'settings_models',
+      category: 'Preferences',
+      title: 'Open Model Role Allocations',
+      onSelect: () => setSettingsOpen(true),
+    },
+    {
+      id: 'toggle_mode',
+      category: 'Appearance',
+      title: `Toggle Theme Mode (Current: ${preferences.mode})`,
+      onSelect: () => {
+        updatePreferences({
+          mode: preferences.mode === 'dark' ? 'light' : 'dark',
+        });
+      },
+    },
+    {
+      id: 'theme_sanctum',
+      category: 'Theme',
+      title: 'Switch Theme: Sanctum (Default)',
+      onSelect: () => updatePreferences({ theme: 'sanctum' }),
+    },
+    {
+      id: 'theme_nord',
+      category: 'Theme',
+      title: 'Switch Theme: Nord',
+      onSelect: () => updatePreferences({ theme: 'nord' }),
+    },
+    {
+      id: 'theme_solarized_dark',
+      category: 'Theme',
+      title: 'Switch Theme: Solarized Dark',
+      onSelect: () => updatePreferences({ theme: 'solarized-dark' }),
+    },
+    {
+      id: 'theme_solarized_light',
+      category: 'Theme',
+      title: 'Switch Theme: Solarized Light',
+      onSelect: () => updatePreferences({ theme: 'solarized-light' }),
+    },
+    {
+      id: 'theme_gruvbox',
+      category: 'Theme',
+      title: 'Switch Theme: Gruvbox',
+      onSelect: () => updatePreferences({ theme: 'gruvbox' }),
+    },
+    {
+      id: 'theme_tokyo_night',
+      category: 'Theme',
+      title: 'Switch Theme: Tokyo Night',
+      onSelect: () => updatePreferences({ theme: 'tokyo-night' }),
+    },
+    {
+      id: 'theme_catppuccin',
+      category: 'Theme',
+      title: 'Switch Theme: Catppuccin Mocha',
+      onSelect: () => updatePreferences({ theme: 'catppuccin-mocha' }),
+    },
+    {
+      id: 'layout_default',
+      category: 'Layout',
+      title: 'Apply Layout: Default',
+      onSelect: () => updatePreferences({ activeLayout: 'default' }),
+    },
+    {
+      id: 'layout_focus',
+      category: 'Layout',
+      title: 'Apply Layout: Focus Mode',
+      onSelect: () => updatePreferences({ activeLayout: 'focus' }),
+    },
+    {
+      id: 'layout_quad',
+      category: 'Layout',
+      title: 'Apply Layout: Quad Panes',
+      onSelect: () => updatePreferences({ activeLayout: 'quad' }),
+    },
+    {
+      id: 'layout_console',
+      category: 'Layout',
+      title: 'Apply Layout: Console View',
+      onSelect: () => updatePreferences({ activeLayout: 'console' }),
+    },
+    {
+      id: 'toggle_right_rail',
+      category: 'Layout',
+      title: STRINGS.shell.toggleRightRail,
+      shortcut: 'Ctrl+J',
+      onSelect: () => setRightRailOpen(open => !open),
+    },
+    {
       id: 'dashboard',
       category: 'Navigation',
       title: STRINGS.navigation.dashboard,
-      onSelect: () => setDashboardOpen(true),
+      onSelect: () => navigateToDashboard('status'),
+    },
+    {
+      id: 'dashboard_models',
+      category: 'Navigation',
+      title: 'Dashboard: Models',
+      onSelect: () => navigateToDashboard('models'),
+    },
+    {
+      id: 'dashboard_sessions',
+      category: 'Navigation',
+      title: 'Dashboard: Sessions',
+      onSelect: () => navigateToDashboard('sessions'),
+    },
+    {
+      id: 'dashboard_resources',
+      category: 'Navigation',
+      title: 'Dashboard: Resources',
+      onSelect: () => navigateToDashboard('resources'),
+    },
+    {
+      id: 'dashboard_config',
+      category: 'Navigation',
+      title: 'Dashboard: Config',
+      onSelect: () => navigateToDashboard('config'),
+    },
+    {
+      id: 'dashboard_licenses',
+      category: 'Navigation',
+      title: 'Dashboard: Licenses',
+      onSelect: () => navigateToDashboard('licenses'),
     },
     {
       id: 'knowledge',
@@ -345,12 +541,53 @@ function App() {
       onSelect: () => setKnowledgeOpen(true),
     },
     {
-      id: 'clear',
-      category: 'Session',
-      title: 'Clear Conversation',
-      onSelect: () => setMessages([]),
+      id: 'licenses',
+      category: 'Navigation',
+      title: 'Third-Party Notices & Licenses',
+      onSelect: () => setLicensesOpen(true),
     },
-  ], []);
+  ], [preferences.mode]);
+
+  if (route === 'dashboard') {
+    return (
+      <div data-density={preferences.density} style={{ fontSize: `${preferences.fontSizeScale}%` }}>
+        <DashboardPage
+          token={token}
+          activeSubpage={dashboardSubpage}
+          onNavigateSubpage={navigateToDashboard}
+          onBackToWorkspace={navigateToWorkspace}
+          api={api}
+          thirdPartyNoticesText={thirdPartyNotices}
+          activeModel={model}
+        />
+        <CommandPalette
+          isOpen={paletteOpen}
+          onClose={() => setPaletteOpen(false)}
+          actions={commandActions}
+        />
+        <SettingsModal
+          isOpen={settingsOpen}
+          onClose={() => setSettingsOpen(false)}
+          preferences={preferences}
+          onUpdatePreferences={updatePreferences}
+          onResetPreferences={() => updatePreferences(DEFAULT_PREFERENCES)}
+          api={api}
+          token={token}
+          conversationId={conversation}
+          messages={messages}
+          models={modelObjects}
+          activeProfileId={activeProfileId}
+          onSelectProfile={id => setActiveProfileId(id)}
+          onPurgeComplete={() => {
+            setConversation(crypto.randomUUID());
+            setMessages([]);
+            refresh();
+          }}
+          thirdPartyNoticesText={thirdPartyNotices}
+        />
+      </div>
+    );
+  }
 
   return (
     <div data-density={preferences.density} style={{ fontSize: `${preferences.fontSizeScale}%` }}>
@@ -390,7 +627,7 @@ function App() {
               Cloud connections disabled<br />
               <div className="flex flex-wrap gap-2 my-2">
                 {token && capabilities.includes('dashboard') && (
-                  <Button variant="outline" onClick={() => setDashboardOpen(true)}>
+                  <Button variant="outline" onClick={() => navigateToDashboard('status')}>
                     Dashboard
                   </Button>
                 )}
@@ -443,7 +680,44 @@ function App() {
                 </span>
               </div>
             )}
+            {token && (
+              <button
+                type="button"
+                onClick={() => setRightRailOpen(o => !o)}
+                aria-label="Toggle right rail"
+                title={STRINGS.shell.toggleRightRail}
+                className={`text-xs px-2.5 py-1.5 rounded-lg border ui-border transition-colors flex items-center gap-1.5 ${
+                  rightRailOpen
+                    ? 'bg-accent/15 text-accent border-accent/30'
+                    : 'ui-surface ui-text-secondary hover:text-foreground'
+                }`}
+              >
+                <span>◨</span> <span className="hidden md:inline">Artifacts</span>
+              </button>
+            )}
           </>
+        }
+        rightRail={
+          token ? (
+            <RightRail
+              messages={messages}
+              api={api}
+              isOpen={rightRailOpen}
+              onClose={() => setRightRailOpen(false)}
+              onCitationClick={() => setKnowledgeOpen(true)}
+            />
+          ) : undefined
+        }
+        statusBar={
+          token ? (
+            <StatusBar
+              api={api}
+              conversation={conversation}
+              activeModel={model}
+              models={modelObjects}
+              onSelectModel={setModel}
+            />
+          ) : undefined
         }
       >
         {token && <MeetingPanel token={token} />}
@@ -452,9 +726,10 @@ function App() {
           showWizard ? (
             <div className="m-auto w-full max-w-2xl py-6">
               <SetupWizard
-                onComplete={t => {
+                onComplete={(t, initialPrompt) => {
                   setToken(t);
                   setShowWizard(false);
+                  if (initialPrompt) setPrompt(initialPrompt);
                 }}
                 defaultToken={keyInput}
               />
@@ -525,126 +800,37 @@ function App() {
             </section>
           )
         ) : (
-          <>
-            <section className="app-transcript py-6 space-y-7" aria-live="polite">
-              {!messages.length && (
-                <div className="pt-8 pb-4">
-                  <div className="text-xs text-display ui-text-secondary tracking-widest mb-3">
-                    HERMES-GRADE LOCAL AI · PRIVACY FIRST
-                  </div>
-                  <h1 className="text-4xl font-semibold tracking-tight">{STRINGS.chat.starterTitle}</h1>
-                  <p className="mt-3 ui-text-secondary max-w-lg leading-relaxed">
-                    {STRINGS.chat.starterSubtitle}
-                  </p>
-                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 mt-8 max-w-2xl">
-                    {PROMPT_SUGGESTIONS.map((item, idx) => (
-                      <button
-                        key={idx}
-                        type="button"
-                        onClick={() => setPrompt(item.prompt)}
-                        className="text-left p-3.5 rounded-xl border ui-border ui-surface hover:border-accent transition-colors shadow-sm group"
-                      >
-                        <div className="text-xs font-semibold group-hover:text-accent transition-colors">
-                          {item.title}
-                        </div>
-                        <p className="text-[11px] ui-text-secondary mt-1 line-clamp-2 leading-relaxed">
-                          {item.prompt}
-                        </p>
-                      </button>
-                    ))}
-                  </div>
-                </div>
-              )}
-
-              {messages.map((m, i) => (
-                <article
-                  key={i}
-                  className={m.role === 'user' ? 'ui-user-bubble rounded-2xl p-5 ml-8' : 'p-4 group/msg'}
-                >
-                  <div className="flex items-center justify-between mb-2">
-                    <div className="text-xs text-display ui-text-secondary tracking-wider">
-                      {m.role === 'user' ? 'You' : 'Sanctum'}
-                    </div>
-                    {m.role === 'assistant' && m.content && (
-                      <button
-                        type="button"
-                        onClick={() => copyText(m.content, i)}
-                        className="text-[11px] ui-text-secondary hover:text-foreground opacity-70 hover:opacity-100 transition-opacity flex items-center gap-1"
-                        title="Copy response"
-                      >
-                        {copiedIndex === i ? '✓ Copied' : 'Copy'}
-                      </button>
-                    )}
-                  </div>
-                  {m.role === 'assistant' ? (
-                    <SafeMarkdown content={m.content || 'Thinking locally…'} />
-                  ) : (
-                    <div className="whitespace-pre-wrap leading-7">{m.content}</div>
-                  )}
-                </article>
-              ))}
-            </section>
-
-            <form onSubmit={send} className="app-composer ui-background pt-3 pb-3">
-              <div className="ui-surface border ui-border rounded-2xl p-4 shadow-sm">
-                <textarea
-                  ref={composerRef}
-                  aria-label="Message"
-                  placeholder={STRINGS.composer.placeholder}
-                  value={prompt}
-                  onChange={e => setPrompt(e.target.value)}
-                  onKeyDown={e => {
-                    if (preferences.sendOnEnter && e.key === 'Enter' && !e.shiftKey) {
-                      e.preventDefault();
-                      send();
-                    } else if (!preferences.sendOnEnter && e.key === 'Enter' && e.shiftKey) {
-                      e.preventDefault();
-                      send();
-                    }
-                  }}
-                  rows={3}
-                  className="resize-none w-full bg-transparent"
-                />
-                <div className="flex justify-between items-center mt-2 pt-2 border-t ui-border">
-                  <div className="flex items-center gap-2">
-                    <span className="text-xs ui-text-secondary">● Private by default</span>
-                    <span className="text-[11px] text-display ui-text-secondary hidden sm:inline">
-                      · {preferences.sendOnEnter ? 'Enter to send (Shift+Enter for newline)' : 'Shift+Enter to send'}
-                    </span>
-                  </div>
-                  <div className="flex items-center gap-2">
-                    {busy && (
-                      <Button variant="outline" onClick={() => chatRun.stop()}>
-                        {STRINGS.composer.stop}
-                      </Button>
-                    )}
-                    <button
-                      disabled={busy || !prompt.trim()}
-                      className="ui-primary text-white py-2 px-5 rounded-lg text-xs font-medium"
-                    >
-                      {busy ? 'Generating…' : 'Send ↑'}
-                    </button>
-                  </div>
-                </div>
-              </div>
-              {chatStatus && (
-                <p className="text-xs ui-text-secondary mt-1" aria-live="polite">
-                  {chatStatus}
-                </p>
-              )}
-              {capabilities.includes('speech') && (
-                <SpeechPanel
-                  token={token}
-                  conversation={conversation}
-                  answer={messages.filter(m => m.role === 'assistant').at(-1)?.content || ''}
-                  onTranscript={setPrompt}
-                />
-              )}
-              <p className="text-[11px] text-center mt-3 ui-text-secondary">
-                Local models run directly on your hardware. Verify important outputs.
-              </p>
-            </form>
-          </>
+          <ChatView
+            messages={messages}
+            prompt={prompt}
+            setPrompt={setPrompt}
+            onSend={send}
+            onStop={() => {
+              if (busy || chatRun.active) {
+                chatRun.stop();
+                setChatStatus('Generation stopped.');
+              }
+            }}
+            onRetry={index => {
+              const userMsg = messages[index];
+              if (userMsg && userMsg.role === 'user') {
+                setPrompt(userMsg.content);
+              }
+            }}
+            onDeleteMessage={index => {
+              setMessages(prev => prev.filter((_, i) => i !== index));
+            }}
+            busy={busy}
+            sendOnEnter={preferences.sendOnEnter}
+            messageLayout={preferences.messageLayout}
+            conversationId={conversation}
+            api={api}
+            token={token}
+            modelId={model}
+            contextLimit={modelObjects.find(m => m.id === model)?.context_length}
+            onCitationClick={() => setKnowledgeOpen(true)}
+            onAttachmentUploaded={() => refresh()}
+          />
         )}
 
         {error && (
@@ -655,9 +841,6 @@ function App() {
       </AppShell>
 
       {/* Global Overlays */}
-      <Dialog open={dashboardOpen} title="Platform Dashboard" onClose={() => setDashboardOpen(false)}>
-        {dashboardOpen && <DashboardPanel token={token} />}
-      </Dialog>
       <Dialog open={knowledgeOpen} title="Knowledge" onClose={() => setKnowledgeOpen(false)}>
         {knowledgeOpen && <KnowledgePanel api={api} />}
       </Dialog>
@@ -670,6 +853,19 @@ function App() {
         preferences={preferences}
         onUpdatePreferences={updatePreferences}
         onResetPreferences={() => updatePreferences(DEFAULT_PREFERENCES)}
+        api={api}
+        token={token}
+        conversationId={conversation}
+        messages={messages}
+        models={modelObjects}
+        activeProfileId={activeProfileId}
+        onSelectProfile={id => setActiveProfileId(id)}
+        onPurgeComplete={() => {
+          setConversation(crypto.randomUUID());
+          setMessages([]);
+          refresh();
+        }}
+        thirdPartyNoticesText={thirdPartyNotices}
       />
       <CommandPalette
         isOpen={paletteOpen}

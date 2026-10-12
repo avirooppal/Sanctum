@@ -30,3 +30,13 @@ test('shell has one sidebar and main with explicitly connected native navigation
   assert(shell.includes('Owner content'));
   assert(!/portal|electron|iframe/i.test(shell));
 });
+
+test('primitives CSS enforces 180ms motion and 44px coarse pointer touch target', async () => {
+  const fs = await import('node:fs');
+  const path = await import('node:path');
+  const css = fs.readFileSync(path.resolve('src/ui/primitives.css'), 'utf8');
+  assert.ok(css.includes('180ms ease-out'), 'Must use 150-200ms ease-out motion');
+  assert.ok(css.includes('pointer: coarse'), 'Must define touch target styles for coarse pointers');
+  assert.ok(css.includes('min-height: 44px'), 'Must meet 44px touch target minimum');
+  assert.ok(css.includes('prefers-reduced-motion'), 'Must honor prefers-reduced-motion');
+});

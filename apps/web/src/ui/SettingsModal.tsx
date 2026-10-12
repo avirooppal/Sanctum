@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { STRINGS } from './strings.js';
 import { THEMES } from './themes.js';
 import { Button, Dialog } from './primitives.js';
@@ -7,11 +7,15 @@ import {
   type Mode,
   type Density,
   type FontFamily,
+  type MessageLayout,
+  type ContentWidth,
+  type AnimationLevel,
   DEFAULT_PREFERENCES,
   DEFAULT_SHORTCUTS,
   validateThemeTokens,
   enforceContrastGuard,
 } from './Customization.js';
+import { type AssistantProfile, type SanctumClient } from '../api.js';
 
 interface Props {
   isOpen: boolean;
@@ -19,9 +23,20 @@ interface Props {
   preferences: UserPreferences;
   onUpdatePreferences: (updated: Partial<UserPreferences>) => void;
   onResetPreferences: () => void;
+  api?: SanctumClient;
+  token?: string;
+  conversationId?: string | null;
+  messages?: Array<{ role: string; content: string }>;
+  models?: Array<{ id: string; context_length?: number }>;
+  activeProfileId?: string | null;
+  onSelectProfile?: (id: string | null) => void;
+  onPurgeComplete?: () => void;
+  thirdPartyNoticesText?: string;
 }
 
 const ACCENT_PRESETS = ['#48a87b', '#3b82f6', '#8b5cf6', '#ec4899', '#f59e0b', '#10b981', '#06b6d4'];
+
+type TabKey = 'appearance' | 'layouts' | 'shortcuts' | 'profiles' | 'models' | 'data' | 'licenses' | 'importExport';
 
 export function SettingsModal({
   isOpen,
@@ -29,11 +44,44 @@ export function SettingsModal({
   preferences,
   onUpdatePreferences,
   onResetPreferences,
+  api,
+  token,
+  conversationId,
+  messages = [],
+  models = [],
+  activeProfileId,
+  onSelectProfile,
+  onPurgeComplete,
+  thirdPartyNoticesText,
 }: Props) {
-  const [activeTab, setActiveTab] = useState<'appearance' | 'layouts' | 'shortcuts' | 'importExport'>('appearance');
+  const [activeTab, setActiveTab] = useState<TabKey>('appearance');
   const [themeJsonInput, setThemeJsonInput] = useState('');
   const [themeJsonError, setThemeJsonError] = useState('');
   const [shortcutConflict, setShortcutConflict] = useState('');
+
+  // Profiles State
+  const [profilesList, setProfilesList] = useState<AssistantProfile[]>([]);
+  const [editingProfile, setEditingProfile] = useState<{
+    id: string;
+    name: string;
+    system_prompt: string;
+    scope: 'global' | 'profile';
+  } | null>(null);
+  const [profileMsg, setProfileMsg] = useState('');
+
+  // Data / Purge State
+  const [purgeInput, setPurgeInput] = useState('');
+  const [purgeInProgress, setPurgeInProgress] = useState(false);
+  const [purgeMsg, setPurgeMsg] = useState('');
+
+  // Load profiles when modal opens or tab changes
+  useEffect(() => {
+    if (isOpen && api && token) {
+      api.profiles()
+        .then(res => setProfilesList(res))
+        .catch(() => {});
+    }
+  }, [isOpen, activeTab, api, token]);
 
   if (!isOpen) return null;
 
@@ -46,8 +94,9 @@ export function SettingsModal({
   };
 
   const handleShortcutChange = (actionKey: string, newKey: string) => {
-    // Conflict check
-    const existing = Object.entries(preferences.shortcuts).find(([k, v]) => v.toLowerCase() === newKey.toLowerCase() && k !== actionKey);
+    const existing = Object.entries(preferences.shortcuts).find(
+      ([k, v]) => v.toLowerCase() === newKey.toLowerCase() && k !== actionKey
+    );
     if (existing) {
       setShortcutConflict(`Shortcut '${newKey}' is already assigned to '${existing[0]}'`);
       return;
@@ -67,7 +116,6 @@ export function SettingsModal({
         return;
       }
       setThemeJsonError('');
-      // Apply theme custom tokens
       onUpdatePreferences({ theme: res.theme!.id });
     } catch {
       setThemeJsonError('Invalid JSON format');
@@ -84,11 +132,98 @@ export function SettingsModal({
     URL.revokeObjectURL(url);
   };
 
+  const handleExportConversationMarkdown = () => {
+    if (!messages || messages.length === 0) {
+      alert('No messages in active conversation to export.');
+      return;
+    }
+    const lines = [
+      `# Sanctum Conversation Export`,
+      `- **Session ID**: \`${conversationId || 'unnamed'}\``,
+      `- **Export Date**: ${new Date().toISOString()}`,
+      `- **Turns**: ${messages.length}`,
+      '',
+    ];
+    for (const msg of messages) {
+      lines.push(`## ${msg.role.toUpperCase()}`);
+      lines.push('');
+      lines.push(msg.content);
+      lines.push('');
+    }
+    const blob = new Blob([lines.join('\n')], { type: 'text/markdown' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = `conversation-${conversationId || 'export'}-${Date.now()}.md`;
+    a.click();
+    URL.revokeObjectURL(url);
+  };
+
+  const handleSaveProfile = async () => {
+    if (!editingProfile || !api) return;
+    if (!editingProfile.name.trim()) {
+      setProfileMsg('Profile name is required');
+      return;
+    }
+    try {
+      const profId = editingProfile.id || crypto.randomUUID();
+      await api.saveProfile({
+        id: profId,
+        name: editingProfile.name.trim(),
+        system_prompt: editingProfile.system_prompt,
+        scope: editingProfile.scope,
+      });
+      const updated = await api.profiles();
+      setProfilesList(updated);
+      setEditingProfile(null);
+      setProfileMsg('Profile saved successfully.');
+      setTimeout(() => setProfileMsg(''), 3000);
+    } catch (err: any) {
+      setProfileMsg(err.message || 'Failed to save profile');
+    }
+  };
+
+  const handleDeleteProfile = async (id: string) => {
+    if (!api) return;
+    try {
+      await api.deleteProfile(id);
+      const updated = await api.profiles();
+      setProfilesList(updated);
+      if (activeProfileId === id && onSelectProfile) {
+        onSelectProfile(null);
+      }
+      setProfileMsg('Profile deleted.');
+      setTimeout(() => setProfileMsg(''), 3000);
+    } catch (err: any) {
+      setProfileMsg(err.message || 'Failed to delete profile');
+    }
+  };
+
+  const handleFullPurge = async () => {
+    if (purgeInput.trim() !== STRINGS.settings.purgeConfirmRequired) return;
+    if (!api) return;
+    setPurgeInProgress(true);
+    setPurgeMsg(STRINGS.settings.purging);
+    try {
+      await api.fullPurge(STRINGS.settings.purgeConfirmRequired);
+      setPurgeMsg(STRINGS.settings.purgeSuccess);
+      setPurgeInput('');
+      if (onPurgeComplete) onPurgeComplete();
+      setTimeout(() => {
+        setPurgeInProgress(false);
+        onClose();
+      }, 1500);
+    } catch (err: any) {
+      setPurgeInProgress(false);
+      setPurgeMsg(`Purge failed: ${err.message || 'Server error'}`);
+    }
+  };
+
   return (
     <Dialog open={isOpen} title={STRINGS.settings.title} onClose={onClose}>
-      <div style={{ display: 'flex', gap: '20px', minHeight: '440px' }}>
+      <div style={{ display: 'flex', gap: '20px', minHeight: '460px', maxHeight: '70vh' }}>
         {/* Left Navigation */}
-        <div style={{ width: '180px', borderRight: '1px solid var(--ui-border, #283832)', paddingRight: '12px' }}>
+        <div style={{ width: '190px', borderRight: '1px solid var(--ui-border, #283832)', paddingRight: '12px' }}>
           <nav style={{ display: 'flex', flexDirection: 'column', gap: '4px' }}>
             <Button
               variant={activeTab === 'appearance' ? 'primary' : 'quiet'}
@@ -112,6 +247,34 @@ export function SettingsModal({
               {STRINGS.settings.shortcuts}
             </Button>
             <Button
+              variant={activeTab === 'profiles' ? 'primary' : 'quiet'}
+              style={{ justifyContent: 'flex-start', width: '100%' }}
+              onClick={() => setActiveTab('profiles')}
+            >
+              {STRINGS.settings.profiles}
+            </Button>
+            <Button
+              variant={activeTab === 'models' ? 'primary' : 'quiet'}
+              style={{ justifyContent: 'flex-start', width: '100%' }}
+              onClick={() => setActiveTab('models')}
+            >
+              {STRINGS.settings.models}
+            </Button>
+            <Button
+              variant={activeTab === 'data' ? 'primary' : 'quiet'}
+              style={{ justifyContent: 'flex-start', width: '100%' }}
+              onClick={() => setActiveTab('data')}
+            >
+              {STRINGS.settings.data}
+            </Button>
+            <Button
+              variant={activeTab === 'licenses' ? 'primary' : 'quiet'}
+              style={{ justifyContent: 'flex-start', width: '100%' }}
+              onClick={() => setActiveTab('licenses')}
+            >
+              {STRINGS.settings.licenses}
+            </Button>
+            <Button
               variant={activeTab === 'importExport' ? 'primary' : 'quiet'}
               style={{ justifyContent: 'flex-start', width: '100%' }}
               onClick={() => setActiveTab('importExport')}
@@ -122,7 +285,7 @@ export function SettingsModal({
         </div>
 
         {/* Right Content */}
-        <div style={{ flex: 1, overflowY: 'auto', paddingRight: '4px' }}>
+        <div style={{ flex: 1, overflowY: 'auto', paddingRight: '6px' }}>
           {activeTab === 'appearance' && (
             <div style={{ display: 'flex', flexDirection: 'column', gap: '18px' }}>
               {/* Mode & Theme */}
@@ -211,7 +374,11 @@ export function SettingsModal({
                       variant={preferences.density === d ? 'primary' : 'outline'}
                       onClick={() => onUpdatePreferences({ density: d })}
                     >
-                      {d === 'compact' ? STRINGS.settings.densityCompact : d === 'comfortable' ? STRINGS.settings.densityComfortable : STRINGS.settings.densitySpacious}
+                      {d === 'compact'
+                        ? STRINGS.settings.densityCompact
+                        : d === 'comfortable'
+                        ? STRINGS.settings.densityComfortable
+                        : STRINGS.settings.densitySpacious}
                     </Button>
                   ))}
                 </div>
@@ -243,6 +410,84 @@ export function SettingsModal({
                   style={{ width: '220px' }}
                   aria-label="Font size scale"
                 />
+              </div>
+
+              {/* Message Layout (Bubbles vs Document Measure) */}
+              <div>
+                <label style={{ fontSize: '13px', fontWeight: 600, display: 'block', marginBottom: '6px' }}>
+                  {STRINGS.settings.messageLayout}
+                </label>
+                <div style={{ display: 'flex', gap: '8px' }}>
+                  <Button
+                    variant={preferences.messageLayout === 'bubbles' ? 'primary' : 'outline'}
+                    onClick={() => onUpdatePreferences({ messageLayout: 'bubbles' })}
+                  >
+                    {STRINGS.settings.bubblesLayout}
+                  </Button>
+                  <Button
+                    variant={preferences.messageLayout === 'document' ? 'primary' : 'outline'}
+                    onClick={() => onUpdatePreferences({ messageLayout: 'document' })}
+                  >
+                    {STRINGS.settings.documentLayout}
+                  </Button>
+                </div>
+              </div>
+
+              {/* Content Measure / Width */}
+              <div>
+                <label style={{ fontSize: '13px', fontWeight: 600, display: 'block', marginBottom: '6px' }}>
+                  {STRINGS.settings.contentWidth}
+                </label>
+                <div style={{ display: 'flex', gap: '8px' }}>
+                  {(['narrow', 'normal', 'wide'] as ContentWidth[]).map(w => (
+                    <Button
+                      key={w}
+                      variant={preferences.contentWidth === w ? 'primary' : 'outline'}
+                      onClick={() => onUpdatePreferences({ contentWidth: w })}
+                    >
+                      {w === 'narrow' ? STRINGS.settings.widthNarrow : w === 'normal' ? STRINGS.settings.widthNormal : STRINGS.settings.widthWide}
+                    </Button>
+                  ))}
+                </div>
+              </div>
+
+              {/* Code Theme */}
+              <div>
+                <label style={{ fontSize: '13px', fontWeight: 600, display: 'block', marginBottom: '6px' }}>
+                  {STRINGS.settings.codeTheme}
+                </label>
+                <div style={{ display: 'flex', gap: '8px' }}>
+                  {(['match', 'dark', 'light'] as const).map(ct => (
+                    <Button
+                      key={ct}
+                      variant={preferences.codeTheme === ct ? 'primary' : 'outline'}
+                      onClick={() => onUpdatePreferences({ codeTheme: ct })}
+                    >
+                      {ct.toUpperCase()}
+                    </Button>
+                  ))}
+                </div>
+              </div>
+
+              {/* Motion Level */}
+              <div>
+                <label style={{ fontSize: '13px', fontWeight: 600, display: 'block', marginBottom: '6px' }}>
+                  {STRINGS.settings.motion}
+                </label>
+                <div style={{ display: 'flex', gap: '8px' }}>
+                  <Button
+                    variant={preferences.animationLevel === 'full' ? 'primary' : 'outline'}
+                    onClick={() => onUpdatePreferences({ animationLevel: 'full' })}
+                  >
+                    {STRINGS.settings.motionFull}
+                  </Button>
+                  <Button
+                    variant={preferences.animationLevel === 'reduced' ? 'primary' : 'outline'}
+                    onClick={() => onUpdatePreferences({ animationLevel: 'reduced' })}
+                  >
+                    {STRINGS.settings.motionReduced}
+                  </Button>
+                </div>
               </div>
 
               {/* Enter vs Shift+Enter send behavior */}
@@ -365,6 +610,434 @@ export function SettingsModal({
             </div>
           )}
 
+          {activeTab === 'profiles' && (
+            <div style={{ display: 'flex', flexDirection: 'column', gap: '14px' }}>
+              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                <span style={{ fontSize: '13px', fontWeight: 600 }}>{STRINGS.settings.profiles}</span>
+                <Button
+                  variant="outline"
+                  onClick={() =>
+                    setEditingProfile({
+                      id: '',
+                      name: '',
+                      system_prompt: '',
+                      scope: 'global',
+                    })
+                  }
+                >
+                  + {STRINGS.settings.newProfile}
+                </Button>
+              </div>
+
+              {profileMsg && (
+                <div style={{ fontSize: '12px', color: 'var(--ui-primary, #48a87b)' }}>{profileMsg}</div>
+              )}
+
+              {/* Profiles List */}
+              <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
+                {profilesList.length === 0 ? (
+                  <p style={{ fontSize: '12px', color: 'var(--ui-text-secondary, #9fb3a4)' }}>
+                    {STRINGS.settings.noProfiles}
+                  </p>
+                ) : (
+                  profilesList.map(prof => (
+                    <div
+                      key={prof.id}
+                      style={{
+                        padding: '10px 12px',
+                        background: 'var(--ui-surface, #151c19)',
+                        borderRadius: '6px',
+                        border:
+                          activeProfileId === prof.id
+                            ? '1px solid var(--ui-primary, #48a87b)'
+                            : '1px solid var(--ui-border, #283832)',
+                        display: 'flex',
+                        flexDirection: 'column',
+                        gap: '6px',
+                      }}
+                    >
+                      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                        <span style={{ fontWeight: 600, fontSize: '13px' }}>
+                          {prof.name}{' '}
+                          <span
+                            style={{
+                              fontSize: '10px',
+                              padding: '2px 6px',
+                              borderRadius: '4px',
+                              background: 'var(--ui-border, #283832)',
+                              marginLeft: '6px',
+                            }}
+                          >
+                            {prof.scope}
+                          </span>
+                        </span>
+                        <div style={{ display: 'flex', gap: '6px' }}>
+                          {onSelectProfile && (
+                            <Button
+                              variant={activeProfileId === prof.id ? 'primary' : 'quiet'}
+                              style={{ fontSize: '11px', padding: '2px 8px' }}
+                              onClick={() => onSelectProfile(activeProfileId === prof.id ? null : prof.id)}
+                            >
+                              {activeProfileId === prof.id ? 'Active' : 'Apply'}
+                            </Button>
+                          )}
+                          <Button
+                            variant="quiet"
+                            style={{ fontSize: '11px', padding: '2px 8px' }}
+                            onClick={() =>
+                              setEditingProfile({
+                                id: prof.id,
+                                name: prof.name,
+                                system_prompt: prof.system_prompt,
+                                scope: prof.scope as 'global' | 'profile',
+                              })
+                            }
+                          >
+                            Edit
+                          </Button>
+                          <Button
+                            variant="quiet"
+                            style={{ fontSize: '11px', padding: '2px 8px', color: 'var(--ui-danger, #f87171)' }}
+                            onClick={() => handleDeleteProfile(prof.id)}
+                          >
+                            Delete
+                          </Button>
+                        </div>
+                      </div>
+                      <p
+                        style={{
+                          fontSize: '11px',
+                          color: 'var(--ui-text-secondary, #9fb3a4)',
+                          margin: 0,
+                          fontFamily: 'monospace',
+                          maxHeight: '40px',
+                          overflow: 'hidden',
+                          textOverflow: 'ellipsis',
+                        }}
+                      >
+                        {prof.system_prompt || '(Empty prompt)'}
+                      </p>
+                    </div>
+                  ))
+                )}
+              </div>
+
+              {/* Editing Form */}
+              {editingProfile && (
+                <div
+                  style={{
+                    borderTop: '1px solid var(--ui-border, #283832)',
+                    paddingTop: '14px',
+                    display: 'flex',
+                    flexDirection: 'column',
+                    gap: '10px',
+                  }}
+                >
+                  <label style={{ fontSize: '12px', fontWeight: 600 }}>Profile Name</label>
+                  <input
+                    type="text"
+                    value={editingProfile.name}
+                    onChange={e => setEditingProfile({ ...editingProfile, name: e.target.value })}
+                    placeholder="e.g. Code Specialist"
+                    style={{
+                      padding: '6px 10px',
+                      borderRadius: '4px',
+                      border: '1px solid var(--ui-border, #283832)',
+                      background: 'var(--ui-background, #0f1412)',
+                      color: 'var(--ui-text-primary, #e8efe9)',
+                    }}
+                  />
+
+                  <label style={{ fontSize: '12px', fontWeight: 600 }}>Scope</label>
+                  <div style={{ display: 'flex', gap: '8px' }}>
+                    <Button
+                      variant={editingProfile.scope === 'global' ? 'primary' : 'outline'}
+                      onClick={() => setEditingProfile({ ...editingProfile, scope: 'global' })}
+                    >
+                      {STRINGS.settings.profileScopeGlobal}
+                    </Button>
+                    <Button
+                      variant={editingProfile.scope === 'profile' ? 'primary' : 'outline'}
+                      onClick={() => setEditingProfile({ ...editingProfile, scope: 'profile' })}
+                    >
+                      {STRINGS.settings.profileScopeConversation}
+                    </Button>
+                  </div>
+
+                  <label style={{ fontSize: '12px', fontWeight: 600 }}>System Prompt</label>
+                  <textarea
+                    rows={4}
+                    value={editingProfile.system_prompt}
+                    onChange={e => setEditingProfile({ ...editingProfile, system_prompt: e.target.value })}
+                    placeholder="Enter instructions for the model..."
+                    style={{
+                      padding: '6px 10px',
+                      borderRadius: '4px',
+                      border: '1px solid var(--ui-border, #283832)',
+                      background: 'var(--ui-background, #0f1412)',
+                      color: 'var(--ui-text-primary, #e8efe9)',
+                      fontFamily: 'monospace',
+                      fontSize: '12px',
+                    }}
+                  />
+
+                  <div style={{ display: 'flex', gap: '8px', justifyContent: 'flex-end' }}>
+                    <Button variant="quiet" onClick={() => setEditingProfile(null)}>
+                      Cancel
+                    </Button>
+                    <Button variant="primary" onClick={handleSaveProfile}>
+                      {STRINGS.settings.saveProfile}
+                    </Button>
+                  </div>
+                </div>
+              )}
+            </div>
+          )}
+
+          {activeTab === 'models' && (
+            <div style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
+              <span style={{ fontSize: '13px', fontWeight: 600 }}>{STRINGS.settings.assignRoles}</span>
+
+              {/* Chat Role */}
+              <div
+                style={{
+                  padding: '12px',
+                  background: 'var(--ui-surface, #151c19)',
+                  borderRadius: '6px',
+                  border: '1px solid var(--ui-border, #283832)',
+                }}
+              >
+                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '6px' }}>
+                  <span style={{ fontWeight: 600, fontSize: '13px' }}>Chat &amp; Reasoning</span>
+                  <span style={{ fontSize: '10px', padding: '2px 6px', borderRadius: '4px', background: '#283832' }}>
+                    Apache 2.0
+                  </span>
+                </div>
+                <p style={{ fontSize: '11px', color: 'var(--ui-text-secondary, #9fb3a4)', margin: '0 0 8px' }}>
+                  Primary interactive assistant. Fits in local VRAM based on quantized model parameters.
+                </p>
+                <select
+                  value={preferences.modelRoles?.chat || ''}
+                  onChange={e =>
+                    onUpdatePreferences({
+                      modelRoles: { ...preferences.modelRoles, chat: e.target.value },
+                    })
+                  }
+                  style={{
+                    width: '100%',
+                    padding: '6px',
+                    borderRadius: '4px',
+                    background: 'var(--ui-background, #0f1412)',
+                    border: '1px solid var(--ui-border, #283832)',
+                    color: 'var(--ui-text-primary, #e8efe9)',
+                    fontSize: '12px',
+                  }}
+                >
+                  <option value="">Default Registry Model</option>
+                  {models.map(m => (
+                    <option key={m.id} value={m.id}>
+                      {m.id} ({m.context_length ? `${m.context_length} ctx` : 'local'})
+                    </option>
+                  ))}
+                </select>
+              </div>
+
+              {/* Embeddings Role */}
+              <div
+                style={{
+                  padding: '12px',
+                  background: 'var(--ui-surface, #151c19)',
+                  borderRadius: '6px',
+                  border: '1px solid var(--ui-border, #283832)',
+                }}
+              >
+                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '6px' }}>
+                  <span style={{ fontWeight: 600, fontSize: '13px' }}>Vector Embeddings</span>
+                  <span style={{ fontSize: '10px', padding: '2px 6px', borderRadius: '4px', background: '#283832' }}>
+                    Apache 2.0
+                  </span>
+                </div>
+                <div style={{ fontSize: '12px', fontFamily: 'monospace', marginBottom: '4px' }}>
+                  nomic-embed-text-v1.5
+                </div>
+                <div style={{ fontSize: '11px', color: 'var(--ui-text-secondary, #9fb3a4)' }}>
+                  137M parameters • Fits in CPU / 1 GB VRAM • Zero external egress
+                </div>
+              </div>
+
+              {/* Reranker Role */}
+              <div
+                style={{
+                  padding: '12px',
+                  background: 'var(--ui-surface, #151c19)',
+                  borderRadius: '6px',
+                  border: '1px solid var(--ui-border, #283832)',
+                }}
+              >
+                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '6px' }}>
+                  <span style={{ fontWeight: 600, fontSize: '13px' }}>Document Reranker</span>
+                  <span style={{ fontSize: '10px', padding: '2px 6px', borderRadius: '4px', background: '#283832' }}>
+                    MIT
+                  </span>
+                </div>
+                <div style={{ fontSize: '12px', fontFamily: 'monospace', marginBottom: '4px' }}>
+                  bge-reranker-v2-m3
+                </div>
+                <div style={{ fontSize: '11px', color: 'var(--ui-text-secondary, #9fb3a4)' }}>
+                  560M parameters • Fits in CPU / 2 GB VRAM • Multilingual exact cross-encoder
+                </div>
+              </div>
+
+              {/* Speech ASR */}
+              <div
+                style={{
+                  padding: '12px',
+                  background: 'var(--ui-surface, #151c19)',
+                  borderRadius: '6px',
+                  border: '1px solid var(--ui-border, #283832)',
+                }}
+              >
+                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '6px' }}>
+                  <span style={{ fontWeight: 600, fontSize: '13px' }}>Speech Recognition (ASR)</span>
+                  <span style={{ fontSize: '10px', padding: '2px 6px', borderRadius: '4px', background: '#283832' }}>
+                    MIT
+                  </span>
+                </div>
+                <div style={{ fontSize: '12px', fontFamily: 'monospace', marginBottom: '4px' }}>
+                  whisper.cpp (Local engine)
+                </div>
+                <div style={{ fontSize: '11px', color: 'var(--ui-text-secondary, #9fb3a4)' }}>
+                  High-precision speech-to-text • Fits in CPU / 1.5 GB VRAM
+                </div>
+              </div>
+
+              {/* Speech TTS */}
+              <div
+                style={{
+                  padding: '12px',
+                  background: 'var(--ui-surface, #151c19)',
+                  borderRadius: '6px',
+                  border: '1px solid var(--ui-border, #283832)',
+                }}
+              >
+                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '6px' }}>
+                  <span style={{ fontWeight: 600, fontSize: '13px' }}>Speech Synthesis (TTS)</span>
+                  <span style={{ fontSize: '10px', padding: '2px 6px', borderRadius: '4px', background: '#283832' }}>
+                    Apache 2.0
+                  </span>
+                </div>
+                <div style={{ fontSize: '12px', fontFamily: 'monospace', marginBottom: '4px' }}>
+                  Kokoro (82M params)
+                </div>
+                <div style={{ fontSize: '11px', color: 'var(--ui-text-secondary, #9fb3a4)' }}>
+                  On-device audio synthesis • Fits in CPU / 500 MB VRAM
+                </div>
+              </div>
+            </div>
+          )}
+
+          {activeTab === 'data' && (
+            <div style={{ display: 'flex', flexDirection: 'column', gap: '20px' }}>
+              <div>
+                <label style={{ fontSize: '13px', fontWeight: 600, display: 'block', marginBottom: '6px' }}>
+                  {STRINGS.settings.exportMarkdown}
+                </label>
+                <p style={{ fontSize: '12px', color: 'var(--ui-text-secondary, #9fb3a4)', margin: '0 0 10px' }}>
+                  Export the active session transcript as a clean, standardized Markdown document with roles and timestamps.
+                </p>
+                <Button variant="outline" onClick={handleExportConversationMarkdown}>
+                  {STRINGS.settings.exportMarkdown}
+                </Button>
+              </div>
+
+              {/* Full Purge Section */}
+              <div
+                style={{
+                  padding: '14px',
+                  borderRadius: '6px',
+                  border: '1px solid var(--ui-danger, #f87171)',
+                  background: 'rgba(239, 68, 68, 0.05)',
+                }}
+              >
+                <div style={{ fontSize: '13px', fontWeight: 600, color: 'var(--ui-danger, #f87171)', marginBottom: '6px' }}>
+                  {STRINGS.settings.fullPurge}
+                </div>
+                <p style={{ fontSize: '12px', color: 'var(--ui-text-secondary, #9fb3a4)', margin: '0 0 10px' }}>
+                  {STRINGS.settings.purgeWarning}
+                </p>
+                <label style={{ fontSize: '12px', fontWeight: 600, display: 'block', marginBottom: '6px' }}>
+                  {STRINGS.settings.purgeConfirmPrompt}
+                </label>
+                <input
+                  type="text"
+                  value={purgeInput}
+                  onChange={e => setPurgeInput(e.target.value)}
+                  placeholder={STRINGS.settings.purgeConfirmRequired}
+                  disabled={purgeInProgress}
+                  style={{
+                    width: '100%',
+                    padding: '8px',
+                    borderRadius: '4px',
+                    border: '1px solid var(--ui-border, #283832)',
+                    background: 'var(--ui-background, #0f1412)',
+                    color: 'var(--ui-text-primary, #e8efe9)',
+                    fontFamily: 'monospace',
+                    fontSize: '12px',
+                    marginBottom: '10px',
+                  }}
+                />
+                {purgeMsg && (
+                  <div
+                    style={{
+                      fontSize: '12px',
+                      color: purgeMsg.includes('failed') ? 'var(--ui-danger, #f87171)' : 'var(--ui-primary, #48a87b)',
+                      marginBottom: '10px',
+                    }}
+                  >
+                    {purgeMsg}
+                  </div>
+                )}
+                <Button
+                  variant="outline"
+                  style={{
+                    borderColor: 'var(--ui-danger, #f87171)',
+                    color: 'var(--ui-danger, #f87171)',
+                    opacity: purgeInput.trim() === STRINGS.settings.purgeConfirmRequired ? 1 : 0.5,
+                  }}
+                  disabled={purgeInput.trim() !== STRINGS.settings.purgeConfirmRequired || purgeInProgress}
+                  onClick={handleFullPurge}
+                >
+                  {purgeInProgress ? STRINGS.settings.purging : STRINGS.settings.purgeAction}
+                </Button>
+              </div>
+            </div>
+          )}
+
+          {activeTab === 'licenses' && (
+            <div style={{ display: 'flex', flexDirection: 'column', gap: '10px' }}>
+              <span style={{ fontSize: '13px', fontWeight: 600 }}>{STRINGS.settings.licenses}</span>
+              <p style={{ fontSize: '11px', color: 'var(--ui-text-secondary, #9fb3a4)', margin: 0 }}>
+                Every bundled component, font, and dependency has been verified for permissive licensing (MIT, Apache 2.0, OFL).
+              </p>
+              <pre
+                style={{
+                  maxHeight: '340px',
+                  overflowY: 'auto',
+                  fontSize: '11px',
+                  fontFamily: 'monospace',
+                  padding: '12px',
+                  borderRadius: '6px',
+                  border: '1px solid var(--ui-border, #283832)',
+                  background: 'var(--ui-background, #0f1412)',
+                  color: 'var(--ui-text-primary, #e8efe9)',
+                  whiteSpace: 'pre-wrap',
+                }}
+              >
+                {thirdPartyNoticesText || 'Licensed under MIT and OFL.'}
+              </pre>
+            </div>
+          )}
+
           {activeTab === 'importExport' && (
             <div style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
               <div>
@@ -419,7 +1092,6 @@ export function SettingsModal({
                   {STRINGS.settings.resetDefaults}
                 </Button>
               </div>
-
             </div>
           )}
         </div>

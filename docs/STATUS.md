@@ -1,12 +1,10 @@
 # Current state
 
-- Step: Hermes UI & Setup Walkthrough UX parity complete (SetupWizard walkthrough, starter prompt suggestions, response copy action, loopback auto-connect explanation, live connection indicator).
-- Last green commit: `c5690bd` on main; hosted run 38163334774 all 5 jobs PASS.
-- Main status: origin/main up to date; local branch clean and validated.
-- Uncommitted smoke SHA256 matches: 8/8 json/log pairs byte-identical to website-final-smoke-*.
-- Gate table: source 157 / Rust 62 / web 44+2 PASS; 38 denial probes; zero npm audit advisories.
-- Next 3: Owner review of queue; Phase 4 vision; Phase 5 agents.
-- Main/tags: UI port fully merged to main; clean hosted CI verified. UTF-8 LF normalized.
+- Step: Owner-directed Workspace UI S14 final report and merge to main (ADR 0069).
+- Baseline: Source 157 / Rust 62 / web 73 PASS; 25 E2E Playwright PASS; 38 denial probes; zero npm audit advisories; hosted CI run 38215304239 green on exact commit `2e990bb`.
+- Branch: `ui-workspace` at `2e990bb`; all S0–S13 implemented and verified; merge to main pending.
+- Resolved debt: (a) reference environment built with lockfile hashes and 6 screenshots; (b) pixel-diff and computed-style fidelity measured at supplementary invariant level (ADR 0067), not upstream exact-match; (c) dashboard migrated from modal to routed pages (#/dashboard/*); (d) "complete" claims retracted — UI workspace scope is implemented but full release gates (R-UI through R-HANDOFF) remain OPEN per RELEASE_CHECKLIST.md.
+- Next: merge to main, rerun all gates on main, update coverage.
 
 ## Public website slice
 

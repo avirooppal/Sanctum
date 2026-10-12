@@ -39,12 +39,16 @@ export interface UserPreferences {
   activeLayout: string;
   savedLayouts: SavedLayout[];
   shortcuts: Record<string, string>;
+  modelRoles?: Record<string, string>;
 }
 
 export const DEFAULT_SHORTCUTS: Record<string, string> = Object.freeze({
   'command_palette': 'Ctrl+K',
   'new_chat': 'Ctrl+N',
-  'toggle_sidebar': 'Ctrl+\\',
+  'toggle_sidebar': 'Ctrl+B',
+  'toggle_right_rail': 'Ctrl+J',
+  'cycle_tabs': 'Ctrl+Tab',
+  'close_tab': 'Ctrl+W',
   'open_settings': 'Ctrl+,',
   'focus_composer': 'Ctrl+/',
   'toggle_mic': 'Ctrl+M',
@@ -66,30 +70,37 @@ export const DEFAULT_PREFERENCES: UserPreferences = Object.freeze({
   showAvatars: true,
   sendOnEnter: true,
   sidebarSide: 'left',
-  activeLayout: 'full',
+  activeLayout: 'default',
   savedLayouts: [
     {
-      id: 'full',
-      name: 'Full Workspace',
-      slots: { left: 'history', center: 'chat', right: 'knowledge', bottom: 'none' },
+      id: 'default',
+      name: 'Default',
+      slots: { left: 'history', center: 'chat', right: 'artifacts', bottom: 'none' },
     },
     {
-      id: 'focused',
-      name: 'Focused Chat',
-      slots: { left: 'history', center: 'chat', right: 'none', bottom: 'none' },
+      id: 'focus',
+      name: 'Focus',
+      slots: { left: 'none', center: 'chat', right: 'none', bottom: 'none' },
     },
     {
-      id: 'dual',
-      name: 'Dual Lane',
-      slots: { left: 'history', center: 'chat', right: 'knowledge', bottom: 'none' },
+      id: 'quad',
+      name: 'Quad',
+      slots: { left: 'history', center: 'quad', right: 'none', bottom: 'none' },
     },
     {
-      id: 'dashboard',
-      name: 'Dashboard Monitor',
-      slots: { left: 'none', center: 'dashboard', right: 'chat', bottom: 'none' },
+      id: 'console',
+      name: 'Console',
+      slots: { left: 'history', center: 'chat', right: 'none', bottom: 'console' },
     },
   ],
   shortcuts: { ...DEFAULT_SHORTCUTS },
+  modelRoles: {
+    chat: '',
+    embeddings: 'nomic-embed-text-v1.5',
+    reranker: 'bge-reranker-v2-m3',
+    asr: 'whisper',
+    tts: 'kokoro',
+  },
 });
 
 const HEX_COLOR_REGEX = /^#([A-Fa-f0-9]{6}|[A-Fa-f0-9]{8}|[A-Fa-f0-9]{3})$/;
@@ -221,9 +232,10 @@ export function sanitizePreferences(raw: unknown): { preferences: UserPreference
       showAvatars: typeof obj.showAvatars === 'boolean' ? obj.showAvatars : true,
       sendOnEnter: typeof obj.sendOnEnter === 'boolean' ? obj.sendOnEnter : true,
       sidebarSide: obj.sidebarSide === 'right' ? 'right' : 'left',
-      activeLayout: typeof obj.activeLayout === 'string' ? obj.activeLayout : 'full',
+      activeLayout: typeof obj.activeLayout === 'string' ? obj.activeLayout : DEFAULT_PREFERENCES.activeLayout,
       savedLayouts: Array.isArray(obj.savedLayouts) && obj.savedLayouts.length > 0 ? (obj.savedLayouts as SavedLayout[]) : DEFAULT_PREFERENCES.savedLayouts,
       shortcuts: typeof obj.shortcuts === 'object' && obj.shortcuts ? { ...DEFAULT_SHORTCUTS, ...(obj.shortcuts as Record<string, string>) } : { ...DEFAULT_SHORTCUTS },
+      modelRoles: typeof obj.modelRoles === 'object' && obj.modelRoles ? { ...DEFAULT_PREFERENCES.modelRoles, ...(obj.modelRoles as Record<string, string>) } : DEFAULT_PREFERENCES.modelRoles,
     },
     wasRecovered: recovered,
   };

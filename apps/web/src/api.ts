@@ -1,10 +1,12 @@
 /** Same-origin Sanctum contracts. Credentials and drafts are never persisted here. */
 export type Message = {role:'user'|'assistant'; content:string};
-export type Model = {id:string; capabilities:string[]};
+export type Model = {id:string; capabilities:string[]; context_length?:number; license?:string};
 export type Turn = {request:string; response:string; streaming:boolean};
-export type SessionPage = {data:{id:string;title:string}[];has_more:boolean};
+export type SessionPage = {data:{id:string;title:string;pinned?:boolean}[];has_more:boolean};
 export type Workspace = {id:string;name:string};
 export type KnowledgeAnswer = {answer:string;abstained:boolean;citations:{source:string;page:number|null;quote:string;document_id:string;chunk_id:string;start:number;end:number}[]};
+export type ConversationUsage = {conversation_id:string;prompt_tokens:number;completion_tokens:number;total_tokens:number;context_length:number;has_data:boolean};
+export type AssistantProfile = {id:string;name:string;system_prompt:string;scope:string;created_at?:number;updated_at?:number};
 type Socket = Pick<WebSocket,'close'|'addEventListener'>;
 type SocketFactory = (url:string, protocols:string[])=>Socket;
 
@@ -101,6 +103,9 @@ export class SanctumClient {
   deleteSession(id:string,signal?:AbortSignal):Promise<void> {
     return this.mutateSession({operation:'delete',id},signal);
   }
+  pinSession(id:string,pinned:boolean,signal?:AbortSignal):Promise<void> {
+    return this.mutateSession({operation:'pin',id,pinned},signal);
+  }
 
   async conversations(signal?:AbortSignal):Promise<string[]> {
     const data:unknown=await (await this.request('/v1/conversations',signal)).json();
@@ -121,9 +126,20 @@ export class SanctumClient {
     return data.data as Turn[];
   }
 
-  async *chat(model:string,messages:Message[],conversation:string,signal?:AbortSignal):AsyncGenerator<string> {
+  async conversationUsage(id:string,signal?:AbortSignal):Promise<{conversation_id:string;prompt_tokens:number;completion_tokens:number;total_tokens:number;context_length:number;has_data:boolean}> {
+    const data:unknown=await (await this.request(`/v1/conversations/${encodeURIComponent(id)}/usage`,signal)).json();
+    signal?.throwIfAborted();
+    if (!record(data) || typeof data.total_tokens !== 'number' || typeof data.context_length !== 'number' || typeof data.has_data !== 'boolean') {
+      throw Error('Invalid conversation usage response');
+    }
+    return data as {conversation_id:string;prompt_tokens:number;completion_tokens:number;total_tokens:number;context_length:number;has_data:boolean};
+  }
+
+  async *chat(model:string,messages:Message[],conversation:string,signal?:AbortSignal,profile?:string):AsyncGenerator<string> {
+    const payload: Record<string, unknown> = {model,messages,stream:true,max_tokens:256};
+    if (profile) payload.profile = profile;
     const response=await this.request('/v1/chat/completions',signal,
-      {model,messages,stream:true,max_tokens:256},'POST',conversation);
+      payload,'POST',conversation);
     if (!response.body) throw Error('Missing chat stream');
     const reader=response.body.getReader();
     const cancel=()=>{void reader.cancel().catch(()=>{});};
@@ -193,6 +209,32 @@ export class SanctumClient {
     const body = JSON.stringify(preferences);
     const res = await this.request('/v1/preferences', signal, { 'Content-Type': 'application/json' }, 'POST', body);
     if (!res.ok) throw Error(`Failed to save preferences: ${res.status}`);
+  }
+
+  async profiles(signal?: AbortSignal): Promise<AssistantProfile[]> {
+    const res = await this.request('/v1/profiles', signal);
+    const data: unknown = await res.json();
+    if (!record(data) || !Array.isArray(data.data)) throw Error('Invalid profiles response');
+    return data.data as AssistantProfile[];
+  }
+
+  async saveProfile(profile: { id?: string; name: string; system_prompt: string; scope: string }, signal?: AbortSignal): Promise<string> {
+    const res = await this.request('/v1/profiles', signal, { operation: 'save', ...profile }, 'POST');
+    const data: unknown = await res.json();
+    if (!record(data) || typeof data.id !== 'string') throw Error('Invalid save profile response');
+    return data.id as string;
+  }
+
+  async deleteProfile(id: string, signal?: AbortSignal): Promise<void> {
+    const res = await this.request('/v1/profiles', signal, { operation: 'delete', id }, 'POST');
+    const data: unknown = await res.json();
+    if (!record(data) || data.deleted !== true) throw Error('Invalid delete profile response');
+  }
+
+  async fullPurge(confirm: string, signal?: AbortSignal): Promise<void> {
+    const res = await this.request('/v1/purge', signal, { confirm }, 'POST');
+    const data: unknown = await res.json();
+    if (!record(data) || data.purged !== true) throw Error('Invalid purge response');
   }
 }
 

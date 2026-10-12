@@ -12,6 +12,7 @@ pub enum SessionRequest {
     List { query: String, offset: usize },
     Rename { id: String, title: String },
     Delete { id: String },
+    Pin { id: String, pinned: bool },
 }
 impl Store {
     pub fn open(path: &Path) -> rusqlite::Result<Self> {
@@ -26,6 +27,8 @@ impl Store {
             CREATE TABLE IF NOT EXISTS turns(id INTEGER PRIMARY KEY, conversation TEXT NOT NULL REFERENCES conversations(id), request TEXT NOT NULL, response TEXT NOT NULL, streaming INTEGER NOT NULL);")?;
         connection.execute_batch(include_str!("../migrations/0001-session-metadata.sql"))?;
         connection.execute_batch(include_str!("../migrations/0002-user-preferences.sql"))?;
+        connection.execute_batch(include_str!("../migrations/0003-session-pins.sql"))?;
+        connection.execute_batch(include_str!("../migrations/0004-assistant-profiles.sql"))?;
         Ok(Self { connection })
     }
     pub fn save(
@@ -76,10 +79,26 @@ impl Store {
                     return Err(rusqlite::Error::InvalidQuery);
                 }
                 let mut statement = self.connection.prepare(
-                    "SELECT c.id,COALESCE(t.title,'Conversation ' || substr(c.id,1,8)) AS title FROM conversations c LEFT JOIN conversation_titles_v1 t ON t.id=c.id WHERE c.owner=?1 AND (instr(lower(COALESCE(t.title,'Conversation ' || substr(c.id,1,8))),lower(?2))>0 OR instr(lower(c.id),lower(?2))>0) ORDER BY c.rowid DESC LIMIT 101 OFFSET ?3")?;
+                    "SELECT c.id, COALESCE(t.title, 'Conversation ' || substr(c.id, 1, 8)) AS title, COALESCE(p.pinned, 0) AS pinned \
+                     FROM conversations c \
+                     LEFT JOIN conversation_titles_v1 t ON t.id = c.id \
+                     LEFT JOIN conversation_pins_v1 p ON p.id = c.id \
+                     WHERE c.owner = ?1 \
+                       AND ( \
+                         instr(lower(COALESCE(t.title, 'Conversation ' || substr(c.id, 1, 8))), lower(?2)) > 0 \
+                         OR instr(lower(c.id), lower(?2)) > 0 \
+                         OR EXISTS(SELECT 1 FROM turns tr WHERE tr.conversation = c.id AND (instr(lower(tr.request), lower(?2)) > 0 OR instr(lower(tr.response), lower(?2)) > 0)) \
+                       ) \
+                     ORDER BY COALESCE(p.pinned, 0) DESC, c.rowid DESC \
+                     LIMIT 101 OFFSET ?3",
+                )?;
                 let mut data = statement
                     .query_map(params![owner, query, offset], |r| {
-                        Ok(json!({"id":r.get::<_,String>(0)?,"title":r.get::<_,String>(1)?}))
+                        Ok(json!({
+                            "id": r.get::<_, String>(0)?,
+                            "title": r.get::<_, String>(1)?,
+                            "pinned": r.get::<_, i64>(2)? != 0
+                        }))
                     })?
                     .collect::<rusqlite::Result<Vec<Value>>>()?;
                 let has_more = data.len() > 100;
@@ -87,7 +106,12 @@ impl Store {
                 Ok(json!({"data":data,"has_more":has_more}))
             }
             request => {
-                let (id, title) = match request {
+                enum Action {
+                    Rename(String),
+                    Delete,
+                    Pin(bool),
+                }
+                let (id, action) = match request {
                     SessionRequest::Rename { id, title } => {
                         let title = title.trim().to_owned();
                         if title.is_empty()
@@ -96,9 +120,10 @@ impl Store {
                         {
                             return Err(rusqlite::Error::InvalidQuery);
                         }
-                        (id, Some(title))
+                        (id, Action::Rename(title))
                     }
-                    SessionRequest::Delete { id } => (id, None),
+                    SessionRequest::Delete { id } => (id, Action::Delete),
+                    SessionRequest::Pin { id, pinned } => (id, Action::Pin(pinned)),
                     SessionRequest::List { .. } => unreachable!(),
                 };
                 if id.is_empty()
@@ -118,18 +143,39 @@ impl Store {
                 if !exists {
                     return Ok(json!({"changed":false}));
                 }
-                if let Some(title) = title {
-                    transaction.execute("INSERT INTO conversation_titles_v1(id,title) VALUES(?1,?2) ON CONFLICT(id) DO UPDATE SET title=excluded.title", params![id,title])?;
-                } else {
-                    transaction.execute(
-                        "INSERT INTO conversation_tombstones_v1(id,owner) VALUES(?1,?2)",
-                        params![id, owner],
-                    )?;
-                    transaction.execute("DELETE FROM turns WHERE conversation=?1", [&id])?;
-                    transaction.execute(
-                        "DELETE FROM conversations WHERE id=?1 AND owner=?2",
-                        params![id, owner],
-                    )?;
+                match action {
+                    Action::Rename(title) => {
+                        transaction.execute(
+                            "INSERT INTO conversation_titles_v1(id,title) VALUES(?1,?2) ON CONFLICT(id) DO UPDATE SET title=excluded.title",
+                            params![id, title],
+                        )?;
+                    }
+                    Action::Pin(pinned) => {
+                        if pinned {
+                            transaction.execute(
+                                "INSERT INTO conversation_pins_v1(id, pinned, updated_at) VALUES(?1, 1, unixepoch()) ON CONFLICT(id) DO UPDATE SET pinned=1, updated_at=excluded.updated_at",
+                                params![id],
+                            )?;
+                        } else {
+                            transaction.execute(
+                                "DELETE FROM conversation_pins_v1 WHERE id=?1",
+                                params![id],
+                            )?;
+                        }
+                    }
+                    Action::Delete => {
+                        transaction.execute(
+                            "INSERT INTO conversation_tombstones_v1(id,owner) VALUES(?1,?2)",
+                            params![id, owner],
+                        )?;
+                        transaction
+                            .execute("DELETE FROM conversation_pins_v1 WHERE id=?1", [&id])?;
+                        transaction.execute("DELETE FROM turns WHERE conversation=?1", [&id])?;
+                        transaction.execute(
+                            "DELETE FROM conversations WHERE id=?1 AND owner=?2",
+                            params![id, owner],
+                        )?;
+                    }
                 }
                 transaction.commit()?;
                 Ok(json!({"changed":true}))
@@ -140,6 +186,45 @@ impl Store {
         let mut statement = self.connection.prepare("SELECT t.request,t.response,t.streaming FROM turns t JOIN conversations c ON c.id=t.conversation WHERE c.owner=?1 AND c.id=?2 ORDER BY t.id")?;
         let rows=statement.query_map(params![owner,id],|r| Ok(json!({"request":r.get::<_,String>(0)?,"response":r.get::<_,String>(1)?,"streaming":r.get::<_,bool>(2)?})))?.collect();
         rows
+    }
+
+    pub fn conversation_usage(
+        &self,
+        owner: &str,
+        id: &str,
+        context_length: usize,
+    ) -> rusqlite::Result<Value> {
+        let mut statement = self.connection.prepare(
+            "SELECT t.response FROM turns t JOIN conversations c ON c.id=?1 AND c.owner=?2",
+        )?;
+        let rows = statement.query_map(params![id, owner], |r| r.get::<_, String>(0))?;
+        let mut prompt_tokens = 0;
+        let mut completion_tokens = 0;
+        let mut has_usage = false;
+        for row in rows {
+            let resp = row?;
+            if let Ok(val) = serde_json::from_str::<Value>(&resp) {
+                if let Some(usage) = val.get("usage") {
+                    if let Some(pt) = usage.get("prompt_tokens").and_then(|p| p.as_u64()) {
+                        prompt_tokens += pt as usize;
+                        has_usage = true;
+                    }
+                    if let Some(ct) = usage.get("completion_tokens").and_then(|c| c.as_u64()) {
+                        completion_tokens += ct as usize;
+                        has_usage = true;
+                    }
+                }
+            }
+        }
+        let total_tokens = prompt_tokens + completion_tokens;
+        Ok(json!({
+            "conversation_id": id,
+            "prompt_tokens": prompt_tokens,
+            "completion_tokens": completion_tokens,
+            "total_tokens": total_tokens,
+            "context_length": context_length,
+            "has_data": has_usage
+        }))
     }
     pub fn preferences(&self, owner: &str) -> rusqlite::Result<Option<String>> {
         let mut statement = self
@@ -158,6 +243,86 @@ impl Store {
             "INSERT INTO user_preferences_v1(owner,preferences,updated_at) VALUES(?1,?2,unixepoch()) ON CONFLICT(owner) DO UPDATE SET preferences=excluded.preferences,updated_at=excluded.updated_at",
             params![owner, preferences],
         )?;
+        Ok(())
+    }
+
+    pub fn profiles(&self, owner: &str) -> rusqlite::Result<Vec<Value>> {
+        let mut statement = self.connection.prepare(
+            "SELECT id, name, system_prompt, scope, created_at, updated_at FROM assistant_profiles_v1 WHERE owner=?1 ORDER BY updated_at DESC",
+        )?;
+        let rows = statement
+            .query_map([owner], |r| {
+                Ok(json!({
+                    "id": r.get::<_, String>(0)?,
+                    "name": r.get::<_, String>(1)?,
+                    "system_prompt": r.get::<_, String>(2)?,
+                    "scope": r.get::<_, String>(3)?,
+                    "created_at": r.get::<_, i64>(4)?,
+                    "updated_at": r.get::<_, i64>(5)?
+                }))
+            })?
+            .collect::<Result<Vec<Value>, _>>()?;
+        Ok(rows)
+    }
+
+    pub fn save_profile(
+        &self,
+        owner: &str,
+        id: &str,
+        name: &str,
+        system_prompt: &str,
+        scope: &str,
+    ) -> rusqlite::Result<()> {
+        self.connection.execute(
+            "INSERT INTO assistant_profiles_v1(id, owner, name, system_prompt, scope, created_at, updated_at) \
+             VALUES(?1, ?2, ?3, ?4, ?5, unixepoch(), unixepoch()) \
+             ON CONFLICT(id) DO UPDATE SET \
+                name=excluded.name, \
+                system_prompt=excluded.system_prompt, \
+                scope=excluded.scope, \
+                updated_at=excluded.updated_at \
+             WHERE owner=excluded.owner",
+            params![id, owner, name, system_prompt, scope],
+        )?;
+        Ok(())
+    }
+
+    pub fn delete_profile(&self, owner: &str, id: &str) -> rusqlite::Result<bool> {
+        let count = self.connection.execute(
+            "DELETE FROM assistant_profiles_v1 WHERE id=?1 AND owner=?2",
+            params![id, owner],
+        )?;
+        Ok(count > 0)
+    }
+
+    pub fn purge_all(&self, owner: &str) -> rusqlite::Result<()> {
+        let tx = self.connection.unchecked_transaction()?;
+        tx.execute(
+            "DELETE FROM turns WHERE conversation IN (SELECT id FROM conversations WHERE owner=?1)",
+            params![owner],
+        )?;
+        tx.execute(
+            "DELETE FROM conversation_titles_v1 WHERE id IN (SELECT id FROM conversations WHERE owner=?1)",
+            params![owner],
+        )?;
+        tx.execute(
+            "DELETE FROM conversation_pins_v1 WHERE id IN (SELECT id FROM conversations WHERE owner=?1)",
+            params![owner],
+        )?;
+        tx.execute(
+            "DELETE FROM conversation_tombstones_v1 WHERE owner=?1",
+            params![owner],
+        )?;
+        tx.execute(
+            "DELETE FROM user_preferences_v1 WHERE owner=?1",
+            params![owner],
+        )?;
+        tx.execute(
+            "DELETE FROM assistant_profiles_v1 WHERE owner=?1",
+            params![owner],
+        )?;
+        tx.execute("DELETE FROM conversations WHERE owner=?1", params![owner])?;
+        tx.commit()?;
         Ok(())
     }
 }

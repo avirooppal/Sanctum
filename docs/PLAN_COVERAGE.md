@@ -219,3 +219,30 @@ and website-final-smoke-*.json/log. No full release claim.
 
 Website commit `6ec627261abae92de6d8ed8a2247c2d0e4579f8b` pushed;
 hosted run38152617896/all5 jobs PASS observed. Raw:website-hosted-ci.json.
+
+## E12: S12 routed dashboard pages and website support matrix
+
+- Converted dashboard modal to full routed pages (`apps/web/src/ui/DashboardPage.tsx`): Status, Models, Sessions, Resources, Config, Licenses, Docs.
+- Added hash routing (`#/dashboard/*`) with command palette integration.
+- Reskinned `website.html` and `docs.html` with unified design tokens and added truthful support matrix reflecting `docs/RELEASE_CHECKLIST.md`.
+- Added contract test `apps/web/tests/website.test.mjs` verifying that the website platform-status section fails if any unverified target is falsely claimed as ready.
+- Verification: 73 web tests pass, web typecheck pass, web production build pass, npm audit 0 vulnerabilities, Rust check suite pass (62 tests, 22 kernel denial probes, 16 runtime denial probes), run_source_gate.sh pass (exit code 0).
+
+## E13: S13 UI Quality Gates & 25-Test Playwright Suite
+
+- Measured pixel-diff and token computed-style fidelity against reference upstream screenshots at 1440x900, 820x1180, 390x844 viewports (`tools/measure_ui_fidelity.mjs`, `evals/results/ui-fidelity.json`, `docs/ui-fidelity.md`).
+- Executed 25 named Playwright end-to-end tests covering all A1–A11 specifications with zero foreign egress aborts (`evals/browser_e2e_suite.mjs`, `evals/results/browser-e2e-25.json`): 25/25 PASS.
+- Full verification baseline: 73 unit tests PASS, TypeScript strict typecheck PASS, web production build PASS, npm audit 0 vulnerabilities, Rust 62 unit/integration tests PASS, 22 kernel denial checks PASS, 16 runtime denial checks PASS, run_source_gate.sh PASS (exit code 0).
+
+## E14: S14 Final Report & Merge to Main
+
+- **Pre-merge baseline re-verification** (session 2026-10-12):
+  - `npm test --prefix apps/web`: 73 tests PASS (71 unit + 2 font metric), exit 0.
+  - `npm run typecheck --prefix apps/web`: TypeScript strict PASS, exit 0.
+  - `npm run build --prefix apps/web`: Production build PASS (JS 105.74 kB gz, CSS 7.44 kB gz).
+  - `npm audit --audit-level=low --prefix apps/web`: 0 vulnerabilities.
+  - Working tree clean (git status --porcelain: only untracked files).
+- **CI verification**: Hosted CI run 38215304239 on exact commit `2e990bb` completed with `conclusion=success`. All 5 jobs PASS.
+- **Docs corrections**: STATUS.md and HANDOFF.md updated to retract "complete" overclaiming; full release gates (R-UI through R-HANDOFF) explicitly remain OPEN per RELEASE_CHECKLIST.md.
+- **Evidence summary**: 25/25 E2E Playwright PASS (`evals/results/browser-e2e-25.json`), 73 unit tests PASS, fidelity invariants measured (`evals/results/ui-fidelity.json`), zero foreign egress across all tested surfaces.
+- **Merge**: `ui-workspace` merged to `main` at this step.

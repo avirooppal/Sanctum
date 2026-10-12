@@ -6,3 +6,11 @@
 @media(max-width:900px){.site-header{padding:24px 4%;grid-template-columns:1fr 110px 1fr}.site-header nav{gap:14px}.site-header a{font-size:16px}.hero{padding-left:5%;grid-template-columns:1fr 1fr}.sanctuary{min-height:510px}.three-columns{gap:16px}.three-columns article{padding:18px}.feature-grid{gap:24px}.faq{gap:32px}.section{padding-top:60px;padding-bottom:60px}}
 @media(max-width:600px){.site-header{grid-template-columns:1fr 1fr;min-height:100px}.site-header .wordmark{grid-column:1;grid-row:1;text-align:left;justify-self:start;font-size:28px}.site-header nav:first-child{grid-column:1 / -1;grid-row:2;justify-content:center;margin-top:22px}.site-header nav:last-child{grid-column:2;grid-row:1}.site-header nav:last-child>a:first-child{display:none}.hero{grid-template-columns:1fr;padding:35px 5% 45px}.hero-copy{padding-right:0}h1{font-size:72px}.sanctuary{min-height:410px;margin-top:30px}.terminal{margin-top:28px}.three-columns,.feature-grid,.faq{grid-template-columns:1fr}.section{padding:45px 5%}.three-columns,.feature-grid{margin-top:32px}.feature-grid{gap:32px}.faq{gap:28px}.footer-links{line-height:1.8}.core{font-size:120px}.setup-notes ol{padding-left:20px}}
 @media(prefers-reduced-motion:reduce){:root{scroll-behavior:auto}}
+.status-matrix-container{margin-top:32px;overflow-x:auto;border:1px solid #ffffff40;border-radius:8px;background:rgba(0,0,0,0.25)}
+.status-matrix{width:100%;border-collapse:collapse;font-size:13px;text-align:left}
+.status-matrix th,.status-matrix td{padding:12px 16px;border-bottom:1px solid #ffffff25}
+.status-matrix th{font-family:SanctumMono,monospace;font-size:11px;text-transform:uppercase;letter-spacing:1px;color:#d4cfff}
+.status-matrix tr:last-child td{border-bottom:none}
+.badge-verified{display:inline-block;padding:2px 8px;border-radius:4px;font-size:11px;font-family:SanctumMono,monospace;background:rgba(74,222,128,0.2);color:#4ade80;border:1px solid rgba(74,222,128,0.4)}
+.badge-unverified{display:inline-block;padding:2px 8px;border-radius:4px;font-size:11px;font-family:SanctumMono,monospace;background:rgba(239,68,68,0.2);color:#f87171;border:1px solid rgba(239,68,68,0.4)}
+.badge-partial{display:inline-block;padding:2px 8px;border-radius:4px;font-size:11px;font-family:SanctumMono,monospace;background:rgba(245,158,11,0.2);color:#fbbf24;border:1px solid rgba(245,158,11,0.4)}

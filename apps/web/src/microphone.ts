@@ -1,4 +1,4 @@
-import {PcmCaptureBuffer} from './pcm';
+import {PcmCaptureBuffer} from './pcm.js';
 
 export class MicrophoneCapture {
   private generation = 0;

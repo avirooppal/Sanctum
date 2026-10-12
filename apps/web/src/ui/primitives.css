@@ -15,7 +15,7 @@
   border:1px solid transparent;border-radius:2.5px;padding:6px 12px;
   font-size:12px;line-height:16px;font-weight:500;cursor:pointer;
   color:var(--ui-text-on-accent);background:var(--ui-accent);
-  transition:background-color 100ms;
+  transition:background-color 180ms ease-out;
 }
 [data-ui-button="outline"], [data-ui-button="quiet"] {
   color:var(--ui-text-primary);background:var(--ui-surface);
@@ -31,4 +31,7 @@
 .ui-dialog-heading { display:flex;align-items:center;justify-content:space-between;gap:16px;margin-bottom:16px; }
 .ui-dialog-heading h2 { font-size:18px;line-height:24px;margin:0; }
 .ui-licenses { white-space:pre-wrap;overflow-wrap:anywhere;font:12px/1.6 ui-monospace,monospace;margin:0; }
+@media (pointer: coarse) {
+  [data-ui-button], [data-ui-input] { min-height: 44px; }
+}
 @media (prefers-reduced-motion:reduce) { [data-ui-button] { transition:none; } }
