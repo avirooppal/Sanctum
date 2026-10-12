@@ -7,11 +7,13 @@ export function AppShell({
   sidebar,
   header,
   rightRail,
+  statusBar,
   children,
 }: {
   sidebar: ReactNode;
   header: ReactNode;
   rightRail?: ReactNode;
+  statusBar?: ReactNode;
   children: ReactNode;
 }) {
   const [mobile,setMobile]=useState(()=>typeof matchMedia === 'function' && matchMedia(MOBILE_QUERY).matches);
@@ -63,6 +65,7 @@ export function AppShell({
         <div className="app-body flex-1">{children}</div>
         {rightRail}
       </div>
+      {statusBar}
     </main>
   </div>;
 }

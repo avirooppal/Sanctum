@@ -8,6 +8,7 @@ import { SanctumClient, type Message, type Model } from './api';
 import { ChatRun } from './chat-run';
 import { ChatView } from './ui/ChatView';
 import { RightRail } from './ui/RightRail';
+import { StatusBar } from './ui/StatusBar';
 import { KnowledgePanel } from './KnowledgePanel';
 import { HistoryPanel } from './HistoryPanel';
 import './ui/knowledge.css';
@@ -486,6 +487,17 @@ function App() {
               isOpen={rightRailOpen}
               onClose={() => setRightRailOpen(false)}
               onCitationClick={() => setKnowledgeOpen(true)}
+            />
+          ) : undefined
+        }
+        statusBar={
+          token ? (
+            <StatusBar
+              api={api}
+              conversation={conversation}
+              activeModel={model}
+              models={modelObjects}
+              onSelectModel={setModel}
             />
           ) : undefined
         }
