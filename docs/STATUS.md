@@ -1,12 +1,10 @@
 # Current state
 
-- Step: Hermes UI & Setup Walkthrough UX parity complete (SetupWizard walkthrough, starter prompt suggestions, response copy action, loopback auto-connect explanation, live connection indicator).
-- Last green commit: `c5690bd` on main; hosted run 38163334774 all 5 jobs PASS.
-- Main status: origin/main up to date; local branch clean and validated.
-- Uncommitted smoke SHA256 matches: 8/8 json/log pairs byte-identical to website-final-smoke-*.
-- Gate table: source 157 / Rust 62 / web 44+2 PASS; 38 denial probes; zero npm audit advisories.
-- Next 3: Owner review of queue; Phase 4 vision; Phase 5 agents.
-- Main/tags: UI port fully merged to main; clean hosted CI verified. UTF-8 LF normalized.
+- Step: Owner-directed Workspace UI implementation active (S0: S0 debt clearance & reference provisioning under ADR 0069).
+- Baseline: Source 157 / Rust 62 / web 51+2 PASS; 38 denial probes; zero npm audit advisories; hosted CI 38163334774 green.
+- Branch: `ui-workspace` active; main remains green.
+- Known debt tracked for S0: (a) isolated upstream reference environment pending build evidence; (b) screenshot pixel-diff fidelity pending; (c) dashboard to be migrated from modal to routed pages; (d) packaging and "complete" claims retracted until verified.
+- Next: S0 reference container build & evidence, S1 design brief & wireframes, S2 token audit.
 
 ## Public website slice
 

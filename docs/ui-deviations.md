@@ -54,4 +54,9 @@ The owner directed a fully modular, customisable, aesthetic, and UX-friendly wor
   - Third-party dynamic plugin loading: Excluded by design; first-party modularity only.
   - User-supplied arbitrary CSS / script injection: Excluded; custom themes are validated against `tokens.schema.json`, rejecting `url()`, `@import`, and script tags.
   - Human participant research: Marked UNVERIFIED as autonomous agents cannot simulate real human subjects; provided 5-participant usability testing script in `docs/design/UX_ACCEPTANCE.md` for owner execution.
-
+  - Messaging channels (Slack, Discord, Telegram, WhatsApp): Omitted by design; they send conversation text off-device to third-party services and have no local backend.
+  - Nous Portal: Omitted by design; commercial multi-tenant cloud portal requiring external accounts; violates Sanctum's on-device zero-telemetry invariant.
+  - Cloud provider / API key forms: Omitted by design; Sanctum runs local inference engines only; pasting cloud keys violates default-deny privacy by construction.
+  - Cron scheduling: Omitted by design; speculative automation surface with no local backend.
+  - Interactive terminal / PTY: Omitted by design; direct arbitrary host command execution represents a sandbox-escape surface.
+  - Remote gateway / VPS setup: Omitted by design; Sanctum is single-owner on-device and LAN mode only; remote VPS setups are out of scope.
