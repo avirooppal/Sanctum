@@ -21,6 +21,7 @@ import { AppShell } from './ui/AppShell';
 import './ui/shell.css';
 import { SafeMarkdown } from './ui/SafeMarkdown';
 import { DashboardPanel } from './DashboardPanel';
+import { DashboardPage, type DashboardSubpage } from './ui/DashboardPage';
 import { SetupWizard } from './SetupWizard';
 
 import { ThemeControls } from './ui/ThemeControls';
@@ -63,13 +64,55 @@ function App() {
   const [conversation, setConversation] = useState<string>(crypto.randomUUID());
   const [historyRevision, setHistoryRevision] = useState(0);
 
-  // Overlays
+  // Overlays & Routing
   const [licensesOpen, setLicensesOpen] = useState(false);
   const [knowledgeOpen, setKnowledgeOpen] = useState(false);
-  const [dashboardOpen, setDashboardOpen] = useState(false);
+  const [route, setRoute] = useState<'workspace' | 'dashboard'>('workspace');
+  const [dashboardSubpage, setDashboardSubpage] = useState<DashboardSubpage>('status');
   const [settingsOpen, setSettingsOpen] = useState(false);
   const [paletteOpen, setPaletteOpen] = useState(false);
   const [rightRailOpen, setRightRailOpen] = useState(false);
+
+  useEffect(() => {
+    const syncRouteFromHash = () => {
+      const hash = typeof window !== 'undefined' ? window.location.hash : '';
+      if (hash.startsWith('#/dashboard')) {
+        setRoute('dashboard');
+        const parts = hash.split('/');
+        const sub = parts[2] as DashboardSubpage;
+        if (['status', 'models', 'sessions', 'resources', 'config', 'licenses'].includes(sub)) {
+          setDashboardSubpage(sub);
+        } else {
+          setDashboardSubpage('status');
+        }
+      } else {
+        setRoute('workspace');
+      }
+    };
+
+    syncRouteFromHash();
+    if (typeof window !== 'undefined') {
+      window.addEventListener('hashchange', syncRouteFromHash);
+      return () => window.removeEventListener('hashchange', syncRouteFromHash);
+    }
+  }, []);
+
+  const navigateToDashboard = (subpage: DashboardSubpage = 'status') => {
+    if (typeof window !== 'undefined') {
+      window.location.hash = `#/dashboard/${subpage}`;
+    } else {
+      setRoute('dashboard');
+      setDashboardSubpage(subpage);
+    }
+  };
+
+  const navigateToWorkspace = () => {
+    if (typeof window !== 'undefined') {
+      window.location.hash = '#/';
+    } else {
+      setRoute('workspace');
+    }
+  };
 
   // Preferences & Capabilities
   const [preferences, setPreferences] = useState<UserPreferences>(DEFAULT_PREFERENCES);
@@ -459,7 +502,37 @@ function App() {
       id: 'dashboard',
       category: 'Navigation',
       title: STRINGS.navigation.dashboard,
-      onSelect: () => setDashboardOpen(true),
+      onSelect: () => navigateToDashboard('status'),
+    },
+    {
+      id: 'dashboard_models',
+      category: 'Navigation',
+      title: 'Dashboard: Models',
+      onSelect: () => navigateToDashboard('models'),
+    },
+    {
+      id: 'dashboard_sessions',
+      category: 'Navigation',
+      title: 'Dashboard: Sessions',
+      onSelect: () => navigateToDashboard('sessions'),
+    },
+    {
+      id: 'dashboard_resources',
+      category: 'Navigation',
+      title: 'Dashboard: Resources',
+      onSelect: () => navigateToDashboard('resources'),
+    },
+    {
+      id: 'dashboard_config',
+      category: 'Navigation',
+      title: 'Dashboard: Config',
+      onSelect: () => navigateToDashboard('config'),
+    },
+    {
+      id: 'dashboard_licenses',
+      category: 'Navigation',
+      title: 'Dashboard: Licenses',
+      onSelect: () => navigateToDashboard('licenses'),
     },
     {
       id: 'knowledge',
@@ -474,6 +547,47 @@ function App() {
       onSelect: () => setLicensesOpen(true),
     },
   ], [preferences.mode]);
+
+  if (route === 'dashboard') {
+    return (
+      <div data-density={preferences.density} style={{ fontSize: `${preferences.fontSizeScale}%` }}>
+        <DashboardPage
+          token={token}
+          activeSubpage={dashboardSubpage}
+          onNavigateSubpage={navigateToDashboard}
+          onBackToWorkspace={navigateToWorkspace}
+          api={api}
+          thirdPartyNoticesText={thirdPartyNotices}
+          activeModel={model}
+        />
+        <CommandPalette
+          isOpen={paletteOpen}
+          onClose={() => setPaletteOpen(false)}
+          actions={commandActions}
+        />
+        <SettingsModal
+          isOpen={settingsOpen}
+          onClose={() => setSettingsOpen(false)}
+          preferences={preferences}
+          onUpdatePreferences={updatePreferences}
+          onResetPreferences={() => updatePreferences(DEFAULT_PREFERENCES)}
+          api={api}
+          token={token}
+          conversationId={conversation}
+          messages={messages}
+          models={modelObjects}
+          activeProfileId={activeProfileId}
+          onSelectProfile={id => setActiveProfileId(id)}
+          onPurgeComplete={() => {
+            setConversation(crypto.randomUUID());
+            setMessages([]);
+            refresh();
+          }}
+          thirdPartyNoticesText={thirdPartyNotices}
+        />
+      </div>
+    );
+  }
 
   return (
     <div data-density={preferences.density} style={{ fontSize: `${preferences.fontSizeScale}%` }}>
@@ -513,7 +627,7 @@ function App() {
               Cloud connections disabled<br />
               <div className="flex flex-wrap gap-2 my-2">
                 {token && capabilities.includes('dashboard') && (
-                  <Button variant="outline" onClick={() => setDashboardOpen(true)}>
+                  <Button variant="outline" onClick={() => navigateToDashboard('status')}>
                     Dashboard
                   </Button>
                 )}
@@ -727,9 +841,6 @@ function App() {
       </AppShell>
 
       {/* Global Overlays */}
-      <Dialog open={dashboardOpen} title="Platform Dashboard" onClose={() => setDashboardOpen(false)}>
-        {dashboardOpen && <DashboardPanel token={token} />}
-      </Dialog>
       <Dialog open={knowledgeOpen} title="Knowledge" onClose={() => setKnowledgeOpen(false)}>
         {knowledgeOpen && <KnowledgePanel api={api} />}
       </Dialog>

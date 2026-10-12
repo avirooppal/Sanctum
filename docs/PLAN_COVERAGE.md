@@ -219,3 +219,11 @@ and website-final-smoke-*.json/log. No full release claim.
 
 Website commit `6ec627261abae92de6d8ed8a2247c2d0e4579f8b` pushed;
 hosted run38152617896/all5 jobs PASS observed. Raw:website-hosted-ci.json.
+
+## E12: S12 routed dashboard pages and website support matrix
+
+- Converted dashboard modal to full routed pages (`apps/web/src/ui/DashboardPage.tsx`): Status, Models, Sessions, Resources, Config, Licenses, Docs.
+- Added hash routing (`#/dashboard/*`) with command palette integration.
+- Reskinned `website.html` and `docs.html` with unified design tokens and added truthful support matrix reflecting `docs/RELEASE_CHECKLIST.md`.
+- Added contract test `apps/web/tests/website.test.mjs` verifying that the website platform-status section fails if any unverified target is falsely claimed as ready.
+- Verification: 73 web tests pass, web typecheck pass, web production build pass, npm audit 0 vulnerabilities, Rust check suite pass (62 tests, 22 kernel denial probes, 16 runtime denial probes), run_source_gate.sh pass (exit code 0).

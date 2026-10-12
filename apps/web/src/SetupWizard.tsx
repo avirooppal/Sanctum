@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
-import { Button } from './ui/primitives';
-import { STRINGS } from './ui/strings';
+import { Button } from './ui/primitives.js';
+import { STRINGS } from './ui/strings.js';
 
 export interface SetupWizardProps {
   onComplete: (token: string, initialPrompt?: string) => void;

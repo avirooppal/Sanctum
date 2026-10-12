@@ -61,7 +61,70 @@
         <ol><li>From the prepared bundle directory, run <code>bin/sanctum-runtime --config profiles/runtime-cpu.json</code>.</li><li>Open the loopback address printed by the runtime (default port 8765). Startup must pass artifact verification and egress self-tests.</li><li>Enter the key from the printed token-file path. Select an available model and send your first message.</li></ol>
         <p>These instructions assume provisioned artifacts; they are not a one-line installer. The source checkout README.md includes dependency installation and model provisioning commands. Never share your local key.</p>
       </section>
-      <section class="section release" id="status" aria-labelledby="status-title"><span class="eyebrow">HONEST BY DESIGN</span><h2 id="status-title">A working foundation.<br>Not a finished release.</h2><p>Full voice, vision, agents, LAN TLS, encryption and signed packaging are still pending. The repository's docs/STATUS.md, docs/PLAN_COVERAGE.md and docs/RELEASE_CHECKLIST.md track evidence and remaining gates.</p><a class="button" href="/">Explore the local application ↗</a></section>
+      <section class="section release" id="status" aria-labelledby="status-title">
+        <span class="eyebrow">HONEST BY DESIGN · SUPPORT MATRIX</span>
+        <h2 id="status-title">A working foundation.<br>Not a finished release.</h2>
+        <p class="lead">Platform capabilities and support boundaries read directly from verified session artifacts and <code>docs/RELEASE_CHECKLIST.md</code>. Native packages, hardware voice, vision, and desktop installers remain unverified release blockers.</p>
+        
+        <div class="status-matrix-container">
+          <table class="status-matrix">
+            <thead>
+              <tr>
+                <th>Platform / Scope</th>
+                <th>Status</th>
+                <th>Support Boundary &amp; Evidence</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr>
+                <td><strong>Linux x86_64, WSL Ubuntu 22.04</strong></td>
+                <td><span class="badge-verified">Verified (Dev)</span></td>
+                <td>Confined CPU runtime, local chat, RAG, and audio file speech. Development configuration with pre-provisioned models.</td>
+              </tr>
+              <tr>
+                <td><strong>Windows Host UI → Gateway</strong></td>
+                <td><span class="badge-verified">Verified (Dev)</span></td>
+                <td>Chromium UI running against local loopback gateway. Full chat, tabs, knowledge, history, and dictation.</td>
+              </tr>
+              <tr>
+                <td><strong>Hosted Source CI</strong></td>
+                <td><span class="badge-verified">Verified (CI)</span></td>
+                <td>Ubuntu/macOS/Windows source gates and Rust foundations pass on GitHub Actions.</td>
+              </tr>
+              <tr>
+                <td><strong>Native Windows Desktop (.exe)</strong></td>
+                <td><span class="badge-unverified">UNVERIFIED</span></td>
+                <td>Native Windows runtime and desktop installer not yet available. Release blocker.</td>
+              </tr>
+              <tr>
+                <td><strong>Native macOS Desktop / MLX</strong></td>
+                <td><span class="badge-unverified">UNVERIFIED</span></td>
+                <td>Native containment, Apple Silicon MLX adapter, and macOS desktop package pending.</td>
+              </tr>
+              <tr>
+                <td><strong>T1 Hardware Voice Pipeline</strong></td>
+                <td><span class="badge-unverified">UNVERIFIED</span></td>
+                <td>Full realtime WS voice, streaming TTS, and barge-in pending. Physical audio unverified.</td>
+              </tr>
+              <tr>
+                <td><strong>NVIDIA GPU Serving (vLLM/SGLang)</strong></td>
+                <td><span class="badge-unverified">UNVERIFIED</span></td>
+                <td>Hardware GPU adapter not implemented; no serving claim.</td>
+              </tr>
+              <tr>
+                <td><strong>Air-gapped LAN Release Bundle</strong></td>
+                <td><span class="badge-partial">Partial</span></td>
+                <td>Signed offline distribution bundle, TLS, and crypto storage pending.</td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+
+        <div class="actions" style="margin-top: 24px;">
+          <a class="button" href="/">Explore the local application ↗</a>
+          <a class="button secondary" href="/docs.html">Read technical docs →</a>
+        </div>
+      </section>
     </main>
     <footer><div class="footer-mark">SANCTUM</div><div class="footer-links"><span>YOUR INTELLIGENCE. YOUR MACHINE.</span><a href="#questions">Privacy &amp; questions</a><a href="#status">Release status</a><span>OPEN SOURCE · MIT</span></div></footer>
   </div>

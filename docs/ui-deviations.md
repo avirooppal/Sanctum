@@ -60,3 +60,11 @@ The owner directed a fully modular, customisable, aesthetic, and UX-friendly wor
   - Cron scheduling: Omitted by design; speculative automation surface with no local backend.
   - Interactive terminal / PTY: Omitted by design; direct arbitrary host command execution represents a sandbox-escape surface.
   - Remote gateway / VPS setup: Omitted by design; Sanctum is single-owner on-device and LAN mode only; remote VPS setups are out of scope.
+
+## Dashboard Routed Pages & Website Support Matrix (S12)
+- **Shipped & Verified**:
+  - Dashboard converted from a modal dialog to routed pages (`apps/web/src/ui/DashboardPage.tsx`) mirroring the Hermes reference dashboard: Status, Models, Sessions, Resources (queue lanes, process/resident RSS memory estimate), Config (only real existing local fields), Licenses (in-app third-party notices), and Docs link (`/docs.html`).
+  - Hash routing (`#/dashboard/status`, `#/dashboard/models`, `#/dashboard/sessions`, `#/dashboard/resources`, `#/dashboard/config`, `#/dashboard/licenses`, `#/` for chat workspace) with back/forward navigation support and command palette direct navigation.
+  - Reskinned `website.html` and `docs.html` with unified token-based styles (`website.css`), including an honest platform-status section displaying the support matrix and release blockers.
+  - Verification test in `apps/web/tests/website.test.mjs` verifies that the public website platform-status section reads only verified session artifacts and fails if it claims any unverified platform from `docs/RELEASE_CHECKLIST.md` as ready.
+  - Web unit tests (73 passing), web typecheck (pass), web build (pass), npm audit (0 vulnerabilities), Rust foundation checks (62 pass, 22 kernel denial probes, 16 runtime denial probes), and source gate (exit code 0).
