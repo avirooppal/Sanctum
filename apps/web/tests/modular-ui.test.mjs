@@ -182,6 +182,13 @@ test('Centralized string table contains required top-level categories and non-em
   assert.ok(STRINGS.app.name);
   assert.ok(STRINGS.onboarding.egressStatement.includes('0 outbound connections'));
   assert.ok(STRINGS.settings.contrastPass);
+  assert.ok(STRINGS.settings.profiles);
+  assert.ok(STRINGS.settings.fullPurge);
+  assert.ok(STRINGS.shell.presetQuad);
+  assert.ok(STRINGS.tabs.quadPane);
+  assert.ok(STRINGS.rightRail.artifacts);
+  assert.ok(STRINGS.statusBar.offlineBadge);
+  assert.ok(STRINGS.dashboard.status);
   assert.ok(STRINGS.errors.engineOfflineTitle);
   assert.ok(STRINGS.commandPalette.searchPlaceholder);
 });
