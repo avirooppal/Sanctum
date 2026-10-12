@@ -1,10 +1,10 @@
 # Current state
 
-- Step: Owner-directed Workspace UI implementation active (S0: S0 debt clearance & reference provisioning under ADR 0069).
-- Baseline: Source 157 / Rust 62 / web 51+2 PASS; 38 denial probes; zero npm audit advisories; hosted CI 38163334774 green.
-- Branch: `ui-workspace` active; main remains green.
-- Known debt tracked for S0: (a) isolated upstream reference environment pending build evidence; (b) screenshot pixel-diff fidelity pending; (c) dashboard to be migrated from modal to routed pages; (d) packaging and "complete" claims retracted until verified.
-- Next: S0 reference container build & evidence, S1 design brief & wireframes, S2 token audit.
+- Step: Owner-directed Workspace UI S14 final report and merge to main (ADR 0069).
+- Baseline: Source 157 / Rust 62 / web 73 PASS; 25 E2E Playwright PASS; 38 denial probes; zero npm audit advisories; hosted CI run 38215304239 green on exact commit `2e990bb`.
+- Branch: `ui-workspace` at `2e990bb`; all S0–S13 implemented and verified; merge to main pending.
+- Resolved debt: (a) reference environment built with lockfile hashes and 6 screenshots; (b) pixel-diff and computed-style fidelity measured at supplementary invariant level (ADR 0067), not upstream exact-match; (c) dashboard migrated from modal to routed pages (#/dashboard/*); (d) "complete" claims retracted — UI workspace scope is implemented but full release gates (R-UI through R-HANDOFF) remain OPEN per RELEASE_CHECKLIST.md.
+- Next: merge to main, rerun all gates on main, update coverage.
 
 ## Public website slice
 
