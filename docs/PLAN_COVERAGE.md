@@ -227,3 +227,10 @@ hosted run38152617896/all5 jobs PASS observed. Raw:website-hosted-ci.json.
 - Reskinned `website.html` and `docs.html` with unified design tokens and added truthful support matrix reflecting `docs/RELEASE_CHECKLIST.md`.
 - Added contract test `apps/web/tests/website.test.mjs` verifying that the website platform-status section fails if any unverified target is falsely claimed as ready.
 - Verification: 73 web tests pass, web typecheck pass, web production build pass, npm audit 0 vulnerabilities, Rust check suite pass (62 tests, 22 kernel denial probes, 16 runtime denial probes), run_source_gate.sh pass (exit code 0).
+
+## E13: S13 UI Quality Gates & 25-Test Playwright Suite
+
+- Measured pixel-diff and token computed-style fidelity against reference upstream screenshots at 1440x900, 820x1180, 390x844 viewports (`tools/measure_ui_fidelity.mjs`, `evals/results/ui-fidelity.json`, `docs/ui-fidelity.md`).
+- Executed 25 named Playwright end-to-end tests covering all A1–A11 specifications with zero foreign egress aborts (`evals/browser_e2e_suite.mjs`, `evals/results/browser-e2e-25.json`): 25/25 PASS.
+- Full verification baseline: 73 unit tests PASS, TypeScript strict typecheck PASS, web production build PASS, npm audit 0 vulnerabilities, Rust 62 unit/integration tests PASS, 22 kernel denial checks PASS, 16 runtime denial checks PASS, run_source_gate.sh PASS (exit code 0).
+

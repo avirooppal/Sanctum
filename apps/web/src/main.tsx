@@ -56,7 +56,7 @@ function App() {
   const [prompt, setPrompt] = useState('');
   const [busy, setBusy] = useState(false);
   const [chatStatus, setChatStatus] = useState('');
-  const [showWizard, setShowWizard] = useState(false);
+  const [showWizard, setShowWizard] = useState(() => typeof window !== 'undefined' && window.location.search.includes('wizard=1'));
   const [copiedIndex, setCopiedIndex] = useState<number | null>(null);
   const chatRun = useMemo(() => new ChatRun(), []);
   useEffect(() => () => chatRun.stop(), [chatRun]);

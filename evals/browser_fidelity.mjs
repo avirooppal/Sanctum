@@ -67,14 +67,13 @@ try {
   assert(Math.abs(sidebarWidth - 237) <= 2, `Sidebar width must match 237px rail token (observed: ${sidebarWidth})`);
   fidelityChecks.push('sidebar_width_token_237px');
 
-  // 3. Open Platform Dashboard Modal & Verify Real Metrics
+  // 3. Open Platform Dashboard Page & Verify Real Metrics
   await page.getByRole('button', {name: 'Dashboard'}).click();
-  await page.getByRole('dialog', {name: 'Platform Dashboard'}).waitFor();
-  await page.getByText('Local Platform Status').waitFor();
+  await page.getByText('Runtime Overview & Status').waitFor();
   await page.getByText('Engine Dispatch Queues').waitFor();
-  fidelityChecks.push('dashboard_dialog_metrics_rendered');
-  await page.keyboard.press('Escape');
-  await page.getByRole('dialog', {name: 'Platform Dashboard'}).waitFor({state: 'hidden'});
+  fidelityChecks.push('dashboard_routed_page_metrics_rendered');
+  await page.getByRole('button', {name: '← Chat'}).click();
+  await page.getByLabel('Model').waitFor();
 
   // 4. Open Knowledge Modal & Verify Invariants
   await page.getByRole('button', {name: 'Knowledge'}).click();

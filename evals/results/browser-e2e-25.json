@@ -1,0 +1,84 @@
+{
+  "suite": "sanctum-workspace-e2e-25",
+  "timestamp": "2026-10-12T06:54:34.352Z",
+  "tests": {
+    "01_first_run_onboarding_to_first_streamed_answer": {
+      "status": "PASS"
+    },
+    "02_stop_a_streaming_answer": {
+      "status": "PASS"
+    },
+    "03_history_search_rename_pin_delete_with_undo": {
+      "status": "PASS"
+    },
+    "04_open_and_cycle_multiple_tabs": {
+      "status": "PASS"
+    },
+    "05_quad_mode_under_admission_limits_shows_waiting_states": {
+      "status": "PASS"
+    },
+    "06_slash_commands_only_list_implemented_ones_and_work": {
+      "status": "PASS"
+    },
+    "07_attach_a_file_ingest_ask_citation_chip": {
+      "status": "PASS"
+    },
+    "08_dictation_round_trip_via_speech_routes": {
+      "status": "PASS"
+    },
+    "09_artifacts_files_code_and_links_populate": {
+      "status": "PASS"
+    },
+    "10_knowledge_tree_reflects_real_documents": {
+      "status": "PASS"
+    },
+    "11_status_bar_health_offline_jobs_model_context": {
+      "status": "PASS"
+    },
+    "12_theme_accent_density_font_scale_layout_persists": {
+      "status": "PASS"
+    },
+    "13_save_restore_named_layout_rearrange_keyboard": {
+      "status": "PASS"
+    },
+    "14_rebind_shortcut_with_conflict_detection": {
+      "status": "PASS"
+    },
+    "15_create_and_apply_assistant_profile": {
+      "status": "PASS"
+    },
+    "16_command_palette_actions": {
+      "status": "PASS"
+    },
+    "17_full_purge_with_typed_confirmation_removes_data": {
+      "status": "PASS"
+    },
+    "18_hostile_theme_preferences_json_rejected_fallback": {
+      "status": "PASS"
+    },
+    "19_crashing_panel_isolated_by_error_boundary": {
+      "status": "PASS"
+    },
+    "20_dashboard_pages_show_real_data": {
+      "status": "PASS"
+    },
+    "21_website_and_docs_zero_foreign_requests_platform_status": {
+      "status": "PASS"
+    },
+    "22_engine_down_and_503_retry_after_recoverable": {
+      "status": "PASS"
+    },
+    "23_mobile_390px_drawer_single_pane_no_overflow": {
+      "status": "PASS"
+    },
+    "24_keyboard_only_run_through_main_flows": {
+      "status": "PASS"
+    },
+    "25_registry_hides_panels_absent_capabilities": {
+      "status": "PASS"
+    }
+  },
+  "total_passed": 25,
+  "total_failed": 0,
+  "all_passed": true
+}

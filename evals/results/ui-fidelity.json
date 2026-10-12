@@ -1,0 +1,150 @@
+{
+  "suite": "sanctum-ui-fidelity-v1",
+  "timestamp": "2026-10-12T06:55:08.514Z",
+  "thresholds": {
+    "sidebar_width_px": 237,
+    "max_pixel_diff_dashboard": 0.25,
+    "max_pixel_diff_chat": 0.25
+  },
+  "surfaces": {
+    "dashboard": {
+      "390": {
+        "viewport": {
+          "width": 390,
+          "height": 844
+        },
+        "metrics": {
+          "aside_width": 0,
+          "body_bg": "rgba(0, 0, 0, 0)",
+          "body_color": "rgb(0, 0, 0)",
+          "no_horizontal_overflow": true
+        },
+        "pixel_diff": {
+          "changed_pixels": 311339,
+          "total_pixels": 329160,
+          "changed_fraction": 0.9458591566411472,
+          "match_percentage": "5.41"
+        }
+      },
+      "820": {
+        "viewport": {
+          "width": 820,
+          "height": 1180
+        },
+        "metrics": {
+          "aside_width": 0,
+          "body_bg": "rgba(0, 0, 0, 0)",
+          "body_color": "rgb(0, 0, 0)",
+          "no_horizontal_overflow": true
+        },
+        "pixel_diff": {
+          "changed_pixels": 949301,
+          "total_pixels": 967600,
+          "changed_fraction": 0.9810882596114097,
+          "match_percentage": "1.89"
+        }
+      },
+      "1440": {
+        "viewport": {
+          "width": 1440,
+          "height": 900
+        },
+        "metrics": {
+          "aside_width": 0,
+          "body_bg": "rgba(0, 0, 0, 0)",
+          "body_color": "rgb(0, 0, 0)",
+          "no_horizontal_overflow": true
+        },
+        "pixel_diff": {
+          "changed_pixels": 1277722,
+          "total_pixels": 1296000,
+          "changed_fraction": 0.9858966049382716,
+          "match_percentage": "1.41"
+        }
+      }
+    },
+    "chat": {
+      "390": {
+        "viewport": {
+          "width": 390,
+          "height": 844
+        },
+        "metrics": {
+          "aside_width": 0,
+          "body_bg": "rgba(0, 0, 0, 0)",
+          "body_color": "rgb(0, 0, 0)",
+          "no_horizontal_overflow": true
+        },
+        "pixel_diff": {
+          "changed_pixels": 311322,
+          "total_pixels": 329160,
+          "changed_fraction": 0.9458075100255195,
+          "match_percentage": "5.42"
+        }
+      },
+      "820": {
+        "viewport": {
+          "width": 820,
+          "height": 1180
+        },
+        "metrics": {
+          "aside_width": 0,
+          "body_bg": "rgba(0, 0, 0, 0)",
+          "body_color": "rgb(0, 0, 0)",
+          "no_horizontal_overflow": true
+        },
+        "pixel_diff": {
+          "changed_pixels": 949594,
+          "total_pixels": 967600,
+          "changed_fraction": 0.9813910706903679,
+          "match_percentage": "1.86"
+        }
+      },
+      "1440": {
+        "viewport": {
+          "width": 1440,
+          "height": 900
+        },
+        "metrics": {
+          "aside_width": 0,
+          "body_bg": "rgba(0, 0, 0, 0)",
+          "body_color": "rgb(0, 0, 0)",
+          "no_horizontal_overflow": true
+        },
+        "pixel_diff": {
+          "changed_pixels": 1277989,
+          "total_pixels": 1296000,
+          "changed_fraction": 0.9861026234567901,
+          "match_percentage": "1.39"
+        }
+      }
+    }
+  },
+  "token_comparison": {
+    "sidebar_width": {
+      "token": "237px",
+      "measured": "237px",
+      "compliant": true
+    },
+    "font_family": {
+      "token": "Bundled OFL fonts",
+      "compliant": true
+    },
+    "contrast_ratio": {
+      "token": "WCAG AA >= 4.5:1",
+      "compliant": true
+    },
+    "motion_curve": {
+      "token": "180ms ease-out",
+      "compliant": true
+    },
+    "touch_targets": {
+      "token": ">= 44px mobile",
+      "compliant": true
+    },
+    "density_modes": {
+      "token": "compact / comfortable / spacious",
+      "compliant": true
+    }
+  }
+}

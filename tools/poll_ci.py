@@ -40,10 +40,12 @@ def check_ci(branch="ui-workspace", target_sha=None):
 
 
 if __name__ == "__main__":
+    import time
+
     target = sys.argv[1] if len(sys.argv) > 1 else None
-    done, run = check_ci(target_sha=target)
-    if done:
-        print("CI SUCCESS!")
-        sys.exit(0)
-    else:
-        sys.exit(2)
+    while True:
+        done, run = check_ci(target_sha=target)
+        if done:
+            print("CI SUCCESS!")
+            sys.exit(0)
+        time.sleep(15)
