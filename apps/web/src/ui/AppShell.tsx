@@ -3,7 +3,17 @@ import {Button} from './primitives.js';
 
 const MOBILE_QUERY='(max-width:639.98px)';
 
-export function AppShell({sidebar,header,children}:{sidebar:ReactNode;header:ReactNode;children:ReactNode}){
+export function AppShell({
+  sidebar,
+  header,
+  rightRail,
+  children,
+}: {
+  sidebar: ReactNode;
+  header: ReactNode;
+  rightRail?: ReactNode;
+  children: ReactNode;
+}) {
   const [mobile,setMobile]=useState(()=>typeof matchMedia === 'function' && matchMedia(MOBILE_QUERY).matches);
   const [open,setOpen]=useState(false);
   const opener=useRef<HTMLButtonElement>(null);
@@ -49,7 +59,10 @@ export function AppShell({sidebar,header,children}:{sidebar:ReactNode;header:Rea
           aria-expanded={open} aria-controls="sanctum-navigation" onClick={()=>setOpen(true)}>☰</button>
         {header}
       </header>
-      <div className="app-body">{children}</div>
+      <div className="flex flex-1 min-h-0 overflow-hidden">
+        <div className="app-body flex-1">{children}</div>
+        {rightRail}
+      </div>
     </main>
   </div>;
 }

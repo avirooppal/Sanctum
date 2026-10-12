@@ -7,6 +7,7 @@ import { MeetingPanel } from './MeetingPanel';
 import { SanctumClient, type Message, type Model } from './api';
 import { ChatRun } from './chat-run';
 import { ChatView } from './ui/ChatView';
+import { RightRail } from './ui/RightRail';
 import { KnowledgePanel } from './KnowledgePanel';
 import { HistoryPanel } from './HistoryPanel';
 import './ui/knowledge.css';
@@ -67,6 +68,7 @@ function App() {
   const [dashboardOpen, setDashboardOpen] = useState(false);
   const [settingsOpen, setSettingsOpen] = useState(false);
   const [paletteOpen, setPaletteOpen] = useState(false);
+  const [rightRailOpen, setRightRailOpen] = useState(false);
 
   // Preferences & Capabilities
   const [preferences, setPreferences] = useState<UserPreferences>(DEFAULT_PREFERENCES);
@@ -162,6 +164,12 @@ function App() {
       if ((e.ctrlKey || e.metaKey) && e.key === '/') {
         e.preventDefault();
         composerRef.current?.focus();
+        return;
+      }
+      // Toggle Right Rail (Ctrl+J or Cmd+J)
+      if ((e.ctrlKey || e.metaKey) && e.key.toLowerCase() === 'j') {
+        e.preventDefault();
+        setRightRailOpen(open => !open);
         return;
       }
     };
@@ -353,6 +361,13 @@ function App() {
       title: 'Clear Conversation',
       onSelect: () => setMessages([]),
     },
+    {
+      id: 'toggle_right_rail',
+      category: 'Layout',
+      title: STRINGS.shell.toggleRightRail,
+      shortcut: 'Ctrl+J',
+      onSelect: () => setRightRailOpen(open => !open),
+    },
   ], []);
 
   return (
@@ -446,7 +461,33 @@ function App() {
                 </span>
               </div>
             )}
+            {token && (
+              <button
+                type="button"
+                onClick={() => setRightRailOpen(o => !o)}
+                aria-label="Toggle right rail"
+                title={STRINGS.shell.toggleRightRail}
+                className={`text-xs px-2.5 py-1.5 rounded-lg border ui-border transition-colors flex items-center gap-1.5 ${
+                  rightRailOpen
+                    ? 'bg-accent/15 text-accent border-accent/30'
+                    : 'ui-surface ui-text-secondary hover:text-foreground'
+                }`}
+              >
+                <span>◨</span> <span className="hidden md:inline">Artifacts</span>
+              </button>
+            )}
           </>
+        }
+        rightRail={
+          token ? (
+            <RightRail
+              messages={messages}
+              api={api}
+              isOpen={rightRailOpen}
+              onClose={() => setRightRailOpen(false)}
+              onCitationClick={() => setKnowledgeOpen(true)}
+            />
+          ) : undefined
         }
       >
         {token && <MeetingPanel token={token} />}
