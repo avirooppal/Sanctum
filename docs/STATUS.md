@@ -1,10 +1,10 @@
 # Current state
 
-- Step: Owner-directed Workspace UI S14 final report and merge to main (ADR 0069).
-- Baseline: Source 157 / Rust 62 / web 73 PASS; 25 E2E Playwright PASS; 38 denial probes; zero npm audit advisories; hosted CI run 38215304239 green on exact commit `2e990bb`.
-- Branch: `ui-workspace` at `2e990bb`; all S0–S13 implemented and verified; merge to main pending.
-- Resolved debt: (a) reference environment built with lockfile hashes and 6 screenshots; (b) pixel-diff and computed-style fidelity measured at supplementary invariant level (ADR 0067), not upstream exact-match; (c) dashboard migrated from modal to routed pages (#/dashboard/*); (d) "complete" claims retracted — UI workspace scope is implemented but full release gates (R-UI through R-HANDOFF) remain OPEN per RELEASE_CHECKLIST.md.
-- Next: merge to main, rerun all gates on main, update coverage.
+- Step: Owner-directed Workspace UI S14 final report and merge to main verified (ADR 0069).
+- Baseline: Source 157 / Rust 62 / web 73 PASS; 25 E2E Playwright PASS; 38 denial probes; zero npm audit advisories; hosted CI run 38216308897 green on main merge commit `064a1c4` (all 5 jobs passed).
+- Branch: `main` at `064a1c4`; merged from `ui-workspace`; all S0–S14 slices implemented and verified.
+- Resolved debt: (a) reference environment built with lockfile hashes and 6 screenshots; (b) pixel-diff and computed-style fidelity measured at supplementary invariant level (ADR 0067), not upstream exact-match; (c) dashboard migrated from modal to routed pages (#/dashboard/*); (d) "complete" claims retracted — UI workspace scope is implemented but full release gates (R-UI through R-HANDOFF) remain OPEN per RELEASE_CHECKLIST.md; (e) hosted CI confirmed green on main post-merge.
+- Next: Pending release roadmap gates (R-UI through R-HANDOFF per RELEASE_CHECKLIST.md).
 
 ## Public website slice
 

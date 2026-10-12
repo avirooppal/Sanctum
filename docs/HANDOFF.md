@@ -42,7 +42,7 @@ node evals/browser_e2e_suite.mjs [token-file] [output-file]
 - **Rust Foundation Gates**: 62 passing tests, Clippy `-D warnings`, 92 crate licenses, 38 kernel denial probes, supervision zero survivors.
 - **Web Gates**: 73 unit tests passing, TypeScript clean, production build, `npm audit` 0 vulnerabilities.
 - **E2E Browser Gates**: 25 named Playwright tests covering all A1–A11 specifications with zero foreign egress (browser-e2e-25.json).
-- **Hosted CI**: commit `2e990bb` all jobs PASS (run 38215304239).
+- **Hosted CI**: merge commit `064a1c4` on `main` all 5 jobs PASS (run 38216308897); branch `ui-workspace` commit `2e990bb` also passed (run 38215304239).
 - **Fidelity**: Supplementary invariant checks (ADR 0067) measured, not upstream pixel-exact match.
 - **Bundle**: JS 105.74 kB gzipped, CSS 7.44 kB gzipped (within budget).
 - **Outstanding**: Full release gates (R-UI through R-HANDOFF in RELEASE_CHECKLIST.md) remain OPEN. Distributable artifacts, native packages, and clean-environment install timings are pending.

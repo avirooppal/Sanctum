@@ -245,4 +245,5 @@ hosted run38152617896/all5 jobs PASS observed. Raw:website-hosted-ci.json.
 - **CI verification**: Hosted CI run 38215304239 on exact commit `2e990bb` completed with `conclusion=success`. All 5 jobs PASS.
 - **Docs corrections**: STATUS.md and HANDOFF.md updated to retract "complete" overclaiming; full release gates (R-UI through R-HANDOFF) explicitly remain OPEN per RELEASE_CHECKLIST.md.
 - **Evidence summary**: 25/25 E2E Playwright PASS (`evals/results/browser-e2e-25.json`), 73 unit tests PASS, fidelity invariants measured (`evals/results/ui-fidelity.json`), zero foreign egress across all tested surfaces.
-- **Merge**: `ui-workspace` merged to `main` at this step.
+- **Merge**: `ui-workspace` merged to `main` via merge commit `064a1c4`.
+- **Post-merge verification on main**: Hosted CI run 38216308897 on merge commit `064a1c4` completed with `conclusion=success` (all 5 jobs PASS: web, rust-foundation, source-gates linux/macos/windows). Local gates re-verified on main: 73 unit tests PASS, TypeScript strict PASS, production build PASS, npm audit 0 vulnerabilities, `tools/run_source_gate.sh` PASS (157 tests), `tools/check_rust.sh` PASS (62 tests, 92 licenses, 38 denial probes, zero supervision survivors), and 25/25 E2E Playwright suite PASS.
