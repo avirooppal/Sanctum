@@ -118,11 +118,11 @@ test('abort while waiting for a stalled stream releases the reader', {timeout:20
 });
 
 test('session management uses owner-authenticated fixed paths and validates pages',async()=>{
- const calls=[];const client=new SanctumClient('owner',async(path,options)=>{calls.push({path,options});return Response.json(JSON.parse(options.body).operation==='list'?{data:[{id:'one',title:'<img src=x>'}],has_more:false}:{changed:true});});
- assert.deepEqual(await client.sessions('query',0),{data:[{id:'one',title:'<img src=x>'}],has_more:false});
- await client.renameSession('one','Renamed');await client.deleteSession('one');
+ const calls=[];const client=new SanctumClient('owner',async(path,options)=>{calls.push({path,options});return Response.json(JSON.parse(options.body).operation==='list'?{data:[{id:'one',title:'<img src=x>',pinned:false}],has_more:false}:{changed:true});});
+ assert.deepEqual(await client.sessions('query',0),{data:[{id:'one',title:'<img src=x>',pinned:false}],has_more:false});
+ await client.renameSession('one','Renamed');await client.deleteSession('one');await client.pinSession('one',true);
  assert(calls.every(c=>c.path==='/v1/sessions'&&c.options.method==='POST'&&c.options.headers.Authorization==='Bearer owner'));
- assert.deepEqual(calls.map(c=>JSON.parse(c.options.body).operation),['list','rename','delete']);
+ assert.deepEqual(calls.map(c=>JSON.parse(c.options.body).operation),['list','rename','delete','pin']);
 });
 test('session mutations never retry and malformed lists are rejected',async()=>{
  let calls=0;const client=new SanctumClient('owner',async()=>{calls++;return new Response('{}',{status:503});});

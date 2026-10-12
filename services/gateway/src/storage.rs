@@ -12,6 +12,7 @@ pub enum SessionRequest {
     List { query: String, offset: usize },
     Rename { id: String, title: String },
     Delete { id: String },
+    Pin { id: String, pinned: bool },
 }
 impl Store {
     pub fn open(path: &Path) -> rusqlite::Result<Self> {
@@ -26,6 +27,7 @@ impl Store {
             CREATE TABLE IF NOT EXISTS turns(id INTEGER PRIMARY KEY, conversation TEXT NOT NULL REFERENCES conversations(id), request TEXT NOT NULL, response TEXT NOT NULL, streaming INTEGER NOT NULL);")?;
         connection.execute_batch(include_str!("../migrations/0001-session-metadata.sql"))?;
         connection.execute_batch(include_str!("../migrations/0002-user-preferences.sql"))?;
+        connection.execute_batch(include_str!("../migrations/0003-session-pins.sql"))?;
         Ok(Self { connection })
     }
     pub fn save(
@@ -76,10 +78,26 @@ impl Store {
                     return Err(rusqlite::Error::InvalidQuery);
                 }
                 let mut statement = self.connection.prepare(
-                    "SELECT c.id,COALESCE(t.title,'Conversation ' || substr(c.id,1,8)) AS title FROM conversations c LEFT JOIN conversation_titles_v1 t ON t.id=c.id WHERE c.owner=?1 AND (instr(lower(COALESCE(t.title,'Conversation ' || substr(c.id,1,8))),lower(?2))>0 OR instr(lower(c.id),lower(?2))>0) ORDER BY c.rowid DESC LIMIT 101 OFFSET ?3")?;
+                    "SELECT c.id, COALESCE(t.title, 'Conversation ' || substr(c.id, 1, 8)) AS title, COALESCE(p.pinned, 0) AS pinned \
+                     FROM conversations c \
+                     LEFT JOIN conversation_titles_v1 t ON t.id = c.id \
+                     LEFT JOIN conversation_pins_v1 p ON p.id = c.id \
+                     WHERE c.owner = ?1 \
+                       AND ( \
+                         instr(lower(COALESCE(t.title, 'Conversation ' || substr(c.id, 1, 8))), lower(?2)) > 0 \
+                         OR instr(lower(c.id), lower(?2)) > 0 \
+                         OR EXISTS(SELECT 1 FROM turns tr WHERE tr.conversation = c.id AND (instr(lower(tr.request), lower(?2)) > 0 OR instr(lower(tr.response), lower(?2)) > 0)) \
+                       ) \
+                     ORDER BY COALESCE(p.pinned, 0) DESC, c.rowid DESC \
+                     LIMIT 101 OFFSET ?3",
+                )?;
                 let mut data = statement
                     .query_map(params![owner, query, offset], |r| {
-                        Ok(json!({"id":r.get::<_,String>(0)?,"title":r.get::<_,String>(1)?}))
+                        Ok(json!({
+                            "id": r.get::<_, String>(0)?,
+                            "title": r.get::<_, String>(1)?,
+                            "pinned": r.get::<_, i64>(2)? != 0
+                        }))
                     })?
                     .collect::<rusqlite::Result<Vec<Value>>>()?;
                 let has_more = data.len() > 100;
@@ -87,7 +105,12 @@ impl Store {
                 Ok(json!({"data":data,"has_more":has_more}))
             }
             request => {
-                let (id, title) = match request {
+                enum Action {
+                    Rename(String),
+                    Delete,
+                    Pin(bool),
+                }
+                let (id, action) = match request {
                     SessionRequest::Rename { id, title } => {
                         let title = title.trim().to_owned();
                         if title.is_empty()
@@ -96,9 +119,10 @@ impl Store {
                         {
                             return Err(rusqlite::Error::InvalidQuery);
                         }
-                        (id, Some(title))
+                        (id, Action::Rename(title))
                     }
-                    SessionRequest::Delete { id } => (id, None),
+                    SessionRequest::Delete { id } => (id, Action::Delete),
+                    SessionRequest::Pin { id, pinned } => (id, Action::Pin(pinned)),
                     SessionRequest::List { .. } => unreachable!(),
                 };
                 if id.is_empty()
@@ -118,18 +142,39 @@ impl Store {
                 if !exists {
                     return Ok(json!({"changed":false}));
                 }
-                if let Some(title) = title {
-                    transaction.execute("INSERT INTO conversation_titles_v1(id,title) VALUES(?1,?2) ON CONFLICT(id) DO UPDATE SET title=excluded.title", params![id,title])?;
-                } else {
-                    transaction.execute(
-                        "INSERT INTO conversation_tombstones_v1(id,owner) VALUES(?1,?2)",
-                        params![id, owner],
-                    )?;
-                    transaction.execute("DELETE FROM turns WHERE conversation=?1", [&id])?;
-                    transaction.execute(
-                        "DELETE FROM conversations WHERE id=?1 AND owner=?2",
-                        params![id, owner],
-                    )?;
+                match action {
+                    Action::Rename(title) => {
+                        transaction.execute(
+                            "INSERT INTO conversation_titles_v1(id,title) VALUES(?1,?2) ON CONFLICT(id) DO UPDATE SET title=excluded.title",
+                            params![id, title],
+                        )?;
+                    }
+                    Action::Pin(pinned) => {
+                        if pinned {
+                            transaction.execute(
+                                "INSERT INTO conversation_pins_v1(id, pinned, updated_at) VALUES(?1, 1, unixepoch()) ON CONFLICT(id) DO UPDATE SET pinned=1, updated_at=excluded.updated_at",
+                                params![id],
+                            )?;
+                        } else {
+                            transaction.execute(
+                                "DELETE FROM conversation_pins_v1 WHERE id=?1",
+                                params![id],
+                            )?;
+                        }
+                    }
+                    Action::Delete => {
+                        transaction.execute(
+                            "INSERT INTO conversation_tombstones_v1(id,owner) VALUES(?1,?2)",
+                            params![id, owner],
+                        )?;
+                        transaction
+                            .execute("DELETE FROM conversation_pins_v1 WHERE id=?1", [&id])?;
+                        transaction.execute("DELETE FROM turns WHERE conversation=?1", [&id])?;
+                        transaction.execute(
+                            "DELETE FROM conversations WHERE id=?1 AND owner=?2",
+                            params![id, owner],
+                        )?;
+                    }
                 }
                 transaction.commit()?;
                 Ok(json!({"changed":true}))

@@ -2,7 +2,7 @@
 export type Message = {role:'user'|'assistant'; content:string};
 export type Model = {id:string; capabilities:string[]};
 export type Turn = {request:string; response:string; streaming:boolean};
-export type SessionPage = {data:{id:string;title:string}[];has_more:boolean};
+export type SessionPage = {data:{id:string;title:string;pinned?:boolean}[];has_more:boolean};
 export type Workspace = {id:string;name:string};
 export type KnowledgeAnswer = {answer:string;abstained:boolean;citations:{source:string;page:number|null;quote:string;document_id:string;chunk_id:string;start:number;end:number}[]};
 type Socket = Pick<WebSocket,'close'|'addEventListener'>;
@@ -100,6 +100,9 @@ export class SanctumClient {
   }
   deleteSession(id:string,signal?:AbortSignal):Promise<void> {
     return this.mutateSession({operation:'delete',id},signal);
+  }
+  pinSession(id:string,pinned:boolean,signal?:AbortSignal):Promise<void> {
+    return this.mutateSession({operation:'pin',id,pinned},signal);
   }
 
   async conversations(signal?:AbortSignal):Promise<string[]> {

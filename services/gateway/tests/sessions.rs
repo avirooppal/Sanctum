@@ -158,3 +158,85 @@ fn rejects_invalid_bounds_without_modifying_history() {
     }
     assert_eq!(store.turns("a", "safe").unwrap()[0]["response"], "kept");
 }
+
+#[test]
+fn session_pin_unpin_and_message_content_search() {
+    let mut store = Store::memory().unwrap();
+    store
+        .save(
+            "owner1",
+            "s1",
+            &json!({"text":"first query"}),
+            "first answer about quantum computing",
+            false,
+        )
+        .unwrap();
+    store
+        .save(
+            "owner1",
+            "s2",
+            &json!({"text":"second query"}),
+            "second answer about cellular biology",
+            false,
+        )
+        .unwrap();
+
+    // Verify initial list (ordered by rowid DESC: s2 then s1)
+    let initial = store
+        .sessions(
+            "owner1",
+            command(json!({"operation":"list","query":"","offset":0})),
+        )
+        .unwrap();
+    assert_eq!(initial["data"][0]["id"], "s2");
+    assert_eq!(initial["data"][0]["pinned"], false);
+    assert_eq!(initial["data"][1]["id"], "s1");
+    assert_eq!(initial["data"][1]["pinned"], false);
+
+    // Pin s1
+    let pin_res = store
+        .sessions(
+            "owner1",
+            command(json!({"operation":"pin","id":"s1","pinned":true})),
+        )
+        .unwrap();
+    assert_eq!(pin_res["changed"], true);
+
+    // Verify pinned session comes first
+    let after_pin = store
+        .sessions(
+            "owner1",
+            command(json!({"operation":"list","query":"","offset":0})),
+        )
+        .unwrap();
+    assert_eq!(after_pin["data"][0]["id"], "s1");
+    assert_eq!(after_pin["data"][0]["pinned"], true);
+    assert_eq!(after_pin["data"][1]["id"], "s2");
+    assert_eq!(after_pin["data"][1]["pinned"], false);
+
+    // Server-side full-text search across turn content ("quantum" in s1)
+    let search_res = store
+        .sessions(
+            "owner1",
+            command(json!({"operation":"list","query":"quantum","offset":0})),
+        )
+        .unwrap();
+    assert_eq!(search_res["data"].as_array().unwrap().len(), 1);
+    assert_eq!(search_res["data"][0]["id"], "s1");
+
+    // Unpin s1
+    let unpin_res = store
+        .sessions(
+            "owner1",
+            command(json!({"operation":"pin","id":"s1","pinned":false})),
+        )
+        .unwrap();
+    assert_eq!(unpin_res["changed"], true);
+    let after_unpin = store
+        .sessions(
+            "owner1",
+            command(json!({"operation":"list","query":"","offset":0})),
+        )
+        .unwrap();
+    assert_eq!(after_unpin["data"][0]["pinned"], false);
+}
