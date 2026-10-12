@@ -43,8 +43,9 @@ if __name__ == "__main__":
     import time
 
     target = sys.argv[1] if len(sys.argv) > 1 else None
+    branch = sys.argv[2] if len(sys.argv) > 2 else "main"
     while True:
-        done, run = check_ci(target_sha=target)
+        done, run = check_ci(branch=branch, target_sha=target)
         if done:
             print("CI SUCCESS!")
             sys.exit(0)
