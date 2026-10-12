@@ -1,0 +1,32 @@
+{
+  "suite": "reference-lockfiles-v1",
+  "pinned_commit": "b30f95ac4a80d2f6dbe3aa01001b0524314f6d74",
+  "root_lockfile_sha256": "30d55e0385ebfb04b2af39cf594643973264808495352648b891103cc02a5bec",
+  "root_lockfile_matches_pinned": true,
+  "lockfiles": {
+    "nix/node-gyp-11-4-0-package-lock.json": {
+      "sha256": "ef413dd0fcab207d90c567c5517cdc810c8aaf358d9b01fb3b2db444b41e21bc",
+      "size_bytes": 184939
+    },
+    "package-lock.json": {
+      "sha256": "30d55e0385ebfb04b2af39cf594643973264808495352648b891103cc02a5bec",
+      "size_bytes": 725681
+    },
+    "plugins/platforms/photon/sidecar/package-lock.json": {
+      "sha256": "2368d0b886d149c69dfb1fb2201ed7868bd751de2a88467b7848f2649241a313",
+      "size_bytes": 55271
+    },
+    "pm/lock.json": {
+      "sha256": "49b79259220160f147255078a19af541a5f328d3871c8041cc1eb909d19eb549",
+      "size_bytes": 33804
+    },
+    "scripts/whatsapp-bridge/package-lock.json": {
+      "sha256": "33ba354286126402e1f98ab5bdc08aee703cc1e24ffbd37ab7134caecd678ad6",
+      "size_bytes": 77114
+    },
+    "website/package-lock.json": {
+      "sha256": "c706a7da56b8f0ca2b92ba246d06119b619d455485a6fbe18367c3cecfa6b849",
+      "size_bytes": 731766
+    }
+  }
+}

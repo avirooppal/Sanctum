@@ -1,0 +1,96 @@
+{
+  "suite": "upstream-reference-environment-v1",
+  "pinned_commit": "b30f95ac4a80d2f6dbe3aa01001b0524314f6d74",
+  "timestamp": "2026-10-12T04:33:06.102Z",
+  "playwright_path": "C:\\Users\\aviroop\\AppData\\Local\\npm-cache\\_npx\\e41f203b7505f1fb\\node_modules\\playwright",
+  "surfaces": {
+    "dashboard": {
+      "390": {
+        "screenshot": "evals/results/reference-screenshots/reference-dashboard-390.png",
+        "viewport": {
+          "width": 390,
+          "height": 844
+        },
+        "metrics": {
+          "title": "Hermes Reference Dashboard",
+          "aside_width": 390,
+          "body_bg": "rgb(10, 10, 10)",
+          "body_color": "rgb(237, 237, 237)",
+          "no_horizontal_overflow": true
+        }
+      },
+      "820": {
+        "screenshot": "evals/results/reference-screenshots/reference-dashboard-820.png",
+        "viewport": {
+          "width": 820,
+          "height": 1180
+        },
+        "metrics": {
+          "title": "Hermes Reference Dashboard",
+          "aside_width": 237,
+          "body_bg": "rgb(10, 10, 10)",
+          "body_color": "rgb(237, 237, 237)",
+          "no_horizontal_overflow": true
+        }
+      },
+      "1440": {
+        "screenshot": "evals/results/reference-screenshots/reference-dashboard-1440.png",
+        "viewport": {
+          "width": 1440,
+          "height": 900
+        },
+        "metrics": {
+          "title": "Hermes Reference Dashboard",
+          "aside_width": 237,
+          "body_bg": "rgb(10, 10, 10)",
+          "body_color": "rgb(237, 237, 237)",
+          "no_horizontal_overflow": true
+        }
+      }
+    },
+    "chat": {
+      "390": {
+        "screenshot": "evals/results/reference-screenshots/reference-chat-390.png",
+        "viewport": {
+          "width": 390,
+          "height": 844
+        },
+        "metrics": {
+          "title": "Hermes Reference Chat",
+          "aside_width": 0,
+          "body_bg": "rgb(10, 10, 10)",
+          "body_color": "rgb(237, 237, 237)",
+          "no_horizontal_overflow": true
+        }
+      },
+      "820": {
+        "screenshot": "evals/results/reference-screenshots/reference-chat-820.png",
+        "viewport": {
+          "width": 820,
+          "height": 1180
+        },
+        "metrics": {
+          "title": "Hermes Reference Chat",
+          "aside_width": 237,
+          "body_bg": "rgb(10, 10, 10)",
+          "body_color": "rgb(237, 237, 237)",
+          "no_horizontal_overflow": true
+        }
+      },
+      "1440": {
+        "screenshot": "evals/results/reference-screenshots/reference-chat-1440.png",
+        "viewport": {
+          "width": 1440,
+          "height": 900
+        },
+        "metrics": {
+          "title": "Hermes Reference Chat",
+          "aside_width": 237,
+          "body_bg": "rgb(10, 10, 10)",
+          "body_color": "rgb(237, 237, 237)",
+          "no_horizontal_overflow": true
+        }
+      }
+    }
+  }
+}

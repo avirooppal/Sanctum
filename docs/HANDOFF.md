@@ -9,7 +9,7 @@ Active implementation is on branch `ui-workspace` under ADR 0069 exact specifica
 - **Documentation Site (`/docs.html`)**: Offline documentation covering architecture, kernel containment, API contracts, and quality gates.
 - **Browser Chat UI (`/`)**: 237px navigation sidebar, 640px dock floor, SafeMarkdown renderer (XSS-safe, code blocks, remote image blocking), slash commands, model badge, session history.
 - **Platform Dashboard**: Currently a modal monitor; being migrated to routed pages (`/dashboard/*`) under ADR 0069 S12.
-- **Reference Launcher (ADR 0065)**: Upstream reference environment provisioning in progress (Phase 1 container dependency fetch, Phase 2 offline build/serve with mock bridge and screenshot capture).
+- **Reference Launcher (ADR 0065)**: Upstream reference environment built and verified; lockfile hashes recorded (`evals/results/reference-lockfile-hashes.json`) and 6 multi-viewport screenshots captured (`evals/results/reference-screenshots/`).
 - **Fidelity & Invariants (ADR 0067 / 0069)**: Invariant checks currently automated via `evals/browser_fidelity.mjs`; pixel-diff fidelity vs upstream screenshots tracked under S0/S13.
 
 ## 3. How to Run & Verify
