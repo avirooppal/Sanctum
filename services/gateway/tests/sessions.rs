@@ -240,3 +240,41 @@ fn session_pin_unpin_and_message_content_search() {
         .unwrap();
     assert_eq!(after_unpin["data"][0]["pinned"], false);
 }
+
+#[test]
+fn conversation_token_usage_accounting() {
+    let store = Store::memory().unwrap();
+    // Nonexistent conversation returns has_data: false
+    let missing = store
+        .conversation_usage("owner", "nonexistent", 2048)
+        .unwrap();
+    assert_eq!(missing["has_data"], false);
+    assert_eq!(missing["total_tokens"], 0);
+    assert_eq!(missing["context_length"], 2048);
+
+    // Save turn with real usage payload
+    let turn_payload = json!({
+        "choices": [{"message": {"role": "assistant", "content": "hello"}}],
+        "usage": {
+            "prompt_tokens": 12,
+            "completion_tokens": 8,
+            "total_tokens": 20
+        }
+    });
+    store
+        .save(
+            "owner",
+            "c1",
+            &json!({"role": "user"}),
+            &turn_payload.to_string(),
+            false,
+        )
+        .unwrap();
+
+    let usage = store.conversation_usage("owner", "c1", 4096).unwrap();
+    assert_eq!(usage["has_data"], true);
+    assert_eq!(usage["prompt_tokens"], 12);
+    assert_eq!(usage["completion_tokens"], 8);
+    assert_eq!(usage["total_tokens"], 20);
+    assert_eq!(usage["context_length"], 4096);
+}

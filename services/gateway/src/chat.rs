@@ -581,13 +581,24 @@ impl Chat {
                 "/v1/models" => respond(
                     request,
                     200,
-                    json!({"object":"list","data":[{"id":self.config.chat.id,"object":"model","created":0,"owned_by":"local","capabilities":["text","tools"]},{"id":self.config.embedding.id,"object":"model","created":0,"owned_by":"local","capabilities":["embedding"]}]}),
+                    json!({"object":"list","data":[{"id":self.config.chat.id,"object":"model","created":0,"owned_by":"local","capabilities":["text","tools"],"context_length":self.config.context,"license":"Apache-2.0"},{"id":self.config.embedding.id,"object":"model","created":0,"owned_by":"local","capabilities":["embedding"],"context_length":self.config.context,"license":"Apache-2.0"}]}),
                 ),
                 "/v1/conversations" => respond(
                     request,
                     200,
                     json!({"data":self.store.lock().map_err(|_| "store lock poisoned")?.conversations("local-owner")?}),
                 ),
+                p if p.starts_with("/v1/conversations/") && p.ends_with("/usage") => {
+                    let id = p
+                        .trim_start_matches("/v1/conversations/")
+                        .trim_end_matches("/usage");
+                    let usage = self
+                        .store
+                        .lock()
+                        .map_err(|_| "store lock poisoned")?
+                        .conversation_usage("local-owner", id, self.config.context)?;
+                    respond(request, 200, usage)
+                }
                 p if p.starts_with("/v1/conversations/") => respond(
                     request,
                     200,

@@ -186,6 +186,45 @@ impl Store {
         let rows=statement.query_map(params![owner,id],|r| Ok(json!({"request":r.get::<_,String>(0)?,"response":r.get::<_,String>(1)?,"streaming":r.get::<_,bool>(2)?})))?.collect();
         rows
     }
+
+    pub fn conversation_usage(
+        &self,
+        owner: &str,
+        id: &str,
+        context_length: usize,
+    ) -> rusqlite::Result<Value> {
+        let mut statement = self.connection.prepare(
+            "SELECT t.response FROM turns t JOIN conversations c ON c.id=?1 AND c.owner=?2",
+        )?;
+        let rows = statement.query_map(params![id, owner], |r| r.get::<_, String>(0))?;
+        let mut prompt_tokens = 0;
+        let mut completion_tokens = 0;
+        let mut has_usage = false;
+        for row in rows {
+            let resp = row?;
+            if let Ok(val) = serde_json::from_str::<Value>(&resp) {
+                if let Some(usage) = val.get("usage") {
+                    if let Some(pt) = usage.get("prompt_tokens").and_then(|p| p.as_u64()) {
+                        prompt_tokens += pt as usize;
+                        has_usage = true;
+                    }
+                    if let Some(ct) = usage.get("completion_tokens").and_then(|c| c.as_u64()) {
+                        completion_tokens += ct as usize;
+                        has_usage = true;
+                    }
+                }
+            }
+        }
+        let total_tokens = prompt_tokens + completion_tokens;
+        Ok(json!({
+            "conversation_id": id,
+            "prompt_tokens": prompt_tokens,
+            "completion_tokens": completion_tokens,
+            "total_tokens": total_tokens,
+            "context_length": context_length,
+            "has_data": has_usage
+        }))
+    }
     pub fn preferences(&self, owner: &str) -> rusqlite::Result<Option<String>> {
         let mut statement = self
             .connection

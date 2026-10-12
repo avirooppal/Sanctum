@@ -1,10 +1,11 @@
 /** Same-origin Sanctum contracts. Credentials and drafts are never persisted here. */
 export type Message = {role:'user'|'assistant'; content:string};
-export type Model = {id:string; capabilities:string[]};
+export type Model = {id:string; capabilities:string[]; context_length?:number; license?:string};
 export type Turn = {request:string; response:string; streaming:boolean};
 export type SessionPage = {data:{id:string;title:string;pinned?:boolean}[];has_more:boolean};
 export type Workspace = {id:string;name:string};
 export type KnowledgeAnswer = {answer:string;abstained:boolean;citations:{source:string;page:number|null;quote:string;document_id:string;chunk_id:string;start:number;end:number}[]};
+export type ConversationUsage = {conversation_id:string;prompt_tokens:number;completion_tokens:number;total_tokens:number;context_length:number;has_data:boolean};
 type Socket = Pick<WebSocket,'close'|'addEventListener'>;
 type SocketFactory = (url:string, protocols:string[])=>Socket;
 
@@ -122,6 +123,15 @@ export class SanctumClient {
       throw Error('Invalid conversation response');
     }
     return data.data as Turn[];
+  }
+
+  async conversationUsage(id:string,signal?:AbortSignal):Promise<{conversation_id:string;prompt_tokens:number;completion_tokens:number;total_tokens:number;context_length:number;has_data:boolean}> {
+    const data:unknown=await (await this.request(`/v1/conversations/${encodeURIComponent(id)}/usage`,signal)).json();
+    signal?.throwIfAborted();
+    if (!record(data) || typeof data.total_tokens !== 'number' || typeof data.context_length !== 'number' || typeof data.has_data !== 'boolean') {
+      throw Error('Invalid conversation usage response');
+    }
+    return data as {conversation_id:string;prompt_tokens:number;completion_tokens:number;total_tokens:number;context_length:number;has_data:boolean};
   }
 
   async *chat(model:string,messages:Message[],conversation:string,signal?:AbortSignal):AsyncGenerator<string> {

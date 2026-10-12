@@ -51,3 +51,20 @@ test("SafeMarkdown renders without throwing and escapes dangerous html elements"
   assert(html.includes('href="https://sanctum.local/docs"'), "Must render safe links");
 });
 
+test("SafeMarkdown renders code block with language label, copy button, and citation chips", async () => {
+  const React = (await import("react")).default;
+  const { renderToStaticMarkup } = await import("react-dom/server");
+  const { SafeMarkdown } = await import("../build/tests/ui/SafeMarkdown.js");
+
+  const md = "Here is source info [^1] and reference [source: guide.md#L12].\n\n```python\nprint('hello')\n```";
+  const html = renderToStaticMarkup(React.createElement(SafeMarkdown, { content: md }));
+
+  assert(html.includes("ui-citation-chip"), "Must render citation chip");
+  assert(html.includes("Citation 1"), "Must include citation 1 aria-label");
+  assert(html.includes("guide.md#L12"), "Must include named source citation");
+  assert(html.includes("python"), "Must render code language label");
+  assert(html.includes("Copy"), "Must render copy code button");
+  assert(html.includes("print(") && html.includes("hello"), "Must render code content");
+});
+
+

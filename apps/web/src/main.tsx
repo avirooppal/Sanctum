@@ -4,8 +4,9 @@ import './style.css';
 import { SpeechPanel } from './SpeechPanel';
 import { MeetingPanel } from './MeetingPanel';
 
-import { SanctumClient, type Message } from './api';
+import { SanctumClient, type Message, type Model } from './api';
 import { ChatRun } from './chat-run';
+import { ChatView } from './ui/ChatView';
 import { KnowledgePanel } from './KnowledgePanel';
 import { HistoryPanel } from './HistoryPanel';
 import './ui/knowledge.css';
@@ -47,6 +48,7 @@ function App() {
   const [keyInput, setKeyInput] = useState('');
   const [model, setModel] = useState('');
   const [models, setModels] = useState<string[]>([]);
+  const [modelObjects, setModelObjects] = useState<Model[]>([]);
   const [messages, setMessages] = useState<Message[]>([]);
   const [prompt, setPrompt] = useState('');
   const [busy, setBusy] = useState(false);
@@ -99,6 +101,7 @@ function App() {
 
     api.models()
       .then(async data => {
+        setModelObjects(data);
         const textModels = data.filter(m => m.capabilities.includes('text')).map(m => m.id);
         setModels(textModels);
         setModel(textModels[0] || '');
@@ -525,126 +528,37 @@ function App() {
             </section>
           )
         ) : (
-          <>
-            <section className="app-transcript py-6 space-y-7" aria-live="polite">
-              {!messages.length && (
-                <div className="pt-8 pb-4">
-                  <div className="text-xs text-display ui-text-secondary tracking-widest mb-3">
-                    HERMES-GRADE LOCAL AI · PRIVACY FIRST
-                  </div>
-                  <h1 className="text-4xl font-semibold tracking-tight">{STRINGS.chat.starterTitle}</h1>
-                  <p className="mt-3 ui-text-secondary max-w-lg leading-relaxed">
-                    {STRINGS.chat.starterSubtitle}
-                  </p>
-                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 mt-8 max-w-2xl">
-                    {PROMPT_SUGGESTIONS.map((item, idx) => (
-                      <button
-                        key={idx}
-                        type="button"
-                        onClick={() => setPrompt(item.prompt)}
-                        className="text-left p-3.5 rounded-xl border ui-border ui-surface hover:border-accent transition-colors shadow-sm group"
-                      >
-                        <div className="text-xs font-semibold group-hover:text-accent transition-colors">
-                          {item.title}
-                        </div>
-                        <p className="text-[11px] ui-text-secondary mt-1 line-clamp-2 leading-relaxed">
-                          {item.prompt}
-                        </p>
-                      </button>
-                    ))}
-                  </div>
-                </div>
-              )}
-
-              {messages.map((m, i) => (
-                <article
-                  key={i}
-                  className={m.role === 'user' ? 'ui-user-bubble rounded-2xl p-5 ml-8' : 'p-4 group/msg'}
-                >
-                  <div className="flex items-center justify-between mb-2">
-                    <div className="text-xs text-display ui-text-secondary tracking-wider">
-                      {m.role === 'user' ? 'You' : 'Sanctum'}
-                    </div>
-                    {m.role === 'assistant' && m.content && (
-                      <button
-                        type="button"
-                        onClick={() => copyText(m.content, i)}
-                        className="text-[11px] ui-text-secondary hover:text-foreground opacity-70 hover:opacity-100 transition-opacity flex items-center gap-1"
-                        title="Copy response"
-                      >
-                        {copiedIndex === i ? '✓ Copied' : 'Copy'}
-                      </button>
-                    )}
-                  </div>
-                  {m.role === 'assistant' ? (
-                    <SafeMarkdown content={m.content || 'Thinking locally…'} />
-                  ) : (
-                    <div className="whitespace-pre-wrap leading-7">{m.content}</div>
-                  )}
-                </article>
-              ))}
-            </section>
-
-            <form onSubmit={send} className="app-composer ui-background pt-3 pb-3">
-              <div className="ui-surface border ui-border rounded-2xl p-4 shadow-sm">
-                <textarea
-                  ref={composerRef}
-                  aria-label="Message"
-                  placeholder={STRINGS.composer.placeholder}
-                  value={prompt}
-                  onChange={e => setPrompt(e.target.value)}
-                  onKeyDown={e => {
-                    if (preferences.sendOnEnter && e.key === 'Enter' && !e.shiftKey) {
-                      e.preventDefault();
-                      send();
-                    } else if (!preferences.sendOnEnter && e.key === 'Enter' && e.shiftKey) {
-                      e.preventDefault();
-                      send();
-                    }
-                  }}
-                  rows={3}
-                  className="resize-none w-full bg-transparent"
-                />
-                <div className="flex justify-between items-center mt-2 pt-2 border-t ui-border">
-                  <div className="flex items-center gap-2">
-                    <span className="text-xs ui-text-secondary">● Private by default</span>
-                    <span className="text-[11px] text-display ui-text-secondary hidden sm:inline">
-                      · {preferences.sendOnEnter ? 'Enter to send (Shift+Enter for newline)' : 'Shift+Enter to send'}
-                    </span>
-                  </div>
-                  <div className="flex items-center gap-2">
-                    {busy && (
-                      <Button variant="outline" onClick={() => chatRun.stop()}>
-                        {STRINGS.composer.stop}
-                      </Button>
-                    )}
-                    <button
-                      disabled={busy || !prompt.trim()}
-                      className="ui-primary text-white py-2 px-5 rounded-lg text-xs font-medium"
-                    >
-                      {busy ? 'Generating…' : 'Send ↑'}
-                    </button>
-                  </div>
-                </div>
-              </div>
-              {chatStatus && (
-                <p className="text-xs ui-text-secondary mt-1" aria-live="polite">
-                  {chatStatus}
-                </p>
-              )}
-              {capabilities.includes('speech') && (
-                <SpeechPanel
-                  token={token}
-                  conversation={conversation}
-                  answer={messages.filter(m => m.role === 'assistant').at(-1)?.content || ''}
-                  onTranscript={setPrompt}
-                />
-              )}
-              <p className="text-[11px] text-center mt-3 ui-text-secondary">
-                Local models run directly on your hardware. Verify important outputs.
-              </p>
-            </form>
-          </>
+          <ChatView
+            messages={messages}
+            prompt={prompt}
+            setPrompt={setPrompt}
+            onSend={send}
+            onStop={() => {
+              if (busy || chatRun.active) {
+                chatRun.stop();
+                setChatStatus('Generation stopped.');
+              }
+            }}
+            onRetry={index => {
+              const userMsg = messages[index];
+              if (userMsg && userMsg.role === 'user') {
+                setPrompt(userMsg.content);
+              }
+            }}
+            onDeleteMessage={index => {
+              setMessages(prev => prev.filter((_, i) => i !== index));
+            }}
+            busy={busy}
+            sendOnEnter={preferences.sendOnEnter}
+            messageLayout={preferences.messageLayout}
+            conversationId={conversation}
+            api={api}
+            token={token}
+            modelId={model}
+            contextLimit={modelObjects.find(m => m.id === model)?.context_length}
+            onCitationClick={() => setKnowledgeOpen(true)}
+            onAttachmentUploaded={() => refresh()}
+          />
         )}
 
         {error && (
