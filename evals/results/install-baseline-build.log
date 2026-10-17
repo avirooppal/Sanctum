@@ -1,0 +1,18 @@
+
+> sanctum-web@0.1.0 build
+> node tools/build-css.mjs && vite build
+
+vite v7.3.7 building client environment for production...
+transforming...
+✓ 69 modules transformed.
+rendering chunks...
+computing gzip size...
+dist/index.html                            0.36 kB │ gzip:   0.27 kB
+dist/assets/capture-worklet-Dbzkoc4Q.js    0.52 kB
+dist/docs.html                             6.83 kB │ gzip:   2.57 kB
+dist/website.html                         13.01 kB │ gzip:   4.22 kB
+dist/assets/docs-pFzaJO9T.css              1.04 kB │ gzip:   0.47 kB
+dist/assets/website-lUDU4MdM.css           7.16 kB │ gzip:   2.20 kB
+dist/assets/app-Cz1MskyZ.css              33.94 kB │ gzip:   7.22 kB
+dist/assets/app-CimnaDDF.js              369.93 kB │ gzip: 104.44 kB
+✓ built in 4.59s

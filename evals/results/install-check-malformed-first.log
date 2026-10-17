@@ -1,0 +1,17 @@
+....................E...........
+======================================================================
+ERROR: test_complete_probe_and_wrong_trace (test_install_check.InstallCheckTests.test_complete_probe_and_wrong_trace)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/mnt/c/Users/aviroop/Desktop/Sanctum/apps/cli/tests/test_install_check.py", line 68, in test_complete_probe_and_wrong_trace
+    self.assertFalse(valid_probe(value, "a" * 32))
+                     ^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/mnt/c/Users/aviroop/Desktop/Sanctum/apps/cli/sanctum/install_check.py", line 99, in valid_probe
+    or set(checks.values()) != {"denied"}
+       ^^^^^^^^^^^^^^^^^^^^
+TypeError: unhashable type: 'list'
+
+----------------------------------------------------------------------
+Ran 32 tests in 1.508s
+
+FAILED (errors=1)

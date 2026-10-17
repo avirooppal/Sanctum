@@ -1,0 +1,18 @@
+Traceback (most recent call last):
+  File "C:\Users\aviroop\Desktop\Sanctum\evals\sdk_chat.py", line 149, in <module>
+    main()
+  File "C:\Users\aviroop\Desktop\Sanctum\evals\sdk_chat.py", line 44, in main
+    result = client.chat.completions.create(
+             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\aviroop\Desktop\Sanctum\.sanctum\windows-workflow-venv\Lib\site-packages\openai\_utils\_utils.py", line 298, in wrapper
+    return func(*args, **kwargs)
+           ^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\aviroop\Desktop\Sanctum\.sanctum\windows-workflow-venv\Lib\site-packages\openai\resources\chat\completions\completions.py", line 1318, in create
+    return self._post(
+           ^^^^^^^^^^^
+  File "C:\Users\aviroop\Desktop\Sanctum\.sanctum\windows-workflow-venv\Lib\site-packages\openai\_base_client.py", line 1440, in post
+    return cast(ResponseT, self.request(cast_to, opts, stream=stream, stream_cls=stream_cls))
+                           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\aviroop\Desktop\Sanctum\.sanctum\windows-workflow-venv\Lib\site-packages\openai\_base_client.py", line 1213, in request
+    raise self._make_status_error_from_response(err.response) from None
+openai.InternalServerError: Error code: 502 - {'error': {'message': 'Local engine unavailable or busy'}}

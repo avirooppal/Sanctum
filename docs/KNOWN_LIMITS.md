@@ -27,3 +27,9 @@ Full purge is hidden pending a transactional/cancellable implementation. ADR0075
 deleting data. This is not an implementation of full or secure erasure.
 The old25-case browser_e2e_suite uses canned API replies;it is fixture coverage,
 not real journey acceptance. Full journey action/chaos/ledger proof is pending.
+
+Installation:ADR0077 selects Linux tar/deb and a dedicated-WSL Windows launcher.
+Only source preflight is tested;no downloadable installer/package has been
+verified. Windows host preflight,rootfs trust/signatures,Ubuntu24 executable
+AppArmor policy,clean installs,upgrades and uninstall remain software work.
+Never bypass containment to use an unsupported platform. macOS unsupported.

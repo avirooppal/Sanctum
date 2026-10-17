@@ -11,6 +11,15 @@ def main() -> int:
     parser = argparse.ArgumentParser(prog="sanctum")
     commands = parser.add_subparsers(dest="command", required=True)
     doctor = commands.add_parser("doctor", help="Offline hardware and readiness report")
+    doctor.add_argument("--install-check", action="store_true")
+    doctor.add_argument(
+        "--probe-binary",
+        type=Path,
+        default=Path.home() / ".local/lib/sanctum/current/bin/sanctum-foundation",
+    )
+    doctor.add_argument("--install-root", type=Path, default=Path.home() / ".local/lib/sanctum")
+    doctor.add_argument("--port", type=int, default=8769)
+    doctor.add_argument("--required-bytes", type=int, default=2 * 1024**3)
     doctor.add_argument("--json", action="store_true", help="Emit versioned JSON")
     doctor.add_argument("--mode", choices=["solo", "team"], default="solo")
     doctor.add_argument("--profiles", type=Path, default=Path("profiles/hardware.json"))
@@ -25,6 +34,20 @@ def main() -> int:
         else:
             command.add_argument("--ram-gib", type=float)
     args = parser.parse_args()
+    if args.command == "doctor" and args.install_check:
+        from .install_check import check
+
+        if not 1 <= args.port <= 65535 or args.required_bytes < 0:
+            parser.error("port must be1..65535 and required-bytes must be nonnegative")
+        try:
+            result = check(args.install_root, args.port, args.required_bytes, args.probe_binary)
+        except (OSError, ValueError):
+            print(
+                "Installation prerequisites could not be read. Startup is blocked.", file=sys.stderr
+            )
+            return 78
+        print(json.dumps(result, indent=2))
+        return 0 if result["ready_for_installation"] else 78
     if args.command in ("pull", "estimate"):
         try:
             manifest = json.loads(args.manifest.read_text())

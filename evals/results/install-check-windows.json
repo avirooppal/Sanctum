@@ -1,0 +1,30 @@
+{
+  "schema_version": "1.0",
+  "ready_for_installation": false,
+  "model_readiness": "unverified",
+  "facts": {
+    "os": "Windows",
+    "arch": "AMD64",
+    "libc": "",
+    "libc_version": "",
+    "uid": 0,
+    "ram_bytes": 0,
+    "free_bytes": 168472236032,
+    "port_free": true,
+    "existing_install": false,
+    "apparmor_restricted": false,
+    "cpu_flags": []
+  },
+  "checks": {
+    "platform": false,
+    "owner": false,
+    "disk": true,
+    "port": true,
+    "containment": false
+  },
+  "messages": [
+    "Linux x86_64 with glibc 2.35 or later is required. On Windows use the dedicated WSL2 launcher.",
+    "Run this check as the owner,not root.",
+    "Kernel containment could not be verified. Startup is blocked;never run unconfined."
+  ]
+}

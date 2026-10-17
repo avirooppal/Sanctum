@@ -365,3 +365,7 @@ availability migration,explicit501,marker-gated real probe and14-stage smoke.
 Workflow:dashboard status now clears stale success,shows Unknown for missing
 metrics and avoids overlapping refreshes. Profile writes admitted under existing
 limits;real CRUD/failure recovery tested. Smoke now15 real stages;release open.
+
+Installation foundations:ADR0077 and versioned install-check contract;read-only
+Linux preflight with real namespace/seccomp denial proof and fail-closed platform,
+owner,disk and port checks. No installer artifact or release claimed.

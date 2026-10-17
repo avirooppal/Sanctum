@@ -152,3 +152,27 @@ completed success (workflow-main-implementation-hosted-ci.json). No full
 journey promoted;no ledger/quality/storm/soak/release proof inferred. Earlier
 per-slice numbers remain historical measurements. New checkpoint is docs-only;
 its exact-SHA hosted CI follows push.
+
+## Installation slice — ADR0077 (2026-10-17)
+
+Scope remains PARTIAL: read-only installation preflight exists; no artifact is
+advertised as runnable. Linux Ubuntu22 WSL doctor with explicit foundation
+binary,port8770 returned0 and all22 real denial checks passed. Busy8769,
+insufficient-space simulation,missing probe,root and native Windows returned78.
+Evidence:`evals/results/install-check-{linux,busy,disk,missing,root,windows}.json`.
+Tests:`apps/cli/tests/test_install_check.py` (8),full source182,Rust70/38 denial
+probes,web81/typecheck/build/audit0. Raw `install-check-*` logs. Scope does not
+verify an installed artifact,model provisioning,Windows host prerequisites,
+Ubuntu24/Debian clean installs,signatures,upgrade,rollback or uninstall.
+
+| Requirement | State | Evidence / next verification |
+|---|---|---|
+| Linux preflight containment/disk/port/platform | Partial | Real source-check execution above;packaged execution pending |
+| Linux tar/deb/install/uninstall | Not done | Not built or installed;owner command will be documented after implementation |
+| Dedicated WSL Windows installer | Not done | ADR0077 only;launcher and host preflight not implemented |
+| Authenticode | UNVERIFIED | No signing certificate/build;never claim signed |
+| Native macOS | Out of scope by decision | ADR0006;no native containment |
+| Ubuntu24 AppArmor minimal fix | Partial | Restriction detection/message;installed executable policy and real24 test pending |
+
+No journey status or phase/release gate is promoted. Exact-SHA hosted CI is
+required after this slice is committed;local tests do not substitute for CI.

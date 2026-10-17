@@ -1,0 +1,3 @@
+ty failed
+  Cause: Failed to discover the site-packages directory
+  Cause: Failed to iterate over the contents of the `lib`/`lib64` directories of the Python installation `/mnt/c/Users/aviroop/Desktop/Sanctum/.venv`

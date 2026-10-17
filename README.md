@@ -129,3 +129,12 @@ model or detect a hardware tier;run `sanctum doctor` for that recommendation.
 Unavailable fit/speed information is shown as Unknown. The privacy badge proves
 only the reported startup denial checks;Privacy Ledger is not yet available.
 See docs/WORKFLOW.md and docs/WORKFLOW_GAPS.md for remaining owner journeys.
+
+### Installation packaging status
+
+No end-user installer is verified yet. ADR0077 selects Linux x86_64 glibc
+packages and a dedicated-WSL2 Windows launcher;native Windows containment is
+unsupported. Development-only preflight:
+`sanctum doctor --install-check --probe-binary /absolute/path/sanctum-foundation --port 8770 --json`.
+It refuses unsupported/missing containment and reports prerequisites only.
+See [release checklist](docs/RELEASE_CHECKLIST.md);do not treat this as a GUI install.

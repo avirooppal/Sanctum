@@ -1,0 +1,6 @@
+Traceback (most recent call last):
+  File "C:\Users\aviroop\Desktop\Sanctum\tools\smoke_all.py", line 327, in <module>
+    main()
+  File "C:\Users\aviroop\Desktop\Sanctum\tools\smoke_all.py", line 314, in main
+    raise RuntimeError(f"smoke {name} failed; see named log")
+RuntimeError: smoke chat failed; see named log

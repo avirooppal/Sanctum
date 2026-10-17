@@ -154,3 +154,5 @@ weakened;failed hosted and local outputs retained.
 | [0075](adr/0075-disable-unsafe-purge.md) | Fail closed before whole-product deletion;OpenAPI0.2.1 availability migration | No timeout/queue/capacity change;reuse10s/1MiB test-client bounds from0072 | Legacy200 becomes501;full purge stays unavailable;marker required before live valid confirmation |
 
 | [0076](adr/0076-dashboard-and-profile-alignment.md) | Scoped dashboard truth and profile CRUD admission/failure recovery | No numeric bound/poll interval/queue increase;false-success assertions replaced with evidence/Unknown assertions | Real13-click subflow and15-stage smoke;full journeys remain partial. Preserve raw console trailing blank under ADR0057 |
+
+| [0077](adr/0077-installation-platform-and-preflight.md) | Dedicated WSL2 Windows launcher plus Linux packages;OS licensing boundary;NSIS candidate only | New staging floor2GiB,existing probe deadline15s plus process-group kill/reap5s;no RAM/profile or phase gate relaxation | Windows launcher/packages/signing/rootfs not shipped;Ubuntu24 concrete AppArmor policy pending;preflight alone is not an install |

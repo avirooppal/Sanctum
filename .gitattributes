@@ -54,3 +54,7 @@ evals/results/workflow-dashboard-tests-first.log whitespace=-blank-at-eol,-blank
 docs/status-archive/2026-10-17-workflow-dashboard-alignment.md -text whitespace=cr-at-eol,-blank-at-eof
 # ADR0057: preserve raw typecheck console ending.
 evals/results/workflow-main-types.log whitespace=-blank-at-eof
+
+docs/status-archive/2026-10-17-before-installation-preflight.md -text whitespace=cr-at-eol,-blank-at-eof
+# ADR0057: unmodified console evidence.
+evals/results/install-*.log whitespace=-blank-at-eof,-blank-at-eol
