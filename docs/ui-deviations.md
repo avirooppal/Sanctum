@@ -108,3 +108,9 @@ owner preferences load only after authentication. Third-party notices load in
 a separate same-origin chunk;notices are not stripped. Button foreground now
 tracks a custom accent. Raw measured baseline/reference smoke remains available;
 this is not an upstream pixel-equivalence claim. Other screens remain pending.
+
+S1 iteration2:the pre-auth card now reads real health metadata with a distinct
+response-read timestamp and explicit no-ledger/no-new-kernel-test explanation.
+The card uses a semantic local surface mix;registered palette bytes and237px
+reference rail are unchanged. Public health reads have no auth or credentials.
+Bounds and failure behavior are ADR0080;no continuous-egress claim is made.

@@ -66,3 +66,5 @@ evals/results/design-*.log whitespace=-blank-at-eof,-blank-at-eol
 docs/status-archive/2026-10-17-before-redesign-audit.md -text whitespace=cr-at-eol,-blank-at-eof
 # ADR0057: raw console evidence.
 evals/results/redesign-*.log whitespace=-blank-at-eof,-blank-at-eol
+
+docs/status-archive/2026-10-18-unlock-iteration1.md -text whitespace=cr-at-eol,-blank-at-eof

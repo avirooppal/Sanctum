@@ -89,3 +89,7 @@ SVG is original path geometry. Existing Archivo and registry-verified fonts only
 no icon pack,font,image,dependency or third-party snippet added. The original
 THIRD_PARTY_NOTICES text is retained unchanged in a lazy same-origin attribution
 chunk. Existing license gates pass;copy gate excludes only that named chunk.
+
+ADR0080 observer and StartupBadge are first-party metadata/UI code,native
+fetch/details only. No dependency,font,icon or external asset added. Existing
+notices remain unchanged and are verified loading in the real browser.

@@ -46,3 +46,15 @@ and exact measurements. Retain consent locally; delete study data on request.
 Do not infer "best", accessibility certification or long-session comfort from
 five preferences. Add findings to CRITIQUE.md and the default REVIEW_QUEUE entry;
 the owner still explicitly chooses whether the shipped default changes.
+
+## Redesign before/after supplement — UNVERIFIED
+
+For the same five consenting participants,counterbalance the old versus new
+unlock screenshot first,then test the actual configured-runtime flow:find the
+key instructions,unlock,read the startup report and explain what the timestamp
+does and does not prove. Use a study runtime/key,never the owner's production
+key,and never record a key. Include a real rejected key and a controlled
+health-network interruption;record task time,clicks,wrong turns and recovery.
+Ask whether either screen implied a new self-test or complete egress history.
+Repeat without coaching in session2. Compare against the archived before UI
+rather than memory. No participant results have been collected.

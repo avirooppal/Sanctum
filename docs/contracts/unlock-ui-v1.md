@@ -20,3 +20,9 @@ Credentials are never server-rendered by the product. Component SSR tests use
 only public test strings. Rendering arbitrary error text must escape HTML.
 No upstream branding or absolute privacy copy outside the attribution resource.
 Dedicated notices remain available after unlock. No new auth/API contract.
+
+Iteration2 observation:health is read with ADR0080 bounds. The chip's timestamp
+records when this browser read the response,not when the kernel test ran.
+Failed/partial/malformed/oversize health removes passed state. Details explain
+that the Ledger is unavailable. Error text is linked via aria-describedby and
+aria-invalid. No workspace or credential is needed for the public health read.

@@ -171,3 +171,16 @@ reference geometry check passes. No full Hermes pixel-diff,all-theme WCAG,axe,
 200% zoom,INP/CLS or human-comfort gate is inferred. S1 iterations2/3 and S2-S7
 remain pending;standalone historical pre-auth shell/theme runners need auth
 migration before reuse. No full journey/install/phase/release promotion.
+
+## S1 iteration2 (2026-10-18)
+
+Live bounded health observation and linked field errors are exercised with real
+gateway reads and explicitly simulated browser network failure. Startup report
+read time is separate from kernel test time;no ledger/history claim. Source182,
+Rust70,web89/types/build,audit0,38 probes,16 smoke PASS;raw redesign-round2-*.
+Button48px/contrast6.85586 and7.16261;observed text minimum8.90049,focus4.90443;
+zero root overflow/foreign/page errors. Raw screenshots ui-after/round-2. JS+868/
+CSS+623 gzip bytes under prior budgets;fonts/deps0. Previous2ce6c60 hosted
+39058592559 completed success/all5. S1 iteration3,legacy standalone runner auth
+migration,all-theme/axe/zoom/performance and later screens remain Not done.
+Full journeys/platform/install/release are not promoted.

@@ -1,5 +1,5 @@
 .unlock-page{box-sizing:border-box;height:100dvh;overflow:auto;display:flex;flex-direction:column;align-items:center;padding:48px 24px 24px;background:var(--ui-background);color:var(--ui-text-primary);font:15px/1.6 'Archivo',system-ui,sans-serif}
-.unlock-card{box-sizing:border-box;flex-shrink:0;width:min(100%,460px);margin:auto;padding:40px;border:1px solid var(--ui-border);border-radius:24px;background:var(--ui-surface);box-shadow:0 2px 4px rgb(0 0 0 / 2%),0 16px 48px rgb(0 0 0 / 5%)}
+.unlock-card{box-sizing:border-box;flex-shrink:0;width:min(100%,460px);margin:auto;padding:40px;border:1px solid var(--ui-border);border-radius:24px;background:color-mix(in srgb,var(--ui-background) 95%,var(--ui-text-primary) 5%);box-shadow:0 2px 4px rgb(0 0 0 / 2%),0 16px 48px rgb(0 0 0 / 5%)}
 .unlock-brand{display:flex;align-items:center;justify-content:center;gap:10px;font:600 18px/1.5 'Archivo',system-ui,sans-serif}
 .unlock-brand svg{color:var(--ui-accent);flex-shrink:0}
 .unlock-heading{text-align:center;margin:32px 0}
@@ -19,7 +19,11 @@
 .unlock-card [data-ui-button="quiet"]{min-height:44px;font-size:13px;border-radius:8px;background:transparent;text-decoration:underline;text-underline-offset:3px}
 .unlock-card :is(input,button,summary):focus-visible{outline:2px solid var(--ui-focus);outline-offset:4px}
 .unlock-error{font-size:14px;border-left:2px solid var(--ui-text-primary);padding:8px 12px;margin:0 0 16px;overflow-wrap:anywhere}
-.unlock-footnote{flex-shrink:0;text-align:center;color:var(--ui-text-secondary);font-size:12px;max-width:44ch;margin:24px 0 0}
+.startup-badge{font-size:12px;line-height:1.6;color:var(--ui-text-secondary);margin-top:12px}
+.startup-badge summary{min-height:44px;box-sizing:border-box;cursor:pointer;padding:10px 0;align-content:center}
+.startup-badge p{margin:4px 0 12px;overflow-wrap:anywhere}
+.startup-state{color:var(--ui-text-primary)}
+.startup-time{display:block;padding-left:14px;font-variant-numeric:tabular-nums}
 .unlock-review{width:min(100%,600px);padding:32px}
 .unlock-review .setup-wizard-container{border:0;padding:24px 0;background:transparent}
 .unlock-review .setup-wizard-container h1{font-family:'Archivo',system-ui,sans-serif;font-variation-settings:'wdth' 100}

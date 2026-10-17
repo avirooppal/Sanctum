@@ -378,3 +378,7 @@ UI:S1 focused unlock with no pre-auth workspace shell,plain access-key help,
 one primary action and inline errors. Remove absolute privacy/upstream branding
 from app copy;retain notices in lazy same-origin chunk. Fix custom-accent button
 ink;add built-copy gate and real unlock to smoke. Whole redesign remains partial.
+
+S1 iteration2:bounded real health-report disclosure with read timestamp and
+failure clearing;lifted local card surface,linked errors and retained attribution.
+No new dependency or font;whole redesign remains partial.

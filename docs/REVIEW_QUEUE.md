@@ -171,3 +171,10 @@ server preferences load after owner validation. Actual48px primary contrast
 6.85586/7.16261,JS+95/CSS+555 gzip bytes;no numeric gate relaxation. Before/after
 in ui-before and ui-after/round-1. S1 iterations2/3,live timestamped chip and
 all-theme/a11y/performance gates remain pending;no whole-redesign approval claim.
+
+| [0080](adr/0080-bounded-ui-health-observation.md) | Live startup-report chip,read timestamp and fault-clearing | New metadata-only5s deadline/64KiB cap,8s cadence/one in-flight;7s unit-driver bound;reuse44px/AA and0078 asset budgets | Not a new self-test or ledger;no existing gate relaxed;measure before claiming |
+
+ADR0080 iteration2 measured:primary6.85586/7.16261;hint minimum8.90049;
+focus minimum4.90443;48px primary;JS+868/CSS+623 gzip bytes. Browser health
+network failure clears passed;recovery restores it. Actual read timestamps,
+not test-run times. S1 iteration3 chip/height refinement still pending.

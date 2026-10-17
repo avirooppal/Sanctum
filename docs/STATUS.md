@@ -1,39 +1,28 @@
 # Current state
 
-- Step:redesign S1 iteration1;focused unlock/copy implementation.
-- Last green:79aa416854aa23a72feaedf131ba47ad4c26456a;hosted39057533321/all5 success.
-- Branch:codex/focused-unlock-redesign.
-- Current local gate:182 source,70 Rust,85 web/types/build,audit0;38 probes;16 smoke PASS.
-- Capture:129 before records,zero foreign/page errors/root overflow;not full state coverage.
-- Open:busy/streaming/long/citations,all redesign iterations/a11y/performance;prior install/backend gaps.
-- Next3:push S1/exact-SHA CI;iteration2 live status/refinement;iteration3/a11y and remaining screens.
-- Reference palette preserved;no journey/phase/release tag or completeness claim.
+- Step:redesign S1 iteration2;live health report and field errors;ADR0079/0080.
+- Last green:2ce6c60675d7c4fb2b5b5ffe9537a423870181c9;hosted39058592559/all5 success.
+- Branch:codex/focused-unlock-redesign;no main merge or phase/release tag.
+- Local:182 source,70 Rust,89 web/types/build,audit0;38 probes;16 smoke PASS.
+- Real chip:read timestamp,passed->unknown->passed on simulated health-network failure.
+- S1 measures:48px primary,contrast6.85586/7.16261;root overflow/foreign/page errors0.
+- Open:iteration3;legacy shell/theme auth migration;all-theme/axe/zoom/performance;S2-S7.
+- Next3:push/exact-SHA CI;stable chip/focus refinement;remaining controls/chat screens.
+- Whole redesign,journeys,install/backend and user-research gates remain OPEN.
 
 ## Evidence
 
-Commands:bash tools/run_source_gate.sh;bash tools/check_rust.sh;web npm test,
-typecheck,build,audit --audit-level=low;bash tools/smoke_all.sh. Raw outputs
-redesign-baseline-*. Capture:node evals/capture_redesign_before.mjs PACKAGE_PATH
-TOKEN_FILE evals/results/ui-before;real loopback only,credentials never logged.
-129 records in ui-before/manifest.json;fixed-blue website/docs are not themeable.
-First mobile-to-desktop navigation timeout retained as named failure;dashboard
-route-race image retained;rerun waits for heading. Contact sheets/layout critique
-in REDESIGN_AUDIT;not every tiny label audited at full resolution. No mock busy,
-model text or health injected. Host CI for this audit follows push.
+Full source/Rust scripts;web npm test/typecheck/build/audit;smoke_all.sh16;
+node evals/browser_unlock.mjs PACKAGE KEY_FILE ui-after/round-2. Actual logs:
+evals/results/redesign-round2-*. All10 new screenshots inspected;body/hint/input/
+focus pairs measured by browser colors. Actual baseline rebuild delta868 JS/
+623 CSS gzip bytes;no new fonts/assets/deps. ADR0080 bounds predeclared5s/64KiB,
+8s/one in-flight,7s unit driver;no old threshold/skip changed. Notices load after
+owner auth;metadata reads omit credentials. Current implementation CI follows
+push. Known standalone historical pre-auth runner migration still pending;
+no claim they passed. No fake health/model content or privacy-history proof.
 
 ## Preserved history
 
-[Previous STATUS](status-archive/2026-10-17-before-redesign-audit.md),SHA256
-`6070abb76cdc14ff020d17e645b91330e192c011d3f8a6f718300e6ad521430b`;bytes archived verbatim,older links retained.
-
-## S1 iteration1 measurements
-
-Commands:full source/Rust gate;web npm test/typecheck/build/audit;smoke_all.sh
-16 stages;node evals/browser_unlock.mjs PACKAGE TOKEN_FILE ui-after/round-1.
-Actual contrast6.85586 light/7.16261 dark,48px primary,center error<1px,0 overflow/
-foreign/page errors at1440/820/390. Test-first module failure and named mapping/
-pre-auth-control failures retained;corrected source and full smoke reruns PASS.
-Budget:actual baseline git archive1c0eb3b rebuilt with same modules;all JS chunks
-+95 gzip bytes,CSS+555;fonts/deps0. Raw redesign-round1-*,screenshots round-1.
-S1 iterations2/3,live timestamped status,axe/zoom/all-theme/performance and later
-screens remain OPEN. New implementation commit/hosted CI follows push.
+[Previous STATUS](status-archive/2026-10-18-unlock-iteration1.md),SHA256
+`efe2e6b7eb30809045238069cc7135b4f46e2aa4ab98ab35524f972eba5b92ac`;bytes retained verbatim with linked earlier evidence.

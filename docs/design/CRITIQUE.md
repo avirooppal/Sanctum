@@ -134,3 +134,28 @@ remain pending. No two-hour comfort,overall redesign or user-research claim.
 Actual git-archive baseline rebuild including all JS chunks:JS gzip+95 bytes,
 CSS gzip+555 bytes,under ADR0078 incremental budgets. Fonts/icons/dependencies
 added0. This is a build-size result,not INP,load-time or streaming-CLS evidence.
+
+## S1 iteration2 — real report,not a static privacy promise
+
+Date2026-10-18. All10 ui-after/round-2 screenshots opened at full resolution:
+light/dark three widths,real key errors and browser health-network failure.
+Remove detached footer;lift card with semantic surface mix;shorten introduction;
+link errors to input;show health-read time inside a native disclosure.
+Browser failure simulation aborts the actual same-origin health request,not a
+fake JSON response. Chip changes passed->unknown->passed after restoration.
+Notices loaded and the original attribution was observed after authentication.
+
+Actual primary contrast6.85586/7.16261;body14.36321/14.47226;hint8.90049/10.53863;
+input boundary6.93219/9.24907;focus5.22290/4.90443.48px primary;0 root overflow,
+foreign requests or page errors. Reduced-motion transition computed0s. The real
+5s observer-deadline unit passes with the predeclared7s driver. Full182 source,
+70 Rust,89 web/types/build,audit0,38 probes,16 smoke stages PASS. Build delta
+868 JS/623 CSS gzip bytes from the same rebuilt baseline;no new assets/deps.
+
+Critique:two stacked triangle disclosures look similar;the health disclosure
+needs a clearer chip affordance. Failed health removes its time row and shifts
+the centered card slightly. Reserve a stable row and say no current read instead.
+Reference focus stays blue while owner accent is green;align override focus
+with the existing contrast guard. Next iteration must retest keyboard/status
+and preserve the original palette when no override is present. No overall UX,
+all-theme WCAG,axe,200% browser zoom,INP/CLS or two-hour-comfort claim.

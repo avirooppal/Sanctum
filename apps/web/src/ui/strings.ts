@@ -7,7 +7,7 @@ export const STRINGS = Object.freeze({
   unlock: {
     region: 'Unlock Sanctum',
     title: 'Your space to think.',
-    subtitle: 'Connect to your local Sanctum runtime. Review its startup checks after unlocking.',
+    subtitle: 'Connect to your local Sanctum runtime.',
     keyLabel: 'Access key',
     placeholder: 'Enter your access key',
     memory: 'Your key stays in memory for this session.',
@@ -24,6 +24,13 @@ export const STRINGS = Object.freeze({
   notices: {
     loading: 'Loading license notices…',
     error: 'License notices could not be loaded. Close and reopen this page to try again.',
+  },
+  startup: {
+    passed: 'Startup checks reported passed',
+    unknown: 'Startup checks unknown',
+    read: 'Health read',
+    unavailable: 'Live health is unavailable. ',
+    scope: 'This is a gateway report, not a new kernel test or continuous egress audit. Ledger unavailable.',
   },
   app: {
     name: 'Sanctum',

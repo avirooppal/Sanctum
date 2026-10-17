@@ -1,0 +1,1 @@
+{"baseline_commit": "1c0eb3b", "method": "same dependency tree;actual git archive rebuild;gzip mtime0;all JS chunks including notices", "baseline_gzip_bytes": {".js": 104219, ".css": 9845}, "current_gzip_bytes": {".js": 105087, ".css": 10468}, "delta_bytes": {".js": 868, ".css": 623}, "budget_bytes": {".js": 12288, ".css": 8192}, "passed": true}
