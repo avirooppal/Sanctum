@@ -9,6 +9,33 @@ import sys
 from pathlib import Path
 
 ROOT = Path(__file__).resolve().parents[1]
+STAGE_JOURNEYS = {
+    "chat": ["J2", "J3"],
+    "rag": ["J4"],
+    "file_asr": ["J5"],
+    "file_tts": ["J5"],
+    "tickets": ["J5", "J12"],
+    "ui": ["J3", "J5"],
+    "ui_knowledge": ["J4"],
+    "ui_chat_stop": ["J3", "J12"],
+    "ui_sessions": ["J3"],
+    "ui_website": ["J1", "J9"],
+    "ui_fidelity": ["J3", "J4", "J9", "J11"],
+    "journey_readiness": [
+        "J1",
+        "J2",
+        "J3",
+        "J4",
+        "J5",
+        "J6",
+        "J7",
+        "J8",
+        "J9",
+        "J10",
+        "J11",
+        "J12",
+    ],
+}
 PENDING = [
     "websocket_voice_barge_in_diarization",
     "vision",
@@ -207,6 +234,20 @@ def main():
             ],
             None,
         ),
+        (
+            "journey_readiness",
+            [
+                sys.executable,
+                "evals/journey_runner.py",
+                "--token-file",
+                str(token),
+                "--base-url",
+                base,
+                "--output",
+                str(directory / "smoke-journey-readiness.json"),
+            ],
+            None,
+        ),
     ]
     record = {
         "suite": "smoke-all-v1",
@@ -214,6 +255,8 @@ def main():
         "passed": [],
         "release_complete": not PENDING,
         "pending_release_requirements": PENDING,
+        "journey_support": STAGE_JOURNEYS,
+        "full_journey_acceptance_verified": False,
     }
     for name, argv, historical in stages:
         manager = (

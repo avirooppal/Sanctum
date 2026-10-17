@@ -11,6 +11,8 @@ await context.route('**/*',route=>{const url=new URL(route.request().url());if(u
 await context.routeWebSocket('**/*',socket=>{const url=new URL(socket.url());url.protocol=url.protocol==='wss:'?'https:':'http:';
   if(url.origin!==base.origin){foreign.push(url.origin);socket.close();}else socket.connectToServer();});
 const page=await context.newPage();page.on('pageerror',e=>errors.push(e.message));
+const responses=[];
+page.on('response',response=>responses.push({path:new URL(response.url()).pathname,status:response.status()}));
 try {
   await page.goto(base.href);await page.getByLabel('Local access key').fill(readFileSync(tokenFile,'utf8').trim());
   await page.getByRole('button',{name:'Open workspace',exact:true}).click();
@@ -42,4 +44,7 @@ try {
   assert.deepEqual(errors,[]);assert.deepEqual(foreign,[]);
   const result={suite:'real-knowledge-browser',passed:['workspace_create','document_upload','cited_answer','empty_workspace_abstention','mobile_no_overflow','escape_closes'],cited_answer:cited,foreign_requests:foreign,page_errors:errors};
   writeFileSync(output,JSON.stringify(result,null,2)+'\n');console.log(JSON.stringify(result,null,2));
+} catch(error) {
+  writeFileSync(output.replace(/\.json$/,'-failure.json'),JSON.stringify({reason:error.name,responses},null,2)+'\n');
+  throw error;
 } finally {await browser.close();}

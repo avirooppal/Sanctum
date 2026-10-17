@@ -106,3 +106,17 @@ The web build also includes `/website.html` on your local gateway. It presents
 Sanctum setup,features and current support with bundled fonts and no external
 requests. The chat application remains at `/`. Desktop installers and the full
 Hermes-inspired documentation/dashboard port are still in development.
+
+## Workflow verification
+
+`python tools/workflow_check.py` verifies journey/status/test mappings;
+`python tools/secret_scan.py` rejects credential-shaped tracked/eval content.
+These also run in the source gate and hosted source CI. Against a real runtime:
+
+```sh
+python evals/journey_runner.py --token-file "$SANCTUM_TOKEN_FILE" --output evals/results/owner-journey-readiness.json
+```
+
+This is readiness only:it reports zero complete journeys verified and does not
+measure human action budgets. `--require-verified` refuses full acceptance.
+Full Playwright/engine/chaos/ledger journeys remain in WORKFLOW_GAPS.

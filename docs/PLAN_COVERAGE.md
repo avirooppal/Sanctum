@@ -259,3 +259,22 @@ checker,journey runners and alignment fixes remain pending. J10 is hidden and
 blocked on policy/ledger/broker;no cloud request or candidate-model admission.
 False hardware/provisioning/privacy/purge promises are documented defects,
 not hardware exceptions. R-UI,R-SPEECH,R-PRIVACY,R-PACKAGES remain OPEN.
+
+## Workflow guards and bootstrap evidence (2026-10-17)
+
+Contract commit d6a10d7589cf79ef9f017db8befa6277fde4c5a3:all5 hosted jobs
+completed success,run39035676424 (workflow-contract-hosted-ci.json).
+New source gate:174 tests PASS;Rust67/38 denial probes PASS;web76 plus
+typecheck/build PASS,audit0. Raw workflow-checks-source-complete.log,
+workflow-checks-rust.log,workflow-bootstrap-web.log,workflow-checks-audit.log.
+12 implemented-feature smoke stages PASS (workflow-checks-smoke-boot-fixed.log).
+12 real journey readiness checks PASS;0 full journeys verified,all click/ledger/
+chaos acceptance remains pending. Strict mode explicitly refuses acceptance.
+Consistency checks cover IDs,all step rows,budgets,smoke/supporting-test mappings,
+release/public status and credential-shaped leaks;10 adversarial consistency,
+3 secret/redaction and4 readiness unit tests pass. No skip/threshold relaxation.
+Repeated startup503s were captured,not treated as an environment pass. ADR0073
+fixes client request bursts without widening admission. Three consecutive real
+Knowledge tests pass after the fix;raw workflow-boot-knowledge-1/2/3.json/log.
+J6.4 correction:the earlier B4 smoke did not run meeting capture;its row is now
+source-only. Full runtime journey CI,backend/chaos/ledger and release gates OPEN.

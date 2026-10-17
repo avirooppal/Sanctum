@@ -6,6 +6,8 @@ remain in the ADRs, status archives and named results. Add new entries when a
 timeout, threshold, tolerance or scope changes; supersede explicitly, never silently.
 “Relaxes gate” includes methodology/scope exceptions, even when numeric bounds stay.
 
+| [0072](adr/0072-workflow-checks-and-readiness.md) | Bidirectional IDs,public status projection,secret scan and12 real readiness checks | New test-client10s/1MiB guards only;no server/SLO relaxation | Readiness is not full journey acceptance;budgets,chaos,ledger and hosted runtime journey suite stay OPEN |
+
 | ADR | Change and motivating evidence | Relaxes plan/ADR gate? | Cost / limitation |
 |---|---|---|---|
 | [0001](adr/0001-foundation-cli.md) | Python diagnostic CLI; initial host lacked Rust; permissive tooling substitution | No: Rust control plane retained | Source CLI initially needs explicit profile path |
@@ -138,3 +140,5 @@ Named failed check retained; no source/test lint exception or quality gate waive
 
 | [0070](adr/0070-workflow-baseline-restoration.md) | Restore real file speech and Stop feedback; explicit light-theme fixture, exact locators and bundled-doc validation | No bounds/thresholds removed or loosened; existing-doc route expected scope corrected | Initial red Rust/path/theme/doc-link/locator runs retained; fresh full smoke rerun required |
 | [0071](adr/0071-canonical-owner-journeys.md) | Owner workflow J1-J12 is canonical; explicit cloud scope remains gated on policy/ledger | New action budgets fixed before measurement; no existing latency/privacy gate relaxed | Negative capability checks do not verify a pending journey; model-download network metadata boundary explicit; full purge needs honest scope |
+
+| [0073](adr/0073-sequential-workspace-bootstrap.md) | Confirmed startup503 burst;sequential cancellable metadata and fail-closed UI,one context poll | No lane/timeout/SLO increase or automatic replay | Three consecutive real Knowledge flows plus full smoke required;full journey acceptance still pending |

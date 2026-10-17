@@ -1,0 +1,24 @@
+node:internal/modules/run_main:107
+    triggerUncaughtException(
+    ^
+
+locator.click: Timeout 30000ms exceeded.
+Call log:
+[2m  - waiting for getByRole('button', { name: 'Knowledge', exact: true })[22m
+[2m    - locator resolved to <button class="" type="button" data-ui-button="outline">Knowledge</button>[22m
+[2m  - attempting click action[22m
+[2m    - waiting for element to be visible, enabled and stable[22m
+[2m  - element was detached from the DOM, retrying[22m
+
+    at C:\Users\aviroop\Desktop\Sanctum\evals\browser_knowledge.mjs:17:64 {
+  log: [
+    "  - waiting for getByRole('button', { name: 'Knowledge', exact: true })",
+    '    - locator resolved to <button class="" type="button" data-ui-button="outline">Knowledge</button>',
+    '  - attempting click action',
+    '    - waiting for element to be visible, enabled and stable',
+    '  - element was detached from the DOM, retrying'
+  ],
+  name: 'TimeoutError'
+}
+
+Node.js v24.19.0

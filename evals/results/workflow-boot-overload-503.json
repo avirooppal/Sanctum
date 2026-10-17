@@ -1,0 +1,65 @@
+{
+  "reason": "TimeoutError",
+  "responses": [
+    {
+      "path": "/",
+      "status": 200
+    },
+    {
+      "path": "/assets/app-D0ym7XKH.css",
+      "status": 200
+    },
+    {
+      "path": "/assets/app-DN-qv3k9.js",
+      "status": 200
+    },
+    {
+      "path": "/fonts/spectral.ttf",
+      "status": 200
+    },
+    {
+      "path": "/fonts/archivo.ttf",
+      "status": 200
+    },
+    {
+      "path": "/v1/workspaces",
+      "status": 200
+    },
+    {
+      "path": "/v1/capabilities",
+      "status": 503
+    },
+    {
+      "path": "/v1/sessions",
+      "status": 200
+    },
+    {
+      "path": "/v1/conversations/8772dd84-5129-42e7-a4d8-4edb3f4f901c/usage",
+      "status": 200
+    },
+    {
+      "path": "/v1/preferences",
+      "status": 200
+    },
+    {
+      "path": "/v1/conversations/8772dd84-5129-42e7-a4d8-4edb3f4f901c/usage",
+      "status": 200
+    },
+    {
+      "path": "/healthz/dispatch",
+      "status": 200
+    },
+    {
+      "path": "/fonts/jetbrainsmono.ttf",
+      "status": 503
+    },
+    {
+      "path": "/healthz",
+      "status": 200
+    },
+    {
+      "path": "/v1/models",
+      "status": 503
+    }
+  ]
+}

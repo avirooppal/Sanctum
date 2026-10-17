@@ -346,3 +346,11 @@ Added grounded quote fallback, configurable loopback-only folder polling, and fr
   privacy/ledger expectations and a strict per-step gap audit.
 - Restore existing real file-speech and chat-Stop feedback in the workspace.
 - Preserve baseline failures;keep all release and full-journey gates open.
+
+### Workflow guards and reliable workspace admission
+
+- Check journey IDs,steps,budgets,test mappings and public/release status;scan
+  tracked files and eval evidence for credential-shaped values with redaction.
+- Add12 real gateway readiness tests with explicit pending/full-acceptance flags.
+- Fix startup metadata503 bursts with sequential cancellable bootstrap and
+  fail-closed capabilities;retain one real status-bar context/usage poll.

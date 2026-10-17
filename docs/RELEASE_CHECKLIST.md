@@ -112,3 +112,29 @@ The initial failures are preserved. Exact edited-SHA hosted CI is pending push.
 Missing full-purge scope,simulated onboarding,unconditional privacy badges and
 fail-open client capabilities must be corrected. Cloud remains unavailable
 until its policy/ledger/broker prerequisites pass;no release tags.
+
+## Canonical journey status v1.0.0
+
+| ID | Status | Acceptance test | Blocker |
+|---|---|---|---|
+| J1 | PENDING | journey:J1 | Signed installers/bundle verification absent |
+| J2 | PARTIAL | journey:J2 | Real hardware onboarding/import progress missing |
+| J3 | PARTIAL | journey:J3 | Journey budgets/chaos/ledger not established |
+| J4 | PARTIAL | journey:J4 | Folder/progress/restart and quality gates incomplete |
+| J5 | PARTIAL | journey:J5 | Full resident WebSocket voice/barge-in absent |
+| J6 | PARTIAL | journey:J6 | Recording,diarization and speaker-note pipeline absent |
+| J7 | PENDING | journey:J7 | Vision/OCR/indexing/evaluation absent |
+| J8 | PENDING | journey:J8 | Governed agent runtime/policy/ledger absent |
+| J9 | PARTIAL | journey:J9 | Startup self-test exists;Privacy Ledger absent |
+| J10 | PENDING | journey:J10 | Prerequisite policy/ledger/broker absent |
+| J11 | PARTIAL | journey:J11 | LAN/crypto/update/full-purge contracts incomplete |
+| J12 | PARTIAL | journey:J12 | Unified recovery,diagnostics and chaos evidence absent |
+
+Workflow guard slice:174 source/Rust67/web76 PASS,audit0,38 denial probes,
+12 real smoke stages PASS. Twelve readiness checks do not verify complete
+journeys;strict acceptance refused. Pending capability-denial tests are not
+skips and do not satisfy hardware,budget,ledger or chaos gates. Public workflow
+tables now match the canonical registry and checklist;source CI checks drift
+and secrets. Full runtime journey CI remains OPEN. Startup503 regression fixed
+per ADR0073,with3 consecutive real Knowledge runs. Fresh evidence paths are in
+PLAN_COVERAGE's workflow guard section;edited-SHA hosted CI follows push.

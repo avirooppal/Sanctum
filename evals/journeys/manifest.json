@@ -1,0 +1,375 @@
+{
+  "version": "1.0.0",
+  "journeys": [
+    {
+      "id": "J1",
+      "title": "Install and verify",
+      "test_id": "journey:J1",
+      "status": "PENDING",
+      "blocker": "Signed installers/bundle verification absent",
+      "steps": [
+        "J1.1",
+        "J1.2",
+        "J1.3",
+        "J1.4"
+      ],
+      "budget": {
+        "clicks": 6,
+        "navigation_keys": 16,
+        "text_entries": 3
+      },
+      "blocked_capabilities": [
+        "signed_install"
+      ]
+    },
+    {
+      "id": "J2",
+      "title": "First run",
+      "test_id": "journey:J2",
+      "status": "PARTIAL",
+      "blocker": "Real hardware onboarding/import progress missing",
+      "steps": [
+        "J2.1",
+        "J2.2",
+        "J2.3",
+        "J2.4"
+      ],
+      "budget": {
+        "clicks": 7,
+        "navigation_keys": 16,
+        "text_entries": 3
+      },
+      "blocked_capabilities": [
+        "model_provisioning",
+        "folder_watch"
+      ]
+    },
+    {
+      "id": "J3",
+      "title": "Ask locally",
+      "test_id": "journey:J3",
+      "status": "PARTIAL",
+      "blocker": "Journey budgets/chaos/ledger not established",
+      "steps": [
+        "J3.1",
+        "J3.2",
+        "J3.3",
+        "J3.4"
+      ],
+      "budget": {
+        "clicks": 8,
+        "navigation_keys": 16,
+        "text_entries": 3
+      },
+      "blocked_capabilities": []
+    },
+    {
+      "id": "J4",
+      "title": "Ask my documents",
+      "test_id": "journey:J4",
+      "status": "PARTIAL",
+      "blocker": "Folder/progress/restart and quality gates incomplete",
+      "steps": [
+        "J4.1",
+        "J4.2",
+        "J4.3",
+        "J4.4"
+      ],
+      "budget": {
+        "clicks": 9,
+        "navigation_keys": 20,
+        "text_entries": 4
+      },
+      "blocked_capabilities": [
+        "knowledge_jobs"
+      ]
+    },
+    {
+      "id": "J5",
+      "title": "Voice",
+      "test_id": "journey:J5",
+      "status": "PARTIAL",
+      "blocker": "Full resident WebSocket voice/barge-in absent",
+      "steps": [
+        "J5.1",
+        "J5.2",
+        "J5.3",
+        "J5.4"
+      ],
+      "budget": {
+        "clicks": 8,
+        "navigation_keys": 16,
+        "text_entries": 2
+      },
+      "blocked_capabilities": [
+        "voice_realtime",
+        "barge_in"
+      ]
+    },
+    {
+      "id": "J6",
+      "title": "Meetings",
+      "test_id": "journey:J6",
+      "status": "PARTIAL",
+      "blocker": "Recording,diarization and speaker-note pipeline absent",
+      "steps": [
+        "J6.1",
+        "J6.2",
+        "J6.3",
+        "J6.4"
+      ],
+      "budget": {
+        "clicks": 10,
+        "navigation_keys": 24,
+        "text_entries": 4
+      },
+      "blocked_capabilities": [
+        "diarization",
+        "meeting_audio"
+      ]
+    },
+    {
+      "id": "J7",
+      "title": "Images and scanned documents",
+      "test_id": "journey:J7",
+      "status": "PENDING",
+      "blocker": "Vision/OCR/indexing/evaluation absent",
+      "steps": [
+        "J7.1",
+        "J7.2",
+        "J7.3",
+        "J7.4"
+      ],
+      "budget": {
+        "clicks": 7,
+        "navigation_keys": 16,
+        "text_entries": 2
+      },
+      "blocked_capabilities": [
+        "vision",
+        "ocr"
+      ]
+    },
+    {
+      "id": "J8",
+      "title": "Agent task",
+      "test_id": "journey:J8",
+      "status": "PENDING",
+      "blocker": "Governed agent runtime/policy/ledger absent",
+      "steps": [
+        "J8.1",
+        "J8.2",
+        "J8.3",
+        "J8.4"
+      ],
+      "budget": {
+        "clicks": 9,
+        "navigation_keys": 20,
+        "text_entries": 3
+      },
+      "blocked_capabilities": [
+        "agents",
+        "tools",
+        "approvals"
+      ]
+    },
+    {
+      "id": "J9",
+      "title": "Verify privacy",
+      "test_id": "journey:J9",
+      "status": "PARTIAL",
+      "blocker": "Startup self-test exists;Privacy Ledger absent",
+      "steps": [
+        "J9.1",
+        "J9.2",
+        "J9.3",
+        "J9.4"
+      ],
+      "budget": {
+        "clicks": 5,
+        "navigation_keys": 12,
+        "text_entries": 0
+      },
+      "blocked_capabilities": [
+        "ledger"
+      ]
+    },
+    {
+      "id": "J10",
+      "title": "Use a cloud model (optional)",
+      "test_id": "journey:J10",
+      "status": "PENDING",
+      "blocker": "Prerequisite policy/ledger/broker absent",
+      "steps": [
+        "J10.1",
+        "J10.2",
+        "J10.3",
+        "J10.4"
+      ],
+      "budget": {
+        "clicks": 8,
+        "navigation_keys": 20,
+        "text_entries": 1
+      },
+      "blocked_capabilities": [
+        "cloud",
+        "openrouter"
+      ]
+    },
+    {
+      "id": "J11",
+      "title": "Manage",
+      "test_id": "journey:J11",
+      "status": "PARTIAL",
+      "blocker": "LAN/crypto/update/full-purge contracts incomplete",
+      "steps": [
+        "J11.1",
+        "J11.2",
+        "J11.3",
+        "J11.4",
+        "J11.5",
+        "J11.6"
+      ],
+      "budget": {
+        "clicks": 24,
+        "navigation_keys": 48,
+        "text_entries": 8
+      },
+      "blocked_capabilities": [
+        "lan",
+        "encryption",
+        "backup",
+        "updates",
+        "full_purge",
+        "resource_limits"
+      ]
+    },
+    {
+      "id": "J12",
+      "title": "Recover",
+      "test_id": "journey:J12",
+      "status": "PARTIAL",
+      "blocker": "Unified recovery,diagnostics and chaos evidence absent",
+      "steps": [
+        "J12.1",
+        "J12.2",
+        "J12.3",
+        "J12.4"
+      ],
+      "budget": {
+        "clicks": 8,
+        "navigation_keys": 20,
+        "text_entries": 2
+      },
+      "blocked_capabilities": [
+        "diagnostics_bundle"
+      ]
+    }
+  ],
+  "supporting_test_roots": [
+    {
+      "root": "apps/cli/tests",
+      "journeys": [
+        "J1",
+        "J2",
+        "J11",
+        "J12"
+      ]
+    },
+    {
+      "root": "apps/web/tests",
+      "journeys": [
+        "J2",
+        "J3",
+        "J4",
+        "J5",
+        "J6",
+        "J9",
+        "J11",
+        "J12"
+      ]
+    },
+    {
+      "root": "services/gateway",
+      "journeys": [
+        "J1",
+        "J2",
+        "J3",
+        "J4",
+        "J5",
+        "J9",
+        "J11",
+        "J12"
+      ]
+    },
+    {
+      "root": "services/inference",
+      "journeys": [
+        "J2",
+        "J3",
+        "J5",
+        "J12"
+      ]
+    },
+    {
+      "root": "services/knowledge",
+      "journeys": [
+        "J4",
+        "J6"
+      ]
+    },
+    {
+      "root": "services/speech",
+      "journeys": [
+        "J5",
+        "J6",
+        "J12"
+      ]
+    },
+    {
+      "root": "services/policy",
+      "journeys": [
+        "J1",
+        "J8",
+        "J9",
+        "J10",
+        "J11",
+        "J12"
+      ]
+    },
+    {
+      "root": "tools/tests",
+      "journeys": [
+        "J1",
+        "J2",
+        "J3",
+        "J4",
+        "J5",
+        "J6",
+        "J7",
+        "J8",
+        "J9",
+        "J10",
+        "J11",
+        "J12"
+      ]
+    },
+    {
+      "root": "evals/tests",
+      "journeys": [
+        "J1",
+        "J2",
+        "J3",
+        "J4",
+        "J5",
+        "J6",
+        "J7",
+        "J8",
+        "J9",
+        "J10",
+        "J11",
+        "J12"
+      ]
+    }
+  ]
+}

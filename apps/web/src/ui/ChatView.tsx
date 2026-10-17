@@ -2,7 +2,6 @@ import React, { useState, useRef, useEffect, useCallback } from 'react';
 import type { Message, SanctumClient } from '../api.js';
 import { SafeMarkdown } from './SafeMarkdown.js';
 import { ChatComposer } from './ChatComposer.js';
-import { ContextBar } from './ContextBar.js';
 import { STRINGS } from './strings.js';
 
 export interface ChatViewProps {
@@ -41,7 +40,6 @@ export function ChatView({
   api,
   token,
   modelId,
-  contextLimit,
   onCitationClick,
   onAttachmentUploaded,
   className = '',
@@ -269,16 +267,8 @@ export function ChatView({
         </button>
       )}
 
-      {/* Context/Token usage bar & Composer area */}
+      {/* Context usage belongs to the status bar; avoid a duplicate poll. */}
       <div className="px-4 pb-4 bg-background/80 backdrop-blur-xs">
-        <div className="flex items-center justify-between mb-2">
-          <ContextBar
-            api={api}
-            conversation={conversationId}
-            contextLimit={contextLimit}
-          />
-        </div>
-
         <ChatComposer
           prompt={prompt}
           setPrompt={setPrompt}

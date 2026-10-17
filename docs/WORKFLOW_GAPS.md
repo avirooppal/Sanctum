@@ -62,7 +62,7 @@ ledger,packet capture,chaos or full-journey gates they did not exercise.
 | J6.1 | No meeting recorder/import job | SOURCE:MeetingPanel.tsx accepts reviewed transcript text | hide until backend |
 | J6.2 | No diarization/speaker map | SOURCE:speech adapters lack evaluated diarizer | hide until backend |
 | J6.3 | Reviewed-text helper only | SOURCE:meeting.ts;no DER/evidence-linked full meeting pipeline | fix |
-| J6.4 | Reviewed notes save partial | B4 browser reviewed meeting capture;not speaker-labelled pipeline | keep |
+| J6.4 | Reviewed notes save source-only | SOURCE:MeetingPanel.tsx and meetings route;not exercised by B4 smoke and not a speaker-labelled pipeline | fix |
 | J7.1 | No image ingress | SOURCE:chat attachment is Knowledge document upload only | hide until backend |
 | J7.2 | No VLM/OCR pipeline | SOURCE:vision-docs service has no runnable adapter | hide until backend |
 | J7.3 | No region visual QA | R-VISION OPEN;no fresh benchmark | hide until backend |
@@ -107,11 +107,28 @@ ledger,packet capture,chaos or full-journey gates they did not exercise.
 
 ## Next alignment slices
 
-1. Commit this versioned contract and audit first;add registry consistency and
-   secret scanning with adversarial tests,source gate and hosted CI coverage.
+1. Canonical contract committed at d6a10d7;all5 hosted jobs completed success
+   (run39035676424). Registry consistency and secret scanning are the next slice.
 2. Real first-run status/auth;fail-closed capabilities;truthful privacy badges,
    error taxonomy,Knowledge cancel;hide false full purge/developer gallery.
 3. Register one automated runner per journey,distinguishing pending-denial checks
    from actual verified journeys;map existing real smoke to supported subflows.
 4. Complete J1–J4/J12 and subsequent backends in WRAPUP order. No cloud connector
    before policy/ledger. No release tag from baseline or documentation alone.
+
+## Workflow guard slice evidence
+
+Canonical contract d6a10d7 hosted run39035676424:all5 jobs completed success.
+Fresh guards:174 source tests,Rust67,web76 PASS;audit0,38 denial probes.
+Full implemented-feature smoke12 stages PASS;readiness12 PASS/full journeys0.
+Raw:workflow-checks-source-complete.log,workflow-checks-rust.log,
+workflow-bootstrap-web.log,workflow-checks-smoke-boot-fixed.log and
+workflow-checks-final-smoke-*. All counts are actual execution results.
+Consistency IDs/steps/budgets/status/test mappings and credential scan are now
+implemented. Actual full journey Playwright,budget,ledger,chaos and hosted
+runtime acceptance remain gaps,not covered by readiness. Confirmed startup503
+responses and failed tests remain named;sequential bootstrap plus fail-closed
+capabilities and one context poll passed3 consecutive real Knowledge runs.
+J2.3/J11.1 capability discovery is now fail-closed;simulated wizard,preference
+write failures and broad privacy/purge claims remain pending alignment.
+J6.4 was corrected to source-only evidence:legacy smoke did not exercise it.

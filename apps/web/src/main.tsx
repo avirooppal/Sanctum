@@ -6,6 +6,7 @@ import { MeetingPanel } from './MeetingPanel';
 
 import { SanctumClient, type Message, type Model } from './api';
 import { ChatRun } from './chat-run';
+import { loadWorkspace } from './workspace-bootstrap';
 import { ChatView } from './ui/ChatView';
 import { RightRail } from './ui/RightRail';
 import { StatusBar } from './ui/StatusBar';
@@ -116,7 +117,7 @@ function App() {
 
   // Preferences & Capabilities
   const [preferences, setPreferences] = useState<UserPreferences>(DEFAULT_PREFERENCES);
-  const [capabilities, setCapabilities] = useState<string[]>(['chat', 'models', 'history', 'dashboard', 'preferences', 'knowledge', 'speech']);
+  const [capabilities, setCapabilities] = useState<string[]>([]);
   const [toasts, setToasts] = useState<ToastItem[]>([]);
   const [lastDeletedSession, setLastDeletedSession] = useState<{ id: string; title?: string } | null>(null);
   const [activeProfileId, setActiveProfileId] = useState<string | null>(null);
@@ -131,33 +132,31 @@ function App() {
   // Load capabilities & server preferences on authentication
   useEffect(() => {
     if (!token) return;
-    api.capabilities()
-      .then(res => {
-        if (res.capabilities) setCapabilities(res.capabilities);
-      })
-      .catch(() => {});
-
-    api.preferences()
-      .then(serverPrefs => {
-        if (serverPrefs) {
-          const { preferences: sanitized } = sanitizePreferences(serverPrefs);
-          setPreferences(sanitized);
+    const controller=new AbortController();
+    setCapabilities([]);setModels([]);setModelObjects([]);
+    async function bootstrap() {
+      try {
+        await document.fonts.load('12px "JetBrains Mono"');
+        await document.fonts.ready;
+        const loaded=await loadWorkspace(api,controller.signal);
+        if(loaded.preferences) {
+          setPreferences(sanitizePreferences(loaded.preferences).preferences);
         }
-      })
-      .catch(() => {});
-
-    api.models()
-      .then(async data => {
+        const data=loaded.models;
         setModelObjects(data);
         const textModels = data.filter(m => m.capabilities.includes('text')).map(m => m.id);
         setModels(textModels);
         setModel(textModels[0] || '');
+        setCapabilities(loaded.capabilities.capabilities);
         await refresh();
-      })
-      .catch(e => {
-        setError(e.message);
+      } catch(e) {
+        if(controller.signal.aborted)return;
+        setError(e instanceof Error?e.message:'Local runtime metadata is unavailable.');
         setToken('');
-      });
+      }
+    }
+    void bootstrap();
+    return ()=>controller.abort();
   }, [token]);
 
   // Apply theme tokens to root element
@@ -612,7 +611,7 @@ function App() {
             <p className="mt-9 mb-3 text-xs text-display tracking-wider ui-text-secondary">
               Your conversations
             </p>
-            {token && (
+            {token && capabilities.includes('history') && (
               <HistoryPanel
                 api={api}
                 current={conversation}
@@ -652,7 +651,7 @@ function App() {
           <>
             <div className="flex items-center gap-3">
               <span className="text-sm ui-text-secondary">Your workspace / Chat</span>
-              {token && (
+              {token && capabilities.includes('chat') && (
                 <span className="inline-flex items-center gap-1.5 px-2 py-0.5 rounded text-[11px] font-medium bg-emerald-500/10 text-emerald-700 dark:text-emerald-400 border border-emerald-500/20">
                   <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse"></span>
                   live
@@ -698,7 +697,7 @@ function App() {
           </>
         }
         rightRail={
-          token ? (
+          token && capabilities.includes('chat') ? (
             <RightRail
               messages={messages}
               api={api}
@@ -709,7 +708,7 @@ function App() {
           ) : undefined
         }
         statusBar={
-          token ? (
+          token && capabilities.includes('chat') ? (
             <StatusBar
               api={api}
               conversation={conversation}
@@ -720,7 +719,7 @@ function App() {
           ) : undefined
         }
       >
-        {token && <MeetingPanel token={token} />}
+        {token && capabilities.includes('knowledge') && <MeetingPanel token={token} />}
 
         {!token ? (
           showWizard ? (
@@ -799,7 +798,7 @@ function App() {
               </form>
             </section>
           )
-        ) : (
+        ) : capabilities.includes('chat') ? (
           <ChatView
             messages={messages}
             prompt={prompt}
@@ -831,7 +830,7 @@ function App() {
             onCitationClick={() => setKnowledgeOpen(true)}
             onAttachmentUploaded={() => refresh()}
           />
-        )}
+        ) : <p role="status">Checking local runtime…</p>}
 
         {token && capabilities.includes('speech') && <SpeechPanel token={token}
           answer={messages.filter(message => message.role === 'assistant').at(-1)?.content ?? ''}

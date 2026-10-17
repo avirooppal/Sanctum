@@ -18,3 +18,10 @@ Public-website v1 adds ui_website: three responsive viewports, same-origin
 request blocking, no WebSockets, local anchor integrity, FAQ interaction,
 keyboard skip navigation, reduced motion and navigation into the real app.
 It is not a substitute for full UI fidelity or accessibility acceptance.
+
+Workflow v1 adds STAGE_JOURNEYS:every existing stage has canonical journey IDs,
+validated bidirectionally by workflow_check.py. journey_readiness runs one real
+gateway metadata/auth/capability-denial check per journey and reports12 readiness
+checks with0 complete journeys verified. It never substitutes for real engine
+smoke or full Playwright,budget,ledger and chaos acceptance. The full release
+gate remains false while those gaps exist;no test or old stage is discarded.

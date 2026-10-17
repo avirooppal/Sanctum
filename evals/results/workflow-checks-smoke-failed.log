@@ -1,0 +1,6 @@
+Traceback (most recent call last):
+  File "C:\Users\aviroop\Desktop\Sanctum\tools\smoke_all.py", line 290, in <module>
+    main()
+  File "C:\Users\aviroop\Desktop\Sanctum\tools\smoke_all.py", line 277, in main
+    raise RuntimeError(f"smoke {name} failed; see named log")
+RuntimeError: smoke ui_knowledge failed; see named log

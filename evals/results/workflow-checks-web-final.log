@@ -1,0 +1,115 @@
+
+> sanctum-web@0.1.0 test
+> tsc --outDir build/tests --noEmit false --target ES2022 --module NodeNext --moduleResolution NodeNext --jsx react-jsx --esModuleInterop src/speech.ts src/pcm.ts src/meeting.ts src/api.ts src/chat-run.ts src/ui/primitives.tsx src/ui/themes.ts src/ui/AppShell.tsx src/ui/SafeMarkdown.tsx src/DashboardPanel.tsx src/ui/DashboardPage.tsx src/SetupWizard.tsx src/ui/PanelRegistry.ts src/ui/Customization.ts src/ui/ErrorBoundary.tsx src/ui/UndoToast.tsx src/ui/CommandPalette.tsx src/ui/SettingsModal.tsx src/ui/LayoutEngine.tsx src/ui/Gallery.tsx src/ui/TabRail.tsx src/ui/QuadView.tsx src/ui/ContextBar.tsx src/ui/ChatComposer.tsx src/ui/ChatView.tsx src/ui/RightRail.tsx src/ui/StatusBar.tsx && node --test tests/*.test.mjs && node --test ../../evals/tests/ui-font-metrics.test.mjs
+
+✔ Knowledge uses authenticated fixed paths and owner-only restricted uploads (62.4745ms)
+✔ Knowledge validates answers and rejects unsupported uploads before sending (3.066ms)
+✔ default fetch retains the Window/global receiver (1.4049ms)
+✔ fixed same-origin requests omit cookies, reject redirects and never retry (1.5663ms)
+✔ models are validated and conversation IDs cannot change origin or path structure (8.3509ms)
+✔ stream decodes split Unicode and SSE lines without fabricated text (7.1362ms)
+✔ consumer cancellation releases stream and ignored fetch abort cannot yield stale text (1.5801ms)
+✔ ticket is in subprotocol only and abort closes the socket (1.872ms)
+✔ invalid ticket and cancellation after ticket never open a socket (5.0676ms)
+✔ abort while waiting for a stalled stream releases the reader (12.6126ms)
+✔ session management uses owner-authenticated fixed paths and validates pages (2.8366ms)
+✔ session mutations never retry and malformed lists are rejected (2.8165ms)
+✔ capabilities and preferences endpoints validate payload and authenticate owner (1.3984ms)
+✔ profiles and full purge endpoints authenticate owner and reject invalid payloads (2.2116ms)
+✔ stop aborts the admitted run, suppresses late output and never retries (12.4641ms)
+✔ overlapping starts are refused; an explicit next run has a fresh signal (2.8003ms)
+✔ abort rejection is stopped but real engine failures are preserved (0.9953ms)
+✔ ContextBar renders truthful Unknown state when token usage data is missing (67.7711ms)
+✔ ChatComposer lists ONLY implemented slash commands and no speculative commands (11.0198ms)
+✔ ChatComposer renders accessible textarea with configurable Enter hint (3.6543ms)
+✔ ChatView renders document measure layout and user bubbles layout without throwing (23.5125ms)
+✔ ChatView renders calm streaming indicator during local generation (3.7212ms)
+✔ DashboardPanel renders daemon health and dispatch lanes without throwing (53.6861ms)
+✔ sanitizeUrl allows safe http, https, and hash links (4.665ms)
+✔ sanitizeUrl blocks javascript:, data:, and malicious protocol injection (1.5703ms)
+✔ parseMarkdownBlocks isolates code blocks from paragraphs (0.707ms)
+✔ parseMarkdownBlocks handles unclosed code fence without crashing (0.3497ms)
+✔ SafeMarkdown renders without throwing and escapes dangerous html elements (60.0068ms)
+✔ SafeMarkdown renders code block with language label, copy button, and citation chips (3.886ms)
+✔ meeting save uses restricted same-origin authenticated request (63.4213ms)
+✔ invalid workspace and oversized or blank input never send requests (2.0767ms)
+✔ failed writes are surfaced without retrying (1.2388ms)
+✔ PanelRegistry registers dummy panel and enforces capabilities filter (4.6869ms)
+✔ Custom theme validation accepts compliant JSON and rejects hostile or malformed tokens (1.4708ms)
+✔ Contrast guard enforces WCAG AA contrast ratio and auto-adjusts failing colors (0.5063ms)
+✔ Preferences sanitizer migrates valid settings and recovers safely from corrupted data (1.0011ms)
+✔ PanelErrorBoundary catches render failures and renders accessible alert (23.2854ms)
+✔ Centralized string table contains required top-level categories and non-empty strings (0.3754ms)
+✔ Layout engine presets and keyboard shortcuts match ADR 0069 specification (0.4109ms)
+✔ SettingsModal renders with all A7 specification tabs without throwing (16.498ms)
+✔ DashboardPage renders routed Hermes-mirrored pages without throwing (38.8086ms)
+✔ encodes finite mono PCM16 with accurate WAV header and clamping (4.9972ms)
+✔ bounded memory accepts no partial overflow and resets after discard (1.1406ms)
+✔ rejects nonfinite data without mutating captured audio (0.5932ms)
+✔ native button defaults to non-submit, preserves explicit submit and disabled (15.86ms)
+✔ untrusted titles and field text remain escaped React text (4.0937ms)
+✔ dialog has a named native modal and escaped children without an injected close link (3.0057ms)
+✔ shell has one sidebar and main with explicitly connected native navigation control (3.4785ms)
+✔ primitives CSS enforces 180ms motion and 44px coarse pointer touch target (3.3754ms)
+✔ apps/web production package.json does not import upstream or reference dependencies (2.8273ms)
+✔ production web source code contains zero imports from reference or upstream directories (20.488ms)
+✔ RightRail returns null when isOpen is false (29.4574ms)
+✔ RightRail extracts code artifacts with language, lines, copy and download actions (10.8748ms)
+✔ RightRail extracts citations and safe links (2.2212ms)
+✔ RightRail renders accessible Knowledge tree header and empty state (1.6239ms)
+✔ uses same-origin multipart and bearer auth without storing credentials (87.348ms)
+✔ stop discards stale audio even if fetch ignores abort (1.2894ms)
+✔ stop releases playback and next operation cannot reuse it (22.7902ms)
+✔ rejects oversized inputs and unexpected audio content types (10.4239ms)
+✔ StatusBar renders health, offline egress badge, and context bar (63.788ms)
+✔ StatusBar renders background jobs counter button (3.1791ms)
+✔ core compiler preserves responsive and arbitrary-value application utilities (62.9622ms)
+✔ TabRail renders accessible tablist, active tab, and close button (12.6835ms)
+✔ QuadView renders four independent panes and clear waiting state under admission limits (5.0835ms)
+✔ all pinned desktop and dashboard-only presets are available without upstream branding (2.4606ms)
+✔ pinned canonical palette values and mode pairs are retained (0.8092ms)
+✔ invalid IDs fail, tokens do not leak mutable palette references or remote URLs (6.5759ms)
+✔ public website is offline, branded Sanctum, with honest setup links (4.6462ms)
+✔ docs site is offline, branded Sanctum, with local navigation and zero scripts/images (1.1493ms)
+✔ platform-status section reads only verified artifacts and fails if it disagrees with RELEASE_CHECKLIST.md (5.1193ms)
+✔ worklet itself stops after 30 seconds even if UI messages are not handled (18.1993ms)
+ℹ tests 71
+ℹ suites 0
+ℹ pass 71
+ℹ fail 0
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 669.9976
+✔ identical raster is zero and multiple changed channels count one pixel (2.2629ms)
+✔ unequal, empty and malformed raster inputs fail (0.7282ms)
+ℹ tests 2
+ℹ suites 0
+ℹ pass 2
+ℹ fail 0
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 129.9177
+
+> sanctum-web@0.1.0 typecheck
+> tsc --noEmit
+
+
+> sanctum-web@0.1.0 build
+> node tools/build-css.mjs && vite build
+
+vite v7.3.7 building client environment for production...
+transforming...
+✓ 68 modules transformed.
+rendering chunks...
+computing gzip size...
+dist/index.html                            0.36 kB │ gzip:   0.27 kB
+dist/assets/capture-worklet-Dbzkoc4Q.js    0.52 kB
+dist/docs.html                             8.03 kB │ gzip:   3.02 kB
+dist/website.html                         13.01 kB │ gzip:   4.22 kB
+dist/assets/website-lUDU4MdM.css           7.16 kB │ gzip:   2.20 kB
+dist/assets/app-D0ym7XKH.css              35.76 kB │ gzip:   7.44 kB
+dist/assets/app-DN-qv3k9.js              384.87 kB │ gzip: 106.66 kB
+✓ built in 1.66s
+found 0 vulnerabilities

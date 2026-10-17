@@ -23,6 +23,8 @@ def main():
         ["tools/license_scan.py"],
         ["tools/web_license_scan.py"],
         ["tools/web_font_assets.py"],
+        ["tools/workflow_check.py"],
+        ["tools/secret_scan.py"],
         ["evals/run.py"],
     ]
     for args in commands:

@@ -75,3 +75,5 @@ lost during workspace integration (ADR0070). Fixed T1 hardware,timer-based
 model verification,token bypass and broad privacy/purge claims are defects
 to remove,not intentional design deviations. Full live voice/diarization,
 vision,agents,ledger,cloud,LAN and crypto remain capability-gated.
+
+ADR0073:workspace widgets wait for sequential authenticated metadata and bundled fonts. The real usage display is retained once in the status bar;the duplicate composer display/poll is removed. No admission limit or fidelity threshold is widened.
