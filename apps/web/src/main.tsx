@@ -22,7 +22,6 @@ import './ui/fonts.css';
 import { AppShell } from './ui/AppShell';
 import './ui/shell.css';
 import { SafeMarkdown } from './ui/SafeMarkdown';
-import { DashboardPanel } from './DashboardPanel';
 import { DashboardPage, type DashboardSubpage } from './ui/DashboardPage';
 import { SetupWizard } from './SetupWizard';
 

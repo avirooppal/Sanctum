@@ -152,3 +152,5 @@ weakened;failed hosted and local outputs retained.
 | [0072](adr/0072-workflow-checks-and-readiness.md) | Read-only readiness/consistency/secret checks | New test-client bounds10s/1MiB;no server or latency SLO change | Readiness never verifies full journeys or ledger/chaos |
 
 | [0075](adr/0075-disable-unsafe-purge.md) | Fail closed before whole-product deletion;OpenAPI0.2.1 availability migration | No timeout/queue/capacity change;reuse10s/1MiB test-client bounds from0072 | Legacy200 becomes501;full purge stays unavailable;marker required before live valid confirmation |
+
+| [0076](adr/0076-dashboard-and-profile-alignment.md) | Scoped dashboard truth and profile CRUD admission/failure recovery | No numeric bound/poll interval/queue increase;false-success assertions replaced with evidence/Unknown assertions | Real13-click subflow and15-stage smoke;full journeys remain partial. Preserve raw console trailing blank under ADR0057 |

@@ -1,6 +1,7 @@
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useRef, useState } from 'react';
 import { Button } from './primitives.js';
 import type { SanctumClient, Model } from '../api.js';
+import {GatewayError,privacyMessage,startupChecksPassed,userError} from '../runtime-truth.js';
 
 export type DashboardSubpage = 'status' | 'models' | 'sessions' | 'resources' | 'config' | 'licenses';
 
@@ -8,7 +9,7 @@ export interface SystemHealth {
   status: string;
   cloud_connectors: string;
   isolation: string;
-  checks?: string[];
+  checks?: unknown;
 }
 
 export interface DispatchStats {
@@ -42,32 +43,36 @@ export function DashboardPage({
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
 
+  const active=useRef<AbortController|null>(null);
   async function loadData() {
-    setLoading(true);
-    setError('');
+    if(active.current)return;
+    const controller=new AbortController();active.current=controller;
+    setLoading(true);setError('');setHealth(null);setDispatch(null);
+    setModels([]);setSessions([]);
     try {
-      const [hRes, dRes, mData, sPage] = await Promise.all([
-        fetch('/healthz', { cache: 'no-store' }),
-        fetch('/healthz/dispatch', { credentials: 'omit', cache: 'no-store' }),
-        api.models().catch(() => [] as Model[]),
-        api.sessions('', 0).catch(() => ({ data: [], has_more: false })),
-      ]);
-      if (hRes.ok) setHealth(await hRes.json());
-      if (dRes.ok) setDispatch(await dRes.json());
-      setModels(mData);
-      setSessions(sPage.data);
-    } catch (e) {
-      setError(e instanceof Error ? e.message : 'Failed to query local runtime status');
+      const options={signal:controller.signal,credentials:'omit' as const,cache:'no-store' as const,redirect:'error' as const};
+      const hRes=await fetch('/healthz',options);
+      if(!hRes.ok)throw new GatewayError(hRes.status,hRes.headers.get('Retry-After'));
+      const healthData=await hRes.json();
+      const dRes=await fetch('/healthz/dispatch',options);
+      if(!dRes.ok)throw new GatewayError(dRes.status,dRes.headers.get('Retry-After'));
+      const dispatchData=await dRes.json();
+      const valid=(value:unknown)=>Array.isArray(value)&&value.length===4&&value.every(v=>Number.isSafeInteger(v)&&v>=0);
+      if(!healthData||typeof healthData!=='object'||!valid(dispatchData?.queued)||!valid(dispatchData?.active))throw new Error('Invalid runtime metadata');
+      const mData=await api.models(controller.signal);
+      const sPage=await api.sessions('',0,controller.signal);
+      controller.signal.throwIfAborted();
+      setHealth(healthData);setDispatch(dispatchData);setModels(mData);setSessions(sPage.data);
+    } catch(failure) {
+      if(active.current===controller)setError(userError(failure));
     } finally {
-      setLoading(false);
+      if(active.current===controller){active.current=null;setLoading(false);}
     }
   }
-
-  useEffect(() => {
-    loadData();
-    const interval = setInterval(loadData, 5000);
-    return () => clearInterval(interval);
-  }, [token]);
+  useEffect(()=>{
+    void loadData();const interval=setInterval(()=>void loadData(),5000);
+    return ()=>{clearInterval(interval);active.current?.abort();active.current=null;};
+  },[token]);
 
   const laneLabels = ['Control', 'Voice (Interactive)', 'Chat (Interactive)', 'Background'];
 
@@ -201,7 +206,7 @@ export function DashboardPage({
           <div className="flex items-center gap-3">
             <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-mono bg-emerald-500/10 text-emerald-400 border border-emerald-500/20">
               <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse" />
-              Healthy · Localhost
+              {health?.status==='ok'?'Gateway responding':'Gateway status unknown'}
             </span>
             <Button variant="outline" onClick={loadData} disabled={loading}>
               {loading ? 'Refreshing…' : 'Refresh'}
@@ -238,10 +243,10 @@ export function DashboardPage({
                   Network Egress
                 </div>
                 <div className="text-xl font-mono font-semibold text-emerald-500">
-                  DENIED
+                  {startupChecksPassed(health)?'Startup checks passed':'Unknown'}
                 </div>
                 <div className="text-xs text-[var(--ui-muted,#8a9990)]">
-                  Default-Deny startup self-test passed
+                  {privacyMessage(health)}
                 </div>
               </div>
 
@@ -250,10 +255,10 @@ export function DashboardPage({
                   Isolation Boundary
                 </div>
                 <div className="text-xl font-mono font-semibold text-[var(--ui-foreground,#e6ece8)]">
-                  {health?.isolation || 'Active'}
+                  {health?.isolation || 'Unknown'}
                 </div>
                 <div className="text-xs text-[var(--ui-muted,#8a9990)]">
-                  Linux namespaces & seccomp confine
+                  Reported backend;inspect startup checks
                 </div>
               </div>
             </div>
@@ -264,8 +269,8 @@ export function DashboardPage({
               </h2>
               <div className="space-y-2">
                 {laneLabels.map((lane, index) => {
-                  const queuedCount = dispatch?.queued?.[index] ?? 0;
-                  const activeCount = dispatch?.active?.[index] ?? 0;
+                  const queuedCount = dispatch?.queued?.[index] ?? 'Unknown';
+                  const activeCount = dispatch?.active?.[index] ?? 'Unknown';
                   return (
                     <div
                       key={lane}
@@ -377,7 +382,7 @@ export function DashboardPage({
                           )}
                         </td>
                         <td className="py-2.5 px-3 text-[var(--ui-muted,#8a9990)]">
-                          {s.updated_at ? new Date(s.updated_at * 1000).toLocaleString() : 'Recent'}
+                          {s.updated_at ? new Date(s.updated_at * 1000).toLocaleString() : 'Unknown'}
                         </td>
                       </tr>
                     ))}
@@ -397,10 +402,10 @@ export function DashboardPage({
                   Resident Engine RAM
                 </div>
                 <div className="text-2xl font-mono font-semibold text-[var(--ui-foreground,#e6ece8)]">
-                  ~450 MB
+                  Unknown
                 </div>
                 <div className="text-xs text-[var(--ui-muted,#8a9990)] mt-2">
-                  Resident process memory footprint
+                  Memory telemetry is unavailable
                 </div>
               </div>
 
@@ -409,7 +414,7 @@ export function DashboardPage({
                   Queue Admission
                 </div>
                 <div className="text-2xl font-mono font-semibold text-emerald-500">
-                  Bounded (4 Lanes)
+                  {dispatch?'4 reported lanes':'Unknown'}
                 </div>
                 <div className="text-xs text-[var(--ui-muted,#8a9990)] mt-2">
                   Interactive priority over background
@@ -435,8 +440,8 @@ export function DashboardPage({
               </h2>
               <div className="space-y-3">
                 {laneLabels.map((lane, index) => {
-                  const queuedCount = dispatch?.queued?.[index] ?? 0;
-                  const activeCount = dispatch?.active?.[index] ?? 0;
+                  const queuedCount = dispatch?.queued?.[index] ?? 'Unknown';
+                  const activeCount = dispatch?.active?.[index] ?? 'Unknown';
                   return (
                     <div key={lane} className="flex items-center justify-between text-xs py-1.5 border-b border-[var(--ui-border,#222d28)] last:border-b-0">
                       <div>
@@ -474,7 +479,7 @@ export function DashboardPage({
               </div>
               <div className="flex justify-between py-2 border-b border-[var(--ui-border,#222d28)]">
                 <span className="text-[var(--ui-muted,#8a9990)]">Egress Enforcement</span>
-                <span className="font-mono text-emerald-400">Default-Deny (Loopback Bound)</span>
+                <span className="font-mono text-emerald-400">{privacyMessage(health)}</span>
               </div>
               <div className="flex justify-between py-2 border-b border-[var(--ui-border,#222d28)]">
                 <span className="text-[var(--ui-muted,#8a9990)]">Storage Backend</span>
@@ -482,7 +487,7 @@ export function DashboardPage({
               </div>
               <div className="flex justify-between py-2 border-b border-[var(--ui-border,#222d28)]">
                 <span className="text-[var(--ui-muted,#8a9990)]">Cloud Connectors</span>
-                <span className="font-mono text-[var(--ui-foreground,#e6ece8)]">Disabled (Strict)</span>
+                <span className="font-mono text-[var(--ui-foreground,#e6ece8)]">{health?.cloud_connectors || 'Unknown'}</span>
               </div>
               <div className="flex justify-between py-2 border-b border-[var(--ui-border,#222d28)]">
                 <span className="text-[var(--ui-muted,#8a9990)]">Authentication</span>

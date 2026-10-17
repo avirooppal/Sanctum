@@ -203,3 +203,13 @@ migration (filename purge-v1-safety-migration.md),OpenAPI0.2.1. Runtime refusal
 401/400/400/413/501 and populated metadata unchanged. No secure erasure/ledger
 claim;J11 remains Partial. Prior correction cd68270 hosted39050933876/all5
 completed success. New safety SHA CI follows push.
+
+## J9/J11/J12 dashboard/profile alignment
+
+ADR0076:source174,Rust70,web81,38 denial probes,15 real smoke stages PASS;
+typecheck/build,audit0. workflow-dashboard-* raw evidence. Real1980.519ms,
+13 clicks/4 entries,zero foreign requests;failed health/list recovery and
+unique-profile CRUD. Source paths:ui/DashboardPage.tsx,ui/SettingsModal.tsx,
+ingress.rs;tests modular-ui.test.mjs,ingress.rs,browser_dashboard_profiles.mjs.
+Full J9/J11/J12 and broad plan requirements remain Partial. No ledger proof.
+Base bcb1b67 hosted39051732254/all5 completed success;new SHA CI follows push.

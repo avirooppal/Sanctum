@@ -1,0 +1,22 @@
+   Compiling sanctum-gateway v0.1.0 (/mnt/c/Users/aviroop/Desktop/Sanctum/services/gateway)
+    Finished `test` profile [unoptimized + debuginfo] target(s) in 7.97s
+     Running tests/ingress.rs (target/debug/deps/ingress-8724822d5012cc5d)
+
+running 1 test
+test profile_writes_use_existing_metadata_lane ... FAILED
+
+failures:
+
+---- profile_writes_use_existing_metadata_lane stdout ----
+
+thread 'profile_writes_use_existing_metadata_lane' (34542) panicked at services/gateway/tests/ingress.rs:172:87:
+called `Result::unwrap()` on an `Err` value: 413
+note: run with `RUST_BACKTRACE=1` environment variable to display a backtrace
+
+
+failures:
+    profile_writes_use_existing_metadata_lane
+
+test result: FAILED. 0 passed; 1 failed; 0 ignored; 0 measured; 6 filtered out; finished in 0.01s
+
+error: test failed, to rerun pass `-p sanctum-gateway --test ingress`

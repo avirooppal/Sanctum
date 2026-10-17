@@ -21,6 +21,7 @@ STAGE_JOURNEYS = {
     "ui_sessions": ["J3"],
     "ui_workflow": ["J2", "J9", "J12"],
     "purge_safety": ["J11", "J12"],
+    "ui_dashboard_profiles": ["J9", "J11", "J12"],
     "ui_website": ["J1", "J9"],
     "ui_fidelity": ["J3", "J4", "J9", "J11"],
     "journey_readiness": [
@@ -235,6 +236,17 @@ def main():
                 str(token),
                 "--output",
                 str(directory / "smoke-purge-safety.json"),
+            ],
+            None,
+        ),
+        (
+            "ui_dashboard_profiles",
+            [
+                node,
+                "evals/browser_dashboard_profiles.mjs",
+                package,
+                browser_token,
+                str(directory / "smoke-ui-dashboard-profiles.json"),
             ],
             None,
         ),

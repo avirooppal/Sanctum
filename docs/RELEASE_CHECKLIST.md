@@ -71,7 +71,7 @@ platform rows currently combine absent software with unverified target execution
 
 | ID / coverage | Acceptance | Current result |
 |---|---|---|
-| R-BASE / D4 | All existing source,Rust,web,SDK,denial checks | PASS scoped only:174 source,69 Rust,81 web,audit0,38 probes,14 real smoke stages;workflow-ui-* evidence. |
+| R-BASE / D4 | All existing source,Rust,web,SDK,denial checks | PASS scoped only:174 source,70 Rust,81 web,audit0,38 probes,15 real smoke stages;workflow-ui-* evidence. |
 | R-DOCTOR / PH0,H1 | Correct real tier/profile and readiness | OPEN:full requirement not established by current slice;historical details archived. Missing software is not a hardware exception. |
 | R-UI / U1–U3 | Completed real screens,licensed assets,reference fidelity,axe/keyboard/contrast,all-screen HTTP+WS egress,branch merge | OPEN:full requirement not established by current slice;historical details archived. Missing software is not a hardware exception. |
 | R-RAG / PH2,EV1 | Real-document hybrid/vector ablation,faithfulness,page highlighting | OPEN:full requirement not established by current slice;historical details archived. Missing software is not a hardware exception. |
@@ -137,3 +137,8 @@ ADR0075:full purge still unsupported;legacy API fails closed501 without
 mutation. Real safety tests PASS;all broad release gates remain OPEN.
 Current scoped regression174/69/81,audit0,38 probes,14 smoke stages. Evidence
 workflow-purge-*. Prior cd68270 hosted all5 completed success;new SHA pending.
+
+ADR0076 current scoped checks174/70/81,38 denial probes,15 smoke stages,
+audit0 PASS. Dashboard errors clear success;profile reads never fake empty on
+failure;real CRUD passes. Full release gates remain OPEN. Missing hardware
+runners/software are not waived. Raw workflow-dashboard-*.

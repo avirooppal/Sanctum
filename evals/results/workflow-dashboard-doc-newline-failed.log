@@ -1,0 +1,262 @@
+docs/WORKFLOW_GAPS.md:1: trailing whitespace.
++# Workflow gap audit v1.0.0
+docs/WORKFLOW_GAPS.md:2: trailing whitespace.
++
+docs/WORKFLOW_GAPS.md:3: trailing whitespace.
++Current date:2026-10-17;base bcb1b67e1ffea0642ad6539d03adaf479d290cff
+docs/WORKFLOW_GAPS.md:4: trailing whitespace.
++plus ADR0076 slice. Previous file retained verbatim at
+docs/WORKFLOW_GAPS.md:5: trailing whitespace.
++[archive](status-archive/2026-10-17-workflow-gaps-before-dashboard.md),SHA256
+docs/WORKFLOW_GAPS.md:6: trailing whitespace.
++`528effc7406198b0fc00da182a8fde4ff0a9c9ee3a3bab5c9b496062b6ce16a8`. Required journeys are not full VERIFIED from supporting checks.
+docs/WORKFLOW_GAPS.md:7: trailing whitespace.
++
+docs/WORKFLOW_GAPS.md:8: trailing whitespace.
++## Current evidence
+docs/WORKFLOW_GAPS.md:9: trailing whitespace.
++
+docs/WORKFLOW_GAPS.md:10: trailing whitespace.
++C1:run_source_gate.sh174 tests PASS;C2:check_rust.sh70 tests,38 denial probes
+docs/WORKFLOW_GAPS.md:11: trailing whitespace.
++PASS;C3:web81,typecheck/build PASS,audit0. Raw workflow-dashboard-*.
+docs/WORKFLOW_GAPS.md:12: trailing whitespace.
++C4:15 real smoke stages PASS,SDK/chat,RAG/citations,file ASR/TTS,tickets and
+docs/WORKFLOW_GAPS.md:13: trailing whitespace.
++UI;release_complete=false. Full budgets/chaos/ledger/WER/DER/visual QA absent.
+docs/WORKFLOW_GAPS.md:14: trailing whitespace.
++C5:base bcb1b67 hosted39051732254 completed success,all5 jobs;new SHA pending.
+docs/WORKFLOW_GAPS.md:15: trailing whitespace.
++C6:real dashboard/profile subflow1980.519ms,13 clicks,4 text entries,zero
+docs/WORKFLOW_GAPS.md:16: trailing whitespace.
++foreign HTTP/WS requests/page errors. Aborted health clears success;aborted
+docs/WORKFLOW_GAPS.md:17: trailing whitespace.
++profile list shows error/Unknown,not false empty. Explicit reopening recovers;
+docs/WORKFLOW_GAPS.md:18: trailing whitespace.
++unique fixture create/edit/delete passes. Counts cover this combined subflow,
+docs/WORKFLOW_GAPS.md:19: trailing whitespace.
++not full journey budgets. Older supported subflow checks rerun in C4.
+docs/WORKFLOW_GAPS.md:20: trailing whitespace.
++
+docs/WORKFLOW_GAPS.md:21: trailing whitespace.
++## Every canonical step
+docs/WORKFLOW_GAPS.md:22: trailing whitespace.
++
+docs/WORKFLOW_GAPS.md:23: trailing whitespace.
++| Step | Exists? | Current evidence | Action |
+
+docs/WORKFLOW_GAPS.md:24: trailing whitespace.
++|---|---|---|---|
+
+docs/WORKFLOW_GAPS.md:25: trailing whitespace.
++| J1.1 | No signed release verification | SOURCE:tools/build_dev_bundle.py explicitly unsigned | build |
+
+docs/WORKFLOW_GAPS.md:26: trailing whitespace.
++| J1.2 | No verified installer | SOURCE:apps/desktop/README.md;R-PACKAGES remains OPEN | build |
+
+docs/WORKFLOW_GAPS.md:27: trailing whitespace.
++| J1.3 | Partial runtime startup | C2,C4;services/gateway/src/runtime_main.rs | keep |
+
+docs/WORKFLOW_GAPS.md:28: trailing whitespace.
++| J1.4 | Partial truthful status | UI alignment:complete eight-check predicate;unknown on failure;ledger explicitly unavailable | fix |
+
+docs/WORKFLOW_GAPS.md:29: trailing whitespace.
++| J2.1 | Runtime-backed review;hardware Unknown | workflow-ui-onboarding.json real auth/review;doctor recommendation API still absent | build |
+
+docs/WORKFLOW_GAPS.md:30: trailing whitespace.
++| J2.2 | CLI import/hash;no product jobs | CLI import/hash only;fake UI provisioning removed per ADR0074 | hide until backend |
+
+docs/WORKFLOW_GAPS.md:31: trailing whitespace.
++| J2.3 | Real auth/review;optional folder not built | workflow-ui-onboarding.json rejects wrong key,uses configured model;inert folder/fallback key removed | build |
+
+docs/WORKFLOW_GAPS.md:32: trailing whitespace.
++| J2.4 | Local answer works | C4 SDK8 and real browser answer;budget/install timing absent | keep |
+
+docs/WORKFLOW_GAPS.md:33: trailing whitespace.
++| J3.1 | Picker/history partial | C4 model API/history;fit/speed Unknown;full version/usage coverage pending;no journey count | fix |
+
+docs/WORKFLOW_GAPS.md:34: trailing whitespace.
++| J3.2 | Streaming works | C4 real SDK/browser;full declarative policy/ledger absent | keep |
+
+docs/WORKFLOW_GAPS.md:35: trailing whitespace.
++| J3.3 | Restored Stop works | C4 request_aborted,no_automatic_retry,explicit_next_send_succeeds;not engine-slot timing | keep |
+
+docs/WORKFLOW_GAPS.md:36: trailing whitespace.
++| J3.4 | History works | C4 sessions15 checks:search/rename/restore/delete/inert HTML;full journey budget absent | keep |
+
+docs/WORKFLOW_GAPS.md:37: trailing whitespace.
++| J4.1 | Workspace works | C4 Knowledge create/select,owner isolation | keep |
+
+docs/WORKFLOW_GAPS.md:38: trailing whitespace.
++| J4.2 | Upload works;folder/jobs incomplete | C4 Markdown indexed;SOURCE:KnowledgePanel.tsx synchronous upload,no progress API | build |
+
+docs/WORKFLOW_GAPS.md:39: trailing whitespace.
++| J4.3 | Cited answer works;benchmark gap | C4 amber-lighthouse citation;R-RAG ablation/page highlights still OPEN | fix |
+
+docs/WORKFLOW_GAPS.md:40: trailing whitespace.
++| J4.4 | Abstention/cancel UI present;full restart evidence pending | C4 abstention;UI Cancel now aborts and retains inputs;real cancel/restart evidence still pending | fix |
+
+docs/WORKFLOW_GAPS.md:41: trailing whitespace.
++| J5.1 | File/emulated capture partial | C4 actual WAV→draft;physical mic evidence absent | fix |
+
+docs/WORKFLOW_GAPS.md:42: trailing whitespace.
++| J5.2 | Transport only | SOURCE:realtime.rs advertises speech_pipeline=false;no resident duplex path | hide until backend |
+
+docs/WORKFLOW_GAPS.md:43: trailing whitespace.
++| J5.3 | No true barge-in | SOURCE:file Stop audio only,not LLM+playback-ack integration | hide until backend |
+
+docs/WORKFLOW_GAPS.md:44: trailing whitespace.
++| J5.4 | Read-aloud works | C4 real TTS/browser playback/stop;not physical speaker verification | keep |
+
+docs/WORKFLOW_GAPS.md:45: trailing whitespace.
++| J6.1 | No meeting recorder/import job | SOURCE:MeetingPanel.tsx accepts reviewed transcript text | hide until backend |
+
+docs/WORKFLOW_GAPS.md:46: trailing whitespace.
++| J6.2 | No diarization/speaker map | SOURCE:speech adapters lack evaluated diarizer | hide until backend |
+
+docs/WORKFLOW_GAPS.md:47: trailing whitespace.
++| J6.3 | Reviewed-text helper only | SOURCE:meeting.ts;no DER/evidence-linked full meeting pipeline | fix |
+
+docs/WORKFLOW_GAPS.md:48: trailing whitespace.
++| J6.4 | Reviewed notes save source-only | SOURCE:MeetingPanel.tsx and meetings route;not exercised by C4 smoke and not a speaker-labelled pipeline | fix |
+
+docs/WORKFLOW_GAPS.md:49: trailing whitespace.
++| J7.1 | No image ingress | SOURCE:chat attachment is Knowledge document upload only | hide until backend |
+
+docs/WORKFLOW_GAPS.md:50: trailing whitespace.
++| J7.2 | No VLM/OCR pipeline | SOURCE:vision-docs service has no runnable adapter | hide until backend |
+
+docs/WORKFLOW_GAPS.md:51: trailing whitespace.
++| J7.3 | No region visual QA | R-VISION OPEN;no fresh benchmark | hide until backend |
+
+docs/WORKFLOW_GAPS.md:52: trailing whitespace.
++| J7.4 | No visual jobs | SOURCE:capabilities endpoint omits vision | hide until backend |
+
+docs/WORKFLOW_GAPS.md:53: trailing whitespace.
++| J8.1 | No governed MCP registry | SOURCE:capabilities omits agents/tools | hide until backend |
+
+docs/WORKFLOW_GAPS.md:54: trailing whitespace.
++| J8.2 | No governed agent runtime | R-AGENTS OPEN;no fresh red-team execution | hide until backend |
+
+docs/WORKFLOW_GAPS.md:55: trailing whitespace.
++| J8.3 | No exact-argument approvals | SOURCE:PanelRegistry only allows registration,not approval backend | hide until backend |
+
+docs/WORKFLOW_GAPS.md:56: trailing whitespace.
++| J8.4 | No agent budgets/result chain | R-AGENTS OPEN;kernel confinement alone insufficient | hide until backend |
+
+docs/WORKFLOW_GAPS.md:57: trailing whitespace.
++| J9.1 | Scoped current status;ledger absent | C6 real health-abort clears success;no historical egress proof | fix |
+
+docs/WORKFLOW_GAPS.md:58: trailing whitespace.
++| J9.2 | No Privacy Ledger view | SOURCE:gateway has no ledger route | hide until backend |
+
+docs/WORKFLOW_GAPS.md:59: trailing whitespace.
++| J9.3 | No ledger verify command | SOURCE:CLI only doctor/pull/estimate | hide until backend |
+
+docs/WORKFLOW_GAPS.md:60: trailing whitespace.
++| J9.4 | No signed ledger export | R-PRIVACY OPEN;no packet reconciliation evidence | hide until backend |
+
+docs/WORKFLOW_GAPS.md:61: trailing whitespace.
++| J10.1 | No connector/policy prerequisite | SOURCE:capabilities excludes cloud;key must never enter UI/config | hide until backend |
+
+docs/WORKFLOW_GAPS.md:62: trailing whitespace.
++| J10.2 | No cloud consent/model registry | Owner model candidate not yet verified;no approved data-policy record | hide until backend |
+
+docs/WORKFLOW_GAPS.md:63: trailing whitespace.
++| J10.3 | No confined broker/adapter | No live call permitted yet;loopback fake tests must precede implementation | hide until backend |
+
+docs/WORKFLOW_GAPS.md:64: trailing whitespace.
++| J10.4 | No kill switch/connector CLI | SOURCE:CLI command inventory | hide until backend |
+
+docs/WORKFLOW_GAPS.md:65: trailing whitespace.
++| J11.1 | Preferences and saved definitions partial | C3 safe errors;C6 real profile create/update/delete and failed-load recovery;not automatic chat application | fix |
+
+docs/WORKFLOW_GAPS.md:66: trailing whitespace.
++| J11.2 | Read-only queues only | C4 dashboard actual dispatch;no resource-limit write API | hide until backend |
+
+docs/WORKFLOW_GAPS.md:67: trailing whitespace.
++| J11.3 | No owner TLS LAN | R-LAN OPEN;loopback confinement is not LAN support | hide until backend |
+
+docs/WORKFLOW_GAPS.md:68: trailing whitespace.
++| J11.4 | No encryption/backup | R-CRYPTO OPEN;no canary/rotation/restore evidence | hide until backend |
+
+docs/WORKFLOW_GAPS.md:69: trailing whitespace.
++| J11.5 | No verified update | R-PACKAGES OPEN;no signature/update rollback evidence | hide until backend |
+
+docs/WORKFLOW_GAPS.md:70: trailing whitespace.
++| J11.6 | Purge hidden;legacy mutation disabled | workflow-purge-live.json and14-stage smoke:401/400/413/501,populated metadata unchanged;full erasure backend absent | hide until backend |
+
+docs/WORKFLOW_GAPS.md:71: trailing whitespace.
++| J12.1 | Selected safe errors;taxonomy coverage partial | C3 runtime-truth tests;C6 wrong-key/health/profile-load errors;all operation-specific recovery not established | fix |
+
+docs/WORKFLOW_GAPS.md:72: trailing whitespace.
++| J12.2 | Supervision/cancel partial | C2 process-tree tests;C4 browser Stop;resident real-engine storms pending | build |
+
+docs/WORKFLOW_GAPS.md:73: trailing whitespace.
++| J12.3 | Incomplete resource/crash recovery | C1 profile fixtures;no fresh low-disk/gateway-kill-indexing runner | build |
+
+docs/WORKFLOW_GAPS.md:74: trailing whitespace.
++| J12.4 | No doctor --bundle | SOURCE:CLI argument inventory;no diagnostic-content scan | build |
+
+docs/WORKFLOW_GAPS.md:75: trailing whitespace.
++
+
+docs/WORKFLOW_GAPS.md:76: trailing whitespace.
++## Product-control inventory and orphan handling
+
+docs/WORKFLOW_GAPS.md:77: trailing whitespace.
++
+
+docs/WORKFLOW_GAPS.md:78: trailing whitespace.
++| Surface/control | Journey | Required disposition |
+
+docs/WORKFLOW_GAPS.md:79: trailing whitespace.
++|---|---|---|
+
+docs/WORKFLOW_GAPS.md:80: trailing whitespace.
++| Owner login,new chat,tabs,history,copy/retry/Stop,model picker | J2,J3,J12 | Keep real behavior;test Retry/usage/save semantics |
+
+docs/WORKFLOW_GAPS.md:81: trailing whitespace.
++| Knowledge dialog,document attachment,source rail,local artifacts | J4 | Keep supported formats;cancel/progress and citation coverage gaps |
+
+docs/WORKFLOW_GAPS.md:82: trailing whitespace.
++| File dictation/Read answer/Stop audio | J5 | Keep precisely named supported subflow;no live-voice promise |
+
+docs/WORKFLOW_GAPS.md:83: trailing whitespace.
++| Reviewed transcript capture | J6 | Keep precise text-only scope;hide speaker/recording promises |
+
+docs/WORKFLOW_GAPS.md:84: trailing whitespace.
++| Dashboard status/models/sessions/queues/config/licenses/docs | J1,J3,J9,J11,J12 | Read-only facts,unknown on failed checks,no invented zero metrics |
+
+docs/WORKFLOW_GAPS.md:85: trailing whitespace.
++| Themes/layouts/shortcuts/palette/profiles,preferences import/export | J11 | Keep validated data-only controls;remove inert options |
+
+docs/WORKFLOW_GAPS.md:86: trailing whitespace.
++| Full Purge | J11.6 | Hide until full documented scope/cancellation/storage tests pass |
+
+docs/WORKFLOW_GAPS.md:87: trailing whitespace.
++| Setup provisioning/folder/auto-token bypass | J2 | Remove simulations;replace with actual status/explicit unavailable |
+
+docs/WORKFLOW_GAPS.md:88: trailing whitespace.
++| ?gallery=1 developer samples | None in owner workflow | Remove from production entry;retain isolated developer tests if useful |
+
+docs/WORKFLOW_GAPS.md:89: trailing whitespace.
++| Pending vision/agents/ledger/cloud/LAN/crypto/update controls | J5–J11 | Capability-denied and absent until backend plus journey test pass |
+
+docs/WORKFLOW_GAPS.md:90: trailing whitespace.
++
+
+docs/WORKFLOW_GAPS.md:91: trailing whitespace.
++
+docs/WORKFLOW_GAPS.md:92: trailing whitespace.
++## Next work
+docs/WORKFLOW_GAPS.md:93: trailing whitespace.
++
+docs/WORKFLOW_GAPS.md:94: trailing whitespace.
++Complete J1-J4/J12 actual provisioning,progress/restart,diagnostics and chaos
+docs/WORKFLOW_GAPS.md:95: trailing whitespace.
++proof;continue later backend journeys in WRAPUP order. Missing full voice,
+docs/WORKFLOW_GAPS.md:96: trailing whitespace.
++vision,agents/ledger,cloud,LAN,crypto/packages remain blocked/hidden. Do not
+docs/WORKFLOW_GAPS.md:97: trailing whitespace.
++start cloud before policy/ledger. All full journey statuses remain unchanged.

@@ -24,3 +24,14 @@ gallery and unsupported layout actions have no production route. Registry facts
 show actual values or Unknown. Real browser tests exercise wrong-key,setup,
 runtime review,status and egress. Existing real smoke covers first answers
 and chat controls;full pending-control/chaos coverage is not established.
+
+## Dashboard/profile alignment (ADR0076)
+
+Dashboard clears previous health/dispatch on refresh failure. It never defaults
+to Healthy,denial passed,active isolation,450MiB RAM or zero queue counts.
+Metadata loads sequentially with one AbortController;unmount cancels and5s
+polls cannot overlap. Safe taxonomy handles failures,not raw provider messages.
+Profile writes use the existing metadata lane and64KiB handler bound. CRUD
+changes are owner-authenticated and have no automatic retries. UI shows save
+progress,disables concurrent save/delete and labels definitions as not applied
+to chat automatically. Full J9/J11 remain partial without their other steps.

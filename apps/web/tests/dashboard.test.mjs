@@ -12,5 +12,6 @@ test('DashboardPanel renders daemon health and dispatch lanes without throwing',
   assert(html.includes('Cloud Policy'));
   assert(html.includes('Voice (Interactive)'));
   assert(html.includes('Chat (Interactive)'));
-  assert(html.includes('Zero remote tracking, analytics, telemetry, or external network calls'));
+  assert(html.includes('Startup checks: unknown. Ledger unavailable.'));
+  assert(!html.includes('Zero remote tracking, analytics, telemetry, or external network calls'));
 });

@@ -361,3 +361,7 @@ subflow to13-stage smoke. Conservative coverage/release audit;no release claim.
 
 Safety:disabled unsafe whole-product purge before any mutation;versioned
 availability migration,explicit501,marker-gated real probe and14-stage smoke.
+
+Workflow:dashboard status now clears stale success,shows Unknown for missing
+metrics and avoids overlapping refreshes. Profile writes admitted under existing
+limits;real CRUD/failure recovery tested. Smoke now15 real stages;release open.

@@ -1,0 +1,18 @@
+node:internal/modules/run_main:107
+    triggerUncaughtException(
+    ^
+
+AssertionError [ERR_ASSERTION]: Profile write must be admitted
+
+413 !== 200
+
+    at file:///C:/Users/aviroop/Desktop/Sanctum/evals/browser_dashboard_profiles.mjs:36:36 {
+  generatedMessage: false,
+  code: 'ERR_ASSERTION',
+  actual: 413,
+  expected: 200,
+  operator: 'strictEqual',
+  diff: 'simple'
+}
+
+Node.js v24.14.0

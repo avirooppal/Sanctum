@@ -369,3 +369,11 @@ ADR0075 disables the legacy full-purge HTTP mutation. Valid owner confirmation
 returns501 without deleting state;full_purge remains absent. This corrects
 availability while J11 stays PARTIAL. Real probe requires disabled-v1 marker
 and preserves populated metadata;not full erasure or ledger acceptance.
+
+## Dashboard/profile evidence
+
+ADR0076:current dashboard checks are scoped and clear on failed health. Failed
+profile loads show Unknown/error and recover only on explicit reopening;unique
+fixture CRUD passes. Definitions are not applied to chat automatically. Real
+subflow13 clicks/4 entries,1980.519ms,zero foreign requests. Full J9/J11/J12
+budgets,ledger and chaos are not verified;statuses remain unchanged.

@@ -1,0 +1,231 @@
+{
+  "suite": "owner-journeys-v1",
+  "scope": "readiness_only",
+  "version": "1.0.0",
+  "journeys_verified": 0,
+  "release_complete": false,
+  "journeys": [
+    {
+      "id": "J1",
+      "test_id": "journey:J1",
+      "readiness": "PASS",
+      "journey_status": "PENDING",
+      "acceptance_verified": false,
+      "elapsed_seconds": 0.009765999857336283,
+      "error": null,
+      "clicks": null,
+      "navigation_keys": null,
+      "text_entries": null,
+      "budget_verified": false,
+      "ledger_verified": false,
+      "blocker": "Signed installers/bundle verification absent"
+    },
+    {
+      "id": "J2",
+      "test_id": "journey:J2",
+      "readiness": "PASS",
+      "journey_status": "PARTIAL",
+      "acceptance_verified": false,
+      "elapsed_seconds": 0.009168099844828248,
+      "error": null,
+      "clicks": null,
+      "navigation_keys": null,
+      "text_entries": null,
+      "budget_verified": false,
+      "ledger_verified": false,
+      "blocker": "Real hardware onboarding/import progress missing"
+    },
+    {
+      "id": "J3",
+      "test_id": "journey:J3",
+      "readiness": "PASS",
+      "journey_status": "PARTIAL",
+      "acceptance_verified": false,
+      "elapsed_seconds": 0.07212729984894395,
+      "error": null,
+      "clicks": null,
+      "navigation_keys": null,
+      "text_entries": null,
+      "budget_verified": false,
+      "ledger_verified": false,
+      "blocker": "Journey budgets/chaos/ledger not established"
+    },
+    {
+      "id": "J4",
+      "test_id": "journey:J4",
+      "readiness": "PASS",
+      "journey_status": "PARTIAL",
+      "acceptance_verified": false,
+      "elapsed_seconds": 0.02925150003284216,
+      "error": null,
+      "clicks": null,
+      "navigation_keys": null,
+      "text_entries": null,
+      "budget_verified": false,
+      "ledger_verified": false,
+      "blocker": "Folder/progress/restart and quality gates incomplete"
+    },
+    {
+      "id": "J5",
+      "test_id": "journey:J5",
+      "readiness": "PASS",
+      "journey_status": "PARTIAL",
+      "acceptance_verified": false,
+      "elapsed_seconds": 5.500158295035362e-06,
+      "error": null,
+      "clicks": null,
+      "navigation_keys": null,
+      "text_entries": null,
+      "budget_verified": false,
+      "ledger_verified": false,
+      "blocker": "Full resident WebSocket voice/barge-in absent"
+    },
+    {
+      "id": "J6",
+      "test_id": "journey:J6",
+      "readiness": "PASS",
+      "journey_status": "PARTIAL",
+      "acceptance_verified": false,
+      "elapsed_seconds": 0.03316079988144338,
+      "error": null,
+      "clicks": null,
+      "navigation_keys": null,
+      "text_entries": null,
+      "budget_verified": false,
+      "ledger_verified": false,
+      "blocker": "Recording,diarization and speaker-note pipeline absent"
+    },
+    {
+      "id": "J7",
+      "test_id": "journey:J7",
+      "readiness": "PASS",
+      "journey_status": "PENDING",
+      "acceptance_verified": false,
+      "elapsed_seconds": 6.6999346017837524e-06,
+      "error": null,
+      "clicks": null,
+      "navigation_keys": null,
+      "text_entries": null,
+      "budget_verified": false,
+      "ledger_verified": false,
+      "blocker": "Vision/OCR/indexing/evaluation absent"
+    },
+    {
+      "id": "J8",
+      "test_id": "journey:J8",
+      "readiness": "PASS",
+      "journey_status": "PENDING",
+      "acceptance_verified": false,
+      "elapsed_seconds": 4.200031980872154e-06,
+      "error": null,
+      "clicks": null,
+      "navigation_keys": null,
+      "text_entries": null,
+      "budget_verified": false,
+      "ledger_verified": false,
+      "blocker": "Governed agent runtime/policy/ledger absent"
+    },
+    {
+      "id": "J9",
+      "test_id": "journey:J9",
+      "readiness": "PASS",
+      "journey_status": "PARTIAL",
+      "acceptance_verified": false,
+      "elapsed_seconds": 0.016436600126326084,
+      "error": null,
+      "clicks": null,
+      "navigation_keys": null,
+      "text_entries": null,
+      "budget_verified": false,
+      "ledger_verified": false,
+      "blocker": "Startup self-test exists;Privacy Ledger absent"
+    },
+    {
+      "id": "J10",
+      "test_id": "journey:J10",
+      "readiness": "PASS",
+      "journey_status": "PENDING",
+      "acceptance_verified": false,
+      "elapsed_seconds": 6.700167432427406e-06,
+      "error": null,
+      "clicks": null,
+      "navigation_keys": null,
+      "text_entries": null,
+      "budget_verified": false,
+      "ledger_verified": false,
+      "blocker": "Prerequisite policy/ledger/broker absent"
+    },
+    {
+      "id": "J11",
+      "test_id": "journey:J11",
+      "readiness": "PASS",
+      "journey_status": "PARTIAL",
+      "acceptance_verified": false,
+      "elapsed_seconds": 0.02184419985860586,
+      "error": null,
+      "clicks": null,
+      "navigation_keys": null,
+      "text_entries": null,
+      "budget_verified": false,
+      "ledger_verified": false,
+      "blocker": "LAN/crypto/update/full-purge contracts incomplete"
+    },
+    {
+      "id": "J12",
+      "test_id": "journey:J12",
+      "readiness": "PASS",
+      "journey_status": "PARTIAL",
+      "acceptance_verified": false,
+      "elapsed_seconds": 0.016488900175318122,
+      "error": null,
+      "clicks": null,
+      "navigation_keys": null,
+      "text_entries": null,
+      "budget_verified": false,
+      "ledger_verified": false,
+      "blocker": "Unified recovery,diagnostics and chaos evidence absent"
+    }
+  ],
+  "requests": [
+    {
+      "path": "/v1/capabilities",
+      "seconds": 0.03984039998613298
+    },
+    {
+      "path": "/healthz",
+      "seconds": 0.007582399994134903
+    },
+    {
+      "path": "/v1/models",
+      "seconds": 0.008823999902233481
+    },
+    {
+      "path": "/v1/models",
+      "seconds": 0.02811939991079271
+    },
+    {
+      "path": "/v1/conversations",
+      "seconds": 0.043564300052821636
+    },
+    {
+      "path": "/v1/workspaces",
+      "seconds": 0.02906490000896156
+    },
+    {
+      "path": "/v1/workspaces",
+      "seconds": 0.033049199962988496
+    },
+    {
+      "path": "/healthz",
+      "seconds": 0.016279600095003843
+    },
+    {
+      "path": "/v1/preferences",
+      "seconds": 0.00905260001309216
+    },
+    {
+      "path": "/v1/profiles",
+      "seconds": 0.012487200088799
+    }
+  ]
+}

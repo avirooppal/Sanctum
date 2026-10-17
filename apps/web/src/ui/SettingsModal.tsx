@@ -1,3 +1,4 @@
+import {userError} from '../runtime-truth.js';
 import React, { useState, useEffect } from 'react';
 import { STRINGS } from './strings.js';
 import { THEMES } from './themes.js';
@@ -70,20 +71,26 @@ export function SettingsModal({
     scope: 'global' | 'profile';
   } | null>(null);
   const [profileMsg, setProfileMsg] = useState('');
+  const [profileBusy,setProfileBusy]=useState(false);
+  const [profileLoadState,setProfileLoadState]=useState<'idle'|'loading'|'ready'|'failed'>('idle');
 
   // Data / Purge State
   const [purgeInput, setPurgeInput] = useState('');
   const [purgeInProgress, setPurgeInProgress] = useState(false);
   const [purgeMsg, setPurgeMsg] = useState('');
 
-  // Load profiles when modal opens or tab changes
+  // Read-only definitions load explicitly with cancellation and honest empty state.
   useEffect(() => {
-    if (isOpen && api && token) {
-      api.profiles()
-        .then(res => setProfilesList(res))
-        .catch(() => {});
-    }
-  }, [isOpen, activeTab, api, token]);
+    if(!isOpen||!api||!token||activeTab!=='profiles')return;
+    const controller=new AbortController();
+    setProfileLoadState('loading');setProfileMsg('');setProfilesList([]);
+    api.profiles(controller.signal).then(result=>{
+      if(!controller.signal.aborted){setProfilesList(result);setProfileLoadState('ready');}
+    }).catch(failure=>{
+      if(!controller.signal.aborted){setProfileLoadState('failed');setProfileMsg(userError(failure));}
+    });
+    return ()=>controller.abort();
+  },[isOpen,activeTab,api,token]);
 
   if (!isOpen) return null;
 
@@ -162,11 +169,12 @@ export function SettingsModal({
   };
 
   const handleSaveProfile = async () => {
-    if (!editingProfile || !api) return;
+    if (!editingProfile || !api || profileBusy) return;
     if (!editingProfile.name.trim()) {
       setProfileMsg('Profile name is required');
       return;
     }
+    setProfileBusy(true);
     try {
       const profId = editingProfile.id || crypto.randomUUID();
       await api.saveProfile({
@@ -176,29 +184,30 @@ export function SettingsModal({
         scope: editingProfile.scope,
       });
       const updated = await api.profiles();
-      setProfilesList(updated);
+      setProfilesList(updated);setProfileLoadState('ready');
       setEditingProfile(null);
       setProfileMsg('Profile saved successfully.');
       setTimeout(() => setProfileMsg(''), 3000);
     } catch (err: any) {
-      setProfileMsg(err.message || 'Failed to save profile');
-    }
+      setProfileMsg(userError(err));
+    } finally {setProfileBusy(false);}
   };
 
   const handleDeleteProfile = async (id: string) => {
-    if (!api) return;
+    if (!api || profileBusy) return;
+    setProfileBusy(true);
     try {
       await api.deleteProfile(id);
       const updated = await api.profiles();
-      setProfilesList(updated);
+      setProfilesList(updated);setProfileLoadState('ready');
       if (activeProfileId === id && onSelectProfile) {
         onSelectProfile(null);
       }
       setProfileMsg('Profile deleted.');
       setTimeout(() => setProfileMsg(''), 3000);
     } catch (err: any) {
-      setProfileMsg(err.message || 'Failed to delete profile');
-    }
+      setProfileMsg(userError(err));
+    } finally {setProfileBusy(false);}
   };
 
   const handleFullPurge = async () => {
@@ -637,13 +646,15 @@ export function SettingsModal({
                 </Button>
               </div>
 
+              {!onSelectProfile && <p>Saved prompt definitions are not applied to chat automatically.</p>}
+              {profileBusy && <p role="status">Saving profile change…</p>}
               {profileMsg && (
                 <div style={{ fontSize: '12px', color: 'var(--ui-primary, #48a87b)' }}>{profileMsg}</div>
               )}
 
               {/* Profiles List */}
               <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
-                {profilesList.length === 0 ? (
+                {profileLoadState!=='ready' ? <p>{profileLoadState==='loading'?'Loading saved definitions…':'Saved definitions are unknown. Reopen this tab to check again.'}</p> : profilesList.length === 0 ? (
                   <p style={{ fontSize: '12px', color: 'var(--ui-text-secondary, #9fb3a4)' }}>
                     {STRINGS.settings.noProfiles}
                   </p>
@@ -706,7 +717,7 @@ export function SettingsModal({
                           <Button
                             variant="quiet"
                             style={{ fontSize: '11px', padding: '2px 8px', color: 'var(--ui-danger, #f87171)' }}
-                            onClick={() => handleDeleteProfile(prof.id)}
+                            disabled={profileBusy} onClick={() => handleDeleteProfile(prof.id)}
                           >
                             Delete
                           </Button>
@@ -744,7 +755,7 @@ export function SettingsModal({
                   <label style={{ fontSize: '12px', fontWeight: 600 }}>Profile Name</label>
                   <input
                     type="text"
-                    value={editingProfile.name}
+                    aria-label="Profile name" value={editingProfile.name}
                     onChange={e => setEditingProfile({ ...editingProfile, name: e.target.value })}
                     placeholder="e.g. Code Specialist"
                     style={{
@@ -775,7 +786,7 @@ export function SettingsModal({
                   <label style={{ fontSize: '12px', fontWeight: 600 }}>System Prompt</label>
                   <textarea
                     rows={4}
-                    value={editingProfile.system_prompt}
+                    aria-label="Profile system prompt" value={editingProfile.system_prompt}
                     onChange={e => setEditingProfile({ ...editingProfile, system_prompt: e.target.value })}
                     placeholder="Enter instructions for the model..."
                     style={{
@@ -793,7 +804,7 @@ export function SettingsModal({
                     <Button variant="quiet" onClick={() => setEditingProfile(null)}>
                       Cancel
                     </Button>
-                    <Button variant="primary" onClick={handleSaveProfile}>
+                    <Button variant="primary" disabled={profileBusy} onClick={handleSaveProfile}>
                       {STRINGS.settings.saveProfile}
                     </Button>
                   </div>

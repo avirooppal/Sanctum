@@ -1,11 +1,12 @@
 import React, { useEffect, useState } from 'react';
 import { Button } from './ui/primitives.js';
+import {privacyMessage,userError} from './runtime-truth.js';
 
 export interface SystemHealth {
   status: string;
   cloud_connectors: string;
   isolation: string;
-  checks?: string[];
+  checks?: unknown;
 }
 
 export interface DispatchStats {
@@ -34,7 +35,7 @@ export function DashboardPanel({ token }: { token: string }) {
         setDispatch(await dRes.json());
       }
     } catch (e) {
-      setError(e instanceof Error ? e.message : 'Failed to query local runtime status');
+      setHealth(null);setDispatch(null);setError(userError(e));
     } finally {
       setLoading(false);
     }
@@ -74,13 +75,13 @@ export function DashboardPanel({ token }: { token: string }) {
               ● {health?.status?.toUpperCase() || 'OFFLINE'}
             </span>
           </div>
-          <p className="text-xs ui-text-secondary mt-2">Zero foreign egress permitted</p>
+          <p className="text-xs ui-text-secondary mt-2">{privacyMessage(health)}</p>
         </div>
 
         <div className="ui-card">
           <div className="text-[11px] text-display ui-text-secondary mb-1">Cloud Policy</div>
           <div className="text-lg font-semibold ui-text-primary">
-            {health?.cloud_connectors === 'disabled' ? 'Disabled (Strict)' : 'Restricted'}
+            {health?.cloud_connectors === 'disabled' ? 'Disabled (reported)' : 'Unknown'}
           </div>
           <p className="text-xs ui-text-secondary mt-2">All traffic bound to loopback</p>
         </div>
@@ -88,7 +89,7 @@ export function DashboardPanel({ token }: { token: string }) {
         <div className="ui-card">
           <div className="text-[11px] text-display ui-text-secondary mb-1">Sandboxing</div>
           <div className="text-lg font-semibold ui-text-primary">
-            {health?.isolation || 'Active'}
+            {health?.isolation || 'Unknown'}
           </div>
           <p className="text-xs ui-text-secondary mt-2">Kernel namespaces & seccomp</p>
         </div>
@@ -98,8 +99,8 @@ export function DashboardPanel({ token }: { token: string }) {
         <div className="text-xs font-semibold text-display tracking-wider">Engine Dispatch Queues</div>
         <div className="space-y-3">
           {laneLabels.map((lane, index) => {
-            const queuedCount = dispatch?.queued?.[index] ?? 0;
-            const activeCount = dispatch?.active?.[index] ?? 0;
+            const queuedCount = dispatch?.queued?.[index] ?? 'Unknown';
+            const activeCount = dispatch?.active?.[index] ?? 'Unknown';
             return (
               <div key={lane} className="flex items-center justify-between text-xs py-1 border-b ui-border last:border-b-0">
                 <span className="font-medium">{lane}</span>
@@ -120,10 +121,10 @@ export function DashboardPanel({ token }: { token: string }) {
       <div className="ui-card">
         <div className="text-xs font-semibold text-display tracking-wider mb-2">Privacy & Execution Invariants</div>
         <ul className="text-xs ui-text-secondary space-y-1.5 list-disc pl-4">
-          <li>All models, ASR, TTS, and embeddings execute exclusively on local hardware.</li>
+          <li>{privacyMessage(health)}</li>
           <li>Owner authentication token required for API access and WebSocket controls.</li>
-          <li>Zero remote tracking, analytics, telemetry, or external network calls.</li>
-          <li>Conversations, embeddings, and audio never leave this machine.</li>
+          <li>Startup checks are scoped to the tested runtime.</li>
+          <li>Privacy Ledger is unavailable;historical egress is not verified.</li>
         </ul>
       </div>
     </div>

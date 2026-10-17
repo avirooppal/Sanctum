@@ -165,3 +165,10 @@ fn disabled_purge_uses_bounded_metadata_lane_not_bodyless_health_lane() {
     assert_eq!(request.length, 2);
     assert_eq!(inspect(b"GET /healthz HTTP/1.1\r\n\r\n").unwrap().lane, 0);
 }
+
+#[cfg(target_os = "linux")]
+#[test]
+fn profile_writes_use_existing_metadata_lane() {
+    let request = inspect(b"POST /v1/profiles HTTP/1.1\r\nContent-Length: 2\r\n\r\n").unwrap();
+    assert_eq!(request.lane, 2);
+}

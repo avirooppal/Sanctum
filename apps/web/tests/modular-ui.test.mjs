@@ -263,7 +263,9 @@ test('DashboardPage renders routed Hermes-mirrored pages without throwing', () =
   assert.ok(statusHtml.includes('Runtime Overview &amp; Status') || statusHtml.includes('Runtime Overview & Status'));
   assert.ok(statusHtml.includes('Active Model'));
   assert.ok(statusHtml.includes('Network Egress'));
-  assert.ok(statusHtml.includes('DENIED'));
+  assert.ok(statusHtml.includes('Startup checks: unknown. Ledger unavailable.'));
+  assert.ok(!statusHtml.includes('self-test passed'));
+  assert.ok(!statusHtml.includes('Healthy · Localhost'));
   assert.ok(statusHtml.includes('Engine Dispatch Queues'));
 
   // Models subpage
@@ -315,7 +317,8 @@ test('DashboardPage renders routed Hermes-mirrored pages without throwing', () =
   const cfgHtml = renderToString(cfgEl);
   assert.ok(cfgHtml.includes('Gateway Configuration'));
   assert.ok(cfgHtml.includes('127.0.0.1'));
-  assert.ok(cfgHtml.includes('Default-Deny (Loopback Bound)'));
+  assert.ok(cfgHtml.includes('Startup checks: unknown. Ledger unavailable.'));
+  assert.ok(!cfgHtml.includes('Default-Deny (Loopback Bound)'));
 
   // Licenses subpage
   const licEl = React.createElement(DashboardPage, {
