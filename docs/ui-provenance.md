@@ -73,3 +73,11 @@ implementation code. Upstream pin remains b30f95ac4a80d2f6dbe3aa01001b0524314f6d
 Native single-sidebar focus/inert lifecycle and bounded viewport are first-party
 code; MIT reference notices remain included. Other spacing/chrome still require
 reference comparisons; no exact-layout/fidelity claim (ADR0061).
+
+## ADR0078 research boundary
+
+Public primary sources and our interpreted principles are in design/DIRECTIONS.md.
+No third-party assets,screenshots,fonts,icons,code or dependencies were copied or
+admitted. Existing bundled-font/notice gates passed in the baseline;this does
+not license any referenced product's assets. No notices change is necessary
+for original documentation alone.

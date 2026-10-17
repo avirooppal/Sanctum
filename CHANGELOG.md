@@ -369,3 +369,7 @@ limits;real CRUD/failure recovery tested. Smoke now15 real stages;release open.
 Installation foundations:ADR0077 and versioned install-check contract;read-only
 Linux preflight with real namespace/seccomp denial proof and fail-closed platform,
 owner,disk and port checks. No installer artifact or release claimed.
+
+Design direction:ADR0078 preserves the reference default;adds original
+research,three theme hypotheses,acceptance criteria and an unverified owner
+study protocol. Theme implementation and measured comparisons remain pending.

@@ -58,3 +58,7 @@ evals/results/workflow-main-types.log whitespace=-blank-at-eof
 docs/status-archive/2026-10-17-before-installation-preflight.md -text whitespace=cr-at-eol,-blank-at-eof
 # ADR0057: unmodified console evidence.
 evals/results/install-*.log whitespace=-blank-at-eof,-blank-at-eol
+
+docs/status-archive/2026-10-17-before-cozy-design.md -text whitespace=cr-at-eol,-blank-at-eof
+# ADR0057: raw console evidence.
+evals/results/design-*.log whitespace=-blank-at-eof,-blank-at-eol

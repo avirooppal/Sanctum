@@ -90,3 +90,11 @@ startup checks and ledger unavailability. No remote asset or new package added.
 ADR0076 removes unconditional dashboard health/denial/memory defaults. The
 existing visual structure stays;unavailable metrics show Unknown. Profile
 definitions use real storage and honest failed-load states;no fake gateway.
+
+## Cozy directions — ADR0078
+
+Paper,Night Study,Studio are specified,not shipped in this documentation slice.
+The current reference id `sanctum` and its default appearance are unchanged.
+Owner-requested Hermes theme label awaits a test-first attribution adjustment;
+no upstream logo/wordmark permission is inferred. No before/after fidelity,
+contrast,a11y or comfort result for these directions is claimed.

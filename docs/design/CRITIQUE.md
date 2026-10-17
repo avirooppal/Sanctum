@@ -96,3 +96,12 @@ Every major screen and slice must be evaluated against this rubric across:
   - *Remediations Applied*:
     - Verified complete state coverage (loading skeletons, disabled send button when prompt empty, error alert).
 
+## 2026-10-17 cozy-direction scope — no visual pass claimed
+
+ADR0078 adds acceptance criteria and research only. Existing narratives above
+are historical and do not establish the new packs' results. No new theme pack,
+new-theme screenshot,first/second critique pass,axe run,200% zoom check,lab
+interaction measurement or two-hour user test has been performed. All remain
+PENDING/UNVERIFIED. Current default/palette unchanged. First concrete audit
+finding:TOKENS.md specifies11px metadata,below the new12px requirement;resolve
+it explicitly for new directions without pretending the reference complies.

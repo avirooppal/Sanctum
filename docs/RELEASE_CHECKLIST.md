@@ -180,3 +180,15 @@ required after this slice is committed;local tests do not substitute for CI.
 Preflight implementation:f8d15e097972095894b25bcffae4d6fb6b56b4a0;hosted
 39055449581/all5 completed success. Evidence:install-check-hosted-ci.json.
 No installed-artifact or full-journey status is promoted.
+
+## Cozy direction slice1 (2026-10-17)
+
+ADR0078,design/DIRECTIONS.md and design/CRITERIA.md specify three additive packs
+without changing the default. design/USER_TEST.md is an UNVERIFIED owner study
+protocol. Implementation,contrast/gallery matrix,screenshots/two critique
+passes,accessibility/performance comparison and default recommendation remain
+Not done. This is documentation only;no journey/phase/platform gate promoted.
+Current session baseline182 source,70 Rust,81 web/typecheck/build,audit0,38 denial
+probes and15 implemented-feature smoke stages PASS. Raw design-baseline-*.
+Starting1df4286 hosted39055637580/all5 completed success. This slice's exact-SHA
+hosted CI follows push. Install artifacts and all earlier open blockers remain.
