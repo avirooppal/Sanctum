@@ -84,7 +84,7 @@ ledger,packet capture,chaos or full-journey gates they did not exercise.
 | J11.3 | No owner TLS LAN | R-LAN OPEN;loopback confinement is not LAN support | hide until backend |
 | J11.4 | No encryption/backup | R-CRYPTO OPEN;no canary/rotation/restore evidence | hide until backend |
 | J11.5 | No verified update | R-PACKAGES OPEN;no signature/update rollback evidence | hide until backend |
-| J11.6 | Purge hidden;HTTP safety repair pending | SOURCE:chat.rs attempts Knowledge deletion but ignores errors/live workers;UI capability gated | hide until backend |
+| J11.6 | Purge hidden;legacy mutation disabled | workflow-purge-live.json and14-stage smoke:401/400/413/501,populated metadata unchanged;full erasure backend absent | hide until backend |
 | J12.1 | Generic/raw errors | SOURCE:api.ts Gateway request failed(status);SpeechPanel String(error) | fix |
 | J12.2 | Supervision/cancel partial | B2 process-tree tests;B4 browser Stop;resident real-engine storms pending | build |
 | J12.3 | Incomplete resource/crash recovery | B1 profile fixtures;no fresh low-disk/gateway-kill-indexing runner | build |

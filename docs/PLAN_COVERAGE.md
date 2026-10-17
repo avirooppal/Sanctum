@@ -194,3 +194,12 @@ Post-docs correction verified locally:source174,Rust67,web81,typecheck/build,
 audit0,38 probes,13 real smoke stages PASS. Evidence:workflow-ui-postdocs-*.
 Hosted12afacc completed FAILED (web status-matrix contract);all other4 jobs
 passed. Follow-up SHA CI must complete before any green claim. No test skipped.
+
+## J11/J12 safety evidence (ADR0075)
+
+Current source174/Rust69/web81 PASS,typecheck/build,audit0,38 denial probes,
+14 real smoke stages PASS. Raw workflow-purge-*. Contract:purge-v1 safety
+migration (filename purge-v1-safety-migration.md),OpenAPI0.2.1. Runtime refusal
+401/400/400/413/501 and populated metadata unchanged. No secure erasure/ledger
+claim;J11 remains Partial. Prior correction cd68270 hosted39050933876/all5
+completed success. New safety SHA CI follows push.

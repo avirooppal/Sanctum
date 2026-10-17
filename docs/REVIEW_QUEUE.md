@@ -150,3 +150,5 @@ retain original adversarial mutations and add row-order regression. No gate
 weakened;failed hosted and local outputs retained.
 
 | [0072](adr/0072-workflow-checks-and-readiness.md) | Read-only readiness/consistency/secret checks | New test-client bounds10s/1MiB;no server or latency SLO change | Readiness never verifies full journeys or ledger/chaos |
+
+| [0075](adr/0075-disable-unsafe-purge.md) | Fail closed before whole-product deletion;OpenAPI0.2.1 availability migration | No timeout/queue/capacity change;reuse10s/1MiB test-client bounds from0072 | Legacy200 becomes501;full purge stays unavailable;marker required before live valid confirmation |

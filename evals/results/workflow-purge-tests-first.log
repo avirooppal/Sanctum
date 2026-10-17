@@ -1,0 +1,27 @@
+   Compiling sanctum-gateway v0.1.0 (/mnt/c/Users/aviroop/Desktop/Sanctum/services/gateway)
+error[E0425]: cannot find function `purge_decision` in module `super`
+   --> services/gateway/src/chat.rs:973:27
+    |
+973 | ...r::purge...ision(b"...
+    |       ^^^^^...^^^^^ not found in `super`
+
+error[E0425]: cannot find function `purge_decision` in module `super`
+   --> services/gateway/src/chat.rs:974:27
+    |
+974 | ...r::purge...ision(b"...
+    |       ^^^^^...^^^^^ not found in `super`
+
+error[E0425]: cannot find function `purge_decision` in module `super`
+   --> services/gateway/src/chat.rs:975:27
+    |
+975 | ...r::purge...ision(&v...
+    |       ^^^^^...^^^^^ not found in `super`
+
+error[E0425]: cannot find function `purge_decision` in module `super`
+   --> services/gateway/src/chat.rs:976:37
+    |
+976 | ...r::purge...ision(br...
+    |       ^^^^^...^^^^^ not found in `super`
+
+For more information about this error, try `rustc --explain E0425`.
+error: could not compile `sanctum-gateway` (bin "sanctum-runtime" test) due to 4 previous errors

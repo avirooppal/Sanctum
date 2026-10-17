@@ -1,0 +1,16 @@
+   Compiling sanctum-gateway v0.1.0 (/mnt/c/Users/aviroop/Desktop/Sanctum/services/gateway)
+error[E0282]: type annotations needed
+   --> services/gateway/src/chat.rs:916:31
+    |
+916 | ...lue = match serde...slice(bo...
+    |                ^^^^^...^^^^^ cannot infer type of the type parameter `T` declared on the function `from_slice`
+917 | ...if value.is_object() => value,
+    |       ----- type must be known at this point
+    |
+help: consider specifying a concrete type for the type parameter `T`
+    |
+916 |     let parsed: Value = match serde_json::from_slice::</* Type */>(body) {
+    |                                                     ++++++++++++++
+
+For more information about this error, try `rustc --explain E0282`.
+error: could not compile `sanctum-gateway` (bin "sanctum-runtime" test) due to 1 previous error

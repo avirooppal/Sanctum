@@ -362,3 +362,10 @@ absent. Real subflow evidence:evals/results/workflow-ui-onboarding.json;3 clicks
 2 text entries including a wrong-key attempt,1486.96ms,zero foreign requests.
 J9 displays current startup denial checks only;the ledger remains unavailable.
 Full journey budgets,chaos and ledger acceptance are not established.
+
+## J11 safety availability
+
+ADR0075 disables the legacy full-purge HTTP mutation. Valid owner confirmation
+returns501 without deleting state;full_purge remains absent. This corrects
+availability while J11 stays PARTIAL. Real probe requires disabled-v1 marker
+and preserves populated metadata;not full erasure or ledger acceptance.

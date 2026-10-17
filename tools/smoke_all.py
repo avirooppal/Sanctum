@@ -20,6 +20,7 @@ STAGE_JOURNEYS = {
     "ui_chat_stop": ["J3", "J12"],
     "ui_sessions": ["J3"],
     "ui_workflow": ["J2", "J9", "J12"],
+    "purge_safety": ["J11", "J12"],
     "ui_website": ["J1", "J9"],
     "ui_fidelity": ["J3", "J4", "J9", "J11"],
     "journey_readiness": [
@@ -222,6 +223,18 @@ def main():
                 package,
                 browser_token,
                 str(directory / "smoke-ui-workflow.json"),
+            ],
+            None,
+        ),
+        (
+            "purge_safety",
+            [
+                sys.executable,
+                "evals/purge_safety.py",
+                "--token-file",
+                str(token),
+                "--output",
+                str(directory / "smoke-purge-safety.json"),
             ],
             None,
         ),

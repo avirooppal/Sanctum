@@ -461,7 +461,7 @@ Runtime HTTP: GET /healthz. Other contracts are foundation diagnostics.
   "openapi": "3.1.0",
   "info": {
     "title": "Sanctum chat core",
-    "version": "0.2.0"
+    "version": "0.2.1"
   },
   "security": [
     {
@@ -787,7 +787,7 @@ Runtime HTTP: GET /healthz. Other contracts are foundation diagnostics.
     },
     "/v1/capabilities": {
       "get": {
-        "description": "List available runtime capabilities based on active configuration and services",
+        "description": "List available runtime capabilities based on active configuration and services Additive purge_safety=disabled-v1 signals that legacy purge returns501 without mutation;full_purge is absent.",
         "responses": {
           "200": {
             "description": "Array of capability string identifiers"
@@ -843,7 +843,7 @@ Runtime HTTP: GET /healthz. Other contracts are foundation diagnostics.
     },
     "/v1/purge": {
       "post": {
-        "description": "Full workspace purge: permanently wipes all turns, knowledge stores, indexes, preferences, and profiles. Requires exact confirmation token.",
+        "description": "Disabled safety correction. Auth and confirmation remain required. Valid requests return501 without any data mutation. See purge-v1-safety-migration.md.",
         "requestBody": {
           "required": true,
           "content": {
@@ -864,16 +864,20 @@ Runtime HTTP: GET /healthz. Other contracts are foundation diagnostics.
           }
         },
         "responses": {
-          "200": {
-            "description": "All workspace data purged"
-          },
           "400": {
             "description": "Invalid confirmation string"
           },
           "401": {
             "description": "Owner authentication required"
+          },
+          "501": {
+            "description": "Capability unavailable;no data deleted"
+          },
+          "413": {
+            "description": "Body exceeds1024 bytes"
           }
-        }
+        },
+        "deprecated": true
       }
     }
   },

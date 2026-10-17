@@ -78,7 +78,11 @@ pub fn inspect(bytes: &[u8]) -> Result<Head, u16> {
     let route = path.split('?').next().unwrap_or(path);
     let lane = match route {
         "/v1/realtime" | "/v1/audio/transcriptions" | "/v1/audio/speech" => 1,
-        "/v1/chat/completions" | "/v1/embeddings" | "/v1/sessions" | "/v1/preferences" => 2,
+        "/v1/chat/completions"
+        | "/v1/embeddings"
+        | "/v1/sessions"
+        | "/v1/preferences"
+        | "/v1/purge" => 2,
         value if value.starts_with("/v1/workspaces") => 3,
         _ => 0,
     };

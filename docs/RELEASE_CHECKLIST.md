@@ -71,7 +71,7 @@ platform rows currently combine absent software with unverified target execution
 
 | ID / coverage | Acceptance | Current result |
 |---|---|---|
-| R-BASE / D4 | All existing source,Rust,web,SDK,denial checks | PASS scoped only:174 source,67 Rust,80 web,audit0,38 probes,13 real smoke stages;workflow-ui-* evidence. |
+| R-BASE / D4 | All existing source,Rust,web,SDK,denial checks | PASS scoped only:174 source,69 Rust,81 web,audit0,38 probes,14 real smoke stages;workflow-ui-* evidence. |
 | R-DOCTOR / PH0,H1 | Correct real tier/profile and readiness | OPEN:full requirement not established by current slice;historical details archived. Missing software is not a hardware exception. |
 | R-UI / U1–U3 | Completed real screens,licensed assets,reference fidelity,axe/keyboard/contrast,all-screen HTTP+WS egress,branch merge | OPEN:full requirement not established by current slice;historical details archived. Missing software is not a hardware exception. |
 | R-RAG / PH2,EV1 | Real-document hybrid/vector ablation,faithfulness,page highlighting | OPEN:full requirement not established by current slice;historical details archived. Missing software is not a hardware exception. |
@@ -124,7 +124,7 @@ platform rows currently combine absent software with unverified target execution
 
 UI slice:real setup3 clicks/2 entries,1054.46ms in the full smoke;wrong key
 rejected,zero foreign requests. This is a configured-runtime subflow,not full
-J2 or budget/ledger acceptance. Full purge hidden;HTTP repair still required.
+J2 or budget/ledger acceptance. Full purge hidden;legacy HTTP mutation disabled per ADR0075.
 The old25-case canned API suite is fixture coverage,not current real evidence.
 Hosted c91cc58 all5 jobs completed success;new SHA CI follows push.
 
@@ -132,3 +132,8 @@ Post-docs correction verified locally:source174,Rust67,web81,typecheck/build,
 audit0,38 probes,13 real smoke stages PASS. Evidence:workflow-ui-postdocs-*.
 Hosted12afacc completed FAILED (web status-matrix contract);all other4 jobs
 passed. Follow-up SHA CI must complete before any green claim. No test skipped.
+
+ADR0075:full purge still unsupported;legacy API fails closed501 without
+mutation. Real safety tests PASS;all broad release gates remain OPEN.
+Current scoped regression174/69/81,audit0,38 probes,14 smoke stages. Evidence
+workflow-purge-*. Prior cd68270 hosted all5 completed success;new SHA pending.

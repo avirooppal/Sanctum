@@ -561,6 +561,7 @@ impl Chat {
                         200,
                         json!({
                             "capabilities": caps,
+                            "purge_safety": "disabled-v1",
                             "profile": "default",
                             "hardware": {
                                 "threads": self.config.threads,
@@ -701,34 +702,8 @@ impl Chat {
         if request.method() == &tiny_http::Method::Post && path == "/v1/purge" {
             let mut body = Vec::new();
             request.as_reader().take(1024 + 1).read_to_end(&mut body)?;
-            let parsed: Value = match serde_json::from_slice::<Value>(&body) {
-                Ok(v) if v.is_object() => v,
-                _ => {
-                    return respond(
-                        request,
-                        400,
-                        json!({"error":{"message":"Invalid JSON object for purge"}}),
-                    )
-                }
-            };
-            let confirm = parsed.get("confirm").and_then(|c| c.as_str()).unwrap_or("");
-            if confirm != "PURGE ALL SANCTUM DATA" {
-                return respond(
-                    request,
-                    400,
-                    json!({"error":{"message":"Confirmation token PURGE ALL SANCTUM DATA required"}}),
-                );
-            }
-            let store = self.store.lock().map_err(|_| "store lock poisoned")?;
-            store.purge_all("local-owner")?;
-            drop(store);
-
-            let knowledge_dir = self.config.state_dir.join("knowledge");
-            if knowledge_dir.exists() {
-                let _ = fs::remove_dir_all(&knowledge_dir);
-                let _ = fs::create_dir_all(&knowledge_dir);
-            }
-            return respond(request, 200, json!({"purged": true}));
+            let (status, payload) = purge_decision(&body);
+            return respond(request, status, payload);
         }
         if request.method() != &tiny_http::Method::Post
             || !matches!(path.as_str(), "/v1/chat/completions" | "/v1/embeddings")
@@ -935,6 +910,31 @@ impl Read for Capture {
         Ok(count)
     }
 }
+fn purge_decision(body: &[u8]) -> (u16, Value) {
+    if body.len() > 1024 {
+        return (413, json!({"error":{"message":"Request too large"}}));
+    }
+    let parsed: Value = match serde_json::from_slice::<Value>(body) {
+        Ok(value) if value.is_object() => value,
+        _ => {
+            return (
+                400,
+                json!({"error":{"message":"Invalid JSON object for purge"}}),
+            )
+        }
+    };
+    if parsed.get("confirm").and_then(Value::as_str) != Some("PURGE ALL SANCTUM DATA") {
+        return (
+            400,
+            json!({"error":{"message":"Confirmation token PURGE ALL SANCTUM DATA required"}}),
+        );
+    }
+    (
+        501,
+        json!({"error":{"code":"capability_unavailable","message":"Full purge is unavailable. No data was deleted."}}),
+    )
+}
+
 fn respond(request: tiny_http::Request, status: u16, payload: Value) -> Result<()> {
     let mut response = tiny_http::Response::from_string(payload.to_string())
         .with_status_code(status)
@@ -964,5 +964,26 @@ mod config_tests {
         let config: Config =
             serde_json::from_str(include_str!("../../../profiles/runtime-cpu.json")).unwrap();
         assert!(config.speech.is_none());
+    }
+    #[test]
+    fn disabled_purge_preserves_populated_state_and_confirmation_boundaries() {
+        let store = sanctum_gateway::storage::Store::memory().unwrap();
+        store
+            .save(
+                "local-owner",
+                "purge-safety",
+                &serde_json::json!({"messages":[]}),
+                "preserve me",
+                false,
+            )
+            .unwrap();
+        let before = store.turns("local-owner", "purge-safety").unwrap();
+        assert_eq!(super::purge_decision(b"{}").0, 400);
+        assert_eq!(super::purge_decision(b"not json").0, 400);
+        assert_eq!(super::purge_decision(&vec![b' '; 1025]).0, 413);
+        let (status, body) = super::purge_decision(br#"{"confirm":"PURGE ALL SANCTUM DATA"}"#);
+        assert_eq!(status, 501);
+        assert_eq!(body["error"]["code"], "capability_unavailable");
+        assert_eq!(before, store.turns("local-owner", "purge-safety").unwrap());
     }
 }

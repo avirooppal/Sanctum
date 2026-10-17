@@ -156,3 +156,12 @@ fn nonreading_clients_cancel_fixed_and_streaming_upstreams() {
         sender.join().unwrap();
     }
 }
+
+#[cfg(target_os = "linux")]
+#[test]
+fn disabled_purge_uses_bounded_metadata_lane_not_bodyless_health_lane() {
+    let request = inspect(b"POST /v1/purge HTTP/1.1\r\nContent-Length: 2\r\n\r\n").unwrap();
+    assert_eq!(request.lane, 2);
+    assert_eq!(request.length, 2);
+    assert_eq!(inspect(b"GET /healthz HTTP/1.1\r\n\r\n").unwrap().lane, 0);
+}

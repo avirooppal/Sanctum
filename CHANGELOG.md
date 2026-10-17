@@ -358,3 +358,6 @@ Added grounded quote fallback, configurable loopback-only folder polling, and fr
 Workflow alignment:runtime-backed setup,scoped startup privacy,truthful registry
 metadata,safe error messages and capability-gated controls. Added real onboarding
 subflow to13-stage smoke. Conservative coverage/release audit;no release claim.
+
+Safety:disabled unsafe whole-product purge before any mutation;versioned
+availability migration,explicit501,marker-gated real probe and14-stage smoke.
