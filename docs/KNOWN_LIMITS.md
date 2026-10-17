@@ -33,3 +33,9 @@ Only source preflight is tested;no downloadable installer/package has been
 verified. Windows host preflight,rootfs trust/signatures,Ubuntu24 executable
 AppArmor policy,clean installs,upgrades and uninstall remain software work.
 Never bypass containment to use an unsupported platform. macOS unsupported.
+
+Redesign is partial:S1 iteration1 is real and verified;the remaining screens,
+full state captures,all-theme accessibility/contrast,axe/zoom/performance and
+further critique iterations are pending. Historical standalone browser_shell/
+browser_themes target pre-auth controls and need contract migration before
+reuse;the current16-stage real smoke passes. No whole-redesign claim.

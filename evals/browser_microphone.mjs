@@ -28,7 +28,7 @@ page.on('pageerror', error => errors.push(error.message));
 try {
   await page.goto(process.env.SANCTUM_BASE_URL || 'http://127.0.0.1:8766');
   await page.getByLabel('Local access key').fill(readFileSync(tokenFile,'utf8').trim());
-  await page.getByRole('button',{name:'Open workspace'}).click();
+  await page.getByRole('button',{name:'Unlock'}).click();
   await page.getByText('Local speech',{exact:true}).click();
   await page.getByLabel('ASR model',{exact:true}).fill(asr);
   assert.equal(await page.evaluate(()=>window.testTracks.length),0);

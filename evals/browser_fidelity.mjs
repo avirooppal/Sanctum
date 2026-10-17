@@ -59,7 +59,7 @@ try {
   // 2. Open Chat Application & Authenticate
   await page.goto(base.href);
   await page.getByLabel('Local access key').fill(token);
-  await page.getByRole('button', {name: 'Open workspace'}).click();
+  await page.getByRole('button', {name: 'Unlock'}).click();
   await page.getByLabel('Model', {exact:true}).waitFor();
 
   // Check 237px sidebar geometry token

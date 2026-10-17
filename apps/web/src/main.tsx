@@ -16,7 +16,8 @@ import { HistoryPanel } from './HistoryPanel';
 import './ui/knowledge.css';
 import { Button, Dialog } from './ui/primitives';
 import './ui/primitives.css';
-import thirdPartyNotices from '../../../THIRD_PARTY_NOTICES.md?raw';
+import {UnlockScreen} from './ui/UnlockScreen';
+import './ui/unlock.css';
 import './ui/themes.css';
 import './ui/fonts.css';
 import { AppShell } from './ui/AppShell';
@@ -31,9 +32,8 @@ import {
   type UserPreferences,
   DEFAULT_PREFERENCES,
   sanitizePreferences,
-  enforceContrastGuard,
 } from './ui/Customization';
-import { themeTokens } from './ui/themes';
+import { themeTokens,accentTokens } from './ui/themes';
 import { CommandPalette, type CommandAction } from './ui/CommandPalette';
 import { SettingsModal } from './ui/SettingsModal';
 import { UndoToastContainer, type ToastItem } from './ui/UndoToast';
@@ -48,6 +48,8 @@ const PROMPT_SUGGESTIONS = [
 
 function App() {
   const [token, setToken] = useState('');
+  const [authorized,setAuthorized]=useState(false);
+  const [thirdPartyNotices,setNotices]=useState(STRINGS.notices.loading as string);
   const [keyInput, setKeyInput] = useState('');
   const [model, setModel] = useState('');
   const [models, setModels] = useState<string[]>([]);
@@ -115,7 +117,7 @@ function App() {
   };
 
   // Preferences & Capabilities
-  const [preferences, setPreferences] = useState<UserPreferences>(DEFAULT_PREFERENCES);
+  const [preferences, setPreferences] = useState<UserPreferences>({...DEFAULT_PREFERENCES,mode:'system'});
   const [capabilities, setCapabilities] = useState<string[]>([]);
   const [toasts, setToasts] = useState<ToastItem[]>([]);
   const [lastDeletedSession, setLastDeletedSession] = useState<{ id: string; title?: string } | null>(null);
@@ -131,7 +133,7 @@ function App() {
   useEffect(() => {
     if (!token) return;
     const controller=new AbortController();
-    setCapabilities([]);setModels([]);setModelObjects([]);
+    setAuthorized(false);setCapabilities([]);setModels([]);setModelObjects([]);
     async function bootstrap() {
       try {
         await document.fonts.load('12px "JetBrains Mono"');
@@ -147,6 +149,7 @@ function App() {
         setModel(textModels[0] || '');
         setCapabilities(loaded.capabilities.capabilities);
         await refresh();
+        setAuthorized(true);
       } catch(e) {
         if(controller.signal.aborted)return;
         setError(userError(e));
@@ -165,18 +168,14 @@ function App() {
       ? (system.matches ? 'dark' : 'light')
       : preferences.mode;
     try {
-      const tokens = themeTokens(preferences.theme, effectiveMode);
+      const base = themeTokens(preferences.theme, effectiveMode);
+      const tokens = preferences.accentColor ? accentTokens(base,preferences.accentColor) : base;
       const root = document.documentElement;
       root.dataset.theme=preferences.theme;root.dataset.mode=effectiveMode;
       for (const [key, val] of Object.entries(tokens)) {
         root.style.setProperty(key, val);
       }
-      // Apply accent override if custom
-      if (preferences.accentColor) {
-        const bg = tokens['--ui-background'] || '#0f1412';
-        const checked = enforceContrastGuard(preferences.accentColor, bg);
-        root.style.setProperty('--ui-accent', checked.effectiveHex);
-      }
+
     } catch {
       // Fallback safely to sanctum theme
     }
@@ -188,6 +187,7 @@ function App() {
   // Global Keyboard Shortcuts
   useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
+      if(!token||!authorized)return;
       // Command palette (Ctrl+K or Cmd+K)
       if ((e.ctrlKey || e.metaKey) && e.key.toLowerCase() === 'k') {
         e.preventDefault();
@@ -223,7 +223,7 @@ function App() {
     };
     window.addEventListener('keydown', handleKeyDown);
     return () => window.removeEventListener('keydown', handleKeyDown);
-  }, []);
+  }, [token,authorized]);
 
   const updatePreferences = (updated: Partial<UserPreferences>) => {
     setPreferences(prev => {
@@ -291,7 +291,7 @@ function App() {
         { role: 'user', content: '/info' },
         {
           role: 'assistant',
-          content: `**Sanctum Active Runtime Info**\n- **Model**: \`${model || 'none'}\` (Local on-device inference)\n- **Privacy**: ${STRINGS.app.privacyVerified}\n- **Storage**: Local session turns, zero telemetry`,
+          content: `**Sanctum Active Runtime Info**\n- **Model**: \`${model || 'none'}\` (Local on-device inference)\n- **Privacy**: ${STRINGS.app.privacyVerified}\n- **Storage**: Local session turns; inspect startup checks separately`,
         },
       ]);
       setPrompt('');
@@ -557,6 +557,23 @@ function App() {
     return true;
   });
 
+  useEffect(()=>{
+    if(!authorized||!(licensesOpen||settingsOpen||(route==='dashboard'&&dashboardSubpage==='licenses')))return;
+    let active=true;
+    import('../../../THIRD_PARTY_NOTICES.md?raw').then(module=>{if(active)setNotices(module.default);})
+      .catch(()=>{if(active)setNotices(STRINGS.notices.error);});
+    return ()=>{active=false;};
+  },[authorized,licensesOpen,settingsOpen,route,dashboardSubpage]);
+
+  if(!token||!authorized)return <UnlockScreen value={keyInput} busy={!!token&&!authorized}
+    error={error} onChange={setKeyInput}
+    onUnlock={()=>{setError('');setToken(keyInput.trim());setKeyInput('');}}
+    onReview={()=>{setError('');setShowWizard(true);}}
+    onBack={()=>{setError('');setShowWizard(false);}}
+    wizard={showWizard?<SetupWizard defaultToken={keyInput} onComplete={(key,initialPrompt)=>{
+      setToken(key);setShowWizard(false);if(initialPrompt)setPrompt(initialPrompt);
+    }}/>:undefined}/>;
+
   if (route === 'dashboard') {
     return (
       <div data-density={preferences.density} style={{ fontSize: `${preferences.fontSizeScale}%` }}>
@@ -633,8 +650,7 @@ function App() {
               />
             )}
             <div className="mt-auto pt-10 text-xs ui-text-secondary leading-6">
-              ● Local models only<br />
-              Cloud connections disabled<br />
+              <span>Review live startup checks in the status bar.</span><br />
               <div className="flex flex-wrap gap-2 my-2">
                 {token && capabilities.includes('dashboard') && (
                   <Button variant="outline" onClick={() => navigateToDashboard('status')}>
@@ -661,7 +677,7 @@ function App() {
         header={
           <>
             <div className="flex items-center gap-3">
-              <span className="text-sm ui-text-secondary">Your workspace / Chat</span>
+              <span className="text-sm ui-text-secondary">Chat</span>
               {token && capabilities.includes('chat') && (
                 <span className="inline-flex items-center gap-1.5 px-2 py-0.5 rounded text-[11px] font-medium bg-emerald-500/10 text-emerald-700 dark:text-emerald-400 border border-emerald-500/20">
                   <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse"></span>
@@ -732,84 +748,7 @@ function App() {
       >
         {token && capabilities.includes('knowledge') && <MeetingPanel token={token} />}
 
-        {!token ? (
-          showWizard ? (
-            <div className="m-auto w-full max-w-2xl py-6">
-              <SetupWizard
-                onComplete={(t, initialPrompt) => {
-                  setToken(t);
-                  setShowWizard(false);
-                  if (initialPrompt) setPrompt(initialPrompt);
-                }}
-                defaultToken={keyInput}
-              />
-              <div className="text-center mt-4">
-                <button
-                  className="text-xs ui-text-secondary underline hover:opacity-80"
-                  onClick={() => setShowWizard(false)}
-                >
-                  Or enter existing access key directly
-                </button>
-              </div>
-            </div>
-          ) : (
-            <section className="m-auto w-full max-w-md">
-              <div className="text-5xl ui-text-accent mb-6">◈</div>
-              <h1 className="text-3xl font-semibold mb-3">Welcome to your Sanctum.</h1>
-              <p className="ui-text-secondary mb-6 leading-relaxed">
-                Local AI that runs 100% on your device with zero cloud telemetry.
-              </p>
-              <div className="mb-6 p-4 rounded-xl border ui-border bg-neutral-500/5">
-                <div className="flex items-center justify-between mb-2">
-                  <span className="text-xs font-semibold text-display ui-text-secondary">
-                    First-Time Setup
-                  </span>
-                  <span className="text-[10px] px-1.5 py-0.5 rounded border ui-border text-display">
-                    Hermes Style
-                  </span>
-                </div>
-                <p className="text-xs ui-text-secondary mb-3">
-                  New here? Follow the interactive setup walkthrough to check local compute, configure models, and launch.
-                </p>
-                <Button className="w-full" onClick={() => setShowWizard(true)}>
-                  Start Setup Walkthrough →
-                </Button>
-              </div>
-              <div className="relative my-6 text-center">
-                <div className="absolute inset-0 flex items-center">
-                  <div className="w-full border-t ui-border"></div>
-                </div>
-                <span className="relative ui-surface px-2 text-xs ui-text-secondary text-display">
-                  Or Existing Key
-                </span>
-              </div>
-              <form
-                onSubmit={e => {
-                  e.preventDefault();
-                  setToken(keyInput.trim());
-                  setKeyInput('');
-                }}
-              >
-                <label className="block text-sm mb-2" htmlFor="key">
-                  Local access key
-                </label>
-                <input
-                  id="key"
-                  type="password"
-                  autoComplete="off"
-                  required
-                  value={keyInput}
-                  onChange={e => setKeyInput(e.target.value)}
-                  className="w-full ui-surface p-3 rounded-lg border ui-border"
-                  placeholder="Paste local.token"
-                />
-                <button className="mt-4 ui-primary text-white rounded-lg py-3 px-5 w-full">
-                  Open workspace
-                </button>
-              </form>
-            </section>
-          )
-        ) : capabilities.includes('chat') ? (
+        {capabilities.includes('chat') ? (
           <ChatView
             messages={messages}
             prompt={prompt}

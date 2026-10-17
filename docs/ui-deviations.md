@@ -98,3 +98,13 @@ The current reference id `sanctum` and its default appearance are unchanged.
 Owner-requested Hermes theme label awaits a test-first attribution adjustment;
 no upstream logo/wordmark permission is inferred. No before/after fidelity,
 contrast,a11y or comfort result for these directions is claimed.
+
+## S1 iteration1 — ADR0079
+
+Focused unlock replaces the reference pre-auth shell on the owner's instruction.
+Authenticated rail geometry and registered reference palettes remain;no theme
+label exposes upstream branding. Initial unlock follows system light/dark;
+owner preferences load only after authentication. Third-party notices load in
+a separate same-origin chunk;notices are not stripped. Button foreground now
+tracks a custom accent. Raw measured baseline/reference smoke remains available;
+this is not an upstream pixel-equivalence claim. Other screens remain pending.

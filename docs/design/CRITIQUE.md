@@ -105,3 +105,32 @@ interaction measurement or two-hour user test has been performed. All remain
 PENDING/UNVERIFIED. Current default/palette unchanged. First concrete audit
 finding:TOKENS.md specifies11px metadata,below the new12px requirement;resolve
 it explicitly for new directions without pretending the reference complies.
+
+## S1 iteration1 — actual focused unlock
+
+Date:2026-10-18. Before:ui-before;after:ui-after/round-1. Opened all8 new
+screenshots (light/dark,three viewports,auth errors) at full resolution. Removed
+locked shell,competing setup button,boxed divider,branding and absolute privacy
+copy. One centered460px card;390px viewport uses358px card. Body and labels use
+Archivo;key help and inline errors describe the actual runtime-file path.
+Real valid/invalid owner authentication,setup/back focus,no locked shortcuts,
+no browser-storage credentials and same-origin checks passed.
+
+Measured button label contrast6.85586:1 light/7.16261:1 dark;48px height;card
+horizontal center error<1px;0 root overflow at1440/820/390;0 foreign/page errors.
+Full182 source,70 Rust,85 web/typecheck/build,audit0,38 probes,16 smoke stages
+PASS. Source mapping initially failed because the new smoke was appended outside
+the checked literal list;fixed the declaration without changing the checker.
+Old speech-browser selected theme while locked;move after auth,retain geometry
+assertions and restore actual preferences. Both failures retained as named logs.
+
+Critique:card is clearer as a single task but the detached footer sits far from
+it on tall screens;dark surface remains stark. A fixed privacy footnote is not
+an observed-time status chip. Refine that with actual health,not a decorative
+badge. Placeholder focus ring is strong;verify all text/input pairs,not just
+the enabled button. Reduced-motion,zoom,axe,all-theme coverage and S1 iterations2/3
+remain pending. No two-hour comfort,overall redesign or user-research claim.
+
+Actual git-archive baseline rebuild including all JS chunks:JS gzip+95 bytes,
+CSS gzip+555 bytes,under ADR0078 incremental budgets. Fonts/icons/dependencies
+added0. This is a build-size result,not INP,load-time or streaming-CLS evidence.

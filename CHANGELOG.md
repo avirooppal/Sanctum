@@ -373,3 +373,8 @@ owner,disk and port checks. No installer artifact or release claimed.
 Design direction:ADR0078 preserves the reference default;adds original
 research,three theme hypotheses,acceptance criteria and an unverified owner
 study protocol. Theme implementation and measured comparisons remain pending.
+
+UI:S1 focused unlock with no pre-auth workspace shell,plain access-key help,
+one primary action and inline errors. Remove absolute privacy/upstream branding
+from app copy;retain notices in lazy same-origin chunk. Fix custom-accent button
+ink;add built-copy gate and real unlock to smoke. Whole redesign remains partial.

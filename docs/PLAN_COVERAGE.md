@@ -278,3 +278,17 @@ combined streaming/code/citation captures remain PENDING. Baseline182 source,
 redesign-baseline-*. Starting1c0eb3b hosted39056409170 completed success/all5.
 No new product feature or journey status promoted by the audit. S1 tests and
 implementation follow the wireframe;all prior installation/backend gaps remain.
+
+## S1 focused unlock iteration1 (2026-10-18)
+
+Partial redesign:real focused unlock,truthful copy,one primary,key-file help,
+inline errors and auth-gated shell are implemented and exercised. New contract:
+docs/contracts/unlock-ui-v1.md;4 unit tests and evals/browser_unlock.mjs;16-stage
+smoke now includes that browser subflow. Actual182 source/70 Rust/85 web/types/
+build,audit0,38 probes and16 smoke PASS;raw redesign-round1-*. AA primary
+6.85586/7.16261;48px target;0 foreign/page errors/root overflow. Actual build
+size delta95 JS/555 CSS gzip bytes (redesign-round1-budget.json). Existing237px
+reference geometry check passes. No full Hermes pixel-diff,all-theme WCAG,axe,
+200% zoom,INP/CLS or human-comfort gate is inferred. S1 iterations2/3 and S2-S7
+remain pending;standalone historical pre-auth shell/theme runners need auth
+migration before reuse. No full journey/install/phase/release promotion.

@@ -1,0 +1,6 @@
+Traceback (most recent call last):
+  File "C:\Users\aviroop\Desktop\Sanctum\tools\smoke_all.py", line 341, in <module>
+  File "C:\Users\aviroop\Desktop\Sanctum\tools\smoke_all.py", line 328, in main
+    (directory / "smoke-all-reference.json").write_text(
+                ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+RuntimeError: smoke ui failed; see named log

@@ -1,0 +1,111 @@
+=== Sanctum Source Gate ===
+Working directory: /mnt/c/Users/aviroop/Desktop/Sanctum
+Python interpreter: /home/aviroop/.local/share/sanctum-dev-venv/bin/python
+Logging output to: evals/results/source-gate-latest.log
+
+All checks passed!
+153 files already formatted
+All checks passed!
+All checks passed!
+test_attribution_license_requires_provenance (test_contracts.ContractTests.test_attribution_license_requires_provenance) ... ok
+test_committed_registry (test_contracts.ContractTests.test_committed_registry) ... ok
+test_doctor_report (test_contracts.ContractTests.test_doctor_report) ... ok
+test_envelope_rejects_missing_identity_and_invalid_traces (test_contracts.ContractTests.test_envelope_rejects_missing_identity_and_invalid_traces) ... ok
+test_legacy_ggml_is_restricted_to_asr_or_vad (test_contracts.ContractTests.test_legacy_ggml_is_restricted_to_asr_or_vad) ... ok
+test_measured_bootstrap_response (test_contracts.ContractTests.test_measured_bootstrap_response) ... ok
+test_measured_runtime_health (test_contracts.ContractTests.test_measured_runtime_health) ... ok
+test_registry_rejects_noncommercial_and_unhashed_weights (test_contracts.ContractTests.test_registry_rejects_noncommercial_and_unhashed_weights) ... ok
+test_shared_envelope_fixtures (test_contracts.ContractTests.test_shared_envelope_fixtures) ... ok
+test_apple_profile (test_doctor.DoctorTests.test_apple_profile) ... ok
+test_does_not_sum_non_sharded_gpus (test_doctor.DoctorTests.test_does_not_sum_non_sharded_gpus) ... ok
+test_json_cli (test_doctor.DoctorTests.test_json_cli) ... ok
+test_missing_config_is_error (test_doctor.DoctorTests.test_missing_config_is_error) ... ok
+test_privacy_never_inferred_from_config (test_doctor.DoctorTests.test_privacy_never_inferred_from_config) ... ok
+test_probe_failure_is_unknown (test_doctor.DoctorTests.test_probe_failure_is_unknown) ... ok
+test_profiles_are_data (test_doctor.DoctorTests.test_profiles_are_data) ... ok
+test_team_requires_known_nvidia_vram (test_doctor.DoctorTests.test_team_requires_known_nvidia_vram) ... ok
+test_tier_boundaries (test_doctor.DoctorTests.test_tier_boundaries) ... ok
+test_unknown_ram_has_no_recommendation (test_doctor.DoctorTests.test_unknown_ram_has_no_recommendation) ... ok
+test_all_required_checks (test_install_check.InstallCheckTests.test_all_required_checks) ... ok
+test_complete_probe_and_wrong_trace (test_install_check.InstallCheckTests.test_complete_probe_and_wrong_trace) ... ok
+test_existing_install_is_reported_not_deleted (test_install_check.InstallCheckTests.test_existing_install_is_reported_not_deleted) ... ok
+test_low_disk_and_busy_port (test_install_check.InstallCheckTests.test_low_disk_and_busy_port) ... ok
+test_missing_probe_and_root_refuse (test_install_check.InstallCheckTests.test_missing_probe_and_root_refuse) ... ok
+test_partial_or_forged_probe_refuses (test_install_check.InstallCheckTests.test_partial_or_forged_probe_refuses) ... ok
+test_platforms_fail_closed (test_install_check.InstallCheckTests.test_platforms_fail_closed) ... ok
+test_restricted_apparmor_does_not_bypass_failed_probe (test_install_check.InstallCheckTests.test_restricted_apparmor_does_not_bypass_failed_probe) ... ok
+test_filename_traversal_rejected (test_provisioning.ProvisioningTests.test_filename_traversal_rejected) ... ok
+test_hash_mismatch_never_installs (test_provisioning.ProvisioningTests.test_hash_mismatch_never_installs) ... ok
+test_network_is_explicit (test_provisioning.ProvisioningTests.test_network_is_explicit) ... ok
+test_offline_import_and_reuse (test_provisioning.ProvisioningTests.test_offline_import_and_reuse) ... ok
+test_speed_not_fabricated (test_provisioning.ProvisioningTests.test_speed_not_fabricated) ... ok
+
+----------------------------------------------------------------------
+Ran 32 tests in 1.576s
+
+OK
+test_fresh_destination_and_refusal_to_overwrite (test_dev_bundle.DevBundleTests.test_fresh_destination_and_refusal_to_overwrite) ... ok
+test_regression_and_missing_metrics_fail (test_evals.EvalTests.test_regression_and_missing_metrics_fail) ... ok
+test_security_has_zero_tolerance (test_evals.EvalTests.test_security_has_zero_tolerance) ... ok
+test_connection_refusal_is_not_denial (test_isolation.IsolationTests.test_connection_refusal_is_not_denial) ... ok
+test_kernel_no_route_is_denial (test_isolation.IsolationTests.test_kernel_no_route_is_denial) ... ok
+test_rejects_host_interfaces_before_probing (test_isolation.IsolationTests.test_rejects_host_interfaces_before_probing) ... ok
+test_successful_connection_fails_gate (test_isolation.IsolationTests.test_successful_connection_fails_gate) ... ok
+test_timeout_is_not_evidence_of_denial (test_isolation.IsolationTests.test_timeout_is_not_evidence_of_denial) ... ok
+test_dual_license_requires_explicit_permissive_selection (test_rust_licenses.RustLicenseTests.test_dual_license_requires_explicit_permissive_selection) ... ok
+test_missing_registry_entry_is_rejected (test_rust_licenses.RustLicenseTests.test_missing_registry_entry_is_rejected) ... ok
+test_nonpermissive_license_is_rejected (test_rust_licenses.RustLicenseTests.test_nonpermissive_license_is_rejected) ... ok
+test_prefix_prose_and_ignored_credentials_are_not_scanned (test_secret_scan.SecretScanTests.test_prefix_prose_and_ignored_credentials_are_not_scanned) ... ok
+test_redacts_provider_error_without_echo (test_secret_scan.SecretScanTests.test_redacts_provider_error_without_echo) ... ok
+test_scans_tracked_and_untracked_results (test_secret_scan.SecretScanTests.test_scans_tracked_and_untracked_results) ... ok
+test_failed_stage_cannot_copy_old_measurement_as_current (test_smoke_all.SmokeResultTests.test_failed_stage_cannot_copy_old_measurement_as_current) ... ok
+test_historical_bytes_restored_and_new_result_retained (test_smoke_all.SmokeResultTests.test_historical_bytes_restored_and_new_result_retained) ... ok
+test_dependency_versions_and_out_of_scope_files (test_ui_inventory.UIInventoryTests.test_dependency_versions_and_out_of_scope_files) ... ok
+test_records_candidates_and_exact_asset_hash (test_ui_inventory.UIInventoryTests.test_records_candidates_and_exact_asset_hash) ... ok
+test_rejects_path_escape_and_mismatched_pin (test_ui_inventory.UIInventoryTests.test_rejects_path_escape_and_mismatched_pin) ... ok
+test_admitted_files_and_hashes (test_web_font_assets.WebFontAssetTests.test_admitted_files_and_hashes) ... ok
+test_non_ofl_and_unregistered_assets_fail (test_web_font_assets.WebFontAssetTests.test_non_ofl_and_unregistered_assets_fail) ... ok
+test_path_escape_fails_before_read (test_web_font_assets.WebFontAssetTests.test_path_escape_fails_before_read) ... ok
+test_tamper_is_not_a_passing_license_gate (test_web_font_assets.WebFontAssetTests.test_tamper_is_not_a_passing_license_gate) ... ok
+test_budget_drift_fails (test_workflow_check.WorkflowCheckTests.test_budget_drift_fails) ... ok
+test_current_registry_is_consistent (test_workflow_check.WorkflowCheckTests.test_current_registry_is_consistent) ... FAIL
+test_duplicate_test_id_fails (test_workflow_check.WorkflowCheckTests.test_duplicate_test_id_fails) ... ok
+test_journey_without_test_fails (test_workflow_check.WorkflowCheckTests.test_journey_without_test_fails) ... ok
+test_missing_gap_step_fails (test_workflow_check.WorkflowCheckTests.test_missing_gap_step_fails) ... ok
+test_public_status_drift_fails (test_workflow_check.WorkflowCheckTests.test_public_status_drift_fails) ... ok
+test_release_status_drift_fails (test_workflow_check.WorkflowCheckTests.test_release_status_drift_fails) ... ok
+test_unannotated_acceptance_test_fails (test_workflow_check.WorkflowCheckTests.test_unannotated_acceptance_test_fails) ... ok
+test_unmapped_regression_test_fails (test_workflow_check.WorkflowCheckTests.test_unmapped_regression_test_fails) ... ok
+test_unmapped_smoke_stage_fails (test_workflow_check.WorkflowCheckTests.test_unmapped_smoke_stage_fails) ... ok
+
+======================================================================
+FAIL: test_current_registry_is_consistent (test_workflow_check.WorkflowCheckTests.test_current_registry_is_consistent)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/mnt/c/Users/aviroop/Desktop/Sanctum/tools/tests/test_workflow_check.py", line 39, in test_current_registry_is_consistent
+    self.assertEqual(check(self.root), [])
+AssertionError: Lists differ: ['Missing or orphan smoke stage journey mapping'] != []
+
+First list contains 1 additional elements.
+First extra element 0:
+'Missing or orphan smoke stage journey mapping'
+
+- ['Missing or orphan smoke stage journey mapping']
++ []
+
+----------------------------------------------------------------------
+Ran 33 tests in 1.617s
+
+FAILED (failures=1)
+/tmp/tmp7dkatres/output
+Traceback (most recent call last):
+  File "/mnt/c/Users/aviroop/Desktop/Sanctum/tools/check.py", line 38, in <module>
+    main()
+  File "/mnt/c/Users/aviroop/Desktop/Sanctum/tools/check.py", line 31, in main
+    subprocess.run([sys.executable, *args], check=True, cwd=ROOT)
+  File "/home/aviroop/.local/share/uv/python/cpython-3.12.13-linux-x86_64-gnu/lib/python3.12/subprocess.py", line 571, in run
+    raise CalledProcessError(retcode, process.args,
+subprocess.CalledProcessError: Command '['/home/aviroop/.local/share/sanctum-dev-venv/bin/python', '-m', 'unittest', 'discover', '-s', 'tools/tests', '-v']' returned non-zero exit status 1.
+
+=== Summary ===
+STATUS: FAIL (exit code 1)

@@ -13,19 +13,24 @@ const page = await browser.newPage();
 const failures = [];
 page.on('pageerror', error => failures.push(error.message));
 const passed = [];
+let originalPreferences;
 try {
   const response = await page.goto(process.env.SANCTUM_BASE_URL || 'http://127.0.0.1:8766');
   const csp = response.headers()['content-security-policy'];
   assert(csp.includes("connect-src 'self'") && csp.includes('media-src blob:'));
   passed.push('same_origin_and_blob_only_media_csp');
+  assert.equal(await page.locator('.app-shell').count(),0,'workspace stays hidden before authentication');
+  const ownerKey=readFileSync(tokenFile,'utf8').trim();
+  originalPreferences=(await (await page.request.get(new URL('/v1/preferences',page.url()).href,
+    {headers:{Authorization:`Bearer ${ownerKey}`}})).json()).preferences;
+  await page.getByLabel('Local access key').fill(ownerKey);
+  await page.getByRole('button', {name:'Unlock'}).click();
   await page.getByLabel('Theme', {exact:true}).selectOption('sanctum');
   await page.getByLabel('Theme mode', {exact:true}).selectOption('light');
   await page.waitForFunction(() => document.documentElement.dataset.mode === 'light');
   assert.equal(await page.locator('aside').evaluate(node => getComputedStyle(node).backgroundColor), 'rgb(246, 248, 250)');
   assert((await page.locator('aside').evaluate(node => getComputedStyle(node.parentElement).gridTemplateColumns)).startsWith('237px'));
   passed.push('compiled_tailwind_desktop_styles');
-  await page.getByLabel('Local access key').fill(readFileSync(tokenFile, 'utf8').trim());
-  await page.getByRole('button', {name:'Open workspace'}).click();
   await page.getByText('Local speech', {exact:true}).click();
   await page.getByLabel('ASR model', {exact:true}).fill(asr);
   await page.getByLabel('TTS model', {exact:true}).fill(tts);
@@ -54,4 +59,8 @@ try {
   const record = {suite:'real-browser-speech', passed, page_errors:failures, physical_playback_verified:false, microphone_verified:false};
   writeFileSync('evals/results/speech-browser.json', JSON.stringify(record,null,2)+'\n');
   console.log(JSON.stringify(record,null,2));
-} finally { await browser.close(); }
+} finally {
+  if(originalPreferences)await page.request.post(new URL('/v1/preferences',page.url()).href,
+    {headers:{Authorization:`Bearer ${readFileSync(tokenFile,'utf8').trim()}`},data:originalPreferences});
+  await browser.close();
+}

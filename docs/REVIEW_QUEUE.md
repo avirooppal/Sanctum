@@ -165,3 +165,9 @@ iterations per direction must precede an owner recommendation. No approval is
 requested on an unseen design. Installation work remains unfinished and tracked.
 
 | [0079](adr/0079-focused-unlock-and-truthful-copy.md) | Owner-authorized focused unlock;no upstream branding in UI;original reference palette/geometry retained after auth | Reuse0078 numeric budgets;44px targets,AA4.5/3;no timeout/skip/fidelity relaxation | Key setup backend absent;keep documented key path. Initial129 before captures;busy/streaming/long/citation matrix still pending;default redesign does not mean release approval |
+
+ADR0079 iteration1:focused unlock now follows system mode before authentication;
+server preferences load after owner validation. Actual48px primary contrast
+6.85586/7.16261,JS+95/CSS+555 gzip bytes;no numeric gate relaxation. Before/after
+in ui-before and ui-after/round-1. S1 iterations2/3,live timestamped chip and
+all-theme/a11y/performance gates remain pending;no whole-redesign approval claim.

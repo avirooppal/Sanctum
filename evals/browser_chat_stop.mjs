@@ -11,7 +11,7 @@ page.on('request',request=>{if(request.url().endsWith('/v1/chat/completions'))re
 try {
   await page.goto(process.env.SANCTUM_BASE_URL ?? 'http://127.0.0.1:8769');
   await page.getByLabel('Local access key').fill(readFileSync(tokenFile,'utf8').trim());
-  await page.getByRole('button',{name:'Open workspace',exact:true}).click();
+  await page.getByRole('button',{name:'Unlock',exact:true}).click();
   await page.getByLabel('Model',{exact:true}).waitFor();
   await page.getByLabel('Message',{exact:true}).fill('Count from 1 to 200, spelling every number out in English. Do not summarize.');
   const started=page.waitForRequest(request=>request.url().endsWith('/v1/chat/completions'));

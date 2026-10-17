@@ -14,7 +14,7 @@ const name='Workflow fixture '+Date.now();let created=null,clicks=0,entries=0;co
 async function click(locator){await locator.click();clicks++;}
 try {
  await page.goto(base.href);await page.getByLabel('Local access key').fill(token);entries++;
- await click(page.getByRole('button',{name:'Open workspace',exact:true}));
+ await click(page.getByRole('button',{name:'Unlock',exact:true}));
  await click(page.getByRole('button',{name:'Dashboard',exact:true}));
  const main=page.getByRole('main');await main.getByText('Startup denial checks passed. Ledger unavailable.',{exact:true}).waitFor();
  assert(!(await main.innerText()).includes('~450 MB'));

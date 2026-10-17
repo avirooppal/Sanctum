@@ -81,3 +81,11 @@ No third-party assets,screenshots,fonts,icons,code or dependencies were copied o
 admitted. Existing bundled-font/notice gates passed in the baseline;this does
 not license any referenced product's assets. No notices change is necessary
 for original documentation alone.
+
+## S1 unlock implementation
+
+UnlockScreen/unlock.css are original first-party code;the small abstract diamond
+SVG is original path geometry. Existing Archivo and registry-verified fonts only;
+no icon pack,font,image,dependency or third-party snippet added. The original
+THIRD_PARTY_NOTICES text is retained unchanged in a lazy same-origin attribution
+chunk. Existing license gates pass;copy gate excludes only that named chunk.

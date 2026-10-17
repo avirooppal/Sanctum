@@ -1,12 +1,12 @@
 # Current state
 
-- Step:redesign baseline/audit;ADR0079;no product edit yet.
-- Last green:1c0eb3bdd5d369c2416bfaaaf9445fff3e924f4e;hosted39056409170/all5 success.
+- Step:redesign S1 iteration1;focused unlock/copy implementation.
+- Last green:79aa416854aa23a72feaedf131ba47ad4c26456a;hosted39057533321/all5 success.
 - Branch:codex/focused-unlock-redesign.
-- Baseline:182 source,70 Rust,81 web/types/build,audit0;38 probes;15 smoke PASS.
+- Current local gate:182 source,70 Rust,85 web/types/build,audit0;38 probes;16 smoke PASS.
 - Capture:129 before records,zero foreign/page errors/root overflow;not full state coverage.
 - Open:busy/streaming/long/citations,all redesign iterations/a11y/performance;prior install/backend gaps.
-- Next3:commit audit/wireframe;S1 contract/tests/copy;real iterations and full regression.
+- Next3:push S1/exact-SHA CI;iteration2 live status/refinement;iteration3/a11y and remaining screens.
 - Reference palette preserved;no journey/phase/release tag or completeness claim.
 
 ## Evidence
@@ -25,3 +25,15 @@ model text or health injected. Host CI for this audit follows push.
 
 [Previous STATUS](status-archive/2026-10-17-before-redesign-audit.md),SHA256
 `6070abb76cdc14ff020d17e645b91330e192c011d3f8a6f718300e6ad521430b`;bytes archived verbatim,older links retained.
+
+## S1 iteration1 measurements
+
+Commands:full source/Rust gate;web npm test/typecheck/build/audit;smoke_all.sh
+16 stages;node evals/browser_unlock.mjs PACKAGE TOKEN_FILE ui-after/round-1.
+Actual contrast6.85586 light/7.16261 dark,48px primary,center error<1px,0 overflow/
+foreign/page errors at1440/820/390. Test-first module failure and named mapping/
+pre-auth-control failures retained;corrected source and full smoke reruns PASS.
+Budget:actual baseline git archive1c0eb3b rebuilt with same modules;all JS chunks
++95 gzip bytes,CSS+555;fonts/deps0. Raw redesign-round1-*,screenshots round-1.
+S1 iterations2/3,live timestamped status,axe/zoom/all-theme/performance and later
+screens remain OPEN. New implementation commit/hosted CI follows push.

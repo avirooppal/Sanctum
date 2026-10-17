@@ -15,7 +15,7 @@ const responses=[];
 page.on('response',response=>responses.push({path:new URL(response.url()).pathname,status:response.status()}));
 try {
   await page.goto(base.href);await page.getByLabel('Local access key').fill(readFileSync(tokenFile,'utf8').trim());
-  await page.getByRole('button',{name:'Open workspace',exact:true}).click();
+  await page.getByRole('button',{name:'Unlock',exact:true}).click();
   await page.getByRole('button',{name:'Knowledge',exact:true}).click();
   const name=`Knowledge browser ${Date.now()}`;
   await page.getByLabel('New Knowledge workspace',{exact:true}).fill(name);

@@ -20,7 +20,7 @@ try {
  assert.equal((await page.request.post(`${base}/v1/sessions`,{headers,data:{operation:'delete',id:'missing'}})).status(),404);
  assert.equal((await page.request.post(`${base}/v1/sessions`,{headers,data:'x'.repeat(4097)})).status(),413);
  await page.getByLabel('Local access key').fill(token);
- await page.getByRole('button',{name:'Open workspace',exact:true}).click();
+ await page.getByRole('button',{name:'Unlock',exact:true}).click();
  await page.getByLabel('Model',{exact:true}).waitFor();
  await page.getByLabel('Message',{exact:true}).fill('Reply with hello.');
  await page.getByRole('button',{name:'Send ↑',exact:true}).click();

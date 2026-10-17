@@ -24,6 +24,7 @@ STAGE_JOURNEYS = {
     "ui_dashboard_profiles": ["J9", "J11", "J12"],
     "ui_website": ["J1", "J9"],
     "ui_fidelity": ["J3", "J4", "J9", "J11"],
+    "ui_unlock": ["J2", "J9", "J12"],
     "journey_readiness": [
         "J1",
         "J2",
@@ -282,6 +283,17 @@ def main():
                 base,
                 "--output",
                 str(directory / "smoke-journey-readiness.json"),
+            ],
+            None,
+        ),
+        (
+            "ui_unlock",
+            [
+                node,
+                "evals/browser_unlock.mjs",
+                package,
+                browser_token,
+                str(directory / "smoke-ui-unlock"),
             ],
             None,
         ),

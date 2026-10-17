@@ -4,6 +4,27 @@
  */
 
 export const STRINGS = Object.freeze({
+  unlock: {
+    region: 'Unlock Sanctum',
+    title: 'Your space to think.',
+    subtitle: 'Connect to your local Sanctum runtime. Review its startup checks after unlocking.',
+    keyLabel: 'Access key',
+    placeholder: 'Enter your access key',
+    memory: 'Your key stays in memory for this session.',
+    submit: 'Unlock',
+    busy: 'Unlocking…',
+    helpTitle: 'Where do I find my key?',
+    helpBody: 'When Sanctum starts, it prints the location of your access-key file. Open that file and copy the key here.',
+    helpSafety: 'Keep the key to yourself. Never paste it into a conversation or share it in a screenshot.',
+    firstTime: 'First time here?',
+    review: 'Review local setup',
+    back: 'Back to unlock',
+    scope: 'Startup checks describe the tested boundary. A full Privacy Ledger is not available yet.',
+  },
+  notices: {
+    loading: 'Loading license notices…',
+    error: 'License notices could not be loaded. Close and reopen this page to try again.',
+  },
   app: {
     name: 'Sanctum',
     tagline: 'Private, on-device intelligence',

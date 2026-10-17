@@ -293,13 +293,13 @@ export function DashboardPage({
 
             <div className="p-4 rounded-xl border border-[var(--ui-border,#222d28)] bg-[var(--ui-card,#1c2622)]">
               <h2 className="text-xs font-semibold uppercase tracking-wider text-[var(--ui-muted,#8a9990)] mb-3">
-                Execution & Privacy Guarantees
+                Runtime boundary and verification
               </h2>
               <ul className="text-xs text-[var(--ui-muted,#8a9990)] space-y-2 list-disc pl-4">
-                <li>All text inference, ASR, TTS, and embeddings execute exclusively on local hardware.</li>
+                <li>This dashboard describes the configured runtime;check each engine and profile before use.</li>
                 <li>Bearer authentication token is required for all API endpoints and WebSocket channels.</li>
-                <li>Zero external telemetry, crash reports, remote fonts, or link previews.</li>
-                <li>Transcripts, vectorized chunks, and captured audio never leave loopback interface.</li>
+                <li>Inspect the live startup denial results above. They do not establish an egress history.</li>
+                <li>Privacy Ledger verification is not available on this runtime.</li>
               </ul>
             </div>
           </div>
