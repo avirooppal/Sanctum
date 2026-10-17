@@ -195,3 +195,15 @@ hosted CI follows push. Install artifacts and all earlier open blockers remain.
 
 Design contract775a918:hosted39056299835 all5 completed success;raw
 design-docs-hosted-ci.json. No new theme implementation is claimed.
+
+## Redesign baseline/audit (2026-10-17)
+
+ADR0079 and design/REDESIGN_AUDIT.md preserve current evidence and missing-state
+coverage. Real129 before records:three themes,two modes,three viewports;zero
+foreign requests/page errors and zero root horizontal-overflow records. This
+is not an accessibility pass or a complete state matrix. Busy,long-answer and
+combined streaming/code/citation captures remain PENDING. Baseline182 source,
+70 Rust,81 web/typecheck/build,audit0,38 denial probes and15 smoke PASS;raw
+redesign-baseline-*. Starting1c0eb3b hosted39056409170 completed success/all5.
+No new product feature or journey status promoted by the audit. S1 tests and
+implementation follow the wireframe;all prior installation/backend gaps remain.

@@ -163,3 +163,5 @@ Default decision ADR0078: do not change the shipped default now. Paper is only a
 research hypothesis;the measured before/after comparison and two critique
 iterations per direction must precede an owner recommendation. No approval is
 requested on an unseen design. Installation work remains unfinished and tracked.
+
+| [0079](adr/0079-focused-unlock-and-truthful-copy.md) | Owner-authorized focused unlock;no upstream branding in UI;original reference palette/geometry retained after auth | Reuse0078 numeric budgets;44px targets,AA4.5/3;no timeout/skip/fidelity relaxation | Key setup backend absent;keep documented key path. Initial129 before captures;busy/streaming/long/citation matrix still pending;default redesign does not mean release approval |

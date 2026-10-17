@@ -1,0 +1,34 @@
+{
+  "suite": "purge-safety-v1",
+  "journeys": [
+    "J11",
+    "J12"
+  ],
+  "status": "PASS",
+  "cases": [
+    {
+      "name": "owner_auth",
+      "status": 401
+    },
+    {
+      "name": "confirmation",
+      "status": 400
+    },
+    {
+      "name": "malformed",
+      "status": 400
+    },
+    {
+      "name": "oversize",
+      "status": 413
+    },
+    {
+      "name": "disabled",
+      "status": 501
+    }
+  ],
+  "metadata_unchanged": true,
+  "metadata_sha256": "14bd5794c41b726b0e9426df97d6416537ab24e004a3d9e2a2ba0a9eff8ba345",
+  "full_purge_verified": false,
+  "ledger_verified": false
+}

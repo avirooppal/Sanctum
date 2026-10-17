@@ -1,0 +1,1311 @@
+{
+  "journeys": [
+    "J2",
+    "J3",
+    "J9",
+    "J11",
+    "J12"
+  ],
+  "scope": "before capture;no fake response or injected state",
+  "captures": [
+    {
+      "theme": "sanctum",
+      "mode": "light",
+      "state": "locked",
+      "viewport": {
+        "width": 1440,
+        "height": 900
+      },
+      "overflow": false
+    },
+    {
+      "theme": "sanctum",
+      "mode": "light",
+      "state": "locked",
+      "viewport": {
+        "width": 820,
+        "height": 1180
+      },
+      "overflow": false
+    },
+    {
+      "theme": "sanctum",
+      "mode": "light",
+      "state": "locked",
+      "viewport": {
+        "width": 390,
+        "height": 844
+      },
+      "overflow": false
+    },
+    {
+      "theme": "sanctum",
+      "mode": "light",
+      "state": "walkthrough",
+      "viewport": {
+        "width": 1440,
+        "height": 900
+      },
+      "overflow": false
+    },
+    {
+      "theme": "sanctum",
+      "mode": "light",
+      "state": "walkthrough",
+      "viewport": {
+        "width": 820,
+        "height": 1180
+      },
+      "overflow": false
+    },
+    {
+      "theme": "sanctum",
+      "mode": "light",
+      "state": "walkthrough",
+      "viewport": {
+        "width": 390,
+        "height": 844
+      },
+      "overflow": false
+    },
+    {
+      "theme": "sanctum",
+      "mode": "light",
+      "state": "empty-chat",
+      "viewport": {
+        "width": 1440,
+        "height": 900
+      },
+      "overflow": false
+    },
+    {
+      "theme": "sanctum",
+      "mode": "light",
+      "state": "empty-chat",
+      "viewport": {
+        "width": 820,
+        "height": 1180
+      },
+      "overflow": false
+    },
+    {
+      "theme": "sanctum",
+      "mode": "light",
+      "state": "empty-chat",
+      "viewport": {
+        "width": 390,
+        "height": 844
+      },
+      "overflow": false
+    },
+    {
+      "theme": "sanctum",
+      "mode": "light",
+      "state": "settings",
+      "viewport": {
+        "width": 1440,
+        "height": 900
+      },
+      "overflow": false
+    },
+    {
+      "theme": "sanctum",
+      "mode": "light",
+      "state": "settings",
+      "viewport": {
+        "width": 820,
+        "height": 1180
+      },
+      "overflow": false
+    },
+    {
+      "theme": "sanctum",
+      "mode": "light",
+      "state": "settings",
+      "viewport": {
+        "width": 390,
+        "height": 844
+      },
+      "overflow": false
+    },
+    {
+      "theme": "sanctum",
+      "mode": "light",
+      "state": "dashboard",
+      "viewport": {
+        "width": 1440,
+        "height": 900
+      },
+      "overflow": false
+    },
+    {
+      "theme": "sanctum",
+      "mode": "light",
+      "state": "dashboard",
+      "viewport": {
+        "width": 820,
+        "height": 1180
+      },
+      "overflow": false
+    },
+    {
+      "theme": "sanctum",
+      "mode": "light",
+      "state": "dashboard",
+      "viewport": {
+        "width": 390,
+        "height": 844
+      },
+      "overflow": false
+    },
+    {
+      "theme": "sanctum",
+      "mode": "light",
+      "state": "website",
+      "viewport": {
+        "width": 1440,
+        "height": 900
+      },
+      "overflow": false
+    },
+    {
+      "theme": "sanctum",
+      "mode": "light",
+      "state": "website",
+      "viewport": {
+        "width": 820,
+        "height": 1180
+      },
+      "overflow": false
+    },
+    {
+      "theme": "sanctum",
+      "mode": "light",
+      "state": "website",
+      "viewport": {
+        "width": 390,
+        "height": 844
+      },
+      "overflow": false
+    },
+    {
+      "theme": "sanctum",
+      "mode": "light",
+      "state": "docs",
+      "viewport": {
+        "width": 1440,
+        "height": 900
+      },
+      "overflow": false
+    },
+    {
+      "theme": "sanctum",
+      "mode": "light",
+      "state": "docs",
+      "viewport": {
+        "width": 820,
+        "height": 1180
+      },
+      "overflow": false
+    },
+    {
+      "theme": "sanctum",
+      "mode": "light",
+      "state": "docs",
+      "viewport": {
+        "width": 390,
+        "height": 844
+      },
+      "overflow": false
+    },
+    {
+      "theme": "sanctum",
+      "mode": "dark",
+      "state": "locked",
+      "viewport": {
+        "width": 1440,
+        "height": 900
+      },
+      "overflow": false
+    },
+    {
+      "theme": "sanctum",
+      "mode": "dark",
+      "state": "locked",
+      "viewport": {
+        "width": 820,
+        "height": 1180
+      },
+      "overflow": false
+    },
+    {
+      "theme": "sanctum",
+      "mode": "dark",
+      "state": "locked",
+      "viewport": {
+        "width": 390,
+        "height": 844
+      },
+      "overflow": false
+    },
+    {
+      "theme": "sanctum",
+      "mode": "dark",
+      "state": "walkthrough",
+      "viewport": {
+        "width": 1440,
+        "height": 900
+      },
+      "overflow": false
+    },
+    {
+      "theme": "sanctum",
+      "mode": "dark",
+      "state": "walkthrough",
+      "viewport": {
+        "width": 820,
+        "height": 1180
+      },
+      "overflow": false
+    },
+    {
+      "theme": "sanctum",
+      "mode": "dark",
+      "state": "walkthrough",
+      "viewport": {
+        "width": 390,
+        "height": 844
+      },
+      "overflow": false
+    },
+    {
+      "theme": "sanctum",
+      "mode": "dark",
+      "state": "empty-chat",
+      "viewport": {
+        "width": 1440,
+        "height": 900
+      },
+      "overflow": false
+    },
+    {
+      "theme": "sanctum",
+      "mode": "dark",
+      "state": "empty-chat",
+      "viewport": {
+        "width": 820,
+        "height": 1180
+      },
+      "overflow": false
+    },
+    {
+      "theme": "sanctum",
+      "mode": "dark",
+      "state": "empty-chat",
+      "viewport": {
+        "width": 390,
+        "height": 844
+      },
+      "overflow": false
+    },
+    {
+      "theme": "sanctum",
+      "mode": "dark",
+      "state": "settings",
+      "viewport": {
+        "width": 1440,
+        "height": 900
+      },
+      "overflow": false
+    },
+    {
+      "theme": "sanctum",
+      "mode": "dark",
+      "state": "settings",
+      "viewport": {
+        "width": 820,
+        "height": 1180
+      },
+      "overflow": false
+    },
+    {
+      "theme": "sanctum",
+      "mode": "dark",
+      "state": "settings",
+      "viewport": {
+        "width": 390,
+        "height": 844
+      },
+      "overflow": false
+    },
+    {
+      "theme": "sanctum",
+      "mode": "dark",
+      "state": "dashboard",
+      "viewport": {
+        "width": 1440,
+        "height": 900
+      },
+      "overflow": false
+    },
+    {
+      "theme": "sanctum",
+      "mode": "dark",
+      "state": "dashboard",
+      "viewport": {
+        "width": 820,
+        "height": 1180
+      },
+      "overflow": false
+    },
+    {
+      "theme": "sanctum",
+      "mode": "dark",
+      "state": "dashboard",
+      "viewport": {
+        "width": 390,
+        "height": 844
+      },
+      "overflow": false
+    },
+    {
+      "theme": "sanctum",
+      "mode": "dark",
+      "state": "website",
+      "viewport": {
+        "width": 1440,
+        "height": 900
+      },
+      "overflow": false
+    },
+    {
+      "theme": "sanctum",
+      "mode": "dark",
+      "state": "website",
+      "viewport": {
+        "width": 820,
+        "height": 1180
+      },
+      "overflow": false
+    },
+    {
+      "theme": "sanctum",
+      "mode": "dark",
+      "state": "website",
+      "viewport": {
+        "width": 390,
+        "height": 844
+      },
+      "overflow": false
+    },
+    {
+      "theme": "sanctum",
+      "mode": "dark",
+      "state": "docs",
+      "viewport": {
+        "width": 1440,
+        "height": 900
+      },
+      "overflow": false
+    },
+    {
+      "theme": "sanctum",
+      "mode": "dark",
+      "state": "docs",
+      "viewport": {
+        "width": 820,
+        "height": 1180
+      },
+      "overflow": false
+    },
+    {
+      "theme": "sanctum",
+      "mode": "dark",
+      "state": "docs",
+      "viewport": {
+        "width": 390,
+        "height": 844
+      },
+      "overflow": false
+    },
+    {
+      "theme": "catppuccin",
+      "mode": "light",
+      "state": "locked",
+      "viewport": {
+        "width": 1440,
+        "height": 900
+      },
+      "overflow": false
+    },
+    {
+      "theme": "catppuccin",
+      "mode": "light",
+      "state": "locked",
+      "viewport": {
+        "width": 820,
+        "height": 1180
+      },
+      "overflow": false
+    },
+    {
+      "theme": "catppuccin",
+      "mode": "light",
+      "state": "locked",
+      "viewport": {
+        "width": 390,
+        "height": 844
+      },
+      "overflow": false
+    },
+    {
+      "theme": "catppuccin",
+      "mode": "light",
+      "state": "walkthrough",
+      "viewport": {
+        "width": 1440,
+        "height": 900
+      },
+      "overflow": false
+    },
+    {
+      "theme": "catppuccin",
+      "mode": "light",
+      "state": "walkthrough",
+      "viewport": {
+        "width": 820,
+        "height": 1180
+      },
+      "overflow": false
+    },
+    {
+      "theme": "catppuccin",
+      "mode": "light",
+      "state": "walkthrough",
+      "viewport": {
+        "width": 390,
+        "height": 844
+      },
+      "overflow": false
+    },
+    {
+      "theme": "catppuccin",
+      "mode": "light",
+      "state": "empty-chat",
+      "viewport": {
+        "width": 1440,
+        "height": 900
+      },
+      "overflow": false
+    },
+    {
+      "theme": "catppuccin",
+      "mode": "light",
+      "state": "empty-chat",
+      "viewport": {
+        "width": 820,
+        "height": 1180
+      },
+      "overflow": false
+    },
+    {
+      "theme": "catppuccin",
+      "mode": "light",
+      "state": "empty-chat",
+      "viewport": {
+        "width": 390,
+        "height": 844
+      },
+      "overflow": false
+    },
+    {
+      "theme": "catppuccin",
+      "mode": "light",
+      "state": "settings",
+      "viewport": {
+        "width": 1440,
+        "height": 900
+      },
+      "overflow": false
+    },
+    {
+      "theme": "catppuccin",
+      "mode": "light",
+      "state": "settings",
+      "viewport": {
+        "width": 820,
+        "height": 1180
+      },
+      "overflow": false
+    },
+    {
+      "theme": "catppuccin",
+      "mode": "light",
+      "state": "settings",
+      "viewport": {
+        "width": 390,
+        "height": 844
+      },
+      "overflow": false
+    },
+    {
+      "theme": "catppuccin",
+      "mode": "light",
+      "state": "dashboard",
+      "viewport": {
+        "width": 1440,
+        "height": 900
+      },
+      "overflow": false
+    },
+    {
+      "theme": "catppuccin",
+      "mode": "light",
+      "state": "dashboard",
+      "viewport": {
+        "width": 820,
+        "height": 1180
+      },
+      "overflow": false
+    },
+    {
+      "theme": "catppuccin",
+      "mode": "light",
+      "state": "dashboard",
+      "viewport": {
+        "width": 390,
+        "height": 844
+      },
+      "overflow": false
+    },
+    {
+      "theme": "catppuccin",
+      "mode": "light",
+      "state": "website",
+      "viewport": {
+        "width": 1440,
+        "height": 900
+      },
+      "overflow": false
+    },
+    {
+      "theme": "catppuccin",
+      "mode": "light",
+      "state": "website",
+      "viewport": {
+        "width": 820,
+        "height": 1180
+      },
+      "overflow": false
+    },
+    {
+      "theme": "catppuccin",
+      "mode": "light",
+      "state": "website",
+      "viewport": {
+        "width": 390,
+        "height": 844
+      },
+      "overflow": false
+    },
+    {
+      "theme": "catppuccin",
+      "mode": "light",
+      "state": "docs",
+      "viewport": {
+        "width": 1440,
+        "height": 900
+      },
+      "overflow": false
+    },
+    {
+      "theme": "catppuccin",
+      "mode": "light",
+      "state": "docs",
+      "viewport": {
+        "width": 820,
+        "height": 1180
+      },
+      "overflow": false
+    },
+    {
+      "theme": "catppuccin",
+      "mode": "light",
+      "state": "docs",
+      "viewport": {
+        "width": 390,
+        "height": 844
+      },
+      "overflow": false
+    },
+    {
+      "theme": "catppuccin",
+      "mode": "dark",
+      "state": "locked",
+      "viewport": {
+        "width": 1440,
+        "height": 900
+      },
+      "overflow": false
+    },
+    {
+      "theme": "catppuccin",
+      "mode": "dark",
+      "state": "locked",
+      "viewport": {
+        "width": 820,
+        "height": 1180
+      },
+      "overflow": false
+    },
+    {
+      "theme": "catppuccin",
+      "mode": "dark",
+      "state": "locked",
+      "viewport": {
+        "width": 390,
+        "height": 844
+      },
+      "overflow": false
+    },
+    {
+      "theme": "catppuccin",
+      "mode": "dark",
+      "state": "walkthrough",
+      "viewport": {
+        "width": 1440,
+        "height": 900
+      },
+      "overflow": false
+    },
+    {
+      "theme": "catppuccin",
+      "mode": "dark",
+      "state": "walkthrough",
+      "viewport": {
+        "width": 820,
+        "height": 1180
+      },
+      "overflow": false
+    },
+    {
+      "theme": "catppuccin",
+      "mode": "dark",
+      "state": "walkthrough",
+      "viewport": {
+        "width": 390,
+        "height": 844
+      },
+      "overflow": false
+    },
+    {
+      "theme": "catppuccin",
+      "mode": "dark",
+      "state": "empty-chat",
+      "viewport": {
+        "width": 1440,
+        "height": 900
+      },
+      "overflow": false
+    },
+    {
+      "theme": "catppuccin",
+      "mode": "dark",
+      "state": "empty-chat",
+      "viewport": {
+        "width": 820,
+        "height": 1180
+      },
+      "overflow": false
+    },
+    {
+      "theme": "catppuccin",
+      "mode": "dark",
+      "state": "empty-chat",
+      "viewport": {
+        "width": 390,
+        "height": 844
+      },
+      "overflow": false
+    },
+    {
+      "theme": "catppuccin",
+      "mode": "dark",
+      "state": "settings",
+      "viewport": {
+        "width": 1440,
+        "height": 900
+      },
+      "overflow": false
+    },
+    {
+      "theme": "catppuccin",
+      "mode": "dark",
+      "state": "settings",
+      "viewport": {
+        "width": 820,
+        "height": 1180
+      },
+      "overflow": false
+    },
+    {
+      "theme": "catppuccin",
+      "mode": "dark",
+      "state": "settings",
+      "viewport": {
+        "width": 390,
+        "height": 844
+      },
+      "overflow": false
+    },
+    {
+      "theme": "catppuccin",
+      "mode": "dark",
+      "state": "dashboard",
+      "viewport": {
+        "width": 1440,
+        "height": 900
+      },
+      "overflow": false
+    },
+    {
+      "theme": "catppuccin",
+      "mode": "dark",
+      "state": "dashboard",
+      "viewport": {
+        "width": 820,
+        "height": 1180
+      },
+      "overflow": false
+    },
+    {
+      "theme": "catppuccin",
+      "mode": "dark",
+      "state": "dashboard",
+      "viewport": {
+        "width": 390,
+        "height": 844
+      },
+      "overflow": false
+    },
+    {
+      "theme": "catppuccin",
+      "mode": "dark",
+      "state": "website",
+      "viewport": {
+        "width": 1440,
+        "height": 900
+      },
+      "overflow": false
+    },
+    {
+      "theme": "catppuccin",
+      "mode": "dark",
+      "state": "website",
+      "viewport": {
+        "width": 820,
+        "height": 1180
+      },
+      "overflow": false
+    },
+    {
+      "theme": "catppuccin",
+      "mode": "dark",
+      "state": "website",
+      "viewport": {
+        "width": 390,
+        "height": 844
+      },
+      "overflow": false
+    },
+    {
+      "theme": "catppuccin",
+      "mode": "dark",
+      "state": "docs",
+      "viewport": {
+        "width": 1440,
+        "height": 900
+      },
+      "overflow": false
+    },
+    {
+      "theme": "catppuccin",
+      "mode": "dark",
+      "state": "docs",
+      "viewport": {
+        "width": 820,
+        "height": 1180
+      },
+      "overflow": false
+    },
+    {
+      "theme": "catppuccin",
+      "mode": "dark",
+      "state": "docs",
+      "viewport": {
+        "width": 390,
+        "height": 844
+      },
+      "overflow": false
+    },
+    {
+      "theme": "everforest",
+      "mode": "light",
+      "state": "locked",
+      "viewport": {
+        "width": 1440,
+        "height": 900
+      },
+      "overflow": false
+    },
+    {
+      "theme": "everforest",
+      "mode": "light",
+      "state": "locked",
+      "viewport": {
+        "width": 820,
+        "height": 1180
+      },
+      "overflow": false
+    },
+    {
+      "theme": "everforest",
+      "mode": "light",
+      "state": "locked",
+      "viewport": {
+        "width": 390,
+        "height": 844
+      },
+      "overflow": false
+    },
+    {
+      "theme": "everforest",
+      "mode": "light",
+      "state": "walkthrough",
+      "viewport": {
+        "width": 1440,
+        "height": 900
+      },
+      "overflow": false
+    },
+    {
+      "theme": "everforest",
+      "mode": "light",
+      "state": "walkthrough",
+      "viewport": {
+        "width": 820,
+        "height": 1180
+      },
+      "overflow": false
+    },
+    {
+      "theme": "everforest",
+      "mode": "light",
+      "state": "walkthrough",
+      "viewport": {
+        "width": 390,
+        "height": 844
+      },
+      "overflow": false
+    },
+    {
+      "theme": "everforest",
+      "mode": "light",
+      "state": "empty-chat",
+      "viewport": {
+        "width": 1440,
+        "height": 900
+      },
+      "overflow": false
+    },
+    {
+      "theme": "everforest",
+      "mode": "light",
+      "state": "empty-chat",
+      "viewport": {
+        "width": 820,
+        "height": 1180
+      },
+      "overflow": false
+    },
+    {
+      "theme": "everforest",
+      "mode": "light",
+      "state": "empty-chat",
+      "viewport": {
+        "width": 390,
+        "height": 844
+      },
+      "overflow": false
+    },
+    {
+      "theme": "everforest",
+      "mode": "light",
+      "state": "settings",
+      "viewport": {
+        "width": 1440,
+        "height": 900
+      },
+      "overflow": false
+    },
+    {
+      "theme": "everforest",
+      "mode": "light",
+      "state": "settings",
+      "viewport": {
+        "width": 820,
+        "height": 1180
+      },
+      "overflow": false
+    },
+    {
+      "theme": "everforest",
+      "mode": "light",
+      "state": "settings",
+      "viewport": {
+        "width": 390,
+        "height": 844
+      },
+      "overflow": false
+    },
+    {
+      "theme": "everforest",
+      "mode": "light",
+      "state": "dashboard",
+      "viewport": {
+        "width": 1440,
+        "height": 900
+      },
+      "overflow": false
+    },
+    {
+      "theme": "everforest",
+      "mode": "light",
+      "state": "dashboard",
+      "viewport": {
+        "width": 820,
+        "height": 1180
+      },
+      "overflow": false
+    },
+    {
+      "theme": "everforest",
+      "mode": "light",
+      "state": "dashboard",
+      "viewport": {
+        "width": 390,
+        "height": 844
+      },
+      "overflow": false
+    },
+    {
+      "theme": "everforest",
+      "mode": "light",
+      "state": "website",
+      "viewport": {
+        "width": 1440,
+        "height": 900
+      },
+      "overflow": false
+    },
+    {
+      "theme": "everforest",
+      "mode": "light",
+      "state": "website",
+      "viewport": {
+        "width": 820,
+        "height": 1180
+      },
+      "overflow": false
+    },
+    {
+      "theme": "everforest",
+      "mode": "light",
+      "state": "website",
+      "viewport": {
+        "width": 390,
+        "height": 844
+      },
+      "overflow": false
+    },
+    {
+      "theme": "everforest",
+      "mode": "light",
+      "state": "docs",
+      "viewport": {
+        "width": 1440,
+        "height": 900
+      },
+      "overflow": false
+    },
+    {
+      "theme": "everforest",
+      "mode": "light",
+      "state": "docs",
+      "viewport": {
+        "width": 820,
+        "height": 1180
+      },
+      "overflow": false
+    },
+    {
+      "theme": "everforest",
+      "mode": "light",
+      "state": "docs",
+      "viewport": {
+        "width": 390,
+        "height": 844
+      },
+      "overflow": false
+    },
+    {
+      "theme": "everforest",
+      "mode": "dark",
+      "state": "locked",
+      "viewport": {
+        "width": 1440,
+        "height": 900
+      },
+      "overflow": false
+    },
+    {
+      "theme": "everforest",
+      "mode": "dark",
+      "state": "locked",
+      "viewport": {
+        "width": 820,
+        "height": 1180
+      },
+      "overflow": false
+    },
+    {
+      "theme": "everforest",
+      "mode": "dark",
+      "state": "locked",
+      "viewport": {
+        "width": 390,
+        "height": 844
+      },
+      "overflow": false
+    },
+    {
+      "theme": "everforest",
+      "mode": "dark",
+      "state": "walkthrough",
+      "viewport": {
+        "width": 1440,
+        "height": 900
+      },
+      "overflow": false
+    },
+    {
+      "theme": "everforest",
+      "mode": "dark",
+      "state": "walkthrough",
+      "viewport": {
+        "width": 820,
+        "height": 1180
+      },
+      "overflow": false
+    },
+    {
+      "theme": "everforest",
+      "mode": "dark",
+      "state": "walkthrough",
+      "viewport": {
+        "width": 390,
+        "height": 844
+      },
+      "overflow": false
+    },
+    {
+      "theme": "everforest",
+      "mode": "dark",
+      "state": "empty-chat",
+      "viewport": {
+        "width": 1440,
+        "height": 900
+      },
+      "overflow": false
+    },
+    {
+      "theme": "everforest",
+      "mode": "dark",
+      "state": "empty-chat",
+      "viewport": {
+        "width": 820,
+        "height": 1180
+      },
+      "overflow": false
+    },
+    {
+      "theme": "everforest",
+      "mode": "dark",
+      "state": "empty-chat",
+      "viewport": {
+        "width": 390,
+        "height": 844
+      },
+      "overflow": false
+    },
+    {
+      "theme": "everforest",
+      "mode": "dark",
+      "state": "settings",
+      "viewport": {
+        "width": 1440,
+        "height": 900
+      },
+      "overflow": false
+    },
+    {
+      "theme": "everforest",
+      "mode": "dark",
+      "state": "settings",
+      "viewport": {
+        "width": 820,
+        "height": 1180
+      },
+      "overflow": false
+    },
+    {
+      "theme": "everforest",
+      "mode": "dark",
+      "state": "settings",
+      "viewport": {
+        "width": 390,
+        "height": 844
+      },
+      "overflow": false
+    },
+    {
+      "theme": "everforest",
+      "mode": "dark",
+      "state": "dashboard",
+      "viewport": {
+        "width": 1440,
+        "height": 900
+      },
+      "overflow": false
+    },
+    {
+      "theme": "everforest",
+      "mode": "dark",
+      "state": "dashboard",
+      "viewport": {
+        "width": 820,
+        "height": 1180
+      },
+      "overflow": false
+    },
+    {
+      "theme": "everforest",
+      "mode": "dark",
+      "state": "dashboard",
+      "viewport": {
+        "width": 390,
+        "height": 844
+      },
+      "overflow": false
+    },
+    {
+      "theme": "everforest",
+      "mode": "dark",
+      "state": "website",
+      "viewport": {
+        "width": 1440,
+        "height": 900
+      },
+      "overflow": false
+    },
+    {
+      "theme": "everforest",
+      "mode": "dark",
+      "state": "website",
+      "viewport": {
+        "width": 820,
+        "height": 1180
+      },
+      "overflow": false
+    },
+    {
+      "theme": "everforest",
+      "mode": "dark",
+      "state": "website",
+      "viewport": {
+        "width": 390,
+        "height": 844
+      },
+      "overflow": false
+    },
+    {
+      "theme": "everforest",
+      "mode": "dark",
+      "state": "docs",
+      "viewport": {
+        "width": 1440,
+        "height": 900
+      },
+      "overflow": false
+    },
+    {
+      "theme": "everforest",
+      "mode": "dark",
+      "state": "docs",
+      "viewport": {
+        "width": 820,
+        "height": 1180
+      },
+      "overflow": false
+    },
+    {
+      "theme": "everforest",
+      "mode": "dark",
+      "state": "docs",
+      "viewport": {
+        "width": 390,
+        "height": 844
+      },
+      "overflow": false
+    },
+    {
+      "theme": "sanctum",
+      "mode": "dark",
+      "state": "auth-error",
+      "viewport": {
+        "width": 1440,
+        "height": 900
+      },
+      "overflow": false
+    },
+    {
+      "theme": "sanctum",
+      "mode": "dark",
+      "state": "auth-error",
+      "viewport": {
+        "width": 820,
+        "height": 1180
+      },
+      "overflow": false
+    },
+    {
+      "theme": "sanctum",
+      "mode": "dark",
+      "state": "auth-error",
+      "viewport": {
+        "width": 390,
+        "height": 844
+      },
+      "overflow": false
+    }
+  ],
+  "foreign": [],
+  "errors": [],
+  "pending": [
+    "streaming code and citations combined",
+    "long answer",
+    "engine busy",
+    "many-conversation grouped sidebar"
+  ],
+  "product_verified": false
+}

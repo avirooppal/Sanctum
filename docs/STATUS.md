@@ -1,33 +1,27 @@
 # Current state
 
-- Step:cozy direction slice1;ADR0078;research/acceptance docs only.
-- Last green:775a9181e835ec3cdd2a5352abf66fab11e329ca;hosted39056299835/all5 completed success.
-- Branch:codex/cozy-design-direction;default reference/palette unchanged.
-- Baseline:source182,Rust70,web81/types/build,audit0;38 denial probes;15 smoke PASS.
-- Gate:new packs/gallery/contrast/screenshots/axe/performance NOT DONE;no recommendation yet.
-- Blockers:two critique iterations and owner comparison;all prior backend/install gaps remain.
-- Next3:contrast contract/tests;add three theme packs/gallery;real matrix/screenshots/critique.
-- Default stays reference until explicit owner choice;human research UNVERIFIED.
-- No full-journey,phase or release promotion;design slice pushed;exact-SHA CI completed success.
+- Step:redesign baseline/audit;ADR0079;no product edit yet.
+- Last green:1c0eb3bdd5d369c2416bfaaaf9445fff3e924f4e;hosted39056409170/all5 success.
+- Branch:codex/focused-unlock-redesign.
+- Baseline:182 source,70 Rust,81 web/types/build,audit0;38 probes;15 smoke PASS.
+- Capture:129 before records,zero foreign/page errors/root overflow;not full state coverage.
+- Open:busy/streaming/long/citations,all redesign iterations/a11y/performance;prior install/backend gaps.
+- Next3:commit audit/wireframe;S1 contract/tests/copy;real iterations and full regression.
+- Reference palette preserved;no journey/phase/release tag or completeness claim.
 
-## Evidence and boundaries
+## Evidence
 
-Commands:bash tools/run_source_gate.sh;bash tools/check_rust.sh;apps/web npm
- test,typecheck,build,audit --audit-level=low;bash tools/smoke_all.sh.
-Actual outputs:evals/results/design-baseline-*. Baseline all green before edits.
-DIRECTIONS cites22 public primary references;these are interpreted principles,
-not authenticated product UI/asset audits. Prompt-kit homepage fetch failed;
-upstream repository used. Perplexity homepage had no useful text;help center used.
-No product code/dependency/asset changed. Existing11px design-floor conflict is
-explicit in ADR0078. Default recommendation waits for actual comparison images;
-there are no invented contrast/fidelity/participant numbers. First-docs slice
-uses existing consistency/secret/license gates;exact-SHA CI follows push.
+Commands:bash tools/run_source_gate.sh;bash tools/check_rust.sh;web npm test,
+typecheck,build,audit --audit-level=low;bash tools/smoke_all.sh. Raw outputs
+redesign-baseline-*. Capture:node evals/capture_redesign_before.mjs PACKAGE_PATH
+TOKEN_FILE evals/results/ui-before;real loopback only,credentials never logged.
+129 records in ui-before/manifest.json;fixed-blue website/docs are not themeable.
+First mobile-to-desktop navigation timeout retained as named failure;dashboard
+route-race image retained;rerun waits for heading. Contact sheets/layout critique
+in REDESIGN_AUDIT;not every tiny label audited at full resolution. No mock busy,
+model text or health injected. Host CI for this audit follows push.
 
 ## Preserved history
 
-[Previous STATUS](status-archive/2026-10-17-before-cozy-design.md),SHA256
-`8019cf0889d6a2b31025a03ab418cca8c6e8c56ff12c580d689f85f27d6bf7de`. Bytes retained verbatim;older narratives remain linked.
-
-Design docs commit775a9181e835ec3cdd2a5352abf66fab11e329ca;hosted
-39056299835 completed success,all5 jobs;design-docs-hosted-ci.json.
-This evidence checkpoint is docs-only;its exact-SHA CI follows push.
+[Previous STATUS](status-archive/2026-10-17-before-redesign-audit.md),SHA256
+`6070abb76cdc14ff020d17e645b91330e192c011d3f8a6f718300e6ad521430b`;bytes archived verbatim,older links retained.
