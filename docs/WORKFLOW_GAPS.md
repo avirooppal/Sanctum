@@ -95,3 +95,13 @@ Complete J1-J4/J12 actual provisioning,progress/restart,diagnostics and chaos
 proof;continue later backend journeys in WRAPUP order. Missing full voice,
 vision,agents/ledger,cloud,LAN,crypto/packages remain blocked/hidden. Do not
 start cloud before policy/ledger. All full journey statuses remain unchanged.
+
+## Main checkpoint (2026-10-17)
+
+Verified code:f34af519d57e1e8585229ba92b7324cdc2de5fe6 on main. Full requested
+baseline rerun:174 source,70 Rust,81 web/types/build,audit0,38 denial probes,
+15 real smoke stages PASS. Raw workflow-main-*;main hosted39053461090 all5
+completed success (workflow-main-implementation-hosted-ci.json). No full
+journey promoted;no ledger/quality/storm/soak/release proof inferred. Earlier
+per-slice numbers remain historical measurements. New checkpoint is docs-only;
+its exact-SHA hosted CI follows push.

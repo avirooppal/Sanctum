@@ -213,3 +213,13 @@ unique-profile CRUD. Source paths:ui/DashboardPage.tsx,ui/SettingsModal.tsx,
 ingress.rs;tests modular-ui.test.mjs,ingress.rs,browser_dashboard_profiles.mjs.
 Full J9/J11/J12 and broad plan requirements remain Partial. No ledger proof.
 Base bcb1b67 hosted39051732254/all5 completed success;new SHA CI follows push.
+
+## Main checkpoint (2026-10-17)
+
+Verified code:f34af519d57e1e8585229ba92b7324cdc2de5fe6 on main. Full requested
+baseline rerun:174 source,70 Rust,81 web/types/build,audit0,38 denial probes,
+15 real smoke stages PASS. Raw workflow-main-*;main hosted39053461090 all5
+completed success (workflow-main-implementation-hosted-ci.json). No full
+journey promoted;no ledger/quality/storm/soak/release proof inferred. Earlier
+per-slice numbers remain historical measurements. New checkpoint is docs-only;
+its exact-SHA hosted CI follows push.

@@ -142,3 +142,13 @@ ADR0076 current scoped checks174/70/81,38 denial probes,15 smoke stages,
 audit0 PASS. Dashboard errors clear success;profile reads never fake empty on
 failure;real CRUD passes. Full release gates remain OPEN. Missing hardware
 runners/software are not waived. Raw workflow-dashboard-*.
+
+## Main checkpoint (2026-10-17)
+
+Verified code:f34af519d57e1e8585229ba92b7324cdc2de5fe6 on main. Full requested
+baseline rerun:174 source,70 Rust,81 web/types/build,audit0,38 denial probes,
+15 real smoke stages PASS. Raw workflow-main-*;main hosted39053461090 all5
+completed success (workflow-main-implementation-hosted-ci.json). No full
+journey promoted;no ledger/quality/storm/soak/release proof inferred. Earlier
+per-slice numbers remain historical measurements. New checkpoint is docs-only;
+its exact-SHA hosted CI follows push.
