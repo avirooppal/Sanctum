@@ -129,3 +129,7 @@ Ubuntu24/Debian clean installs,signatures,upgrade,rollback or uninstall.
 
 No journey status or phase/release gate is promoted. Exact-SHA hosted CI is
 required after this slice is committed;local tests do not substitute for CI.
+
+Preflight implementation:f8d15e097972095894b25bcffae4d6fb6b56b4a0;hosted
+39055449581/all5 completed success. Evidence:install-check-hosted-ci.json.
+No installed-artifact or full-journey status is promoted.

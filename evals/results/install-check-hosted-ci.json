@@ -1,0 +1,36 @@
+[
+  {
+    "sha": "f8d15e097972095894b25bcffae4d6fb6b56b4a0",
+    "branch": "codex/runnable-installation",
+    "url": "https://github.com/avirooppal/Sanctum/actions/runs/39055449581",
+    "status": "completed",
+    "conclusion": "success",
+    "jobs": [
+      {
+        "name": "rust-foundation",
+        "status": "completed",
+        "conclusion": "success"
+      },
+      {
+        "name": "source-gates (macos-latest)",
+        "status": "completed",
+        "conclusion": "success"
+      },
+      {
+        "name": "web",
+        "status": "completed",
+        "conclusion": "success"
+      },
+      {
+        "name": "source-gates (ubuntu-22.04)",
+        "status": "completed",
+        "conclusion": "success"
+      },
+      {
+        "name": "source-gates (windows-latest)",
+        "status": "completed",
+        "conclusion": "success"
+      }
+    ]
+  }
+]

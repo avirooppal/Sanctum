@@ -1,0 +1,5 @@
+Failed shell harness attempt (2026-10-17):
+bash: -c: line 1: syntax error near unexpected token `busy'
+Command exit1; no negative feature checks executed by this attempt.
+PowerShell/WSL interpolation removed shell variables. Replaced the harness with
+.sanctum/install-check-negative.py; actual rerun exits busy78,disk78,missing78.
