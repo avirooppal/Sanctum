@@ -25,7 +25,8 @@ test("StatusBar renders health, offline egress badge, and context bar", async ()
   );
 
   assert(html.includes("role=\"status\""), "Must have role status for accessibility");
-  assert(html.includes("Offline • Egress Denied"), "Must render truthful offline egress invariant");
+  assert(html.includes("Startup checks: unknown. Ledger unavailable."), "Absent evidence must remain unknown");
+  assert(!html.includes("0 outbound"), "Missing health cannot prove zero historical traffic");
   assert(html.includes("sanctum-chat-v1"), "Must display active model ID");
   assert(html.includes("Tokens:"), "Must integrate real context usage bar");
   assert(html.includes("Unknown"), "Must display truthful Unknown for empty/missing usage");
@@ -43,6 +44,6 @@ test("StatusBar renders background jobs counter button", async () => {
     })
   );
 
-  assert(html.includes("background jobs"), "Must display background jobs label");
+  assert(html.includes("Unknown queued or active requests"), "Must not fabricate counts or classify every lane as background");
   assert(html.includes("aria-label=\"Background jobs status\""), "Must provide accessible label for jobs status");
 });

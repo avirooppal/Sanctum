@@ -142,3 +142,5 @@ Named failed check retained; no source/test lint exception or quality gate waive
 | [0071](adr/0071-canonical-owner-journeys.md) | Owner workflow J1-J12 is canonical; explicit cloud scope remains gated on policy/ledger | New action budgets fixed before measurement; no existing latency/privacy gate relaxed | Negative capability checks do not verify a pending journey; model-download network metadata boundary explicit; full purge needs honest scope |
 
 | [0073](adr/0073-sequential-workspace-bootstrap.md) | Confirmed startup503 burst;sequential cancellable metadata and fail-closed UI,one context poll | No lane/timeout/SLO increase or automatic replay | Three consecutive real Knowledge flows plus full smoke required;full journey acceptance still pending |
+
+| [0074](adr/0074-truthful-onboarding-and-privacy.md) | Remove fake onboarding/fit/privacy claims;hide unavailable controls;safe error taxonomy | No latency/timeout/budget relaxation;fixture assertions now require Unknown and capability gating | Backend purge repair,full journey chaos/ledger and legacy canned-suite refresh remain OPEN |

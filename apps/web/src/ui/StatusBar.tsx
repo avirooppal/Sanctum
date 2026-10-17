@@ -2,6 +2,7 @@ import React, { useState, useEffect, useRef } from 'react';
 import type { Model, SanctumClient } from '../api.js';
 import { ContextBar } from './ContextBar.js';
 import { STRINGS } from './strings.js';
+import {privacyMessage,startupChecksPassed,type RuntimeHealth} from '../runtime-truth.js';
 
 export interface StatusBarProps {
   api?: SanctumClient;
@@ -12,11 +13,7 @@ export interface StatusBarProps {
   className?: string;
 }
 
-interface HealthData {
-  status: string;
-  isolation?: string;
-  checks?: string[];
-}
+type HealthData=RuntimeHealth;
 
 interface DispatchData {
   queued: number[];
@@ -43,33 +40,39 @@ export function StatusBar({
   // Poll /healthz and /healthz/dispatch
   useEffect(() => {
     let active = true;
+    let inFlight=false;
+    const controller=new AbortController();
 
     async function fetchStatus() {
+      if(inFlight)return;
+      inFlight=true;
       try {
         const [hRes, dRes] = await Promise.all([
-          fetch('/healthz', { cache: 'no-store' }),
-          fetch('/healthz/dispatch', { credentials: 'omit', cache: 'no-store' }),
+          fetch('/healthz', { cache: 'no-store',credentials:'omit',redirect:'error',signal:controller.signal }),
+          fetch('/healthz/dispatch', { credentials: 'omit', cache: 'no-store',redirect:'error',signal:controller.signal }),
         ]);
         if (!active) return;
         if (hRes.ok) {
           const hData = await hRes.json();
           setHealth(hData);
-        }
+        }else setHealth(null);
         if (dRes.ok) {
           const dData = await dRes.json();
-          setDispatch(dData);
-        }
+          const valid=(value:unknown)=>Array.isArray(value)&&value.length===4&&value.every(item=>Number.isInteger(item)&&item>=0);
+          setDispatch(valid(dData.queued)&&valid(dData.active)?dData:null);
+        }else setDispatch(null);
       } catch {
         if (active) {
-          setHealth({ status: 'offline', isolation: 'local_only', checks: [] });
+          setHealth(null);setDispatch(null);
         }
-      }
+      } finally {inFlight=false;}
     }
 
     fetchStatus();
     const timer = setInterval(fetchStatus, 8000);
     return () => {
       active = false;
+      controller.abort();
       clearInterval(timer);
     };
   }, []);
@@ -88,9 +91,9 @@ export function StatusBar({
     return () => document.removeEventListener('mousedown', handleClickOutside);
   }, []);
 
-  const totalQueued = dispatch?.queued?.reduce((a, b) => a + b, 0) || 0;
-  const totalActive = dispatch?.active?.reduce((a, b) => a + b, 0) || 0;
-  const totalJobs = totalQueued + totalActive;
+  const totalQueued = dispatch?dispatch.queued.reduce((a,b)=>a+b,0):null;
+  const totalActive = dispatch?dispatch.active.reduce((a,b)=>a+b,0):null;
+  const totalJobs = totalQueued!==null&&totalActive!==null?totalQueued+totalActive:null;
 
   const isHealthy = health?.status === 'ok';
   const currentModelObj = models.find(m => m.id === activeModel);
@@ -100,10 +103,10 @@ export function StatusBar({
     <footer
       role="status"
       aria-label="Status Bar"
-      className={`status-bar border-t ui-border ui-surface px-3 py-1.5 flex items-center justify-between text-xs ui-text-secondary select-none z-20 ${className}`}
+      className={`status-bar border-t ui-border ui-surface px-3 py-1.5 flex flex-wrap gap-2 items-center justify-between text-xs ui-text-secondary select-none z-20 ${className}`}
     >
       {/* Left side: Runtime Health, Engine Readiness, Egress Badge */}
-      <div className="flex items-center gap-3">
+      <div className="flex min-w-0 flex-wrap items-center gap-3">
         {/* Runtime Health */}
         <div
           className="flex items-center gap-1.5"
@@ -123,8 +126,8 @@ export function StatusBar({
 
         {/* Engine Readiness */}
         <div className="flex items-center gap-1.5 hidden sm:flex">
-          <span className="text-[11px] text-display">
-            {isHealthy ? STRINGS.statusBar.engineReady : 'Engine Initializing'}
+          <span className="text-xs text-display">
+            {isHealthy ? 'Gateway responding' : 'Gateway status unknown'}
           </span>
         </div>
 
@@ -132,15 +135,15 @@ export function StatusBar({
 
         {/* Offline / Egress Badge */}
         <div
-          className="inline-flex items-center gap-1 px-1.5 py-0.5 rounded border border-emerald-500/20 bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 font-mono text-[10px]"
-          title="Startup Egress Self-Test: PASS • 0 external outbound sockets allowed"
+          className="inline-flex items-center gap-1 px-1.5 py-0.5 rounded border ui-border font-mono text-xs"
+          title={privacyMessage(health)} data-startup-checks={startupChecksPassed(health)?'passed':'unknown'}
         >
-          <span>🛡</span> {STRINGS.statusBar.offlineBadge}
+          {privacyMessage(health)}
         </div>
       </div>
 
       {/* Right side: Dispatch Jobs Popover, Model Picker, Context Bar */}
-      <div className="flex items-center gap-3">
+      <div className="flex min-w-0 flex-wrap items-center gap-3">
         {/* Background Jobs Popover Toggle */}
         <div className="relative" ref={popoverRef}>
           <button
@@ -148,11 +151,11 @@ export function StatusBar({
             onClick={() => setShowDispatchPopover(o => !o)}
             aria-expanded={showDispatchPopover}
             aria-label="Background jobs status"
-            className="flex items-center gap-1.5 hover:text-foreground text-[11px] transition-colors"
+            className="flex items-center gap-1.5 hover:text-foreground text-xs transition-colors"
           >
             <span>⚡</span>
             <span>
-              {STRINGS.statusBar.jobsCount.replace('{count}', String(totalJobs))}
+              {STRINGS.statusBar.jobsCount.replace('{count}', totalJobs===null?'Unknown':String(totalJobs))}
             </span>
           </button>
 
@@ -160,24 +163,24 @@ export function StatusBar({
             <div className="absolute bottom-full right-0 mb-2 w-64 p-3 rounded-xl border ui-border ui-surface shadow-xl z-50 text-xs space-y-2.5 animate-fade-in">
               <div className="flex items-center justify-between border-b ui-border pb-1.5">
                 <span className="font-semibold text-display">Dispatch Lanes</span>
-                <span className="text-[10px] ui-text-secondary">
-                  Active: {totalActive} | Queued: {totalQueued}
+                <span className="text-xs ui-text-secondary">
+                  Active: {totalActive??'Unknown'} | Queued: {totalQueued??'Unknown'}
                 </span>
               </div>
               <div className="space-y-1.5">
                 {LANE_NAMES.map((name, idx) => {
-                  const q = dispatch?.queued?.[idx] || 0;
-                  const a = dispatch?.active?.[idx] || 0;
+                  const q = dispatch?.queued?.[idx];
+                  const a = dispatch?.active?.[idx];
                   return (
-                    <div key={name} className="flex items-center justify-between text-[11px]">
+                    <div key={name} className="flex items-center justify-between text-xs">
                       <span className="ui-text-secondary">{name}</span>
                       <span className="font-mono">
-                        {a > 0 ? (
+                        {a===undefined||q===undefined?'Unknown':a > 0 ? (
                           <strong className="text-accent">{a} active</strong>
                         ) : (
                           'idle'
                         )}
-                        {q > 0 ? ` (${q} queued)` : ''}
+                        {q!==undefined&&q > 0 ? ` (${q} queued)` : ''}
                       </span>
                     </div>
                   );
@@ -196,22 +199,22 @@ export function StatusBar({
             onClick={() => setShowModelPicker(o => !o)}
             aria-expanded={showModelPicker}
             aria-label="Model picker"
-            className="flex items-center gap-1.5 hover:text-foreground text-[11px] font-medium transition-colors border ui-border px-2 py-0.5 rounded ui-surface"
+            className="flex items-center gap-1.5 hover:text-foreground text-xs font-medium transition-colors border ui-border px-2 py-0.5 rounded ui-surface"
           >
             <span>◈</span>
             <span className="max-w-[120px] truncate">{activeModel || 'Select Model'}</span>
-            <span className="text-[9px] opacity-70">▼</span>
+            <span className="text-xs opacity-70">▼</span>
           </button>
 
           {showModelPicker && (
             <div className="absolute bottom-full right-0 mb-2 w-72 p-2 rounded-xl border ui-border ui-surface shadow-xl z-50 text-xs space-y-1.5 animate-fade-in">
-              <div className="text-[10px] uppercase font-mono tracking-wider px-2 py-1 border-b ui-border ui-text-secondary">
+              <div className="text-xs uppercase font-mono tracking-wider px-2 py-1 border-b ui-border ui-text-secondary">
                 Registry Models
               </div>
               {models.length === 0 ? (
                 <div className="p-2 text-center text-xs ui-text-secondary">No models configured</div>
               ) : (
-                models.map(m => (
+                models.filter(model=>model.capabilities.includes('text')).map(m => (
                   <button
                     key={m.id}
                     type="button"
@@ -225,13 +228,13 @@ export function StatusBar({
                   >
                     <div className="flex items-center justify-between font-mono font-medium text-xs">
                       <span className="truncate">{m.id}</span>
-                      <span className="text-[10px] px-1 py-0.2 rounded border ui-border opacity-80">
-                        {m.license || 'Verified Open'}
+                      <span className="text-xs px-1 py-0.2 rounded border ui-border opacity-80">
+                        {m.license || 'License unknown'}
                       </span>
                     </div>
-                    <div className="flex items-center justify-between text-[10px] ui-text-secondary">
-                      <span>Window: {m.context_length ? m.context_length.toLocaleString() : 'Local'}</span>
-                      <span className="text-emerald-600 dark:text-emerald-400">Fits VRAM</span>
+                    <div className="flex items-center justify-between text-xs ui-text-secondary">
+                      <span>Window: {m.context_length ? m.context_length.toLocaleString() : 'Unknown'}</span>
+                      <span>Fit / speed: Unknown</span>
                     </div>
                   </button>
                 ))

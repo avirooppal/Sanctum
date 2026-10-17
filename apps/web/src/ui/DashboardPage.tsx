@@ -178,7 +178,7 @@ export function DashboardPage({
         <div className="mt-auto pt-4 border-t border-[var(--ui-border,#222d28)] text-[11px] text-[var(--ui-muted,#8a9990)] flex flex-col gap-1">
           <div>● On-Device Gateway</div>
           <div>Port {typeof window !== 'undefined' ? window.location.port || '8765' : '8765'}</div>
-          <div className="text-emerald-500 font-mono text-[10px] mt-1">Egress: Denied (Local)</div>
+          <div className="text-emerald-500 font-mono text-[10px] mt-1">Ledger unavailable; inspect startup checks</div>
         </div>
       </aside>
 
@@ -331,9 +331,9 @@ export function DashboardPage({
                             {m.capabilities.join(', ')}
                           </span>
                         </td>
-                        <td className="py-2.5 px-3 font-mono">{m.context_length ? `${m.context_length} tokens` : '2048 default'}</td>
-                        <td className="py-2.5 px-3 text-emerald-400 font-mono text-[11px]">{m.license || 'Permissive'}</td>
-                        <td className="py-2.5 px-3 text-[var(--ui-muted,#8a9990)]">Standard CPU / AVX2</td>
+                        <td className="py-2.5 px-3 font-mono">{m.context_length ? `${m.context_length} tokens` : 'Unknown'}</td>
+                        <td className="py-2.5 px-3 text-emerald-400 font-mono text-[11px]">{m.license || 'Unknown'}</td>
+                        <td className="py-2.5 px-3 text-[var(--ui-muted,#8a9990)]">Unknown</td>
                       </tr>
                     ))}
                   </tbody>
@@ -421,10 +421,10 @@ export function DashboardPage({
                   Hardware Profile
                 </div>
                 <div className="text-2xl font-mono font-semibold text-[var(--ui-foreground,#e6ece8)]">
-                  Tier 1 CPU
+                  Unknown
                 </div>
                 <div className="text-xs text-[var(--ui-muted,#8a9990)] mt-2">
-                  x86_64 AVX2 reference environment
+                  Run sanctum doctor for a detected recommendation
                 </div>
               </div>
             </div>

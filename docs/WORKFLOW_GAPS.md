@@ -42,10 +42,10 @@ ledger,packet capture,chaos or full-journey gates they did not exercise.
 | J1.1 | No signed release verification | SOURCE:tools/build_dev_bundle.py explicitly unsigned | build |
 | J1.2 | No verified installer | SOURCE:apps/desktop/README.md;R-PACKAGES remains OPEN | build |
 | J1.3 | Partial runtime startup | B2,B4;services/gateway/src/runtime_main.rs | keep |
-| J1.4 | Partial truthful status | B4 /healthz;StatusBar.tsx claims unconditional PASS/zero outbound | fix |
-| J2.1 | Fake UI hardware | SOURCE:SetupWizard.tsx fixed T1/7B claims;doctor CLI exists,B1 fixtures only | fix |
-| J2.2 | CLI import/hash;no product jobs | SOURCE:apps/cli/sanctum/provisioning.py;SetupWizard timers simulate progress | hide until backend |
-| J2.3 | Auth works;folder step is inert | B4 real owner login;SOURCE:SetupWizard folder text never registered,fake fallback key | fix |
+| J1.4 | Partial truthful status | UI alignment:complete eight-check predicate;unknown on failure;ledger explicitly unavailable | fix |
+| J2.1 | Runtime-backed review;hardware Unknown | workflow-ui-onboarding.json real auth/review;doctor recommendation API still absent | build |
+| J2.2 | CLI import/hash;no product jobs | CLI import/hash only;fake UI provisioning removed per ADR0074 | hide until backend |
+| J2.3 | Real auth/review;optional folder not built | workflow-ui-onboarding.json rejects wrong key,uses configured model;inert folder/fallback key removed | build |
 | J2.4 | Local answer works | B4 SDK8 and real browser answer;budget/install timing absent | keep |
 | J3.1 | Picker/history partial | B4 model API/history;fit/usage derive inconsistently;no journey count | fix |
 | J3.2 | Streaming works | B4 real SDK/browser;full declarative policy/ledger absent | keep |
@@ -54,7 +54,7 @@ ledger,packet capture,chaos or full-journey gates they did not exercise.
 | J4.1 | Workspace works | B4 Knowledge create/select,owner isolation | keep |
 | J4.2 | Upload works;folder/jobs incomplete | B4 Markdown indexed;SOURCE:KnowledgePanel.tsx synchronous upload,no progress API | build |
 | J4.3 | Cited answer works;benchmark gap | B4 amber-lighthouse citation;R-RAG ablation/page highlights still OPEN | fix |
-| J4.4 | Abstention works;cancel UI missing | B4 empty-workspace abstention;SOURCE:KnowledgePanel active controller but no Cancel button | fix |
+| J4.4 | Abstention works;cancel UI missing | B4 abstention;UI Cancel now aborts and retains inputs;real cancel/restart evidence still pending | fix |
 | J5.1 | File/emulated capture partial | B4 actual WAV→draft;physical mic evidence absent | fix |
 | J5.2 | Transport only | SOURCE:realtime.rs advertises speech_pipeline=false;no resident duplex path | hide until backend |
 | J5.3 | No true barge-in | SOURCE:file Stop audio only,not LLM+playback-ack integration | hide until backend |
@@ -84,7 +84,7 @@ ledger,packet capture,chaos or full-journey gates they did not exercise.
 | J11.3 | No owner TLS LAN | R-LAN OPEN;loopback confinement is not LAN support | hide until backend |
 | J11.4 | No encryption/backup | R-CRYPTO OPEN;no canary/rotation/restore evidence | hide until backend |
 | J11.5 | No verified update | R-PACKAGES OPEN;no signature/update rollback evidence | hide until backend |
-| J11.6 | Export/chat purge only;false full scope | SOURCE:storage.rs purge_all omits Knowledge;UI promises all data | hide until backend |
+| J11.6 | Purge hidden;HTTP safety repair pending | SOURCE:chat.rs attempts Knowledge deletion but ignores errors/live workers;UI capability gated | hide until backend |
 | J12.1 | Generic/raw errors | SOURCE:api.ts Gateway request failed(status);SpeechPanel String(error) | fix |
 | J12.2 | Supervision/cancel partial | B2 process-tree tests;B4 browser Stop;resident real-engine storms pending | build |
 | J12.3 | Incomplete resource/crash recovery | B1 profile fixtures;no fresh low-disk/gateway-kill-indexing runner | build |

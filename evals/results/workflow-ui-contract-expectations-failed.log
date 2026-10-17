@@ -1,0 +1,178 @@
+
+> sanctum-web@0.1.0 test
+> tsc --outDir build/tests --noEmit false --target ES2022 --module NodeNext --moduleResolution NodeNext --jsx react-jsx --esModuleInterop src/speech.ts src/pcm.ts src/meeting.ts src/api.ts src/chat-run.ts src/workspace-bootstrap.ts src/ui/primitives.tsx src/ui/themes.ts src/ui/AppShell.tsx src/ui/SafeMarkdown.tsx src/DashboardPanel.tsx src/ui/DashboardPage.tsx src/SetupWizard.tsx src/ui/PanelRegistry.ts src/ui/Customization.ts src/ui/ErrorBoundary.tsx src/ui/UndoToast.tsx src/ui/CommandPalette.tsx src/ui/SettingsModal.tsx src/ui/LayoutEngine.tsx src/ui/Gallery.tsx src/ui/TabRail.tsx src/ui/QuadView.tsx src/ui/ContextBar.tsx src/ui/ChatComposer.tsx src/ui/ChatView.tsx src/ui/RightRail.tsx src/ui/StatusBar.tsx && node --test tests/*.test.mjs && node --test ../../evals/tests/ui-font-metrics.test.mjs
+
+✔ Knowledge uses authenticated fixed paths and owner-only restricted uploads (59.0808ms)
+✔ Knowledge validates answers and rejects unsupported uploads before sending (2.4294ms)
+✔ default fetch retains the Window/global receiver (1.2706ms)
+✔ fixed same-origin requests omit cookies, reject redirects and never retry (2.0502ms)
+✔ models are validated and conversation IDs cannot change origin or path structure (2.5525ms)
+✔ stream decodes split Unicode and SSE lines without fabricated text (6.4856ms)
+✔ consumer cancellation releases stream and ignored fetch abort cannot yield stale text (1.8911ms)
+✔ ticket is in subprotocol only and abort closes the socket (3.3598ms)
+✔ invalid ticket and cancellation after ticket never open a socket (1.7314ms)
+✔ abort while waiting for a stalled stream releases the reader (12.5923ms)
+✔ session management uses owner-authenticated fixed paths and validates pages (2.4827ms)
+✔ session mutations never retry and malformed lists are rejected (1.1585ms)
+✔ capabilities and preferences endpoints validate payload and authenticate owner (1.2957ms)
+✖ profiles and full purge endpoints authenticate owner and reject invalid payloads (3.0156ms)
+✔ stop aborts the admitted run, suppresses late output and never retries (8.9993ms)
+✔ overlapping starts are refused; an explicit next run has a fresh signal (1.9177ms)
+✔ abort rejection is stopped but real engine failures are preserved (0.9266ms)
+✔ ContextBar renders truthful Unknown state when token usage data is missing (64.6511ms)
+✔ ChatComposer lists ONLY implemented slash commands and no speculative commands (22.3783ms)
+✔ ChatComposer renders accessible textarea with configurable Enter hint (4.0038ms)
+✔ ChatView renders document measure layout and user bubbles layout without throwing (16.3934ms)
+✔ ChatView renders calm streaming indicator during local generation (3.2925ms)
+✔ DashboardPanel renders daemon health and dispatch lanes without throwing (21.6595ms)
+✔ sanitizeUrl allows safe http, https, and hash links (2.3941ms)
+✔ sanitizeUrl blocks javascript:, data:, and malicious protocol injection (0.471ms)
+✔ parseMarkdownBlocks isolates code blocks from paragraphs (0.5786ms)
+✔ parseMarkdownBlocks handles unclosed code fence without crashing (0.3571ms)
+✔ SafeMarkdown renders without throwing and escapes dangerous html elements (59.6695ms)
+✔ SafeMarkdown renders code block with language label, copy button, and citation chips (4.8244ms)
+✔ meeting save uses restricted same-origin authenticated request (55.0348ms)
+✔ invalid workspace and oversized or blank input never send requests (2.3248ms)
+✔ failed writes are surfaced without retrying (1.14ms)
+✔ PanelRegistry registers dummy panel and enforces capabilities filter (2.4662ms)
+✔ Custom theme validation accepts compliant JSON and rejects hostile or malformed tokens (1.2966ms)
+✔ Contrast guard enforces WCAG AA contrast ratio and auto-adjusts failing colors (0.5309ms)
+✔ Preferences sanitizer migrates valid settings and recovers safely from corrupted data (0.6473ms)
+✔ PanelErrorBoundary catches render failures and renders accessible alert (18.3244ms)
+✖ Centralized string table contains required top-level categories and non-empty strings (10.4442ms)
+✔ Layout engine presets and keyboard shortcuts match ADR 0069 specification (0.4744ms)
+✖ SettingsModal renders with all A7 specification tabs without throwing (11.012ms)
+✔ DashboardPage renders routed Hermes-mirrored pages without throwing (24.9648ms)
+✔ encodes finite mono PCM16 with accurate WAV header and clamping (4.0899ms)
+✔ bounded memory accepts no partial overflow and resets after discard (1.0771ms)
+✔ rejects nonfinite data without mutating captured audio (0.3771ms)
+✔ native button defaults to non-submit, preserves explicit submit and disabled (15.3387ms)
+✔ untrusted titles and field text remain escaped React text (3.1ms)
+✔ dialog has a named native modal and escaped children without an injected close link (2.5339ms)
+✔ shell has one sidebar and main with explicitly connected native navigation control (3.3149ms)
+✔ primitives CSS enforces 180ms motion and 44px coarse pointer touch target (3.5223ms)
+✔ apps/web production package.json does not import upstream or reference dependencies (2.2271ms)
+✔ production web source code contains zero imports from reference or upstream directories (22.1186ms)
+✔ RightRail returns null when isOpen is false (47.0248ms)
+✔ RightRail extracts code artifacts with language, lines, copy and download actions (12.6949ms)
+✔ RightRail extracts citations and safe links (2.578ms)
+✔ RightRail renders accessible Knowledge tree header and empty state (1.1801ms)
+✔ uses same-origin multipart and bearer auth without storing credentials (64.8641ms)
+✔ stop discards stale audio even if fetch ignores abort (2.3317ms)
+✔ stop releases playback and next operation cannot reuse it (12.6385ms)
+✔ rejects oversized inputs and unexpected audio content types (8.1653ms)
+✔ StatusBar renders health, offline egress badge, and context bar (74.5091ms)
+✔ StatusBar renders background jobs counter button (3.2134ms)
+✔ core compiler preserves responsive and arbitrary-value application utilities (58.3158ms)
+✔ TabRail renders accessible tablist, active tab, and close button (15.7512ms)
+✔ QuadView renders four independent panes and clear waiting state under admission limits (5.383ms)
+✔ all pinned desktop and dashboard-only presets are available without upstream branding (1.5505ms)
+✔ pinned canonical palette values and mode pairs are retained (0.6209ms)
+✔ invalid IDs fail, tokens do not leak mutable palette references or remote URLs (2.8545ms)
+✔ public website is offline, branded Sanctum, with honest setup links (3.3213ms)
+✔ docs site is offline, branded Sanctum, with local navigation and zero scripts/images (1.4673ms)
+✔ platform-status section reads only verified artifacts and fails if it disagrees with RELEASE_CHECKLIST.md (6.9127ms)
+✔ privacy badge cannot turn absent or partial health into egress-history proof (0.8859ms)
+✔ unknown provider errors cannot leak raw content and busy errors retain metadata (0.4613ms)
+✔ setup cannot fabricate hardware, model verification or an owner key (7.264ms)
+✖ unregistered preference themes recover to an admitted local preset (1.1253ms)
+✔ worklet itself stops after 30 seconds even if UI messages are not handled (20.229ms)
+✔ workspace metadata is sequential and publishes only real capabilities (3.1149ms)
+✔ failed discovery cannot fall back to enabled capabilities (1.0729ms)
+✔ cancellation between steps stops subsequent metadata requests (0.4115ms)
+ℹ tests 78
+ℹ suites 0
+ℹ pass 74
+ℹ fail 4
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 582.7889
+
+✖ failing tests:
+
+test at tests\api.test.mjs:164:1
+✖ profiles and full purge endpoints authenticate owner and reject invalid payloads (3.0156ms)
+  AssertionError [ERR_ASSERTION]: The input did not match the regular expression /400/. Input:
+  
+  'GatewayError: This request could not be accepted. Review the highlighted fields.'
+  
+      at async TestContext.<anonymous> (file:///C:/Users/aviroop/Desktop/Sanctum/apps/web/tests/api.test.mjs:202:3)
+      at async Test.run (node:internal/test_runner/test:1125:7)
+      at async Test.processPendingSubtests (node:internal/test_runner/test:787:7) {
+    generatedMessage: true,
+    code: 'ERR_ASSERTION',
+    actual: GatewayError: This request could not be accepted. Review the highlighted fields.
+        at SanctumClient.request (file:///C:/Users/aviroop/Desktop/Sanctum/apps/web/build/tests/api.js:30:19)
+        at async SanctumClient.fullPurge (file:///C:/Users/aviroop/Desktop/Sanctum/apps/web/build/tests/api.js:241:21)
+        at async waitForActual (node:assert:646:5)
+        at async strict.rejects (node:assert:769:25)
+        at async TestContext.<anonymous> (file:///C:/Users/aviroop/Desktop/Sanctum/apps/web/tests/api.test.mjs:202:3)
+        at async Test.run (node:internal/test_runner/test:1125:7)
+        at async Test.processPendingSubtests (node:internal/test_runner/test:787:7),
+    expected: /400/,
+    operator: 'rejects',
+    diff: 'simple'
+  }
+
+test at tests\modular-ui.test.mjs:183:1
+✖ Centralized string table contains required top-level categories and non-empty strings (10.4442ms)
+  AssertionError [ERR_ASSERTION]: The expression evaluated to a falsy value:
+  
+    assert.ok(STRINGS.onboarding.egressStatement.includes('0 outbound connections'))
+  
+      at TestContext.<anonymous> (file:///C:/Users/aviroop/Desktop/Sanctum/apps/web/tests/modular-ui.test.mjs:185:10)
+      at Test.runInAsyncScope (node:async_hooks:228:14)
+      at Test.run (node:internal/test_runner/test:1118:25)
+      at Test.processPendingSubtests (node:internal/test_runner/test:787:18)
+      at Test.postRun (node:internal/test_runner/test:1247:19)
+      at Test.run (node:internal/test_runner/test:1175:12)
+      at async Test.processPendingSubtests (node:internal/test_runner/test:787:7) {
+    generatedMessage: true,
+    code: 'ERR_ASSERTION',
+    actual: false,
+    expected: true,
+    operator: '==',
+    diff: 'simple'
+  }
+
+test at tests\modular-ui.test.mjs:215:1
+✖ SettingsModal renders with all A7 specification tabs without throwing (11.012ms)
+  AssertionError [ERR_ASSERTION]: Must render layouts tab
+      at TestContext.<anonymous> (file:///C:/Users/aviroop/Desktop/Sanctum/apps/web/tests/modular-ui.test.mjs:233:10)
+      at Test.runInAsyncScope (node:async_hooks:228:14)
+      at Test.run (node:internal/test_runner/test:1118:25)
+      at Test.processPendingSubtests (node:internal/test_runner/test:787:18)
+      at Test.postRun (node:internal/test_runner/test:1247:19)
+      at Test.run (node:internal/test_runner/test:1175:12)
+      at async Test.processPendingSubtests (node:internal/test_runner/test:787:7) {
+    generatedMessage: false,
+    code: 'ERR_ASSERTION',
+    actual: false,
+    expected: true,
+    operator: '==',
+    diff: 'simple'
+  }
+
+test at tests\workflow-ui.test.mjs:40:1
+✖ unregistered preference themes recover to an admitted local preset (1.1253ms)
+  AssertionError [ERR_ASSERTION]: Expected values to be strictly equal:
+  + actual - expected
+  
+  + undefined
+  - true
+  
+      at TestContext.<anonymous> (file:///C:/Users/aviroop/Desktop/Sanctum/apps/web/tests/workflow-ui.test.mjs:43:10)
+      at Test.runInAsyncScope (node:async_hooks:228:14)
+      at Test.run (node:internal/test_runner/test:1118:25)
+      at Test.processPendingSubtests (node:internal/test_runner/test:787:18)
+      at Test.postRun (node:internal/test_runner/test:1247:19)
+      at Test.run (node:internal/test_runner/test:1175:12)
+      at async Test.processPendingSubtests (node:internal/test_runner/test:787:7) {
+    generatedMessage: true,
+    code: 'ERR_ASSERTION',
+    actual: undefined,
+    expected: true,
+    operator: 'strictEqual',
+    diff: 'simple'
+  }

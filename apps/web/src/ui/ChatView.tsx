@@ -90,7 +90,7 @@ export function ChatView({
         {!messages.length && (
           <div className="pt-8 pb-4 max-w-[720px] mx-auto">
             <div className="text-xs text-display ui-text-secondary tracking-widest mb-3">
-              HERMES-GRADE LOCAL AI · PRIVACY FIRST
+              LOCAL AI · OWNER CONTROLLED
             </div>
             <h1 className="text-3xl font-semibold tracking-tight">{STRINGS.chat.starterTitle}</h1>
             <p className="mt-2 text-sm ui-text-secondary leading-relaxed">

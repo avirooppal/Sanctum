@@ -19,6 +19,7 @@ STAGE_JOURNEYS = {
     "ui_knowledge": ["J4"],
     "ui_chat_stop": ["J3", "J12"],
     "ui_sessions": ["J3"],
+    "ui_workflow": ["J2", "J9", "J12"],
     "ui_website": ["J1", "J9"],
     "ui_fidelity": ["J3", "J4", "J9", "J11"],
     "journey_readiness": [
@@ -210,6 +211,17 @@ def main():
                 package,
                 browser_token,
                 str(directory / "smoke-ui-sessions.json"),
+            ],
+            None,
+        ),
+        (
+            "ui_workflow",
+            [
+                node,
+                "evals/browser_workflow_alignment.mjs",
+                package,
+                browser_token,
+                str(directory / "smoke-ui-workflow.json"),
             ],
             None,
         ),

@@ -182,7 +182,8 @@ test('PanelErrorBoundary catches render failures and renders accessible alert', 
 
 test('Centralized string table contains required top-level categories and non-empty strings', () => {
   assert.ok(STRINGS.app.name);
-  assert.ok(STRINGS.onboarding.egressStatement.includes('0 outbound connections'));
+  assert.ok(STRINGS.onboarding.egressStatement.includes('Privacy Ledger unavailable'));
+  assert.ok(!STRINGS.onboarding.egressStatement.includes('0 outbound connections'));
   assert.ok(STRINGS.settings.contrastPass);
   assert.ok(STRINGS.settings.profiles);
   assert.ok(STRINGS.settings.fullPurge);
@@ -224,6 +225,7 @@ test('SettingsModal renders with all A7 specification tabs without throwing', ()
       { role: 'user', content: 'hello' },
       { role: 'assistant', content: 'world' },
     ],
+    capabilities: ['layouts', 'shortcut_customization'],
     models: [{ id: 'qwen2.5-coder-7b-instruct', context_length: 32768 }],
     thirdPartyNoticesText: 'MIT License',
   });
@@ -237,6 +239,9 @@ test('SettingsModal renders with all A7 specification tabs without throwing', ()
   assert.ok(html.includes(STRINGS.settings.data), 'Must render data tab');
   assert.ok(html.includes(STRINGS.settings.licenses.replace(/&/g, '&amp;')), 'Must render licenses tab');
   assert.ok(html.includes('WCAG AA'), 'Must render WCAG AA contrast guard info');
+  const gated = renderToString(React.cloneElement(el, {capabilities: []}));
+  assert.ok(!gated.includes(STRINGS.settings.layouts), 'Unbacked layout control must be hidden');
+  assert.ok(!gated.includes(STRINGS.settings.shortcuts), 'Unbacked shortcut editor must be hidden');
 });
 
 test('DashboardPage renders routed Hermes-mirrored pages without throwing', () => {
@@ -296,7 +301,8 @@ test('DashboardPage renders routed Hermes-mirrored pages without throwing', () =
   const resHtml = renderToString(resEl);
   assert.ok(resHtml.includes('Engine Resources &amp; Queue Lanes') || resHtml.includes('Engine Resources & Queue Lanes'));
   assert.ok(resHtml.includes('Resident Engine RAM'));
-  assert.ok(resHtml.includes('Tier 1 CPU'));
+  assert.ok(resHtml.includes('Unknown'));
+  assert.ok(!resHtml.includes('Tier 1 CPU'));
 
   // Config subpage
   const cfgEl = React.createElement(DashboardPage, {

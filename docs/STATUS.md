@@ -1,38 +1,33 @@
 # Current state
 
-- Step:workflow guards/readiness and startup503 fix;ADR0071-0073.
-- Last green commit:d6a10d7589cf79ef9f017db8befa6277fde4c5a3;hosted39035676424/all5 completed success.
-- Branch:codex/workflow-alignment;new edited-SHA CI pending push.
-- Local gates:174 source/Rust67/web76 PASS;audit0;38 denial probes;12 real smoke stages PASS.
-- Journey gates:12 readiness PASS,0 full journeys VERIFIED;statuses remain PARTIAL/PENDING.
-- Blockers:simulated wizard,false privacy/purge copy;missing full voice,vision,agents/ledger,LAN/crypto/packages.
-- Next3:real onboarding/status/error alignment;hide unsupported/orphan controls;real journey action/chaos coverage.
-- Main unchanged;no release/phase tags;owner untracked files preserved.
+- Step:UI alignment ADR0074;canonical workflow v1.0.0.
+- Last green:c91cc58a249aa14db97d625116e8f4ca1a4b294d;hosted39037605782/all5 completed success.
+- Branch:codex/workflow-alignment;edited-SHA hosted CI pending push.
+- Local gates:source174,Rust67,web80,typecheck/build PASS;audit0;38 denial probes;13 real smoke stages PASS.
+- Journey gates:readiness12 PASS;full VERIFIED0;all remain PARTIAL/PENDING.
+- Blockers:legacy purge route;full journeys/chaos/ledger;voice/vision/agents/LAN/crypto/packages.
+- Next3:non-mutating purge API repair;real cancellation/recovery journeys;continue frozen WRAPUP order.
+- Main unchanged;no tags;owner untracked files preserved.
 
-## Guard slice evidence
+## Slice evidence
 
-WORKFLOW/GAPS and ADR0071-0073 govern this slice. Source tests include10
-adversarial consistency checks,3 credential/redaction tests,4 readiness tests.
-Hosted source CI now executes workflow and secret checks via tools/check.py.
-The runtime readiness suite queries all12 real journey boundaries but reports
-0 full journeys,unknown clicks and unverified ledger/chaos. Strict mode refuses
-acceptance as required;no fake responses or provider key were used.
-
-Repeated full smoke exposed a real bootstrap overload:capabilities503,models503,
-font503,then session removal. Preserve workflow-boot-overload-503.json and all
-failed smoke logs. Sequential cancellable metadata,closed initial capabilities,
-deferred widgets and removal of duplicate context polling fixed it without
-raising limits. Three consecutive real Knowledge flows and full12-stage smoke
-PASS. Public-generator Windows newline failure is preserved;fixed using stable
-UTF-8/LF output,same existing assertion. Meeting evidence correction retained.
-
-Commands/results:run_source_gate.sh 174;check_rust.sh67/38 probes;web
-test/typecheck/build76;audit0;smoke_all.sh12. Raw evals/results/workflow-checks-*,
-workflow-bootstrap-*,workflow-boot-* and workflow-contract-hosted-ci.json.
-No claim of full journey budgets/ledger or runtime journey hosted CI success.
+Commands:tools/run_source_gate.sh,tools/check_rust.sh,web test/typecheck/build/
+audit,tools/smoke_all.sh. Raw evals/results/workflow-ui-{source-final,rust,tests,
+typecheck,build,audit,smoke-final}.log and workflow-ui-final-smoke-*.
+Real setup subflow:3 clicks,2 entries including wrong key,1054.46ms,zero foreign
+requests/page errors. Not installer/provisioning or full journey acceptance.
+Inspected mobile screenshot;no horizontal overflow. Scoped eight-check privacy
+proof with ledger explicitly unavailable. Hardware/fit/speed Unknown. Hidden
+unbacked controls and canned model-role cards. Safe errors retain status and
+Retry-After;no generation replay. Docs CSS extracted to respect unchanged CSP.
+Source consistency and credential scans PASS. Full purge backend remains unsafe
+and explicitly pending;UI does not advertise it. Old25 canned-suite labels are
+not real acceptance. Named failed type/unit runs preserved;no threshold changes.
+Supervisor term/parent-death/natural releases0.565575111/0.536249951/0.566313649s,
+zero survivors. This is not a fresh full mixed-engine storm/soak gate.
 
 ## Preserved history
 
-Previous STATUS archived verbatim at
-[workflow contract](status-archive/2026-10-17-workflow-contract.md),SHA256
-`a458c8a730e0bfc8f1fde8c07087c0b152c4925ecad3e66a4bdc128f704290d3`. All previous archives and failed measurements remain intact.
+[Previous STATUS](status-archive/2026-10-17-workflow-guards.md),SHA256
+`b980cdc159a3c8d62614a4c09a00829ef211e6b8f1b5928c54c22088f6e2b509`. Coverage and release archives contain prior narratives verbatim
+with SHA256 recorded in their replacements;all failed runs retained.

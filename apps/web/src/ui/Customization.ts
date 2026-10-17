@@ -1,4 +1,5 @@
 import { ensureContrast, contrastRatio } from './color.js';
+import {THEMES} from './themes.js';
 
 export type Mode = 'light' | 'dark' | 'system';
 export type Density = 'compact' | 'comfortable' | 'spacious';
@@ -218,7 +219,7 @@ export function sanitizePreferences(raw: unknown): { preferences: UserPreference
 
   return {
     preferences: {
-      theme: typeof obj.theme === 'string' && obj.theme.length <= 32 ? obj.theme : ((recovered = true), DEFAULT_PREFERENCES.theme),
+      theme: typeof obj.theme === 'string' && THEMES.some(theme=>theme.id===obj.theme) ? obj.theme : ((recovered = true), DEFAULT_PREFERENCES.theme),
       mode,
       accentColor,
       density,

@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useMemo, useRef } from 'react';
+import React, { useState, useEffect, useMemo } from 'react';
 import { createRoot } from 'react-dom/client';
 import './style.css';
 import { SpeechPanel } from './SpeechPanel';
@@ -7,6 +7,7 @@ import { MeetingPanel } from './MeetingPanel';
 import { SanctumClient, type Message, type Model } from './api';
 import { ChatRun } from './chat-run';
 import { loadWorkspace } from './workspace-bootstrap';
+import {userError} from './runtime-truth';
 import { ChatView } from './ui/ChatView';
 import { RightRail } from './ui/RightRail';
 import { StatusBar } from './ui/StatusBar';
@@ -37,7 +38,6 @@ import { themeTokens } from './ui/themes';
 import { CommandPalette, type CommandAction } from './ui/CommandPalette';
 import { SettingsModal } from './ui/SettingsModal';
 import { UndoToastContainer, type ToastItem } from './ui/UndoToast';
-import { DesignGallery } from './ui/Gallery';
 import { STRINGS } from './ui/strings';
 
 const PROMPT_SUGGESTIONS = [
@@ -123,7 +123,6 @@ function App() {
   const [activeProfileId, setActiveProfileId] = useState<string | null>(null);
 
   const api = useMemo(() => new SanctumClient(token), [token]);
-  const composerRef = useRef<HTMLTextAreaElement>(null);
 
   async function refresh() {
     setHistoryRevision(n => n + 1);
@@ -151,7 +150,7 @@ function App() {
         await refresh();
       } catch(e) {
         if(controller.signal.aborted)return;
-        setError(e instanceof Error?e.message:'Local runtime metadata is unavailable.');
+        setError(userError(e));
         setToken('');
       }
     }
@@ -161,12 +160,15 @@ function App() {
 
   // Apply theme tokens to root element
   useEffect(() => {
+    const system=window.matchMedia('(prefers-color-scheme: dark)');
+    function applyTheme() {
     const effectiveMode = preferences.mode === 'system'
-      ? (typeof window !== 'undefined' && window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light')
+      ? (system.matches ? 'dark' : 'light')
       : preferences.mode;
     try {
       const tokens = themeTokens(preferences.theme, effectiveMode);
       const root = document.documentElement;
+      root.dataset.theme=preferences.theme;root.dataset.mode=effectiveMode;
       for (const [key, val] of Object.entries(tokens)) {
         root.style.setProperty(key, val);
       }
@@ -179,6 +181,9 @@ function App() {
     } catch {
       // Fallback safely to sanctum theme
     }
+    }
+    applyTheme();system.addEventListener('change',applyTheme);
+    return ()=>system.removeEventListener('change',applyTheme);
   }, [preferences.theme, preferences.mode, preferences.accentColor]);
 
   // Global Keyboard Shortcuts
@@ -207,7 +212,7 @@ function App() {
       // Focus composer (Ctrl+/)
       if ((e.ctrlKey || e.metaKey) && e.key === '/') {
         e.preventDefault();
-        composerRef.current?.focus();
+        document.querySelector<HTMLTextAreaElement>('textarea[aria-label="Message"]')?.focus();
         return;
       }
       // Toggle Right Rail (Ctrl+J or Cmd+J)
@@ -225,7 +230,7 @@ function App() {
     setPreferences(prev => {
       const next = { ...prev, ...updated };
       if (token) {
-        api.savePreferences(next as any).catch(() => {});
+        api.savePreferences(next as any).catch(failure=>setError(userError(failure)));
       }
       return next;
     });
@@ -322,7 +327,7 @@ function App() {
       if (result === 'stopped') setChatStatus('Generation stopped. Partial text is not guaranteed to be saved.');
       await refresh();
     } catch (e) {
-      setError(e instanceof Error ? e.message : 'Request failed');
+      setError(userError(e));
     } finally {
       setBusy(false);
     }
@@ -363,13 +368,13 @@ function App() {
       setConversation(id);
       setMessages(all);
     } catch (e) {
-      setError(String(e));
+      setError(userError(e));
     } finally {
       setBusy(false);
     }
   }
 
-  const commandActions: CommandAction[] = useMemo(() => [
+  const commandActions: CommandAction[] = [
     {
       id: 'new_chat',
       category: 'Session',
@@ -440,13 +445,13 @@ function App() {
       id: 'theme_solarized_dark',
       category: 'Theme',
       title: 'Switch Theme: Solarized Dark',
-      onSelect: () => updatePreferences({ theme: 'solarized-dark' }),
+      onSelect: () => updatePreferences({ theme: 'solarized',mode:'dark' }),
     },
     {
       id: 'theme_solarized_light',
       category: 'Theme',
       title: 'Switch Theme: Solarized Light',
-      onSelect: () => updatePreferences({ theme: 'solarized-light' }),
+      onSelect: () => updatePreferences({ theme: 'solarized',mode:'light' }),
     },
     {
       id: 'theme_gruvbox',
@@ -464,7 +469,7 @@ function App() {
       id: 'theme_catppuccin',
       category: 'Theme',
       title: 'Switch Theme: Catppuccin Mocha',
-      onSelect: () => updatePreferences({ theme: 'catppuccin-mocha' }),
+      onSelect: () => updatePreferences({ theme: 'catppuccin' }),
     },
     {
       id: 'layout_default',
@@ -545,7 +550,13 @@ function App() {
       title: 'Third-Party Notices & Licenses',
       onSelect: () => setLicensesOpen(true),
     },
-  ], [preferences.mode]);
+  ].filter(action=>{
+    if(action.id.startsWith('layout_'))return false;
+    if(['theme_nord','theme_gruvbox','theme_tokyo_night','settings_profiles','settings_models'].includes(action.id))return false;
+    if(action.id.startsWith('dashboard')&&!capabilities.includes('dashboard'))return false;
+    if(action.id==='knowledge'&&!capabilities.includes('knowledge'))return false;
+    return true;
+  });
 
   if (route === 'dashboard') {
     return (
@@ -575,6 +586,7 @@ function App() {
           conversationId={conversation}
           messages={messages}
           models={modelObjects}
+          capabilities={capabilities}
           activeProfileId={activeProfileId}
           onSelectProfile={id => setActiveProfileId(id)}
           onPurgeComplete={() => {
@@ -642,7 +654,7 @@ function App() {
                   Licenses
                 </Button>
               </div>
-              <ThemeControls />
+              <ThemeControls value={{theme:preferences.theme,mode:preferences.mode}} onChange={updatePreferences}/>
             </div>
           </>
         }
@@ -861,6 +873,7 @@ function App() {
         conversationId={conversation}
         messages={messages}
         models={modelObjects}
+        capabilities={capabilities}
         activeProfileId={activeProfileId}
         onSelectProfile={id => setActiveProfileId(id)}
         onPurgeComplete={() => {
@@ -883,11 +896,5 @@ function App() {
   );
 }
 
-// In-repo gallery detection
-const isGalleryRoute = typeof window !== 'undefined' && window.location.search.includes('gallery=1');
-
-if (isGalleryRoute) {
-  createRoot(document.getElementById('root')!).render(<DesignGallery />);
-} else {
-  createRoot(document.getElementById('root')!).render(<App />);
-}
+// Developer component samples remain separate from the owner application.
+createRoot(document.getElementById('root')!).render(<App />);

@@ -20,3 +20,11 @@ Current audit: PLAN_COVERAGE.md and RELEASE_CHECKLIST.md. This is not a release.
 - Optional visual retrieval,extra UI polish and Phase7 remain unfinished. No new
   scope cut was made in this docs slice. Future cuts require recorded decisions;
   team-only exclusions remain ADR0027.
+
+## Workflow alignment safety limits
+
+Full purge is hidden pending a transactional/cancellable implementation. The
+legacy HTTP route still needs a non-mutating safety correction:it ignores
+Knowledge filesystem errors and live work. Do not use it for secure erasure.
+The old25-case browser_e2e_suite uses canned API replies;it is fixture coverage,
+not real journey acceptance. Full journey action/chaos/ledger proof is pending.

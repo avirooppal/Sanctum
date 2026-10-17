@@ -1,6 +1,7 @@
 import React, {useEffect, useMemo, useRef, useState} from 'react';
 import {SpeechController} from './speech';
 import {MicrophoneCapture} from './microphone';
+import {userError} from './runtime-truth.js';
 
 export function SpeechPanel({token, answer, conversation, onTranscript}: {
   token: string; answer: string; conversation: string; onTranscript: (text: string) => void;
@@ -40,13 +41,13 @@ export function SpeechPanel({token, answer, conversation, onTranscript}: {
         error => { if (operation === generation.current) { setStatus(error); setRecording(false); } },
       );
       if (started && operation === generation.current) { setRecording(true); setStatus('Recording locally. Maximum 30 seconds.'); }
-    } catch (error) { if (operation === generation.current) setStatus(`Microphone unavailable: ${String(error)}`); }
+    } catch { if (operation === generation.current) setStatus('Microphone access is unavailable. Allow access or choose an audio file.'); }
     finally { if (operation === generation.current) setBusy(false); }
   }
   async function finishMicrophone() {
     setRecording(false);
     try { await transcribe(microphone.finish()); }
-    catch (error) { setStatus(String(error)); }
+    catch (error) { setStatus(userError(error)); }
   }
   async function transcribe(file: File | undefined) {
     if (!file) return;
@@ -56,7 +57,7 @@ export function SpeechPanel({token, answer, conversation, onTranscript}: {
       const text = await controller.transcribe(file, asr);
       if (text !== null && operation === generation.current) { onTranscript(text); setStatus('Transcript added to your draft. Review before sending.'); }
     } catch (error) {
-      if (operation === generation.current && !(error instanceof DOMException && error.name === 'AbortError')) setStatus(String(error));
+      if (operation === generation.current && !(error instanceof DOMException && error.name === 'AbortError')) setStatus(userError(error));
     } finally { if (operation === generation.current) setBusy(false); }
   }
   async function speak() {
@@ -64,7 +65,7 @@ export function SpeechPanel({token, answer, conversation, onTranscript}: {
     setBusy(true); setStatus('Preparing local audio…');
     try { await controller.speak(answer, tts, voice); }
     catch (error) {
-      if (operation === generation.current && !(error instanceof DOMException && error.name === 'AbortError')) setStatus(String(error));
+      if (operation === generation.current && !(error instanceof DOMException && error.name === 'AbortError')) setStatus(userError(error));
     } finally { if (operation === generation.current) setBusy(false); }
   }
   return <details className="speech-controls border border-[#c6d3c7] rounded-xl p-3 mt-3">

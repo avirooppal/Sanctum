@@ -120,3 +120,12 @@ python evals/journey_runner.py --token-file "$SANCTUM_TOKEN_FILE" --output evals
 This is readiness only:it reports zero complete journeys verified and does not
 measure human action budgets. `--require-verified` refuses full acceptance.
 Full Playwright/engine/chaos/ledger journeys remain in WORKFLOW_GAPS.
+
+### First-run review
+
+The optional `?wizard=1` setup page asks for the local access key and checks
+the configured runtime before opening the workspace. It does not download a
+model or detect a hardware tier;run `sanctum doctor` for that recommendation.
+Unavailable fit/speed information is shown as Unknown. The privacy badge proves
+only the reported startup denial checks;Privacy Ledger is not yet available.
+See docs/WORKFLOW.md and docs/WORKFLOW_GAPS.md for remaining owner journeys.

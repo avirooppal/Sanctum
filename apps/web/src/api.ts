@@ -1,3 +1,4 @@
+import {GatewayError} from './runtime-truth.js';
 /** Same-origin Sanctum contracts. Credentials and drafts are never persisted here. */
 export type Message = {role:'user'|'assistant'; content:string};
 export type Model = {id:string; capabilities:string[]; context_length?:number; license?:string};
@@ -34,7 +35,7 @@ export class SanctumClient {
     if (signal?.aborted || !response.ok) {
       await response.body?.cancel().catch(()=>{});
       signal?.throwIfAborted();
-      throw Error(`Gateway request failed (${response.status})`);
+      throw new GatewayError(response.status,response.headers.get('Retry-After'));
     }
     return response;
   }
@@ -194,7 +195,7 @@ export class SanctumClient {
   async capabilities(signal?: AbortSignal): Promise<{ capabilities: string[]; profile: string; hardware?: { threads: number; context: number } }> {
     const res = await this.request('/v1/capabilities', signal);
     const data: unknown = await res.json();
-    if (!record(data) || !Array.isArray(data.capabilities)) throw Error('Invalid capabilities response');
+    if (!record(data) || !Array.isArray(data.capabilities) || !data.capabilities.every(item=>typeof item==='string') || typeof data.profile!=='string') throw Error('Invalid capabilities response');
     return data as { capabilities: string[]; profile: string; hardware?: { threads: number; context: number } };
   }
 

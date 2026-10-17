@@ -1,3 +1,4 @@
+import {GatewayError} from './runtime-truth.js';
 type Dependencies = {
   fetch: typeof fetch;
   play: (audio: Blob) => () => void;
@@ -38,7 +39,7 @@ export class SpeechController {
       body, signal: operation.signal,
     });
     if (operation.generation !== this.generation) return null;
-    if (!response.ok) throw Error('Local transcription failed. Check the configured model and WAV format.');
+    if (!response.ok) throw new GatewayError(response.status,response.headers.get('Retry-After'));
     const result = await response.json();
     if (operation.generation !== this.generation) return null;
     if (typeof result.text !== 'string') throw Error('Invalid transcription response.');
@@ -56,7 +57,7 @@ export class SpeechController {
       signal: operation.signal,
     });
     if (operation.generation !== this.generation) return false;
-    if (!response.ok) throw Error('Local synthesis failed. Check the configured model and voice.');
+    if (!response.ok) throw new GatewayError(response.status,response.headers.get('Retry-After'));
     if (response.headers.get('Content-Type')?.split(';')[0] !== 'audio/wav') {
       throw Error('Unexpected audio response.');
     }

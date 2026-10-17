@@ -353,3 +353,12 @@ WORKFLOW_GAPS inventories all product controls against a journey;orphan develope
 galleries stay out of the product entry point. No release/phase tag follows from
 writing this specification. Each acceptance runner must preserve failures and
 report partial/pending without laundering negative checks into VERIFIED status.
+
+## Current implementation evidence: UI alignment
+
+ADR0074 replaces simulated first-run provisioning with configured-runtime review.
+J2 remains PARTIAL:installer,detected hardware recommendation and import jobs are
+absent. Real subflow evidence:evals/results/workflow-ui-onboarding.json;3 clicks,
+2 text entries including a wrong-key attempt,1486.96ms,zero foreign requests.
+J9 displays current startup denial checks only;the ledger remains unavailable.
+Full journey budgets,chaos and ledger acceptance are not established.

@@ -7,7 +7,7 @@ export const STRINGS = Object.freeze({
   app: {
     name: 'Sanctum',
     tagline: 'Private, on-device intelligence',
-    privacyVerified: 'On-device only • Egress verified: 0 outbound connections',
+    privacyVerified: 'Local models configured. Startup checks and Privacy Ledger require separate verification.',
     loading: 'Loading Sanctum...',
   },
   navigation: {
@@ -49,7 +49,7 @@ export const STRINGS = Object.freeze({
   },
   onboarding: {
     welcome: 'Welcome to Sanctum',
-    subtitle: 'Private, on-device intelligence. Zero foreign egress verified.',
+    subtitle: 'Connect to your configured local runtime.',
     stepHardware: '1. Hardware & Profile',
     stepModel: '2. Model Provisioning',
     stepPrivacy: '3. Privacy Invariant Verification',
@@ -59,7 +59,7 @@ export const STRINGS = Object.freeze({
     openWorkspace: 'Open Workspace',
     skipToChat: 'Skip to Chat',
     passBadge: 'PASS',
-    egressStatement: 'Egress self-test: 0 outbound connections • Bound to 127.0.0.1 • Air-gapped verified',
+    egressStatement: 'Inspect live startup checks. Privacy Ledger unavailable.',
   },
   knowledge: {
     title: 'Knowledge Library',
@@ -144,7 +144,7 @@ export const STRINGS = Object.freeze({
     cycleTabs: 'Cycle tabs (Ctrl+Tab)',
     quadPane: 'Pane {index}',
     waitingState: 'Admission limit reached: Waiting for lane permit...',
-    retryAfter: 'Server busy (503): Retrying in {seconds}s...',
+    retryAfter: 'Server busy (503). Retry after {seconds}s; no automatic retry.',
   },
   rightRail: {
     artifacts: 'Artifacts',
@@ -157,12 +157,12 @@ export const STRINGS = Object.freeze({
     copyContent: 'Copy to Clipboard',
   },
   statusBar: {
-    healthOk: 'Healthy',
+    healthOk: 'Gateway responding',
     healthDegraded: 'Degraded',
     engineReady: 'Engine Ready',
     engineBusy: 'Engine Processing',
-    offlineBadge: 'Offline • Egress Denied',
-    jobsCount: '{count} background jobs',
+    offlineBadge: 'Startup checks: unknown. Ledger unavailable.',
+    jobsCount: '{count} queued or active requests',
     contextUsage: '{used} / {limit} tokens ({pct}%)',
     contextUnknown: 'Context usage: Unknown',
   },

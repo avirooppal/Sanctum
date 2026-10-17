@@ -77,3 +77,12 @@ to remove,not intentional design deviations. Full live voice/diarization,
 vision,agents,ledger,cloud,LAN and crypto remain capability-gated.
 
 ADR0073:workspace widgets wait for sequential authenticated metadata and bundled fonts. The real usage display is retained once in the status bar;the duplicate composer display/poll is removed. No admission limit or fidelity threshold is widened.
+
+## Workflow alignment ADR0074
+
+Setup uses actual owner authentication and runtime metadata,not simulated
+provisioning. Unknown hardware/fit/speed remain explicit. Model settings list
+actual registry entries. Unbacked layouts,shortcut editing,advanced appearance,
+custom themes,full purge and developer gallery entry are unavailable in product
+navigation. Existing isolated modules/tests remain. Privacy reports current
+startup checks and ledger unavailability. No remote asset or new package added.

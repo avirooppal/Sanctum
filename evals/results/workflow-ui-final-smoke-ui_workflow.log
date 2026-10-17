@@ -1,0 +1,1 @@
+{"suite":"real-workflow-onboarding-subflow","journeys":["J2","J9","J12"],"status":"PASS","clicks":3,"text_entries":2,"elapsed_ms":1054.4619000000002,"foreign_requests":0,"page_errors":[],"full_journey_verified":false,"ledger_verified":false,"scope":"configured runtime only; no installer, model provisioning, or ledger"}

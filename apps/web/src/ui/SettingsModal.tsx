@@ -15,7 +15,7 @@ import {
   validateThemeTokens,
   enforceContrastGuard,
 } from './Customization.js';
-import { type AssistantProfile, type SanctumClient } from '../api.js';
+import { type AssistantProfile, type SanctumClient,type Model } from '../api.js';
 
 interface Props {
   isOpen: boolean;
@@ -27,7 +27,8 @@ interface Props {
   token?: string;
   conversationId?: string | null;
   messages?: Array<{ role: string; content: string }>;
-  models?: Array<{ id: string; context_length?: number }>;
+  models?: Model[];
+  capabilities?:string[];
   activeProfileId?: string | null;
   onSelectProfile?: (id: string | null) => void;
   onPurgeComplete?: () => void;
@@ -49,6 +50,7 @@ export function SettingsModal({
   conversationId,
   messages = [],
   models = [],
+  capabilities=[],
   activeProfileId,
   onSelectProfile,
   onPurgeComplete,
@@ -232,20 +234,20 @@ export function SettingsModal({
             >
               {STRINGS.settings.appearance}
             </Button>
-            <Button
+            {capabilities.includes('layouts')&&<Button
               variant={activeTab === 'layouts' ? 'primary' : 'quiet'}
               style={{ justifyContent: 'flex-start', width: '100%' }}
               onClick={() => setActiveTab('layouts')}
             >
               {STRINGS.settings.layouts}
-            </Button>
-            <Button
+            </Button>}
+            {capabilities.includes('shortcut_customization')&&<Button
               variant={activeTab === 'shortcuts' ? 'primary' : 'quiet'}
               style={{ justifyContent: 'flex-start', width: '100%' }}
               onClick={() => setActiveTab('shortcuts')}
             >
               {STRINGS.settings.shortcuts}
-            </Button>
+            </Button>}
             <Button
               variant={activeTab === 'profiles' ? 'primary' : 'quiet'}
               style={{ justifyContent: 'flex-start', width: '100%' }}
@@ -362,6 +364,7 @@ export function SettingsModal({
                 </div>
               </div>
 
+              {capabilities.includes('advanced_appearance')&&<>
               {/* Density */}
               <div>
                 <label style={{ fontSize: '13px', fontWeight: 600, display: 'block', marginBottom: '6px' }}>
@@ -412,6 +415,8 @@ export function SettingsModal({
                 />
               </div>
 
+              </>}
+
               {/* Message Layout (Bubbles vs Document Measure) */}
               <div>
                 <label style={{ fontSize: '13px', fontWeight: 600, display: 'block', marginBottom: '6px' }}>
@@ -433,6 +438,7 @@ export function SettingsModal({
                 </div>
               </div>
 
+              {capabilities.includes('advanced_appearance')&&<>
               {/* Content Measure / Width */}
               <div>
                 <label style={{ fontSize: '13px', fontWeight: 600, display: 'block', marginBottom: '6px' }}>
@@ -489,6 +495,8 @@ export function SettingsModal({
                   </Button>
                 </div>
               </div>
+
+              </>}
 
               {/* Enter vs Shift+Enter send behavior */}
               <div>
@@ -795,145 +803,15 @@ export function SettingsModal({
           )}
 
           {activeTab === 'models' && (
-            <div style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
-              <span style={{ fontSize: '13px', fontWeight: 600 }}>{STRINGS.settings.assignRoles}</span>
-
-              {/* Chat Role */}
-              <div
-                style={{
-                  padding: '12px',
-                  background: 'var(--ui-surface, #151c19)',
-                  borderRadius: '6px',
-                  border: '1px solid var(--ui-border, #283832)',
-                }}
-              >
-                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '6px' }}>
-                  <span style={{ fontWeight: 600, fontSize: '13px' }}>Chat &amp; Reasoning</span>
-                  <span style={{ fontSize: '10px', padding: '2px 6px', borderRadius: '4px', background: '#283832' }}>
-                    Apache 2.0
-                  </span>
-                </div>
-                <p style={{ fontSize: '11px', color: 'var(--ui-text-secondary, #9fb3a4)', margin: '0 0 8px' }}>
-                  Primary interactive assistant. Fits in local VRAM based on quantized model parameters.
-                </p>
-                <select
-                  value={preferences.modelRoles?.chat || ''}
-                  onChange={e =>
-                    onUpdatePreferences({
-                      modelRoles: { ...preferences.modelRoles, chat: e.target.value },
-                    })
-                  }
-                  style={{
-                    width: '100%',
-                    padding: '6px',
-                    borderRadius: '4px',
-                    background: 'var(--ui-background, #0f1412)',
-                    border: '1px solid var(--ui-border, #283832)',
-                    color: 'var(--ui-text-primary, #e8efe9)',
-                    fontSize: '12px',
-                  }}
-                >
-                  <option value="">Default Registry Model</option>
-                  {models.map(m => (
-                    <option key={m.id} value={m.id}>
-                      {m.id} ({m.context_length ? `${m.context_length} ctx` : 'local'})
-                    </option>
-                  ))}
-                </select>
-              </div>
-
-              {/* Embeddings Role */}
-              <div
-                style={{
-                  padding: '12px',
-                  background: 'var(--ui-surface, #151c19)',
-                  borderRadius: '6px',
-                  border: '1px solid var(--ui-border, #283832)',
-                }}
-              >
-                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '6px' }}>
-                  <span style={{ fontWeight: 600, fontSize: '13px' }}>Vector Embeddings</span>
-                  <span style={{ fontSize: '10px', padding: '2px 6px', borderRadius: '4px', background: '#283832' }}>
-                    Apache 2.0
-                  </span>
-                </div>
-                <div style={{ fontSize: '12px', fontFamily: 'monospace', marginBottom: '4px' }}>
-                  nomic-embed-text-v1.5
-                </div>
-                <div style={{ fontSize: '11px', color: 'var(--ui-text-secondary, #9fb3a4)' }}>
-                  137M parameters • Fits in CPU / 1 GB VRAM • Zero external egress
-                </div>
-              </div>
-
-              {/* Reranker Role */}
-              <div
-                style={{
-                  padding: '12px',
-                  background: 'var(--ui-surface, #151c19)',
-                  borderRadius: '6px',
-                  border: '1px solid var(--ui-border, #283832)',
-                }}
-              >
-                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '6px' }}>
-                  <span style={{ fontWeight: 600, fontSize: '13px' }}>Document Reranker</span>
-                  <span style={{ fontSize: '10px', padding: '2px 6px', borderRadius: '4px', background: '#283832' }}>
-                    MIT
-                  </span>
-                </div>
-                <div style={{ fontSize: '12px', fontFamily: 'monospace', marginBottom: '4px' }}>
-                  bge-reranker-v2-m3
-                </div>
-                <div style={{ fontSize: '11px', color: 'var(--ui-text-secondary, #9fb3a4)' }}>
-                  560M parameters • Fits in CPU / 2 GB VRAM • Multilingual exact cross-encoder
-                </div>
-              </div>
-
-              {/* Speech ASR */}
-              <div
-                style={{
-                  padding: '12px',
-                  background: 'var(--ui-surface, #151c19)',
-                  borderRadius: '6px',
-                  border: '1px solid var(--ui-border, #283832)',
-                }}
-              >
-                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '6px' }}>
-                  <span style={{ fontWeight: 600, fontSize: '13px' }}>Speech Recognition (ASR)</span>
-                  <span style={{ fontSize: '10px', padding: '2px 6px', borderRadius: '4px', background: '#283832' }}>
-                    MIT
-                  </span>
-                </div>
-                <div style={{ fontSize: '12px', fontFamily: 'monospace', marginBottom: '4px' }}>
-                  whisper.cpp (Local engine)
-                </div>
-                <div style={{ fontSize: '11px', color: 'var(--ui-text-secondary, #9fb3a4)' }}>
-                  High-precision speech-to-text • Fits in CPU / 1.5 GB VRAM
-                </div>
-              </div>
-
-              {/* Speech TTS */}
-              <div
-                style={{
-                  padding: '12px',
-                  background: 'var(--ui-surface, #151c19)',
-                  borderRadius: '6px',
-                  border: '1px solid var(--ui-border, #283832)',
-                }}
-              >
-                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '6px' }}>
-                  <span style={{ fontWeight: 600, fontSize: '13px' }}>Speech Synthesis (TTS)</span>
-                  <span style={{ fontSize: '10px', padding: '2px 6px', borderRadius: '4px', background: '#283832' }}>
-                    Apache 2.0
-                  </span>
-                </div>
-                <div style={{ fontSize: '12px', fontFamily: 'monospace', marginBottom: '4px' }}>
-                  Kokoro (82M params)
-                </div>
-                <div style={{ fontSize: '11px', color: 'var(--ui-text-secondary, #9fb3a4)' }}>
-                  On-device audio synthesis • Fits in CPU / 500 MB VRAM
-                </div>
-              </div>
-            </div>
+            <section aria-label="Configured model registry" className="space-y-4">
+              <h2>Configured models</h2>
+              <p>Model roles and fit estimates are unavailable until the runtime reports them.</p>
+              {models.map(model=><article key={model.id} className="border ui-border rounded p-3">
+                <h3>{model.id}</h3><p>Capabilities: {model.capabilities.join(', ')}</p>
+                <p>License: {model.license??'Unknown'}</p>
+                <p>Context: {model.context_length??'Unknown'}; fit / speed: Unknown</p>
+              </article>)}
+            </section>
           )}
 
           {activeTab === 'data' && (
@@ -951,7 +829,7 @@ export function SettingsModal({
               </div>
 
               {/* Full Purge Section */}
-              <div
+              {capabilities.includes('full_purge')&&<div
                 style={{
                   padding: '14px',
                   borderRadius: '6px',
@@ -1009,7 +887,7 @@ export function SettingsModal({
                 >
                   {purgeInProgress ? STRINGS.settings.purging : STRINGS.settings.purgeAction}
                 </Button>
-              </div>
+              </div>}
             </div>
           )}
 
@@ -1052,6 +930,7 @@ export function SettingsModal({
                 </Button>
               </div>
 
+              {capabilities.includes('custom_themes')&&<>
               <div>
                 <label style={{ fontSize: '13px', fontWeight: 600, display: 'block', marginBottom: '6px' }}>
                   Import Custom JSON Theme
@@ -1082,6 +961,8 @@ export function SettingsModal({
                   {STRINGS.settings.importTheme}
                 </Button>
               </div>
+
+              </>}
 
               <div style={{ borderTop: '1px solid var(--ui-border, #283832)', paddingTop: '12px' }}>
                 <Button

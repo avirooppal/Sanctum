@@ -42,7 +42,7 @@ test('fixed same-origin requests omit cookies, reject redirects and never retry'
   const client=new SanctumClient('owner',async (path,options)=>{
     calls.push({path,options}); return new Response('{}',{status:503});
   });
-  await assert.rejects(client.models(),/503/);
+  await assert.rejects(client.models(),error=>error.status===503&&/local engine is busy/.test(error.message));
   assert.equal(calls.length,1);
   assert.equal(calls[0].path,'/v1/models');
   assert.equal(calls[0].options.credentials,'omit');
@@ -126,7 +126,7 @@ test('session management uses owner-authenticated fixed paths and validates page
 });
 test('session mutations never retry and malformed lists are rejected',async()=>{
  let calls=0;const client=new SanctumClient('owner',async()=>{calls++;return new Response('{}',{status:503});});
- await assert.rejects(client.deleteSession('one'),/503/);assert.equal(calls,1);
+ await assert.rejects(client.deleteSession('one'),error=>error.status===503&&/local engine is busy/.test(error.message));assert.equal(calls,1);
  const malformed=new SanctumClient('owner',async()=>Response.json({data:[{id:'one',title:12}],has_more:false}));
  await assert.rejects(malformed.sessions('',0),/Invalid session/);
 });
@@ -199,7 +199,5 @@ test('profiles and full purge endpoints authenticate owner and reject invalid pa
   await client.fullPurge('PURGE ALL SANCTUM DATA');
   assert.equal(calls[3].path, '/v1/purge');
 
-  await assert.rejects(client.fullPurge('wrong'), /400/);
+  await assert.rejects(client.fullPurge('wrong'), error => error.status === 400 && error.message === 'This request could not be accepted. Review the highlighted fields.');
 });
-
-

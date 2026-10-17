@@ -354,3 +354,7 @@ Added grounded quote fallback, configurable loopback-only folder polling, and fr
 - Add12 real gateway readiness tests with explicit pending/full-acceptance flags.
 - Fix startup metadata503 bursts with sequential cancellable bootstrap and
   fail-closed capabilities;retain one real status-bar context/usage poll.
+
+Workflow alignment:runtime-backed setup,scoped startup privacy,truthful registry
+metadata,safe error messages and capability-gated controls. Added real onboarding
+subflow to13-stage smoke. Conservative coverage/release audit;no release claim.

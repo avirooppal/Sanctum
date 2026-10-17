@@ -1,6 +1,7 @@
 import {useEffect,useRef,useState} from 'react';
 import {SanctumClient,type Workspace,type KnowledgeAnswer} from './api';
 import {Button,Input,Card} from './ui/primitives';
+import {MESSAGES,userError} from './runtime-truth.js';
 
 export function KnowledgePanel({api}:{api:SanctumClient}) {
   const [workspaces,setWorkspaces]=useState<Workspace[]>([]);
@@ -16,7 +17,7 @@ export function KnowledgePanel({api}:{api:SanctumClient}) {
   useEffect(()=>{
     const controller=new AbortController();active.current=controller;
     api.workspaces(controller.signal).then(data=>{if(!controller.signal.aborted){setWorkspaces(data);setWorkspace(data[0]?.id??'');}})
-      .catch(e=>{if(!controller.signal.aborted)setError(String(e.message));});
+      .catch(e=>{if(!controller.signal.aborted)setError(userError(e));});
     return ()=>{controller.abort();active.current?.abort();};
   },[api]);
   async function run(operation:(signal:AbortSignal)=>Promise<void>) {
@@ -24,8 +25,8 @@ export function KnowledgePanel({api}:{api:SanctumClient}) {
     active.current?.abort();const controller=new AbortController();active.current=controller;
     setBusy(true);setError('');setNotice('');setAnswer(null);
     try {await operation(controller.signal);}
-    catch(e){if(!controller.signal.aborted)setError(e instanceof Error?e.message:'Knowledge request failed');}
-    finally {if(!controller.signal.aborted)setBusy(false);}
+    catch(e){if(!controller.signal.aborted)setError(userError(e));}
+    finally {if(active.current===controller)setBusy(false);}
   }
   return <div className="knowledge-panel">
     <p>Your documents stay local. Citations and retrieved text are untrusted source material.</p>
@@ -45,7 +46,9 @@ export function KnowledgePanel({api}:{api:SanctumClient}) {
     <Card title="Ask your documents"><form onSubmit={e=>{e.preventDefault();void run(async signal=>{setAnswer(await api.askKnowledge(workspace,query.trim(),signal));});}}>
       <label>Knowledge question<textarea required maxLength={4000} value={query} disabled={busy} onChange={e=>setQuery(e.target.value)}/></label>
       <Button type="submit" disabled={busy||!workspace||!query.trim()}>Ask Knowledge</Button></form></Card>
-    {busy&&<p aria-live="polite">Working locally…</p>}{notice&&<p role="status">{notice}</p>}{error&&<p role="alert">{error}</p>}
+    {busy&&<><p aria-live="polite">Working locally…</p><Button variant="outline" onClick={()=>{
+      active.current?.abort();setBusy(false);setNotice(MESSAGES.cancelled);setError('');
+    }}>Cancel Knowledge operation</Button></>}{notice&&<p role="status">{notice}</p>}{error&&<p role="alert">{error}</p>}
     {answer&&<section aria-label="Knowledge answer"><h3>{answer.abstained?'No supported answer found':'Answer with sources'}</h3>
       <p className="whitespace-pre-wrap">{answer.answer}</p><ol>{answer.citations.map((c,i)=><li key={`${c.chunk_id}-${i}`}>
         <p>{c.source}{c.page!==null?` · Page ${c.page}`:''}</p><blockquote className="whitespace-pre-wrap">{c.quote}</blockquote>

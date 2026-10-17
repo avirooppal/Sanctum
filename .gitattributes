@@ -32,3 +32,9 @@ docs/status-archive/2026-10-11-history-before-website.md -text whitespace=cr-at-
 docs/status-archive/2026-10-17-before-workflow.md -text whitespace=cr-at-eol,-blank-at-eof
 
 docs/status-archive/2026-10-17-workflow-contract.md -text whitespace=cr-at-eol,-blank-at-eof
+
+docs/status-archive/2026-10-17-coverage-before-ui-alignment.md -text whitespace=cr-at-eol,-blank-at-eof
+
+docs/status-archive/2026-10-17-release-before-ui-alignment.md -text whitespace=cr-at-eol,-blank-at-eof
+
+docs/status-archive/2026-10-17-workflow-guards.md -text whitespace=cr-at-eol,-blank-at-eof
