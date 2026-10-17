@@ -1,14 +1,14 @@
 # Current state
 
 - Step:cozy direction slice1;ADR0078;research/acceptance docs only.
-- Last green:1df42865fe808ffcd6a404bba016cf38806deaed;hosted39055637580/all5 completed success.
+- Last green:775a9181e835ec3cdd2a5352abf66fab11e329ca;hosted39056299835/all5 completed success.
 - Branch:codex/cozy-design-direction;default reference/palette unchanged.
 - Baseline:source182,Rust70,web81/types/build,audit0;38 denial probes;15 smoke PASS.
 - Gate:new packs/gallery/contrast/screenshots/axe/performance NOT DONE;no recommendation yet.
 - Blockers:two critique iterations and owner comparison;all prior backend/install gaps remain.
 - Next3:contrast contract/tests;add three theme packs/gallery;real matrix/screenshots/critique.
 - Default stays reference until explicit owner choice;human research UNVERIFIED.
-- No full-journey,phase or release promotion;current commit/CI recorded after push.
+- No full-journey,phase or release promotion;design slice pushed;exact-SHA CI completed success.
 
 ## Evidence and boundaries
 
@@ -27,3 +27,7 @@ uses existing consistency/secret/license gates;exact-SHA CI follows push.
 
 [Previous STATUS](status-archive/2026-10-17-before-cozy-design.md),SHA256
 `8019cf0889d6a2b31025a03ab418cca8c6e8c56ff12c580d689f85f27d6bf7de`. Bytes retained verbatim;older narratives remain linked.
+
+Design docs commit775a9181e835ec3cdd2a5352abf66fab11e329ca;hosted
+39056299835 completed success,all5 jobs;design-docs-hosted-ci.json.
+This evidence checkpoint is docs-only;its exact-SHA CI follows push.

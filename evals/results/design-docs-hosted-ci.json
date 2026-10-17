@@ -1,0 +1,36 @@
+[
+  {
+    "sha": "775a9181e835ec3cdd2a5352abf66fab11e329ca",
+    "branch": "codex/cozy-design-direction",
+    "url": "https://github.com/avirooppal/Sanctum/actions/runs/39056299835",
+    "status": "completed",
+    "conclusion": "success",
+    "jobs": [
+      {
+        "name": "rust-foundation",
+        "status": "completed",
+        "conclusion": "success"
+      },
+      {
+        "name": "source-gates (macos-latest)",
+        "status": "completed",
+        "conclusion": "success"
+      },
+      {
+        "name": "source-gates (windows-latest)",
+        "status": "completed",
+        "conclusion": "success"
+      },
+      {
+        "name": "web",
+        "status": "completed",
+        "conclusion": "success"
+      },
+      {
+        "name": "source-gates (ubuntu-22.04)",
+        "status": "completed",
+        "conclusion": "success"
+      }
+    ]
+  }
+]
