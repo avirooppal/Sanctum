@@ -1,0 +1,33 @@
+{
+  "run_id": 38293273975,
+  "conclusion": "success",
+  "jobs": [
+    {
+      "name": "rust-foundation",
+      "status": "completed",
+      "conclusion": "success"
+    },
+    {
+      "name": "web",
+      "status": "completed",
+      "conclusion": "success"
+    },
+    {
+      "name": "source-gates (ubuntu-22.04)",
+      "status": "completed",
+      "conclusion": "success"
+    },
+    {
+      "name": "source-gates (windows-latest)",
+      "status": "completed",
+      "conclusion": "success"
+    },
+    {
+      "name": "source-gates (macos-latest)",
+      "status": "completed",
+      "conclusion": "success"
+    }
+  ],
+  "status": "completed",
+  "sha": "6339d359e041d7d21b949b2d1b9ee77e7564b963"
+}

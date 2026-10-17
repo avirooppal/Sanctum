@@ -1,0 +1,17 @@
+node:internal/modules/run_main:107
+    triggerUncaughtException(
+    ^
+
+locator.waitFor: Error: strict mode violation: getByLabel('Model') resolved to 3 elements:
+    1) <input value="" aria-label="ASR model" class="border rounded p-2"/> aka getByLabel('ASR model')
+    2) <input value="" aria-label="TTS model" class="border rounded p-2"/> aka getByLabel('TTS model')
+    3) <button type="button" aria-expanded="false" aria-label="Model picker" class="flex items-center gap-1.5 hover:text-foreground text-[11px] font-medium transition-colors border ui-border px-2 py-0.5 rounded ui-surface">…</button> aka getByRole('button', { name: 'Model picker' })
+
+Call log:
+  - waiting for getByLabel('Model') to be visible
+
+    at C:\Users\aviroop\Desktop\Sanctum\evals\browser_fidelity.mjs:63:34 {
+  log: [ "  - waiting for getByLabel('Model') to be visible" ]
+}
+
+Node.js v24.14.0

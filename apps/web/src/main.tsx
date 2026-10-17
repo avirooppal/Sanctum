@@ -833,6 +833,10 @@ function App() {
           />
         )}
 
+        {token && capabilities.includes('speech') && <SpeechPanel token={token}
+          answer={messages.filter(message => message.role === 'assistant').at(-1)?.content ?? ''}
+          conversation={conversation} onTranscript={text => setPrompt(text)} />}
+        {chatStatus && <p role="status">{chatStatus}</p>}
         {error && (
           <p role="alert" className="rounded-lg bg-red-50 text-red-800 p-4 my-3">
             {error}

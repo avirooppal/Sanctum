@@ -1,0 +1,21 @@
+=== Sanctum Source Gate ===
+Working directory: /mnt/c/Users/aviroop/Desktop/Sanctum
+Python interpreter: /home/aviroop/.local/share/sanctum-dev-venv/bin/python
+Logging output to: evals/results/workflow-contract-source.log
+
+All checks passed!
+143 files already formatted
+ty failed
+  Cause: Failed to discover the site-packages directory
+  Cause: Failed to iterate over the contents of the `lib`/`lib64` directories of the Python installation `/mnt/c/Users/aviroop/Desktop/Sanctum/.venv`
+Traceback (most recent call last):
+  File "/mnt/c/Users/aviroop/Desktop/Sanctum/tools/check.py", line 36, in <module>
+    main()
+  File "/mnt/c/Users/aviroop/Desktop/Sanctum/tools/check.py", line 29, in main
+    subprocess.run([sys.executable, *args], check=True, cwd=ROOT)
+  File "/home/aviroop/.local/share/uv/python/cpython-3.12.13-linux-x86_64-gnu/lib/python3.12/subprocess.py", line 571, in run
+    raise CalledProcessError(retcode, process.args,
+subprocess.CalledProcessError: Command '['/home/aviroop/.local/share/sanctum-dev-venv/bin/python', '-m', 'ty', 'check', 'apps/cli/sanctum', 'services/speech/sanctum_speech']' returned non-zero exit status 2.
+
+=== Summary ===
+STATUS: FAIL (exit code 1)

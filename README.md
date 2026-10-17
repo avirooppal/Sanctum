@@ -1,5 +1,10 @@
 # Sanctum
 
+The canonical owner journeys and current gaps are in
+[WORKFLOW.md](docs/WORKFLOW.md) and [WORKFLOW_GAPS.md](docs/WORKFLOW_GAPS.md).
+Signed installation,live voice,vision,governed agents,Privacy Ledger,cloud
+connectors,LAN TLS and encryption remain unfinished release requirements.
+
 Private local AI platform. Architecture and phase gates: [plan.md](plan.md).
 Single-owner scope: [ADR 0027](docs/adr/0027-single-user-scope.md). Workspaces organize
 personal data; team storage, SSO, collaboration and Helm are out of scope.

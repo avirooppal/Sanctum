@@ -18,6 +18,9 @@ try {
   const csp = response.headers()['content-security-policy'];
   assert(csp.includes("connect-src 'self'") && csp.includes('media-src blob:'));
   passed.push('same_origin_and_blob_only_media_csp');
+  await page.getByLabel('Theme', {exact:true}).selectOption('sanctum');
+  await page.getByLabel('Theme mode', {exact:true}).selectOption('light');
+  await page.waitForFunction(() => document.documentElement.dataset.mode === 'light');
   assert.equal(await page.locator('aside').evaluate(node => getComputedStyle(node).backgroundColor), 'rgb(246, 248, 250)');
   assert((await page.locator('aside').evaluate(node => getComputedStyle(node.parentElement).gridTemplateColumns)).startsWith('237px'));
   passed.push('compiled_tailwind_desktop_styles');
@@ -40,7 +43,7 @@ try {
   await page.getByRole('status').filter({hasText:/Playing locally|Playback finished/}).waitFor({timeout:170000});
   passed.push('browser_audio_play_promise_resolved');
   await page.getByRole('button', {name:'Stop audio', exact:true}).click();
-  assert.equal(await page.getByRole('status').textContent(), 'Stopped.');
+  assert.equal(await page.locator('.speech-controls').getByRole('status').textContent(), 'Stopped.');
   passed.push('stop_control');
   assert.deepEqual(failures, []);
   await page.screenshot({path:'.sanctum/browser-speech.png', fullPage:true});

@@ -22,6 +22,10 @@ if [ ! -x "$VENV_PYTHON" ]; then
     exit 1
 fi
 
+# Keep ty's environment discovery on the same verified interpreter; the checkout
+# may contain an unrelated Windows or incomplete .venv.
+export VIRTUAL_ENV="${VENV_PYTHON%/bin/python}"
+
 echo "=== Sanctum Source Gate ==="
 echo "Working directory: $ROOT"
 echo "Python interpreter: $VENV_PYTHON"

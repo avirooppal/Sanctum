@@ -339,3 +339,10 @@ Added grounded quote fallback, configurable loopback-only folder polling, and fr
 - Add website contract,three-viewport browser checks and smoke-suite stage.
 - Record the owner's expanded website scope in ADR0064;exact fidelity and
   native executable/Linux packaging remain pending.
+
+### Workflow-first specification
+
+- Define canonical versioned J1-J12 journeys,action budgets,error messages,
+  privacy/ledger expectations and a strict per-step gap audit.
+- Restore existing real file-speech and chat-Stop feedback in the workspace.
+- Preserve baseline failures;keep all release and full-journey gates open.

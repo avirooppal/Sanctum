@@ -247,3 +247,15 @@ hosted run38152617896/all5 jobs PASS observed. Raw:website-hosted-ci.json.
 - **Evidence summary**: 25/25 E2E Playwright PASS (`evals/results/browser-e2e-25.json`), 73 unit tests PASS, fidelity invariants measured (`evals/results/ui-fidelity.json`), zero foreign egress across all tested surfaces.
 - **Merge**: `ui-workspace` merged to `main` via merge commit `064a1c4`.
 - **Post-merge verification on main**: Hosted CI run 38216308897 on merge commit `064a1c4` completed with `conclusion=success` (all 5 jobs PASS: web, rust-foundation, source-gates linux/macos/windows). Local gates re-verified on main: 73 unit tests PASS, TypeScript strict PASS, production build PASS, npm audit 0 vulnerabilities, `tools/run_source_gate.sh` PASS (157 tests), `tools/check_rust.sh` PASS (62 tests, 92 licenses, 38 denial probes, zero supervision survivors), and 25/25 E2E Playwright suite PASS.
+
+## Workflow-first audit (2026-10-17)
+
+Base6339d35;fresh baseline B1-B5 in WORKFLOW_GAPS.md. Source157,Rust67,web73,
+38 denial/startup probes and11 real smoke stages PASS after ADR0070 repairs;
+0 npm advisories. Raw workflow-baseline-* evidence preserves initial failures.
+WORKFLOW.md v1.0.0 and WORKFLOW_GAPS.md now enumerate every J1-J12 step;
+none is claimed fully VERIFIED. New action-budget measurements,consistency
+checker,journey runners and alignment fixes remain pending. J10 is hidden and
+blocked on policy/ledger/broker;no cloud request or candidate-model admission.
+False hardware/provisioning/privacy/purge promises are documented defects,
+not hardware exceptions. R-UI,R-SPEECH,R-PRIVACY,R-PACKAGES remain OPEN.

@@ -100,3 +100,15 @@ and website-final-smoke-*.json/log. No full release claim.
 
 Website commit `6ec627261abae92de6d8ed8a2247c2d0e4579f8b` pushed;
 hosted run38152617896/all5 jobs PASS observed. Raw:website-hosted-ci.json.
+
+## Canonical workflow gate (2026-10-17)
+
+R-WORKFLOW:OPEN. WORKFLOW.md v1.0.0 (ADR0071) and its per-step gap audit are
+canonical. All12 journeys require their own actual action/time/chaos/ledger
+evidence;legacy smoke does not promote one to VERIFIED. Baseline now passes
+source157,Rust67,web73,38 denial probes,11 real smoke stages and npm audit0.
+Evidence:WORKFLOW_GAPS B1-B5,evals/results/workflow-baseline-*.
+The initial failures are preserved. Exact edited-SHA hosted CI is pending push.
+Missing full-purge scope,simulated onboarding,unconditional privacy badges and
+fail-open client capabilities must be corrected. Cloud remains unavailable
+until its policy/ledger/broker prerequisites pass;no release tags.

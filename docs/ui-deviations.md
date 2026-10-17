@@ -68,3 +68,10 @@ The owner directed a fully modular, customisable, aesthetic, and UX-friendly wor
   - Reskinned `website.html` and `docs.html` with unified token-based styles (`website.css`), including an honest platform-status section displaying the support matrix and release blockers.
   - Verification test in `apps/web/tests/website.test.mjs` verifies that the public website platform-status section reads only verified session artifacts and fails if it claims any unverified platform from `docs/RELEASE_CHECKLIST.md` as ready.
   - Web unit tests (73 passing), web typecheck (pass), web build (pass), npm audit (0 vulnerabilities), Rust foundation checks (62 pass, 22 kernel denial probes, 16 runtime denial probes), and source gate (exit code 0).
+
+Workflow-first owner amendment (ADR0071): J1-J12 now govern navigation and
+empty/error/onboarding states. Restore the existing file speech/Stop controls
+lost during workspace integration (ADR0070). Fixed T1 hardware,timer-based
+model verification,token bypass and broad privacy/purge claims are defects
+to remove,not intentional design deviations. Full live voice/diarization,
+vision,agents,ledger,cloud,LAN and crypto remain capability-gated.

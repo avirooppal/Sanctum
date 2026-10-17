@@ -60,7 +60,7 @@ try {
   await page.goto(base.href);
   await page.getByLabel('Local access key').fill(token);
   await page.getByRole('button', {name: 'Open workspace'}).click();
-  await page.getByLabel('Model').waitFor();
+  await page.getByLabel('Model', {exact:true}).waitFor();
 
   // Check 237px sidebar geometry token
   const sidebarWidth = await page.locator('.app-sidebar').evaluate(el => el.getBoundingClientRect().width);
@@ -73,17 +73,17 @@ try {
   await page.getByText('Engine Dispatch Queues').waitFor();
   fidelityChecks.push('dashboard_routed_page_metrics_rendered');
   await page.getByRole('button', {name: '← Chat'}).click();
-  await page.getByLabel('Model').waitFor();
+  await page.getByLabel('Model', {exact:true}).waitFor();
 
   // 4. Open Knowledge Modal & Verify Invariants
-  await page.getByRole('button', {name: 'Knowledge'}).click();
-  await page.getByRole('dialog', {name: 'Knowledge'}).waitFor();
+  await page.getByRole('button', {name: 'Knowledge', exact:true}).click();
+  await page.getByRole('dialog', {name: 'Knowledge', exact:true}).waitFor();
   fidelityChecks.push('knowledge_dialog_rendered');
   await page.keyboard.press('Escape');
-  await page.getByRole('dialog', {name: 'Knowledge'}).waitFor({state: 'hidden'});
+  await page.getByRole('dialog', {name: 'Knowledge', exact:true}).waitFor({state: 'hidden'});
 
   // 5. Test Slash Command in Chat
-  await page.getByLabel('Message').fill('/help');
+  await page.getByLabel('Message', {exact:true}).fill('/help');
   await page.getByRole('button', {name: 'Send ↑'}).click();
   await page.getByText('Available Slash Commands:').waitFor();
   fidelityChecks.push('slash_command_help_rendered');

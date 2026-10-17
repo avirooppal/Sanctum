@@ -31,7 +31,14 @@ try {
     }
     for(const href of await page.locator('a').evaluateAll(links=>links.map(a=>a.getAttribute('href')))) {
       if(href.startsWith('#'))assert.equal(await page.locator(href).count(),1,`missing target ${href}`);
-      else assert.equal(href,'/');
+      else {
+        assert(['/','/docs.html'].includes(href),'only application and bundled documentation routes are allowed');
+        if(href==='/docs.html') {
+          const docs=await page.request.get(`${base}${href}`);
+          assert.equal(docs.status(),200);
+          assert.match(await docs.text(),/<title>Sanctum Documentation/);
+        }
+      }
     }
     const measure=await page.evaluate(()=>({
       viewport:innerWidth,scroll:document.documentElement.scrollWidth,

@@ -316,7 +316,7 @@ export function ChatComposer({
 
           <div className="flex items-center gap-2">
             {busy && (
-              <Button variant="outline" onClick={onStop}>
+              <Button variant="outline" aria-label="Stop generation" onClick={onStop}>
                 {STRINGS.composer.stop}
               </Button>
             )}

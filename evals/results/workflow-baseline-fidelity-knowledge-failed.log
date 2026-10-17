@@ -1,0 +1,16 @@
+node:internal/modules/run_main:107
+    triggerUncaughtException(
+    ^
+
+locator.click: Error: strict mode violation: getByRole('button', { name: 'Knowledge' }) resolved to 2 elements:
+    1) <button class="" type="button" data-ui-button="outline">Knowledge</button> aka getByRole('button', { name: 'Knowledge', exact: true })
+    2) <button type="button" title="Attach .md or .pdf (max 10 MiB)" aria-label="Attach document to Knowledge" class="p-1.5 rounded-lg border ui-border hover:bg-black/5 dark:hover:bg-white/5 text-xs text-display ui-text-secondary hover:text-foreground transition-colors flex items-center gap-1">…</button> aka getByRole('button', { name: 'Attach document to Knowledge' })
+
+Call log:
+  - waiting for getByRole('button', { name: 'Knowledge' })
+
+    at C:\Users\aviroop\Desktop\Sanctum\evals\browser_fidelity.mjs:79:55 {
+  log: [ "  - waiting for getByRole('button', { name: 'Knowledge' })" ]
+}
+
+Node.js v24.14.0
