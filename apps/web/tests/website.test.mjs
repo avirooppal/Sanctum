@@ -28,16 +28,16 @@ export function validatePlatformStatus(html, checklistMd) {
     const isGpu = pattern.includes('NVIDIA') || pattern.includes('vLLM');
 
     // Forbidden to claim any of these unverified targets as verified in the HTML
-    if (isWin && /<td><strong>Native Windows Desktop[\s\S]*?<span class="badge-verified">Verified/i.test(html)) {
+    if (isWin && /<td><strong>Native Windows Desktop(?:(?!<\/tr>)[\s\S])*?<span class="badge-verified">Verified/i.test(html)) {
       throw new Error(`Contradiction: Native Windows is UNVERIFIED in checklist but claimed as verified in website HTML`);
     }
-    if (isMac && /<td><strong>Native macOS Desktop[\s\S]*?<span class="badge-verified">Verified/i.test(html)) {
+    if (isMac && /<td><strong>Native macOS Desktop(?:(?!<\/tr>)[\s\S])*?<span class="badge-verified">Verified/i.test(html)) {
       throw new Error(`Contradiction: macOS is UNVERIFIED in checklist but claimed as verified in website HTML`);
     }
-    if (isVoice && /<td><strong>T1 Hardware Voice[\s\S]*?<span class="badge-verified">Verified/i.test(html)) {
+    if (isVoice && /<td><strong>T1 Hardware Voice(?:(?!<\/tr>)[\s\S])*?<span class="badge-verified">Verified/i.test(html)) {
       throw new Error(`Contradiction: Voice is UNVERIFIED in checklist but claimed as verified in website HTML`);
     }
-    if (isGpu && /<td><strong>NVIDIA GPU[\s\S]*?<span class="badge-verified">Verified/i.test(html)) {
+    if (isGpu && /<td><strong>NVIDIA GPU(?:(?!<\/tr>)[\s\S])*?<span class="badge-verified">Verified/i.test(html)) {
       throw new Error(`Contradiction: GPU is UNVERIFIED in checklist but claimed as verified in website HTML`);
     }
   }
@@ -95,4 +95,13 @@ test('platform-status section reads only verified artifacts and fails if it disa
     '<td><span class="badge-verified">Verified (Release)</span></td>\n                <td>Native containment, Apple Silicon'
   );
   assert.throws(() => validatePlatformStatus(falseMacHtml, checklist), /Contradiction: macOS is UNVERIFIED/);
+});
+
+
+test('platform comparison is independent of checklist row order and later rows', () => {
+  const html = readFileSync(new URL('../website.html', import.meta.url), 'utf8');
+  const matrix = '## Support matrix\n| Native Windows desktop | UNVERIFIED |\n| Native macOS desktop | UNVERIFIED |\n';
+  assert.equal(validatePlatformStatus(html, matrix), true);
+  const laterVerified = html + '<table><tr><td><span class="badge-verified">Verified local source tests</span></td></tr></table>';
+  assert.equal(validatePlatformStatus(laterVerified, matrix), true);
 });

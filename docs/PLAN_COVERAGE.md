@@ -183,3 +183,14 @@ unbacked controls/purge;legacy HTTP safety fix still OPEN. J12 safe error
 taxonomy unit tests and wrong-key recovery pass;full chaos remains OPEN.
 Source174/Rust67/web80/13 real smoke stages PASS,audit0,38 denial probes.
 No requirement upgraded to Implemented without a complete per-row current proof.
+
+Hosted12afacc failed the unchanged website consistency test after the release
+rewrite renamed its Support matrix heading. Restored the established heading
+and explicit native Windows/macOS rows;no assertion removed or weakened.
+Raw workflow-ui-hosted-web-failed.log. Local docs must be included in the final
+web rerun;earlier web pass preceded the last docs rewrite.
+
+Post-docs correction verified locally:source174,Rust67,web81,typecheck/build,
+audit0,38 probes,13 real smoke stages PASS. Evidence:workflow-ui-postdocs-*.
+Hosted12afacc completed FAILED (web status-matrix contract);all other4 jobs
+passed. Follow-up SHA CI must complete before any green claim. No test skipped.

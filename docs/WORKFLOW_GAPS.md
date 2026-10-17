@@ -71,7 +71,7 @@ ledger,packet capture,chaos or full-journey gates they did not exercise.
 | J8.2 | No governed agent runtime | R-AGENTS OPEN;no fresh red-team execution | hide until backend |
 | J8.3 | No exact-argument approvals | SOURCE:PanelRegistry only allows registration,not approval backend | hide until backend |
 | J8.4 | No agent budgets/result chain | R-AGENTS OPEN;kernel confinement alone insufficient | hide until backend |
-| J9.1 | Live checks;misleading badges | B2/B4 scoped denial checks;SOURCE:StatusBar/strings hardcode broader proof | fix |
+| J9.1 | StatusBar scoped;dashboard still needs alignment | workflow-ui-onboarding.json proves current eight-check badge;SOURCE:DashboardPage still contains unconditional denial/self-test copy | fix |
 | J9.2 | No Privacy Ledger view | SOURCE:gateway has no ledger route | hide until backend |
 | J9.3 | No ledger verify command | SOURCE:CLI only doctor/pull/estimate | hide until backend |
 | J9.4 | No signed ledger export | R-PRIVACY OPEN;no packet reconciliation evidence | hide until backend |
@@ -132,3 +132,9 @@ capabilities and one context poll passed3 consecutive real Knowledge runs.
 J2.3/J11.1 capability discovery is now fail-closed;simulated wizard,preference
 write failures and broad privacy/purge claims remain pending alignment.
 J6.4 was corrected to source-only evidence:legacy smoke did not exercise it.
+
+Hosted12afacc failed the unchanged website consistency test after the release
+rewrite renamed its Support matrix heading. Restored the established heading
+and explicit native Windows/macOS rows;no assertion removed or weakened.
+Raw workflow-ui-hosted-web-failed.log. Local docs must be included in the final
+web rerun;earlier web pass preceded the last docs rewrite.

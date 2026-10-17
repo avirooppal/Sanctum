@@ -144,3 +144,9 @@ Named failed check retained; no source/test lint exception or quality gate waive
 | [0073](adr/0073-sequential-workspace-bootstrap.md) | Confirmed startup503 burst;sequential cancellable metadata and fail-closed UI,one context poll | No lane/timeout/SLO increase or automatic replay | Three consecutive real Knowledge flows plus full smoke required;full journey acceptance still pending |
 
 | [0074](adr/0074-truthful-onboarding-and-privacy.md) | Remove fake onboarding/fit/privacy claims;hide unavailable controls;safe error taxonomy | No latency/timeout/budget relaxation;fixture assertions now require Unknown and capability gating | Backend purge repair,full journey chaos/ledger and legacy canned-suite refresh remain OPEN |
+
+ADR0074 hosted follow-up:restore Support matrix,fix cross-row status regex,
+retain original adversarial mutations and add row-order regression. No gate
+weakened;failed hosted and local outputs retained.
+
+| [0072](adr/0072-workflow-checks-and-readiness.md) | Read-only readiness/consistency/secret checks | New test-client bounds10s/1MiB;no server or latency SLO change | Readiness never verifies full journeys or ledger/chaos |

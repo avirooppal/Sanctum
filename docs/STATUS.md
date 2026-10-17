@@ -31,3 +31,14 @@ zero survivors. This is not a fresh full mixed-engine storm/soak gate.
 [Previous STATUS](status-archive/2026-10-17-workflow-guards.md),SHA256
 `b980cdc159a3c8d62614a4c09a00829ef211e6b8f1b5928c54c22088f6e2b509`. Coverage and release archives contain prior narratives verbatim
 with SHA256 recorded in their replacements;all failed runs retained.
+
+Hosted12afacc failed the unchanged website consistency test after the release
+rewrite renamed its Support matrix heading. Restored the established heading
+and explicit native Windows/macOS rows;no assertion removed or weakened.
+Raw workflow-ui-hosted-web-failed.log. Local docs must be included in the final
+web rerun;earlier web pass preceded the last docs rewrite.
+
+Post-docs correction verified locally:source174,Rust67,web81,typecheck/build,
+audit0,38 probes,13 real smoke stages PASS. Evidence:workflow-ui-postdocs-*.
+Hosted12afacc completed FAILED (web status-matrix contract);all other4 jobs
+passed. Follow-up SHA CI must complete before any green claim. No test skipped.

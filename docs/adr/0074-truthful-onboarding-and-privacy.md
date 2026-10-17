@@ -37,3 +37,13 @@ Do not promote full journey/ledger/chaos status from those subflows.
 
 No backend availability change is shipped in this UI slice. No phase/release tag or retroactive benchmark
 claim follows. REVIEW_QUEUE records this scope/compatibility decision.
+
+Hosted correction:retain Support matrix heading and explicit platform rows so
+existing adversarial website/checklist drift tests remain effective. The first
+push failed this unchanged test;preserve failure and rerun after final docs.
+
+The restored matrix exposed an existing regex defect:Windows validation scanned
+across row boundaries and attributed a falsely verified macOS row to Windows.
+Bound each forbidden-status match to its own table row;retain both original
+negative mutations and add an order/later-row regression. This corrects scope,
+not a weaker verification threshold. Failure retained as platform-row-bleed.
