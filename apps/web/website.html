@@ -5,26 +5,10 @@
   <meta name="viewport" content="width=device-width,initial-scale=1.0">
   <meta name="description" content="Sanctum is a private, single-owner local AI platform. Explore the working development build and its release status.">
   <title>Sanctum — Your intelligence. Your machine.</title>
-  <link rel="stylesheet" href="/src/website.css">
 </head>
-<body>
-  <a class="skip" href="#main">Skip to content</a>
-  <div class="blue-stage">
-    <header class="site-header">
-      <nav aria-label="Product"><a href="#features">Platform</a><a href="#setup">Setup</a><a href="#questions">FAQs</a></nav>
-      <a class="wordmark" href="#main" aria-label="Sanctum home">SANCTUM<span>PRIVATE AI</span></a>
-      <nav aria-label="Application"><a href="#status">Status</a><a class="outline" href="/">Open Sanctum ↗</a></nav>
-    </header>
-    <main id="main">
-      <section class="hero" aria-labelledby="hero-title">
-        <div class="hero-copy">
-          <p class="eyebrow">LOCAL INTELLIGENCE · SINGLE OWNER</p>
-          <h1 id="hero-title">Your Intelligence.<br>Your Machine.<br>Your Rules.</h1>
-          <div class="actions"><a class="button" href="/">Open your workspace ↗</a><a class="button secondary" href="#setup">Get started ↓</a></div>
-          <div class="terminal"><span>RUN THE PREPARED DEVELOPMENT BUNDLE · LINUX / WSL</span><code>bin/sanctum-runtime --config profiles/runtime-cpu.json</code><a href="#setup">Prerequisites and current support →</a></div>
-        </div>
-        <div class="sanctuary" role="img" aria-label="Original Sanctum illustration: concentric arches surrounding a private space"><div class="rays"></div><div class="arch arch-outer"></div><div class="arch arch-middle"></div><div class="arch arch-inner"></div><div class="core">S</div><span>AN OPEN DOOR.<br>A PRIVATE WORLD.</span></div>
-      </section>
+<body class="landing-site">
+<a class="skip" href="#main">Skip to content</a>
+<main id="main" tabindex="-1"><div id="landing-root"></div>
       <section class="platforms section" id="setup" aria-labelledby="setup-title">
         <p class="eyebrow">START WITH WHAT IS VERIFIED</p><h2 id="setup-title">One private workspace.</h2>
         <p class="lead">The browser experience runs against your local gateway. This is a development build; packaged releases are still being completed.</p>
@@ -32,17 +16,6 @@
           <article><span class="eyebrow">LINUX X86_64</span><h3>Linux</h3><p>Confined CPU runtime, local chat and document answers. Requires prepared models and engine binaries.</p><a href="#linux-setup">Development setup →</a><p class="support">Linux packages are not yet available.</p></article>
           <article><span class="eyebrow">WINDOWS + WSL</span><h3>Windows</h3><p>Use the browser with the gateway in WSL Ubuntu. The same web application serves the working reference.</p><a href="#linux-setup">WSL prerequisites →</a><p class="support">Native Windows runtime and EXE installer are not yet available.</p></article>
           <article><span class="eyebrow">NATIVE SUPPORT PENDING</span><h3>macOS</h3><p>Native containment, MLX integration and desktop installation still require implementation and validation.</p><a href="#status">Read the support boundary →</a><p class="support">No verified macOS download.</p></article>
-        </div>
-      </section>
-      <section class="section" id="features" aria-labelledby="features-title">
-        <h2 id="features-title">Intelligence, kept close.</h2>
-        <div class="feature-grid">
-          <article><span class="eyebrow">#1 CONVERSE</span><h3>Think out loud.</h3><p>Stream answers from a local model. Search, rename and manage saved conversations in your workspace.</p></article>
-          <article><span class="eyebrow">#2 KNOWLEDGE</span><h3>Ask your documents.</h3><p>Ingest documents and ask questions with citations. Retrieval enforces workspace and document access boundaries.</p></article>
-          <article><span class="eyebrow">#3 SPEECH</span><h3>Give ideas a voice.</h3><p>Local file transcription, dictation and speech playback work today. Live voice, barge-in and speaker diarization remain in development.</p></article>
-          <article><span class="eyebrow">#4 PRIVACY</span><h3>Keep it on your machine.</h3><p>The Linux reference confines engines and checks egress denial at startup. No product telemetry or remote assets on this site.</p></article>
-          <article><span class="eyebrow">#5 CONTROL</span><h3>Choose your engines.</h3><p>Configuration profiles and a license registry make model choices explicit. Hardware fit checks can refuse an unsuitable profile.</p></article>
-          <article><span class="eyebrow">#6 IN DEVELOPMENT</span><h3>See the whole roadmap.</h3><p>Vision, governed agents, the Privacy Ledger, encrypted storage and private-network TLS remain release requirements.</p></article>
         </div>
       </section>
       <section class="section faq" id="questions" aria-labelledby="faq-title">
@@ -146,6 +119,6 @@
 <!-- workflow-status:end -->
 </main>
     <footer><div class="footer-mark">SANCTUM</div><div class="footer-links"><span>YOUR INTELLIGENCE. YOUR MACHINE.</span><a href="#questions">Privacy &amp; questions</a><a href="#status">Release status</a><span>OPEN SOURCE · MIT</span></div></footer>
-  </div>
+<script type="module" src="/src/landing/Index.tsx"></script>
 </body>
 </html>

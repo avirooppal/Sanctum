@@ -56,3 +56,9 @@ Full redesign and release are NOT verified. Native Chrome reports zoom2 and
 root overflow=false: zoom accessibility gate FAILED, not a passing claim.
 See ui-after/round-3/native-zoom/review.json. Capture/layout diagnosis,axe,
 all-theme contrast,streaming/performance and S2-S7 remain open. No tag or merge.
+
+Liquid landing:reference footage is rights-blocked(see landing-media.md);
+original local SVG artwork renders instead. Real video behavior is UNVERIFIED
+despite clock-unit coverage. No newsletter/signup/social-account backend exists,
+so those controls are replaced with real links. Full accessibility/performance/
+pixel-fidelity and the larger release requirements remain open.

@@ -4,7 +4,7 @@ import json
 from pathlib import Path
 
 ROOT = Path(__file__).resolve().parents[1]
-ALLOW = {"MIT", "ISC", "Apache-2.0", "BSD-2-Clause", "BSD-3-Clause", "CC-BY-4.0"}
+ALLOW = {"MIT", "ISC", "Apache-2.0", "BSD-2-Clause", "BSD-3-Clause", "CC-BY-4.0", "0BSD"}
 
 
 def main():

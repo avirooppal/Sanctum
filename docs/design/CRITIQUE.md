@@ -232,3 +232,47 @@ conversation. History still has generated fallback titles when none is saved;
 do not invent titles or pinned/date metadata. Advanced diagnostics retain old
 presentation inside their disclosure. This is not the required three committed
 rounds for S3/S4,nor a claim of two-hour comfort or user-research success.
+
+## Liquid-glass landing — owner recreation
+
+User selected Sanctum information rather than a separate Asme site. Implemented
+the five-section structure and glass language,with original local artwork while
+clip rights are unknown. Inspect first landing-browser captures,then final
+landing-smoke-ui-website sections at desktop/mobile. Initial review found the
+hero artwork crossing the subtitle and a missing mobile space after a hidden
+line break;both were corrected. Removed duplicate old capability marketing
+section while retaining truthful setup,FAQ and support/journey evidence.
+
+Liquid-glass public landing,2026-10-18(ADR0083):React/TypeScript/Vite,
+existing Tailwind compiler,framer-motion14.3.0(MIT),lucide-react1.59.0(ISC).
+Five new design sections,black background,glass primitives,Instrument Serif
+regular/italic,real app/docs/status navigation;static setup/support/journey
+projections retained. No signup/newsletter/social-account placeholders.
+
+Measured:184 source tests,70 Rust,95 web tests,typecheck/build,audit0,77 reviewed
+npm packages,7 admitted OFL font binaries,38 denial probes,19 smoke stages PASS.
+Public browser1440x900/820x1180/390x844:foreign HTTP/WS0,storage0,page errors0,
+no root overflow;normal scroll reveals exercised at1440/390;reduced motion at
+all3 widths. Current public route JS108319 bytes gzip,fonts141604 bytes;budgets
+245760/204800. Authenticated graph relative to archived1c0eb3b:+1816 JS/+2105
+CSS gzip bytes,within unchanged12288/8192 limits. Scope change explicitly
+recorded before graph comparison;old cross-entry aggregate is NOT a pass claim.
+Raw evidence:evals/results/landing-*;source and browser scripts are reproducible.
+
+PARTIAL:the five reference clips have no verified redistribution rights;owner
+input requested,not received. Not downloaded/shipped/fetched. Original project
+SVG artwork is the actual active design. See docs/landing-media.md. Video loop
+500ms fades/100ms restart/cleanup/rejection have deterministic clock tests only;
+real media remains UNVERIFIED. Google Fonts runtime import intentionally replaced
+by pinned self-hosted OFL files. No pixel-exact/source-video fidelity claim.
+
+Failures preserved:new-module tests first;0BSD initially rejected(admitted only
+after reviewing tslib's unrestricted license and testing proprietary rejection);
+obsolete zero-script assertion superseded by exactly one same-origin module
+under explicit React request;status mutation fixture line-endings restored,
+not weakened. Font budget initially800200 bytes failed;optional Archivo request
+removed instead of raising budget. Full-page screenshots reviewed for layout;
+section captures inspected at readable resolution. Long mobile element captures
+can show a fixed skip-link screenshot artifact;separate actual viewport check
+observed focus=false and its bottom above0(landing-skip-diagnostic.log). No
+global accessibility/INP/pixel-fidelity/full-roadmap/release pass is claimed.

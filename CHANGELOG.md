@@ -389,3 +389,7 @@ S1 iteration3:stable health chip,accent focus,real preference serialization,
 Focused chat:quiet history actions,disclosed appearance/diagnostics,compact
 centered composer,smaller user bubbles,one chat scroller and44px tool targets.
 Real browser flow added to smoke;failed runs retained;full redesign partial.
+
+Liquid-glass public landing with five React sections,local Instrument Serif,
+pinned Motion/Lucide,original SVG and truthful support. No external requests.
+Reference clips rights-blocked;loop clock tests added;19 smoke stages pass.

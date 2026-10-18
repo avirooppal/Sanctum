@@ -62,7 +62,11 @@ test('public website is offline, branded Sanctum, with honest setup links', () =
   for (const match of html.matchAll(/(?:href|src)="([^"]+)"/g)) {
     assert.match(match[1], /^(?:\/(?!\/)|#)/, 'every asset and navigation is local');
   }
-  assert.doesNotMatch(html, /<script|<iframe|<img|<form|onclick=|Hermes|Nous Portal/);
+  assert.doesNotMatch(html, /<iframe|<img|<form|onclick=|Hermes|Nous Portal/);
+  const scripts=[...html.matchAll(/<script\b([^>]*)>([\s\S]*?)<\/script>/g)];
+  assert.equal(scripts.length,1,'ADR0083 permits only the local React entry module');
+  assert.match(scripts[0][1],/type="module"/);assert.match(scripts[0][1],/src="\/src\/landing\/Index.tsx"/);
+  assert.equal(scripts[0][2].trim(),'','no inline executable script');
 });
 
 test('docs site is offline, branded Sanctum, with local navigation and zero scripts/images', () => {

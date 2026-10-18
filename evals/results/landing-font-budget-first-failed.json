@@ -1,0 +1,10 @@
+{
+  "measured_files_bytes": {
+    "instrument_serif": 141604,
+    "archivo": 658596
+  },
+  "total_bytes": 800200,
+  "budget_bytes": 204800,
+  "passed": false,
+  "resolution": "remove the optional Archivo request;keep system sans and the requested serif"
+}

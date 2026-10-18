@@ -2064,6 +2064,79 @@
       "asset_sha256": "48715a42ec242c21e9f02692891e147d022299a52e48d5e413e1a942193ffeda",
       "notice_path": "apps/web/public/licenses/fonts/jetbrainsmono-OFL.txt",
       "notice_sha256": "b2fe5e8987594e9ffd1d2ca52a2f5d73eb8335243893c5d6254b5ad69269591d"
+    },
+    {
+      "name": "framer-motion",
+      "version": "14.3.0",
+      "license": "MIT",
+      "license_source": "https://registry.npmjs.org/framer-motion/-/framer-motion-14.3.0.tgz",
+      "integrity": "sha512-d8WCrU0ZQn7ukKMykCsDyIOwb/taZeDqqrDBK0du5GO0AO/ynz8fdR/LIIz9Pyy3n3tGwrneR+n0egyrrLa3fw==",
+      "scope": "web",
+      "verified_at": "2026-10-18"
+    },
+    {
+      "name": "lucide-react",
+      "version": "1.59.0",
+      "license": "ISC",
+      "license_source": "https://registry.npmjs.org/lucide-react/-/lucide-react-1.59.0.tgz",
+      "integrity": "sha512-5qgMyyCPU6OvnKpLS2t693+ZtiqA8oaSweWoUows0BLFKFf6V75m4+CptpmohZHpD5IuOVIBXHBBiv2vpLJmtw==",
+      "scope": "web",
+      "verified_at": "2026-10-18"
+    },
+    {
+      "name": "motion-dom",
+      "version": "14.3.0",
+      "license": "MIT",
+      "license_source": "https://registry.npmjs.org/motion-dom/-/motion-dom-14.3.0.tgz",
+      "integrity": "sha512-rcKO4aEJzAqDEsrH6qFzhLZxs7bNqZpiUEuEATz9LaRwt6dG7hZEbcFUSHNR8NECaKYM0Iuw6Iv6NpWEGXDI+w==",
+      "scope": "web",
+      "verified_at": "2026-10-18"
+    },
+    {
+      "name": "motion-utils",
+      "version": "14.1.1",
+      "license": "MIT",
+      "license_source": "https://registry.npmjs.org/motion-utils/-/motion-utils-14.1.1.tgz",
+      "integrity": "sha512-3VvN5Uvf8B6qG+OfOui6Nht5EWp+vLuU3IqcAj7ItZGKqtmTjCebl5sGZF7/08gEHRnEl1AP/fIwbcEyVrcQGQ==",
+      "scope": "web",
+      "verified_at": "2026-10-18"
+    },
+    {
+      "name": "tslib",
+      "version": "2.8.1",
+      "license": "0BSD",
+      "license_source": "https://registry.npmjs.org/tslib/-/tslib-2.8.1.tgz",
+      "integrity": "sha512-oJFu94HQb+KVduSUQL7wnpmqnfmLsOA/nAh6b6EH0wCEoK0/mPeXU6c3wKDV83MkOuHPRHtSXKKU99IBazS/2w==",
+      "scope": "web",
+      "verified_at": "2026-10-18"
+    },
+    {
+      "name": "font-instrument-serif-regular",
+      "family": "Instrument Serif",
+      "version": "65c0ef225f386a3c7e87570a4aa9cc0262c2fd81",
+      "license": "OFL-1.1",
+      "license_source": "https://raw.githubusercontent.com/Instrument/instrument-serif/65c0ef225f386a3c7e87570a4aa9cc0262c2fd81/OFL.txt",
+      "source": "https://raw.githubusercontent.com/Instrument/instrument-serif/65c0ef225f386a3c7e87570a4aa9cc0262c2fd81/fonts/ttf/InstrumentSerif-Regular.ttf",
+      "scope": "web-font",
+      "verified_at": "2026-10-18",
+      "asset_path": "apps/web/public/fonts/instrument-serif/InstrumentSerif-Regular.ttf",
+      "asset_sha256": "498efd461f6ddfcb7a111bf9a565709d2085d48201d501ead960d93e84ffbb88",
+      "notice_path": "apps/web/public/licenses/fonts/instrument-serif-OFL.txt",
+      "notice_sha256": "129ed7618959716959f2941fdd5b49e0ad6e6c1d78726761786a00253d865521"
+    },
+    {
+      "name": "font-instrument-serif-italic",
+      "family": "Instrument Serif",
+      "version": "65c0ef225f386a3c7e87570a4aa9cc0262c2fd81",
+      "license": "OFL-1.1",
+      "license_source": "https://raw.githubusercontent.com/Instrument/instrument-serif/65c0ef225f386a3c7e87570a4aa9cc0262c2fd81/OFL.txt",
+      "source": "https://raw.githubusercontent.com/Instrument/instrument-serif/65c0ef225f386a3c7e87570a4aa9cc0262c2fd81/fonts/ttf/InstrumentSerif-Italic.ttf",
+      "scope": "web-font",
+      "verified_at": "2026-10-18",
+      "asset_path": "apps/web/public/fonts/instrument-serif/InstrumentSerif-Italic.ttf",
+      "asset_sha256": "08939b8bdf534afec24ae0ef5e03f948940cd9a8fe08e7fecbad040e62327385",
+      "notice_path": "apps/web/public/licenses/fonts/instrument-serif-OFL.txt",
+      "notice_sha256": "129ed7618959716959f2941fdd5b49e0ad6e6c1d78726761786a00253d865521"
     }
   ]
 }

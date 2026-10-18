@@ -127,3 +127,11 @@ The keyboard hint lives in the textarea title;actual shortcuts unchanged.
 Default greeting and model/local labels simplified;static live badge removed.
 No new custom menu focus implementation or dependency. Whole reference-fidelity
 and accessibility gates remain open;new screenshots are not an exact-match claim.
+
+Public website ADR0083 supersedes the prior blue landing design at the owner's
+request. Sanctum identity and factual status remain. Newsletter/signup/social
+controls become working local app/docs/status links. Self-host Instrument Serif
+instead of runtime Google import;system sans keeps the font budget. Reference
+clips withheld for missing rights;original first-party static SVG artwork is
+active. Added support information remains below the five designed sections.
+Chat palettes/layout remain separate. This is not an exact recreation claim.

@@ -74,3 +74,9 @@ docs/status-archive/2026-10-18-unlock-iteration2.md -text whitespace=cr-at-eol,-
 docs/status-archive/2026-10-18-focused-chat-before.md -text whitespace=cr-at-eol,-blank-at-eof
 # ADR0057 raw console evidence.
 evals/results/chat-clean-*.log whitespace=-blank-at-eof,-blank-at-eol
+
+docs/status-archive/2026-10-18-before-liquid-landing.md -text whitespace=cr-at-eol,-blank-at-eof
+# ADR0057/0060: preserve raw evidence and exact primary font notices.
+evals/results/landing-*.log whitespace=-blank-at-eof,-blank-at-eol
+apps/web/public/licenses/fonts/instrument-serif-OFL.txt -text whitespace=cr-at-eol,-blank-at-eof,-blank-at-eol
+apps/web/public/fonts/instrument-serif/OFL.txt -text whitespace=cr-at-eol,-blank-at-eof,-blank-at-eol

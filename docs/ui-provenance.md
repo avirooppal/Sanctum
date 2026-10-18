@@ -101,3 +101,11 @@ visual review;current clipped captures are retained as a failed gate.
 
 Focused chat ADR0082 is original JSX/CSS using existing native details,fonts
 and theme tokens. No copied third-party source,icons,fonts or packages added.
+
+Landing ADR0083 uses owner-provided CSS/design direction,original project SVG,
+lucide-react ISC icons and framer-motion MIT code. All5 newly locked packages
+(including motion-dom,motion-utils,tslib) have registry integrity/license entries
+and exact notices appended to THIRD_PARTY_NOTICES. tslib0BSD was reviewed,not
+waived. Instrument Serif is pinned to upstream65c0ef225f386a3c7e87570a4aa9cc0262c2fd81;
+source URLs,bytes and SHA256 in landing-font-provenance.json and the registry.
+Exact OFL notices are bundled. Five supplied videos are excluded;see landing-media.md.
