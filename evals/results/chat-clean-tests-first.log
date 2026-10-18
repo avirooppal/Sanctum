@@ -1,0 +1,165 @@
+
+> sanctum-web@0.1.0 test
+> tsc --outDir build/tests --noEmit false --target ES2022 --module NodeNext --moduleResolution NodeNext --jsx react-jsx --esModuleInterop src/speech.ts src/pcm.ts src/meeting.ts src/api.ts src/chat-run.ts src/workspace-bootstrap.ts src/ui/primitives.tsx src/ui/themes.ts src/ui/AppShell.tsx src/ui/UnlockScreen.tsx src/ui/SafeMarkdown.tsx src/DashboardPanel.tsx src/ui/DashboardPage.tsx src/SetupWizard.tsx src/ui/PanelRegistry.ts src/ui/Customization.ts src/ui/ErrorBoundary.tsx src/ui/UndoToast.tsx src/ui/CommandPalette.tsx src/ui/SettingsModal.tsx src/ui/LayoutEngine.tsx src/ui/Gallery.tsx src/ui/TabRail.tsx src/ui/QuadView.tsx src/ui/ContextBar.tsx src/ui/ChatComposer.tsx src/ui/ChatView.tsx src/ui/RightRail.tsx src/ui/StatusBar.tsx && node --test tests/*.test.mjs && node --test ../../evals/tests/ui-font-metrics.test.mjs
+
+✔ Knowledge uses authenticated fixed paths and owner-only restricted uploads (83.8492ms)
+✔ Knowledge validates answers and rejects unsupported uploads before sending (5.663ms)
+✔ default fetch retains the Window/global receiver (1.4725ms)
+✔ fixed same-origin requests omit cookies, reject redirects and never retry (2.1703ms)
+✔ models are validated and conversation IDs cannot change origin or path structure (2.7246ms)
+✔ stream decodes split Unicode and SSE lines without fabricated text (13.1093ms)
+✔ consumer cancellation releases stream and ignored fetch abort cannot yield stale text (1.4132ms)
+✔ ticket is in subprotocol only and abort closes the socket (1.5997ms)
+✔ invalid ticket and cancellation after ticket never open a socket (1.2197ms)
+✔ abort while waiting for a stalled stream releases the reader (10.2475ms)
+✔ session management uses owner-authenticated fixed paths and validates pages (1.8682ms)
+✔ session mutations never retry and malformed lists are rejected (0.9356ms)
+✔ capabilities and preferences endpoints validate payload and authenticate owner (0.9839ms)
+✔ profiles and full purge endpoints authenticate owner and reject invalid payloads (1.6874ms)
+✔ stop aborts the admitted run, suppresses late output and never retries (9.373ms)
+✔ overlapping starts are refused; an explicit next run has a fresh signal (1.7411ms)
+✔ abort rejection is stopped but real engine failures are preserved (1.0974ms)
+✔ ContextBar renders truthful Unknown state when token usage data is missing (67.2825ms)
+✔ ChatComposer lists ONLY implemented slash commands and no speculative commands (23.4543ms)
+✔ ChatComposer renders accessible textarea with configurable Enter hint (5.2197ms)
+✔ ChatView renders document measure layout and user bubbles layout without throwing (22.5621ms)
+✔ ChatView renders calm streaming indicator during local generation (5.1392ms)
+✔ DashboardPanel renders daemon health and dispatch lanes without throwing (20.6948ms)
+✖ focused-chat-composer keeps a compact writing surface (20.2537ms)
+✖ focused-chat-stop replaces send during a request (10.5995ms)
+✖ focused-chat-status discloses detailed diagnostics on demand (3.7053ms)
+✔ badge distinguishes report time from test time and rejects incomplete health (68.2665ms)
+✔ bounded same-origin read omits credentials and retains only parsed health (80.5718ms)
+✔ failed,invalid,redirected and oversized responses become unknown (4.3922ms)
+✔ real observer deadline aborts a stalled transport (5015.2591ms)
+✔ sanitizeUrl allows safe http, https, and hash links (1.7719ms)
+✔ sanitizeUrl blocks javascript:, data:, and malicious protocol injection (0.4854ms)
+✔ parseMarkdownBlocks isolates code blocks from paragraphs (0.5055ms)
+✔ parseMarkdownBlocks handles unclosed code fence without crashing (0.2675ms)
+✔ SafeMarkdown renders without throwing and escapes dangerous html elements (64.5108ms)
+✔ SafeMarkdown renders code block with language label, copy button, and citation chips (4.2801ms)
+✔ meeting save uses restricted same-origin authenticated request (69.9008ms)
+✔ invalid workspace and oversized or blank input never send requests (2.2326ms)
+✔ failed writes are surfaced without retrying (1.4924ms)
+✔ PanelRegistry registers dummy panel and enforces capabilities filter (3.1488ms)
+✔ Custom theme validation accepts compliant JSON and rejects hostile or malformed tokens (1.5878ms)
+✔ Contrast guard enforces WCAG AA contrast ratio and auto-adjusts failing colors (0.7314ms)
+✔ Preferences sanitizer migrates valid settings and recovers safely from corrupted data (1.0512ms)
+✔ PanelErrorBoundary catches render failures and renders accessible alert (22.8322ms)
+✔ Centralized string table contains required top-level categories and non-empty strings (0.3812ms)
+✔ Layout engine presets and keyboard shortcuts match ADR 0069 specification (0.3788ms)
+✔ SettingsModal renders with all A7 specification tabs without throwing (24.762ms)
+✔ DashboardPage renders routed Hermes-mirrored pages without throwing (31.0242ms)
+✔ encodes finite mono PCM16 with accurate WAV header and clamping (4.3643ms)
+✔ bounded memory accepts no partial overflow and resets after discard (1.1702ms)
+✔ rejects nonfinite data without mutating captured audio (0.3878ms)
+✔ native button defaults to non-submit, preserves explicit submit and disabled (24.3366ms)
+✔ untrusted titles and field text remain escaped React text (6.1522ms)
+✔ dialog has a named native modal and escaped children without an injected close link (2.4346ms)
+✔ shell has one sidebar and main with explicitly connected native navigation control (2.9384ms)
+✔ primitives CSS enforces 180ms motion and 44px coarse pointer touch target (2.5021ms)
+✔ apps/web production package.json does not import upstream or reference dependencies (2.5532ms)
+✔ production web source code contains zero imports from reference or upstream directories (20.2389ms)
+✔ RightRail returns null when isOpen is false (75.3322ms)
+✔ RightRail extracts code artifacts with language, lines, copy and download actions (12.6142ms)
+✔ RightRail extracts citations and safe links (2.259ms)
+✔ RightRail renders accessible Knowledge tree header and empty state (1.7041ms)
+✔ uses same-origin multipart and bearer auth without storing credentials (80.7292ms)
+✔ stop discards stale audio even if fetch ignores abort (1.8024ms)
+✔ stop releases playback and next operation cannot reuse it (23.5348ms)
+✔ rejects oversized inputs and unexpected audio content types (9.0736ms)
+✔ StatusBar renders health, offline egress badge, and context bar (83.1147ms)
+✔ StatusBar renders background jobs counter button (2.8088ms)
+✔ core compiler preserves responsive and arbitrary-value application utilities (86.0906ms)
+✔ TabRail renders accessible tablist, active tab, and close button (24.7625ms)
+✔ QuadView renders four independent panes and clear waiting state under admission limits (4.8464ms)
+✔ all pinned desktop and dashboard-only presets are available without upstream branding (2.7664ms)
+✔ pinned canonical palette values and mode pairs are retained (0.8333ms)
+✔ invalid IDs fail, tokens do not leak mutable palette references or remote URLs (6.6134ms)
+✔ locked screen has one primary action and no workspace chrome (22.3455ms)
+✔ busy and blank keys disable submission;untrusted errors remain text (8.9119ms)
+✔ setup review is isolated from workspace and has a secondary back action (1.561ms)
+✔ custom accent recomputes foreground instead of inheriting white label ink (1.6478ms)
+✔ public website is offline, branded Sanctum, with honest setup links (3.642ms)
+✔ docs site is offline, branded Sanctum, with local navigation and zero scripts/images (5.3933ms)
+✔ platform-status section reads only verified artifacts and fails if it disagrees with RELEASE_CHECKLIST.md (14.7249ms)
+✔ platform comparison is independent of checklist row order and later rows (4.7044ms)
+✔ privacy badge cannot turn absent or partial health into egress-history proof (1.9407ms)
+✔ unknown provider errors cannot leak raw content and busy errors retain metadata (0.85ms)
+✔ setup cannot fabricate hardware, model verification or an owner key (9.8884ms)
+✔ unregistered preference themes recover to an admitted local preset (1.0683ms)
+✔ worklet itself stops after 30 seconds even if UI messages are not handled (17.1093ms)
+✔ workspace metadata is sequential and publishes only real capabilities (1.8989ms)
+✔ failed discovery cannot fall back to enabled capabilities (0.7979ms)
+✔ cancellation between steps stops subsequent metadata requests (0.3372ms)
+ℹ tests 90
+ℹ suites 0
+ℹ pass 87
+ℹ fail 3
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 5612.191
+
+✖ failing tests:
+
+test at tests\focused-chat.test.mjs:8:1
+✖ focused-chat-composer keeps a compact writing surface (20.2537ms)
+  AssertionError [ERR_ASSERTION]: The input did not match the regular expression /chat-compose-surface/. Input:
+  
+  '<div class="app-composer relative "><div class="ui-surface border ui-border rounded-2xl p-4 shadow-sm focus-within:border-accent transition-colors"><textarea aria-label="Message" placeholder="Ask Sanctum or type &quot;/&quot; for commands..." rows="2" class="resize-none w-full bg-transparent outline-hidden text-sm leading-relaxed">Hello</textarea><div class="flex justify-between items-center mt-3 pt-2 border-t ui-border"><div class="flex items-center gap-2"><input type="file" accept=".md,.pdf" class="hidden"/><button type="button" aria-label="Attach document to Knowledge" title="Attach .md or .pdf (max 10 MiB)" class="p-1.5 rounded-lg border ui-border hover:bg-black/5 dark:hover:bg-white/5 text-xs text-display ui-text-secondary hover:text-foreground transition-colors flex items-center gap-1">📎 <span class="hidden sm:inline">Attach</span></button><span class="text-xs text-display ui-text-secondary hidden md:inline ml-1">Enter to send (Shift+Enter for newline)</span></div><div class="flex items-center gap-2"><button class="ui-primary text-white py-1.5 px-4 rounded-lg text-xs font-medium disabled:opacity-100 transition-opacity">Send ↑</button></div></div></div></div>'
+  
+      at TestContext.<anonymous> (file:///C:/Users/aviroop/Desktop/Sanctum/apps/web/tests/focused-chat.test.mjs:10:9)
+      at Test.runInAsyncScope (node:async_hooks:227:14)
+      at Test.run (node:internal/test_runner/test:1382:25)
+      at Test.start (node:internal/test_runner/test:1242:17)
+      at startSubtestAfterBootstrap (node:internal/test_runner/harness:387:17) {
+    generatedMessage: true,
+    code: 'ERR_ASSERTION',
+    actual: '<div class="app-composer relative "><div class="ui-surface border ui-border rounded-2xl p-4 shadow-sm focus-within:border-accent transition-colors"><textarea aria-label="Message" placeholder="Ask Sanctum or type &quot;/&quot; for commands..." rows="2" class="resize-none w-full bg-transparent outline-hidden text-sm leading-relaxed">Hello</textarea><div class="flex justify-between items-center mt-3 pt-2 border-t ui-border"><div class="flex items-center gap-2"><input type="file" accept=".md,.pdf" class="hidden"/><button type="button" aria-label="Attach document to Knowledge" title="Attach .md or .pdf (max 10 MiB)" class="p-1.5 rounded-lg border ui-border hover:bg-black/5 dark:hover:bg-white/5 text-xs text-display ui-text-secondary hover:text-foreground transition-colors flex items-center gap-1">📎 <span class="hidden sm:inline">Attach</span></button><span class="text-xs text-display ui-text-secondary hidden md:inline ml-1">Enter to send (Shift+Enter for newline)</span></div><div class="flex items-center gap-2"><button class="ui-primary text-white py-1.5 px-4 rounded-lg text-xs font-medium disabled:opacity-100 transition-opacity">Send ↑</button></div></div></div></div>',
+    expected: /chat-compose-surface/,
+    operator: 'match',
+    diff: 'simple'
+  }
+
+test at tests\focused-chat.test.mjs:14:1
+✖ focused-chat-stop replaces send during a request (10.5995ms)
+  AssertionError [ERR_ASSERTION]: The expression evaluated to a falsy value:
+  
+    assert(!html.includes('Generating…'))
+  
+      at TestContext.<anonymous> (file:///C:/Users/aviroop/Desktop/Sanctum/apps/web/tests/focused-chat.test.mjs:16:39)
+      at Test.runInAsyncScope (node:async_hooks:227:14)
+      at Test.run (node:internal/test_runner/test:1382:25)
+      at Test.processPendingSubtests (node:internal/test_runner/test:960:18)
+      at Test.postRun (node:internal/test_runner/test:1522:19)
+      at Test.run (node:internal/test_runner/test:1447:12)
+      at async startSubtestAfterBootstrap (node:internal/test_runner/harness:387:3) {
+    generatedMessage: true,
+    code: 'ERR_ASSERTION',
+    actual: false,
+    expected: true,
+    operator: '==',
+    diff: 'simple'
+  }
+
+test at tests\focused-chat.test.mjs:19:1
+✖ focused-chat-status discloses detailed diagnostics on demand (3.7053ms)
+  AssertionError [ERR_ASSERTION]: The input did not match the regular expression /<details class="runtime-details">/. Input:
+  
+  '<footer role="status" aria-label="Status Bar" class="status-bar border-t ui-border ui-surface px-3 py-1.5 flex flex-wrap gap-2 items-center justify-between text-xs ui-text-secondary select-none z-20 "><div class="flex min-w-0 flex-wrap items-center gap-3"><div class="flex items-center gap-1.5" title="Runtime: connecting"><span class="w-2 h-2 rounded-full bg-amber-500 animate-pulse"></span><span class="font-medium text-foreground">Degraded</span></div><span aria-hidden="true" class="inline-block h-3 border-r ui-border"></span><div class="flex items-center gap-1.5 hidden sm:flex"><span class="text-xs text-display">Gateway status unknown</span></div><span aria-hidden="true" class="hidden sm:inline-block h-3 border-r ui-border"></span><div class="inline-flex items-center gap-1 px-1.5 py-0.5 rounded border ui-border font-mono text-xs" title="Startup checks: unknown. Ledger unavailable." data-startup-checks="unknown">Startup checks: unknown. Ledger unavailable.</div></div><div class="flex min-w-0 flex-wrap items-center gap-3"><div class="relative"><button type="button" aria-expanded="false" aria-label="Background jobs status" class="flex items-center gap-1.5 hover:text-foreground text-xs transition-colors"><span>⚡</span><span>Unknown queued or active requests</span></button></div><span aria-hidden="true" class="inline-block h-3 border-r ui-border"></span><div class="relative"><button type="button" aria-expanded="false" aria-label="Model picker" class="flex items-center gap-1.5 hover:text-foreground text-xs font-medium transition-colors border ui-border px-2 py-0.5 rounded ui-surface"><span>◈</span><span class="max-w-[120px] truncate">Select Model</span><span class="text-xs opacity-70">▼</span></button></div><span aria-hidden="true" class="inline-block h-3 border-r ui-border"></span><div class="context-bar text-xs ui-text-secondary flex items-center gap-2 px-2 py-1 rounded border ui-border " aria-label="Context usage" title="No token usage data recorded for this conversation yet"><span class="w-1.5 h-1.5 rounded-full bg-neutral-400"></span><span>Tokens: <strong class="font-mono">Unknown</strong></span></div></div></footer>'
+  
+      at TestContext.<anonymous> (file:///C:/Users/aviroop/Desktop/Sanctum/apps/web/tests/focused-chat.test.mjs:21:9)
+      at Test.runInAsyncScope (node:async_hooks:227:14)
+      at Test.run (node:internal/test_runner/test:1382:25)
+      at Test.processPendingSubtests (node:internal/test_runner/test:960:18)
+      at Test.postRun (node:internal/test_runner/test:1522:19)
+      at Test.run (node:internal/test_runner/test:1447:12)
+      at async Test.processPendingSubtests (node:internal/test_runner/test:960:7) {
+    generatedMessage: true,
+    code: 'ERR_ASSERTION',
+    actual: '<footer role="status" aria-label="Status Bar" class="status-bar border-t ui-border ui-surface px-3 py-1.5 flex flex-wrap gap-2 items-center justify-between text-xs ui-text-secondary select-none z-20 "><div class="flex min-w-0 flex-wrap items-center gap-3"><div class="flex items-center gap-1.5" title="Runtime: connecting"><span class="w-2 h-2 rounded-full bg-amber-500 animate-pulse"></span><span class="font-medium text-foreground">Degraded</span></div><span aria-hidden="true" class="inline-block h-3 border-r ui-border"></span><div class="flex items-center gap-1.5 hidden sm:flex"><span class="text-xs text-display">Gateway status unknown</span></div><span aria-hidden="true" class="hidden sm:inline-block h-3 border-r ui-border"></span><div class="inline-flex items-center gap-1 px-1.5 py-0.5 rounded border ui-border font-mono text-xs" title="Startup checks: unknown. Ledger unavailable." data-startup-checks="unknown">Startup checks: unknown. Ledger unavailable.</div></div><div class="flex min-w-0 flex-wrap items-center gap-3"><div class="relative"><button type="button" aria-expanded="false" aria-label="Background jobs status" class="flex items-center gap-1.5 hover:text-foreground text-xs transition-colors"><span>⚡</span><span>Unknown queued or active requests</span></button></div><span aria-hidden="true" class="inline-block h-3 border-r ui-border"></span><div class="relative"><button type="button" aria-expanded="false" aria-label="Model picker" class="flex items-center gap-1.5 hover:text-foreground text-xs font-medium transition-colors border ui-border px-2 py-0.5 rounded ui-surface"><span>◈</span><span class="max-w-[120px] truncate">Select Model</span><span class="text-xs opacity-70">▼</span></button></div><span aria-hidden="true" class="inline-block h-3 border-r ui-border"></span><div class="context-bar text-xs ui-text-secondary flex items-center gap-2 px-2 py-1 rounded border ui-border " aria-label="Context usage" title="No token usage data recorded for this conversation yet"><span class="w-1.5 h-1.5 rounded-full bg-neutral-400"></span><span>Tokens: <strong class="font-mono">Unknown</strong></span></div></div></footer>',
+    expected: /<details class="runtime-details">/,
+    operator: 'match',
+    diff: 'simple'
+  }

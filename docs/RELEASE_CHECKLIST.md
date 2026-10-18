@@ -251,3 +251,24 @@ Full redesign and release are NOT verified. Native Chrome reports zoom2 and
 root overflow=false: zoom accessibility gate FAILED, not a passing claim.
 See ui-after/round-3/native-zoom/review.json. Capture/layout diagnosis,axe,
 all-theme contrast,streaming/performance and S2-S7 remain open. No tag or merge.
+
+Focused chat refinement1,2026-10-18 (ADR0082):quiet single-line history with
+native Actions disclosure;Appearance and runtime details collapsed;one compact
+composer;Send replaced by Stop;readable transcript;Local speech and Meeting notes
+below chat. APIs,auth,storage and engine behavior unchanged. Actual browser at
+1440/820/390 measures composer760/543/366px wide and127px tall,no outer/root
+overflow,real local answer,foreign HTTP/WS attempts0,page errors0;44px attachment,
+dictation and artifact targets asserted. Existing history mutations,keyboard
+mobile escape,speech and theme controls retain assertions with disclosure steps.
+Source182,Rust70,web92/types/build,audit0,38 denial probes;19 implemented smoke
+stages PASS. Raw chat-clean-* and chat-clean-smoke-ui-focused-chat. All new
+browser images opened and inspected. Same-dependency git-archive baseline:
+JS gzip+796/CSS+1949 bytes;no assets/fonts/dependencies added.
+
+Preserved failures:initial new contract tests;old shortcut-label assertion
+(restored exact shortcut text as textarea title);mobile0px runtime-more label
+(fixed proper display:none,not lower floor);one standalone unlock locator timeout
+while other tests ran(cause unproven,diagnostic and later real runs succeeded).
+No flaked/failed run counted as a pass. Full redesign remains PARTIAL:remaining
+critique rounds,custom controls,axe/all-theme contrast,zoom capture/layout,
+performance and first-run work are not promoted. No phase/release tag or merge.

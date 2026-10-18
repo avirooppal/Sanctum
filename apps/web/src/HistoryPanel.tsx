@@ -18,17 +18,18 @@ export function HistoryPanel({api,current,busy,revision,onLoad,onDeleted}:{api:S
   else {await api.deleteSession(selected.id);onDeleted(selected.id);}
   setSelected(null);setRefresh(n=>n+1);
  }catch(e){setError(String(e));}finally{setPending(false);}}
- return <section aria-label="Conversation history">
-  <form onSubmit={e=>{e.preventDefault();setSearch(query);setRefresh(n=>n+1);}}>
-   <input aria-label="Search conversations" value={query} maxLength={120} onChange={e=>setQuery(e.target.value)} className="w-full ui-surface border ui-border rounded p-2"/>
-   <Button type="submit" variant="outline" disabled={pending||busy}>Search</Button>
+ return <section className="conversation-history" aria-label="Conversation history">
+  <form className="history-search" onSubmit={e=>{e.preventDefault();setSearch(query);setRefresh(n=>n+1);}}>
+   <input aria-label="Search conversations" placeholder="Search chats" value={query} maxLength={120} onChange={e=>setQuery(e.target.value)} className="w-full ui-surface border ui-border rounded p-2"/>
+   <Button type="submit" variant="quiet" disabled={pending||busy}>Search</Button>
   </form>
   <nav aria-label="Saved conversations">{page.data.map(session=><div key={session.id} className="my-2">
-   <Button className="max-w-full break-all text-left" variant="outline" disabled={busy||pending} aria-current={current===session.id?'page':undefined} onClick={()=>onLoad(session.id)}>{session.title}</Button>
-   <div><Button disabled={busy||pending} onClick={()=>{setTitle(session.title);setSelected({...session,operation:'rename'});}} aria-label={`Rename ${session.title}`}>Rename</Button>
-   <Button disabled={busy||pending} onClick={()=>setSelected({...session,operation:'delete'})} aria-label={`Delete ${session.title}`}>Delete</Button></div>
+   <Button className="history-title" variant="quiet" disabled={busy||pending} aria-current={current===session.id?'page':undefined} onClick={()=>onLoad(session.id)} title={session.title}>{session.title}</Button>
+   <details className="history-actions"><summary aria-label={`Actions for ${session.title}`} title="Conversation actions">···</summary>
+   <div><Button variant="quiet" disabled={busy||pending} onClick={event=>{event.currentTarget.closest('details')?.removeAttribute('open');setTitle(session.title);setSelected({...session,operation:'rename'});}} aria-label={`Rename ${session.title}`}>Rename</Button>
+   <Button variant="quiet" disabled={busy||pending} onClick={event=>{event.currentTarget.closest('details')?.removeAttribute('open');setSelected({...session,operation:'delete'});}} aria-label={`Delete ${session.title}`}>Delete</Button></div></details>
   </div>)}</nav>
-  {page.has_more&&<Button disabled={busy||pending} onClick={more}>Load more conversations</Button>}
+  {page.has_more&&<Button variant="quiet" disabled={busy||pending} onClick={more}>Load more conversations</Button>}
   {!pending&&!page.data.length&&<p className="text-xs ui-text-secondary">No saved conversations found.</p>}
   {error&&<p role="alert">{error}</p>}
   <div onKeyDown={event=>{if(event.key==='Escape'||event.key==='Tab')event.stopPropagation();}}>

@@ -119,3 +119,11 @@ ADR0081:chip has a reserved timestamp row and64px summary;owner-accent focus
 uses the existing contrast guard. Interface metadata floor is12px across app,
 website and docs. Unsupported message deletion and fake deletion Undo are hidden.
 Reference theme palette and237px rail remain. Native zoom gate remains failed.
+
+ADR0082:authenticated chat uses quiet title rows,native history/Appearance/runtime
+disclosures,760px desktop composer and single transcript scroll. Registered
+palette and237px reference rail preserved;wordmark uses existing Archivo.
+The keyboard hint lives in the textarea title;actual shortcuts unchanged.
+Default greeting and model/local labels simplified;static live badge removed.
+No new custom menu focus implementation or dependency. Whole reference-fidelity
+and accessibility gates remain open;new screenshots are not an exact-match claim.

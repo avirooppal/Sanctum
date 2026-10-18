@@ -385,3 +385,7 @@ No new dependency or font;whole redesign remains partial.
 
 S1 iteration3:stable health chip,accent focus,real preference serialization,
 12px metadata floor;authenticated shell/theme smoke coverage. Zoom gate open.
+
+Focused chat:quiet history actions,disclosed appearance/diagnostics,compact
+centered composer,smaller user bubbles,one chat scroller and44px tool targets.
+Real browser flow added to smoke;failed runs retained;full redesign partial.

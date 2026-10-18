@@ -27,6 +27,7 @@ STAGE_JOURNEYS = {
     "ui_unlock": ["J2", "J9", "J12"],
     "ui_shell": ["J2", "J3", "J11"],
     "ui_theme_controls": ["J3", "J11"],
+    "ui_focused_chat": ["J3", "J9"],
     "journey_readiness": [
         "J1",
         "J2",
@@ -318,6 +319,17 @@ def main():
                 package,
                 str(directory / "smoke-ui-theme-controls.json"),
                 browser_token,
+            ],
+            None,
+        ),
+        (
+            "ui_focused_chat",
+            [
+                node,
+                "evals/browser_focused_chat.mjs",
+                package,
+                browser_token,
+                str(directory / "smoke-ui-focused-chat"),
             ],
             None,
         ),

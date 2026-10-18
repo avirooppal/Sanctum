@@ -27,6 +27,7 @@ try {
  await page.getByRole('button',{name:'Stop generation',exact:true}).waitFor({state:'hidden'});
  assert(session,'chat must provide its new session ID');
  const original=`Conversation ${session.slice(0,8)}`;
+ await page.getByLabel(`Actions for ${original}`,{exact:true}).click();
  await page.getByRole('button',{name:`Rename ${original}`,exact:true}).click();
  const title=`Audit ${session.slice(0,8)} <img src=x>`;
  await page.getByLabel('Conversation title').fill(title);
@@ -40,6 +41,7 @@ try {
  await page.screenshot({path:output.replace(/\.json$/,'-history.png')});
  await page.setViewportSize({width:390,height:844});
  await page.getByRole('button',{name:'Open navigation',exact:true}).click();
+ await page.getByLabel(`Actions for ${title}`,{exact:true}).click();
  await page.getByRole('button',{name:`Rename ${title}`,exact:true}).click();
  await page.keyboard.press('Escape');
  await page.getByRole('dialog',{name:'Rename conversation',exact:true}).waitFor({state:'hidden'});
@@ -51,9 +53,11 @@ try {
  await page.getByRole('button',{name:title,exact:true}).click();
  await page.locator('article').first().waitFor();
  assert((await page.locator('article').last().textContent()).length>8);
+ await page.getByLabel(`Actions for ${title}`,{exact:true}).click();
  await page.getByRole('button',{name:`Delete ${title}`,exact:true}).click();
  await page.getByRole('button',{name:'Close Delete conversation',exact:true}).click();
  assert.equal(await page.getByRole('button',{name:title,exact:true}).count(),1,'dismiss must preserve conversation');
+ await page.getByLabel(`Actions for ${title}`,{exact:true}).click();
  await page.getByRole('button',{name:`Delete ${title}`,exact:true}).click();
  await page.getByRole('button',{name:'Confirm delete',exact:true}).click();
  await page.waitForFunction(()=>document.querySelector('dialog[open]')===null);

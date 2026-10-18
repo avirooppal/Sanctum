@@ -98,3 +98,6 @@ Round3 adds only first-party CSS/TypeScript/tests. The Chrome native-zoom helper
 is dev-only,restricted to loopback and never shipped/installed in the owner
 browser. No font,icon,asset or dependency added. Native zoom results require
 visual review;current clipped captures are retained as a failed gate.
+
+Focused chat ADR0082 is original JSX/CSS using existing native details,fonts
+and theme tokens. No copied third-party source,icons,fonts or packages added.

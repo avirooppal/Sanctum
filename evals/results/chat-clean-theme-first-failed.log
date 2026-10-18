@@ -1,0 +1,5 @@
+AssertionError [ERR_ASSERTION]: The expression evaluated to a falsy value:
+
+  assert(sample.minimum_readable_font_pixels >= 12)
+
+    at file:///C:/Users/aviroop/Desktop/Sanctum/evals/browser_themes.mjs:57:7

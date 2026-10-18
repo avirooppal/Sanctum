@@ -52,7 +52,7 @@ export const STRINGS = Object.freeze({
     chat: 'Chat',
   },
   composer: {
-    placeholder: 'Ask Sanctum or type "/" for commands...',
+    placeholder: 'Ask anything…',
     placeholderDisabled: 'Composer unavailable while engine recovers...',
     send: 'Send message',
     stop: 'Stop generating',
@@ -61,8 +61,8 @@ export const STRINGS = Object.freeze({
     streaming: 'Generating response...',
   },
   chat: {
-    starterTitle: 'Private Workspace',
-    starterSubtitle: 'Ask a question, dictate notes, or select an indexed document.',
+    starterTitle: 'What’s on your mind?',
+    starterSubtitle: 'Ask a question or bring a document into the conversation.',
     promptSuggestion1: 'Summarize key themes across my clinical notes',
     promptSuggestion2: 'Explain how local vector embeddings work',
     promptSuggestion3: 'Review protocol inclusion criteria from attached PDF',

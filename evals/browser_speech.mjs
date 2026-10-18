@@ -25,6 +25,7 @@ try {
     {headers:{Authorization:`Bearer ${ownerKey}`}})).json()).preferences;
   await page.getByLabel('Local access key').fill(ownerKey);
   await page.getByRole('button', {name:'Unlock'}).click();
+  await page.getByLabel('Appearance options',{exact:true}).click();
   await page.getByLabel('Theme', {exact:true}).selectOption('sanctum');
   await page.getByLabel('Theme mode', {exact:true}).selectOption('light');
   await page.waitForFunction(() => document.documentElement.dataset.mode === 'light');

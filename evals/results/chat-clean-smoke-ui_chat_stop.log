@@ -1,0 +1,12 @@
+{
+  "suite": "real-chat-stop",
+  "passed": [
+    "request_aborted",
+    "no_automatic_retry",
+    "no_abort_error",
+    "explicit_next_send_succeeds"
+  ],
+  "browser_stop_to_idle_ms": 101.25540000000001,
+  "engine_slot_release_measured": false,
+  "page_errors": []
+}

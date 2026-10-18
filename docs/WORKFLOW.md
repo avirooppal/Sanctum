@@ -377,3 +377,13 @@ profile loads show Unknown/error and recover only on explicit reopening;unique
 fixture CRUD passes. Definitions are not applied to chat automatically. Real
 subflow13 clicks/4 entries,1980.519ms,zero foreign requests. Full J9/J11/J12
 budgets,ledger and chaos are not verified;statuses remain unchanged.
+
+### J3/J9 presentation update — ADR0082
+
+J3 history mutations:open the conversation's Actions (···) disclosure,then Rename
+or Delete;Delete still confirms before persistence. Appearance in the sidebar
+reveals existing theme/mode controls. Model choice stays in the chat header.
+J9:open Runtime details for full existing diagnostics;closed summary is only a
+startup-report observation,not ledger verification. Local speech and Meeting
+notes remain disclosures below the composer. No journey status/click-budget
+gate is promoted by this layout-only refinement.

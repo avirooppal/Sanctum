@@ -73,7 +73,7 @@ export function ChatComposer({
     if (!el) return;
     el.style.height = 'auto';
     const nextHeight = Math.min(el.scrollHeight, 240);
-    el.style.height = `${Math.max(nextHeight, 64)}px`;
+    el.style.height = `${Math.max(nextHeight, 48)}px`;
   }, [prompt]);
 
   // Check for slash menu
@@ -257,7 +257,7 @@ export function ChatComposer({
         </div>
       )}
 
-      <div className="ui-surface border ui-border rounded-2xl p-4 shadow-sm focus-within:border-accent transition-colors">
+      <div className="chat-compose-surface ui-surface border ui-border rounded-2xl p-4 shadow-sm focus-within:border-accent transition-colors">
         <textarea
           ref={textareaRef}
           aria-label="Message"
@@ -266,6 +266,7 @@ export function ChatComposer({
           onChange={e => setPrompt(e.target.value)}
           onKeyDown={handleKeyDown}
           rows={2}
+          title={sendOnEnter ? 'Enter to send (Shift+Enter for newline)' : 'Shift+Enter to send'}
           className="resize-none w-full bg-transparent outline-hidden text-sm leading-relaxed"
         />
 
@@ -309,9 +310,6 @@ export function ChatComposer({
               </button>
             )}
 
-            <span className="text-xs text-display ui-text-secondary hidden md:inline ml-1">
-              {sendOnEnter ? 'Enter to send (Shift+Enter for newline)' : 'Shift+Enter to send'}
-            </span>
           </div>
 
           <div className="flex items-center gap-2">
@@ -320,13 +318,13 @@ export function ChatComposer({
                 {STRINGS.composer.stop}
               </Button>
             )}
-            <button
+            {!busy && <button
               disabled={busy || !prompt.trim()}
               onClick={onSend}
               className="ui-primary text-white py-1.5 px-4 rounded-lg text-xs font-medium disabled:opacity-100 transition-opacity"
             >
-              {busy ? 'Generating…' : 'Send ↑'}
-            </button>
+              Send ↑
+            </button>}
           </div>
         </div>
       </div>

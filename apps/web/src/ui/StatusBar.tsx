@@ -105,6 +105,13 @@ export function StatusBar({
       aria-label="Status Bar"
       className={`status-bar border-t ui-border ui-surface px-3 py-1.5 flex flex-wrap gap-2 items-center justify-between text-xs ui-text-secondary select-none z-20 ${className}`}
     >
+      <details className="runtime-details">
+      <summary aria-label="Runtime details" data-startup-checks={startupChecksPassed(health)?'passed':'unknown'}>
+        <span className="runtime-dot" aria-hidden="true"/>
+        <span>{startupChecksPassed(health)?'Startup checks reported passed':'Startup checks unknown'}</span>
+        <span className="runtime-more">Runtime details</span>
+      </summary>
+      <div className="runtime-details-panel">
       {/* Left side: Runtime Health, Engine Readiness, Egress Badge */}
       <div className="flex min-w-0 flex-wrap items-center gap-3">
         {/* Runtime Health */}
@@ -136,7 +143,7 @@ export function StatusBar({
         {/* Offline / Egress Badge */}
         <div
           className="inline-flex items-center gap-1 px-1.5 py-0.5 rounded border ui-border font-mono text-xs"
-          title={privacyMessage(health)} data-startup-checks={startupChecksPassed(health)?'passed':'unknown'}
+          title={privacyMessage(health)}
         >
           {privacyMessage(health)}
         </div>
@@ -252,6 +259,8 @@ export function StatusBar({
           contextLimit={contextLimit}
         />
       </div>
+      </div>
+      </details>
     </footer>
   );
 }

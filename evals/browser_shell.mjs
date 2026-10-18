@@ -50,6 +50,7 @@ try{
   }
   const context=await browser.newContext({viewport:{width:1440,height:900},reducedMotion:'reduce'});
   const page=await context.newPage();await page.goto(base.href);await unlock(page);
+  await page.getByLabel('Appearance options',{exact:true}).click();
   await page.getByLabel('Theme',{exact:true}).selectOption('rose');
   await page.setViewportSize({width:390,height:844});
   await page.getByRole('button',{name:'Open navigation',exact:true}).click();

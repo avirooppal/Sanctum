@@ -22,6 +22,7 @@ import './ui/themes.css';
 import './ui/fonts.css';
 import { AppShell } from './ui/AppShell';
 import './ui/shell.css';
+import './ui/focused-chat.css';
 import { SafeMarkdown } from './ui/SafeMarkdown';
 import { DashboardPage, type DashboardSubpage } from './ui/DashboardPage';
 import { SetupWizard } from './SetupWizard';
@@ -618,12 +619,9 @@ function App() {
         sidebar={
           <>
             <div className="text-2xl tracking-tight font-semibold ui-wordmark">◈ Sanctum</div>
-            <p className="text-xs ui-text-secondary mt-2 text-display tracking-[.18em]">
-              A private place to think
-            </p>
             <button
               disabled={busy}
-              className="mt-10 border ui-border rounded-lg px-4 py-3 text-left ui-hover"
+              className="new-conversation border ui-border rounded-lg px-4 py-3 text-left ui-hover"
               onClick={() => {
                 setConversation(crypto.randomUUID());
                 setMessages([]);
@@ -632,8 +630,8 @@ function App() {
             >
               ＋ {STRINGS.navigation.newChat}
             </button>
-            <p className="mt-9 mb-3 text-xs text-display tracking-wider ui-text-secondary">
-              Your conversations
+            <p className="history-heading text-xs ui-text-secondary">
+              Conversations
             </p>
             {token && capabilities.includes('history') && (
               <HistoryPanel
@@ -645,8 +643,7 @@ function App() {
                 onDeleted={handleSessionDeleted}
               />
             )}
-            <div className="mt-auto pt-10 text-xs ui-text-secondary leading-6">
-              <span>Review live startup checks in the status bar.</span><br />
+            <div className="sidebar-settings mt-auto text-xs ui-text-secondary leading-6">
               <div className="flex flex-wrap gap-2 my-2">
                 {token && capabilities.includes('dashboard') && (
                   <Button variant="outline" onClick={() => navigateToDashboard('status')}>
@@ -665,7 +662,9 @@ function App() {
                   Licenses
                 </Button>
               </div>
-              <ThemeControls value={{theme:preferences.theme,mode:preferences.mode}} onChange={updatePreferences}/>
+              <details className="sidebar-appearance"><summary aria-label="Appearance options">Appearance</summary>
+                <ThemeControls value={{theme:preferences.theme,mode:preferences.mode}} onChange={updatePreferences}/>
+              </details>
             </div>
           </>
         }
@@ -674,12 +673,6 @@ function App() {
           <>
             <div className="flex items-center gap-3">
               <span className="text-sm ui-text-secondary">Chat</span>
-              {token && capabilities.includes('chat') && (
-                <span className="inline-flex items-center gap-1.5 px-2 py-0.5 rounded text-xs font-medium bg-emerald-500/10 text-emerald-700 dark:text-emerald-400 border border-emerald-500/20">
-                  <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse"></span>
-                  live
-                </span>
-              )}
             </div>
             {model && (
               <div className="flex items-center gap-2">
@@ -696,9 +689,9 @@ function App() {
                 </select>
                 <span
                   className="text-xs px-2 py-0.5 rounded border ui-border text-display ui-text-secondary"
-                  title="Runs on device with verified open license"
+                  title="Selected model runs on the local runtime"
                 >
-                  On-Device · Local
+                  Local
                 </span>
               </div>
             )}
@@ -742,7 +735,6 @@ function App() {
           ) : undefined
         }
       >
-        {token && capabilities.includes('knowledge') && <MeetingPanel token={token} />}
 
         {capabilities.includes('chat') ? (
           <ChatView
@@ -775,9 +767,12 @@ function App() {
           />
         ) : <p role="status">Checking local runtime…</p>}
 
+        <div className="chat-tools">
         {token && capabilities.includes('speech') && <SpeechPanel token={token}
           answer={messages.filter(message => message.role === 'assistant').at(-1)?.content ?? ''}
           conversation={conversation} onTranscript={text => setPrompt(text)} />}
+        {token && capabilities.includes('knowledge') && <MeetingPanel token={token} />}
+        </div>
         {chatStatus && <p role="status">{chatStatus}</p>}
         {error && (
           <p role="alert" className="rounded-lg bg-red-50 text-red-800 p-4 my-3">
