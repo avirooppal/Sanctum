@@ -100,7 +100,7 @@ export function QuadView({
             >
               <span>{pane.title || STRINGS.tabs.quadPane.replace('{index}', String(index + 1))}</span>
               {pane.status && (
-                <span style={{ fontSize: '11px', color: 'var(--ui-accent, #48a87b)' }}>
+                <span style={{ fontSize: '12px', color: 'var(--ui-accent, #48a87b)' }}>
                   {pane.status}
                 </span>
               )}

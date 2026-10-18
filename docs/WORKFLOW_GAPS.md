@@ -184,3 +184,20 @@ CSS+623 gzip bytes under prior budgets;fonts/deps0. Previous2ce6c60 hosted
 39058592559 completed success/all5. S1 iteration3,legacy standalone runner auth
 migration,all-theme/axe/zoom/performance and later screens remain Not done.
 Full journeys/platform/install/release are not promoted.
+
+S1 iteration3 (2026-10-18): stable two-line startup chip; guarded owner accent
+also controls focus. Preferences now serialize the actual preference object,
+not the Content-Type header object; API test and browser readback cover it.
+Malformed historical preferences are preserved with an honest recovery notice.
+Unsupported deletion Undo and local-only message deletion are hidden. Metadata
+floor is12px;notification duration remains5s without a layout-width animation.
+Evidence:evals/results/redesign-round3-*;182 source,70 Rust,89 web tests,
+typecheck/build,audit0,38 kernel probes;18 implemented smoke stages. Authenticated
+shell runner covers5 widths;theme runner covers96 samples and3 system checks.
+Unlock primary48px,contrast6.85586/7.16261;focus6.23336/5.83256;no foreign requests
+or page errors. Actual archived-baseline rebuild:JS+862/CSS+739 gzip bytes.
+Full redesign and release are NOT verified. Native Chrome reports zoom2 and
+711x402 CSS viewport, but screenshot inspection finds clipped content despite
+root overflow=false: zoom accessibility gate FAILED, not a passing claim.
+See ui-after/round-3/native-zoom/review.json. Capture/layout diagnosis,axe,
+all-theme contrast,streaming/performance and S2-S7 remain open. No tag or merge.

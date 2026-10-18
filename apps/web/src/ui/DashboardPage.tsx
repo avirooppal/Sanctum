@@ -88,7 +88,7 @@ export function DashboardPage({
             <div className="text-sm font-semibold tracking-tight text-[var(--ui-accent,#417e6c)]">
               ◈ Sanctum
             </div>
-            <div className="text-[11px] text-[var(--ui-muted,#8a9990)]">
+            <div className="text-xs text-[var(--ui-muted,#8a9990)]">
               Platform Dashboard
             </div>
           </div>
@@ -176,14 +176,14 @@ export function DashboardPage({
             className="w-full text-left px-3 py-2 rounded-md text-[var(--ui-muted,#8a9990)] hover:bg-[var(--ui-card,#1c2622)] hover:text-[var(--ui-foreground,#e6ece8)] transition-colors flex items-center justify-between"
           >
             <span>Docs</span>
-            <span className="text-[10px]">↗</span>
+            <span className="text-xs">↗</span>
           </a>
         </nav>
 
-        <div className="mt-auto pt-4 border-t border-[var(--ui-border,#222d28)] text-[11px] text-[var(--ui-muted,#8a9990)] flex flex-col gap-1">
+        <div className="mt-auto pt-4 border-t border-[var(--ui-border,#222d28)] text-xs text-[var(--ui-muted,#8a9990)] flex flex-col gap-1">
           <div>● On-Device Gateway</div>
           <div>Port {typeof window !== 'undefined' ? window.location.port || '8765' : '8765'}</div>
-          <div className="text-emerald-500 font-mono text-[10px] mt-1">Ledger unavailable; inspect startup checks</div>
+          <div className="text-emerald-500 font-mono text-xs mt-1">Ledger unavailable; inspect startup checks</div>
         </div>
       </aside>
 
@@ -225,7 +225,7 @@ export function DashboardPage({
           <div className="space-y-6">
             <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
               <div className="ui-card p-4 rounded-xl border border-[var(--ui-border,#222d28)] bg-[var(--ui-card,#1c2622)] flex flex-col gap-2">
-                <div className="text-[11px] uppercase tracking-wider text-[var(--ui-muted,#8a9990)]">
+                <div className="text-xs uppercase tracking-wider text-[var(--ui-muted,#8a9990)]">
                   Active Model
                 </div>
                 <div className="text-xl font-mono font-semibold truncate text-[var(--ui-foreground,#e6ece8)]">
@@ -239,7 +239,7 @@ export function DashboardPage({
               </div>
 
               <div className="ui-card p-4 rounded-xl border border-[var(--ui-border,#222d28)] bg-[var(--ui-card,#1c2622)] flex flex-col gap-2">
-                <div className="text-[11px] uppercase tracking-wider text-[var(--ui-muted,#8a9990)]">
+                <div className="text-xs uppercase tracking-wider text-[var(--ui-muted,#8a9990)]">
                   Network Egress
                 </div>
                 <div className="text-xl font-mono font-semibold text-emerald-500">
@@ -251,7 +251,7 @@ export function DashboardPage({
               </div>
 
               <div className="ui-card p-4 rounded-xl border border-[var(--ui-border,#222d28)] bg-[var(--ui-card,#1c2622)] flex flex-col gap-2">
-                <div className="text-[11px] uppercase tracking-wider text-[var(--ui-muted,#8a9990)]">
+                <div className="text-xs uppercase tracking-wider text-[var(--ui-muted,#8a9990)]">
                   Isolation Boundary
                 </div>
                 <div className="text-xl font-mono font-semibold text-[var(--ui-foreground,#e6ece8)]">
@@ -332,12 +332,12 @@ export function DashboardPage({
                         <td className="py-2.5 px-3 font-mono font-medium">{m.id}</td>
                         <td className="py-2.5 px-3">{(m as any).name || m.id}</td>
                         <td className="py-2.5 px-3">
-                          <span className="inline-block px-1.5 py-0.5 rounded bg-[var(--ui-surface,#151c19)] border border-[var(--ui-border,#222d28)] text-[10px]">
+                          <span className="inline-block px-1.5 py-0.5 rounded bg-[var(--ui-surface,#151c19)] border border-[var(--ui-border,#222d28)] text-xs">
                             {m.capabilities.join(', ')}
                           </span>
                         </td>
                         <td className="py-2.5 px-3 font-mono">{m.context_length ? `${m.context_length} tokens` : 'Unknown'}</td>
-                        <td className="py-2.5 px-3 text-emerald-400 font-mono text-[11px]">{m.license || 'Unknown'}</td>
+                        <td className="py-2.5 px-3 text-emerald-400 font-mono text-xs">{m.license || 'Unknown'}</td>
                         <td className="py-2.5 px-3 text-[var(--ui-muted,#8a9990)]">Unknown</td>
                       </tr>
                     ))}
@@ -370,11 +370,11 @@ export function DashboardPage({
                   <tbody>
                     {sessions.map(s => (
                       <tr key={s.id} className="border-b border-[var(--ui-border,#222d28)]/60 hover:bg-[var(--ui-surface,#151c19)]">
-                        <td className="py-2.5 px-3 font-mono text-[11px] text-[var(--ui-muted,#8a9990)]">{s.id.slice(0, 8)}…</td>
+                        <td className="py-2.5 px-3 font-mono text-xs text-[var(--ui-muted,#8a9990)]">{s.id.slice(0, 8)}…</td>
                         <td className="py-2.5 px-3 font-medium text-[var(--ui-foreground,#e6ece8)]">{s.title || 'Untitled Session'}</td>
                         <td className="py-2.5 px-3">
                           {s.pinned ? (
-                            <span className="px-1.5 py-0.5 rounded text-[10px] bg-amber-500/10 text-amber-400 border border-amber-500/20">
+                            <span className="px-1.5 py-0.5 rounded text-xs bg-amber-500/10 text-amber-400 border border-amber-500/20">
                               Pinned
                             </span>
                           ) : (
@@ -398,7 +398,7 @@ export function DashboardPage({
           <div className="space-y-6">
             <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
               <div className="ui-card p-4 rounded-xl border border-[var(--ui-border,#222d28)] bg-[var(--ui-card,#1c2622)]">
-                <div className="text-[11px] uppercase tracking-wider text-[var(--ui-muted,#8a9990)] mb-1">
+                <div className="text-xs uppercase tracking-wider text-[var(--ui-muted,#8a9990)] mb-1">
                   Resident Engine RAM
                 </div>
                 <div className="text-2xl font-mono font-semibold text-[var(--ui-foreground,#e6ece8)]">
@@ -410,7 +410,7 @@ export function DashboardPage({
               </div>
 
               <div className="ui-card p-4 rounded-xl border border-[var(--ui-border,#222d28)] bg-[var(--ui-card,#1c2622)]">
-                <div className="text-[11px] uppercase tracking-wider text-[var(--ui-muted,#8a9990)] mb-1">
+                <div className="text-xs uppercase tracking-wider text-[var(--ui-muted,#8a9990)] mb-1">
                   Queue Admission
                 </div>
                 <div className="text-2xl font-mono font-semibold text-emerald-500">
@@ -422,7 +422,7 @@ export function DashboardPage({
               </div>
 
               <div className="ui-card p-4 rounded-xl border border-[var(--ui-border,#222d28)] bg-[var(--ui-card,#1c2622)]">
-                <div className="text-[11px] uppercase tracking-wider text-[var(--ui-muted,#8a9990)] mb-1">
+                <div className="text-xs uppercase tracking-wider text-[var(--ui-muted,#8a9990)] mb-1">
                   Hardware Profile
                 </div>
                 <div className="text-2xl font-mono font-semibold text-[var(--ui-foreground,#e6ece8)]">
@@ -446,7 +446,7 @@ export function DashboardPage({
                     <div key={lane} className="flex items-center justify-between text-xs py-1.5 border-b border-[var(--ui-border,#222d28)] last:border-b-0">
                       <div>
                         <div className="font-medium text-[var(--ui-foreground,#e6ece8)]">{lane}</div>
-                        <div className="text-[10px] text-[var(--ui-muted,#8a9990)]">Lane #{index}</div>
+                        <div className="text-xs text-[var(--ui-muted,#8a9990)]">Lane #{index}</div>
                       </div>
                       <div className="flex gap-4">
                         <span className="text-[var(--ui-muted,#8a9990)]">Active: <strong className="text-[var(--ui-foreground,#e6ece8)]">{activeCount}</strong></span>
@@ -503,7 +503,7 @@ export function DashboardPage({
             <h2 className="text-xs font-semibold uppercase tracking-wider text-[var(--ui-muted,#8a9990)]">
               Third-Party Notices & Licenses
             </h2>
-            <pre className="ui-licenses p-4 rounded-lg bg-[var(--ui-surface,#151c19)] border border-[var(--ui-border,#222d28)] font-mono text-[11px] leading-relaxed max-h-[600px] overflow-y-auto whitespace-pre-wrap">
+            <pre className="ui-licenses p-4 rounded-lg bg-[var(--ui-surface,#151c19)] border border-[var(--ui-border,#222d28)] font-mono text-xs leading-relaxed max-h-[600px] overflow-y-auto whitespace-pre-wrap">
               {thirdPartyNoticesText || 'Sanctum is licensed under the MIT License.\n\nAll bundled assets and fonts use permissive licenses (MIT, Apache-2.0, SIL OFL).'}
             </pre>
           </div>

@@ -183,7 +183,7 @@ export function DesignGallery() {
             >
               How does Sanctum preserve privacy during document indexing?
             </div>
-            <div style={{ fontSize: '11px', color: 'var(--ui-text-secondary)', textAlign: 'right', marginTop: '4px' }}>
+            <div style={{ fontSize: '12px', color: 'var(--ui-text-secondary)', textAlign: 'right', marginTop: '4px' }}>
               You • Just now
             </div>
           </div>
@@ -203,7 +203,7 @@ export function DesignGallery() {
                 <span style={{ fontSize: '12px', fontWeight: 600, color: 'var(--ui-accent)' }}>
                   Sanctum Assistant (Qwen 2.5 7B)
                 </span>
-                <span style={{ fontSize: '11px', color: 'var(--ui-text-secondary)' }}>
+                <span style={{ fontSize: '12px', color: 'var(--ui-text-secondary)' }}>
                   26.4 tok/s • Egress 0 PASS
                 </span>
               </div>
@@ -223,7 +223,7 @@ export function DesignGallery() {
                     borderRadius: '4px',
                     background: 'var(--ui-surface-raised, #1c2622)',
                     border: '1px solid var(--ui-accent)',
-                    fontSize: '11px',
+                    fontSize: '12px',
                     color: 'var(--ui-accent)',
                     cursor: 'pointer',
                     fontWeight: 600,

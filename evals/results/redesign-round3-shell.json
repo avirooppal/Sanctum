@@ -1,0 +1,60 @@
+{
+  "suite": "real-browser-shell-v1",
+  "results": [
+    {
+      "viewport": {
+        "width": 1440,
+        "height": 900
+      },
+      "sidebar_width": 237,
+      "login_bottom": 421.875,
+      "no_horizontal_overflow": true,
+      "document_height": 900
+    },
+    {
+      "viewport": {
+        "width": 820,
+        "height": 1180
+      },
+      "sidebar_width": 237,
+      "login_bottom": 561.875,
+      "no_horizontal_overflow": true,
+      "document_height": 1180
+    },
+    {
+      "viewport": {
+        "width": 390,
+        "height": 844
+      },
+      "sidebar_width": 237,
+      "login_bottom": 372.625,
+      "no_horizontal_overflow": true,
+      "document_height": 844
+    },
+    {
+      "viewport": {
+        "width": 639,
+        "height": 900
+      },
+      "sidebar_width": 237,
+      "login_bottom": 421.875,
+      "no_horizontal_overflow": true,
+      "document_height": 900
+    },
+    {
+      "viewport": {
+        "width": 640,
+        "height": 900
+      },
+      "sidebar_width": 237,
+      "login_bottom": 421.875,
+      "no_horizontal_overflow": true,
+      "document_height": 900
+    }
+  ],
+  "resize_state": {
+    "desktop_mobile_desktop": true,
+    "theme_retained": "rose",
+    "sidebar_instances": 1
+  }
+}

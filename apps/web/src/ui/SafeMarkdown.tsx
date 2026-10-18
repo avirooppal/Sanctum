@@ -150,7 +150,7 @@ function renderInline(
           key={key++}
           type="button"
           onClick={() => onCitationClick?.(label)}
-          className="ui-citation-chip inline-flex items-center gap-1 mx-1 px-1.5 py-0.5 text-[11px] font-mono rounded bg-accent/10 border border-accent/20 text-accent hover:underline cursor-pointer"
+          className="ui-citation-chip inline-flex items-center gap-1 mx-1 px-1.5 py-0.5 text-xs font-mono rounded bg-accent/10 border border-accent/20 text-accent hover:underline cursor-pointer"
           title={`View citation: ${label}`}
           aria-label={`Citation ${label}`}
         >
@@ -244,14 +244,14 @@ function CodeBlock({ code, language }: { code: string; language?: string }) {
   return (
     <div className="ui-code-block rounded-lg p-3 my-2 border ui-border bg-black/5 dark:bg-white/5">
       <div className="flex items-center justify-between mb-2">
-        <span className="text-[11px] font-mono text-display ui-text-secondary">
+        <span className="text-xs font-mono text-display ui-text-secondary">
           {language || 'code'}
         </span>
         <button
           type="button"
           onClick={handleCopy}
           aria-label="Copy code"
-          className="text-[11px] px-2 py-0.5 rounded border ui-border ui-surface ui-text-secondary hover:text-foreground transition-colors"
+          className="text-xs px-2 py-0.5 rounded border ui-border ui-surface ui-text-secondary hover:text-foreground transition-colors"
         >
           {copied ? '✓ Copied' : 'Copy'}
         </button>

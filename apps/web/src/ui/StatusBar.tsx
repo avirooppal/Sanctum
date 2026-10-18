@@ -122,7 +122,7 @@ export function StatusBar({
           </span>
         </div>
 
-        <span className="opacity-30">|</span>
+        <span aria-hidden="true" className="inline-block h-3 border-r ui-border"/>
 
         {/* Engine Readiness */}
         <div className="flex items-center gap-1.5 hidden sm:flex">
@@ -131,7 +131,7 @@ export function StatusBar({
           </span>
         </div>
 
-        <span className="opacity-30 hidden sm:inline">|</span>
+        <span aria-hidden="true" className="hidden sm:inline-block h-3 border-r ui-border"/>
 
         {/* Offline / Egress Badge */}
         <div
@@ -190,7 +190,7 @@ export function StatusBar({
           )}
         </div>
 
-        <span className="opacity-30">|</span>
+        <span aria-hidden="true" className="inline-block h-3 border-r ui-border"/>
 
         {/* Model Picker Dropdown */}
         <div className="relative" ref={pickerRef}>
@@ -243,7 +243,7 @@ export function StatusBar({
           )}
         </div>
 
-        <span className="opacity-30">|</span>
+        <span aria-hidden="true" className="inline-block h-3 border-r ui-border"/>
 
         {/* Real Context/Token usage */}
         <ContextBar

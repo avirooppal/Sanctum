@@ -69,7 +69,7 @@ export function DashboardPanel({ token }: { token: string }) {
 
       <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
         <div className="ui-card">
-          <div className="text-[11px] text-display ui-text-secondary mb-1">Daemon Health</div>
+          <div className="text-xs text-display ui-text-secondary mb-1">Daemon Health</div>
           <div className="text-lg font-semibold flex items-center gap-2">
             <span className={health?.status === 'ok' ? 'text-emerald-700' : 'text-amber-700'}>
               ● {health?.status?.toUpperCase() || 'OFFLINE'}
@@ -79,7 +79,7 @@ export function DashboardPanel({ token }: { token: string }) {
         </div>
 
         <div className="ui-card">
-          <div className="text-[11px] text-display ui-text-secondary mb-1">Cloud Policy</div>
+          <div className="text-xs text-display ui-text-secondary mb-1">Cloud Policy</div>
           <div className="text-lg font-semibold ui-text-primary">
             {health?.cloud_connectors === 'disabled' ? 'Disabled (reported)' : 'Unknown'}
           </div>
@@ -87,7 +87,7 @@ export function DashboardPanel({ token }: { token: string }) {
         </div>
 
         <div className="ui-card">
-          <div className="text-[11px] text-display ui-text-secondary mb-1">Sandboxing</div>
+          <div className="text-xs text-display ui-text-secondary mb-1">Sandboxing</div>
           <div className="text-lg font-semibold ui-text-primary">
             {health?.isolation || 'Unknown'}
           </div>

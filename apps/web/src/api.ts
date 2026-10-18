@@ -207,8 +207,7 @@ export class SanctumClient {
   }
 
   async savePreferences(preferences: Record<string, unknown>, signal?: AbortSignal): Promise<void> {
-    const body = JSON.stringify(preferences);
-    const res = await this.request('/v1/preferences', signal, { 'Content-Type': 'application/json' }, 'POST', body);
+    const res = await this.request('/v1/preferences', signal, preferences, 'POST');
     if (!res.ok) throw Error(`Failed to save preferences: ${res.status}`);
   }
 

@@ -120,7 +120,6 @@ function App() {
   const [preferences, setPreferences] = useState<UserPreferences>({...DEFAULT_PREFERENCES,mode:'system'});
   const [capabilities, setCapabilities] = useState<string[]>([]);
   const [toasts, setToasts] = useState<ToastItem[]>([]);
-  const [lastDeletedSession, setLastDeletedSession] = useState<{ id: string; title?: string } | null>(null);
   const [activeProfileId, setActiveProfileId] = useState<string | null>(null);
 
   const api = useMemo(() => new SanctumClient(token), [token]);
@@ -140,7 +139,9 @@ function App() {
         await document.fonts.ready;
         const loaded=await loadWorkspace(api,controller.signal);
         if(loaded.preferences) {
-          setPreferences(sanitizePreferences(loaded.preferences).preferences);
+          const restored=sanitizePreferences(loaded.preferences);
+          setPreferences(restored.preferences);
+          if(restored.wasRecovered)setToasts(previous=>[...previous,{id:crypto.randomUUID(),message:STRINGS.toast.preferencesRecovered,durationMs:5000}]);
         }
         const data=loaded.models;
         setModelObjects(data);
@@ -236,7 +237,6 @@ function App() {
   };
 
   const handleSessionDeleted = (id: string) => {
-    setLastDeletedSession({ id });
     const toastId = crypto.randomUUID();
     setToasts(prev => [
       ...prev,
@@ -244,10 +244,6 @@ function App() {
         id: toastId,
         message: STRINGS.toast.sessionDeleted,
         durationMs: 5000,
-        onUndo: () => {
-          // Undo restoration
-          refresh();
-        },
       },
     ]);
     if (id === conversation) {
@@ -679,7 +675,7 @@ function App() {
             <div className="flex items-center gap-3">
               <span className="text-sm ui-text-secondary">Chat</span>
               {token && capabilities.includes('chat') && (
-                <span className="inline-flex items-center gap-1.5 px-2 py-0.5 rounded text-[11px] font-medium bg-emerald-500/10 text-emerald-700 dark:text-emerald-400 border border-emerald-500/20">
+                <span className="inline-flex items-center gap-1.5 px-2 py-0.5 rounded text-xs font-medium bg-emerald-500/10 text-emerald-700 dark:text-emerald-400 border border-emerald-500/20">
                   <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse"></span>
                   live
                 </span>
@@ -699,7 +695,7 @@ function App() {
                   ))}
                 </select>
                 <span
-                  className="text-[11px] px-2 py-0.5 rounded border ui-border text-display ui-text-secondary"
+                  className="text-xs px-2 py-0.5 rounded border ui-border text-display ui-text-secondary"
                   title="Runs on device with verified open license"
                 >
                   On-Device · Local
@@ -765,9 +761,6 @@ function App() {
               if (userMsg && userMsg.role === 'user') {
                 setPrompt(userMsg.content);
               }
-            }}
-            onDeleteMessage={index => {
-              setMessages(prev => prev.filter((_, i) => i !== index));
             }}
             busy={busy}
             sendOnEnter={preferences.sendOnEnter}

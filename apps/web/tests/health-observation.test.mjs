@@ -11,6 +11,8 @@ test('badge distinguishes report time from test time and rejects incomplete heal
   assert.match(renderToStaticMarkup(React.createElement(StartupBadge,{health:value,receivedAt:Date.UTC(2026,9,18)})),/data-startup-checks="unknown"/);
  }
  assert.match(renderToStaticMarkup(React.createElement(StartupBadge,{health,receivedAt:null})),/data-startup-checks="unknown"/);
+ const unknown=renderToStaticMarkup(React.createElement(StartupBadge,{health:null,receivedAt:null}));
+ assert.match(unknown,/class="startup-time"/);assert.match(unknown,/No current health read/);
 });
 test('bounded same-origin read omits credentials and retains only parsed health',async()=>{
  let options;const data=await observeHealth(async(path,init)=>{assert.equal(path,'/healthz');options=init;return new Response(JSON.stringify(health),{headers:{'Content-Type':'application/json'}});});

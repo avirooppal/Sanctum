@@ -39,7 +39,7 @@ export const THEMES=Object.freeze(Object.keys(palettes).map(id=>Object.freeze({i
 /** Accent and label ink must be considered together;palette values remain immutable. */
 export function accentTokens(tokens:Record<string,string>,accent:string):Record<string,string>{
   const effective=ensureContrast(accent,tokens['--ui-background'],4.5);
-  return {...tokens,'--ui-accent':effective,
+  return {...tokens,'--ui-accent':effective,'--ui-focus':effective,
     '--ui-text-on-accent':readableOn(effective)};
 }
 

@@ -25,6 +25,8 @@ STAGE_JOURNEYS = {
     "ui_website": ["J1", "J9"],
     "ui_fidelity": ["J3", "J4", "J9", "J11"],
     "ui_unlock": ["J2", "J9", "J12"],
+    "ui_shell": ["J2", "J3", "J11"],
+    "ui_theme_controls": ["J3", "J11"],
     "journey_readiness": [
         "J1",
         "J2",
@@ -294,6 +296,28 @@ def main():
                 package,
                 browser_token,
                 str(directory / "smoke-ui-unlock"),
+            ],
+            None,
+        ),
+        (
+            "ui_shell",
+            [
+                node,
+                "evals/browser_shell.mjs",
+                package,
+                str(directory / "smoke-ui-shell.json"),
+                browser_token,
+            ],
+            None,
+        ),
+        (
+            "ui_theme_controls",
+            [
+                node,
+                "evals/browser_themes.mjs",
+                package,
+                str(directory / "smoke-ui-theme-controls.json"),
+                browser_token,
             ],
             None,
         ),

@@ -55,7 +55,7 @@ export function ContextBar({
         <span className="w-1.5 h-1.5 rounded-full bg-neutral-400"></span>
         <span>Tokens: <strong className="font-mono">Unknown</strong></span>
         {contextLimit ? (
-          <span className="text-[10px] ui-text-secondary">
+          <span className="text-xs ui-text-secondary">
             (Window: {contextLimit.toLocaleString()})
           </span>
         ) : null}
@@ -88,7 +88,7 @@ export function ContextBar({
               style={{ width: `${percent}%` }}
             />
           </div>
-          <span className="text-[10px] font-mono">{percent}%</span>
+          <span className="text-xs font-mono">{percent}%</span>
         </div>
       )}
     </div>

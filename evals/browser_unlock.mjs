@@ -36,8 +36,10 @@ try{
  assert(pairs.body>=4.5&&pairs.hint>=4.5);assert(pairs.input_boundary>=3&&pairs.focus>=3);assert.equal(pairColors.transition,'0s');
  }
  const unlock=page.getByRole('button',{name:'Unlock',exact:true});
+ const beforeHealth=await page.locator('.unlock-card').boundingBox();
  const healthUrl=base+'/healthz';await context.route(healthUrl,r=>r.abort('failed'));
  await page.locator('.startup-badge[data-startup-checks="unknown"]').waitFor();
+ const afterHealth=await page.locator('.unlock-card').boundingBox();assert(Math.abs(beforeHealth.height-afterHealth.height)<=1);assert(Math.abs(beforeHealth.y-afterHealth.y)<=1);
  await page.screenshot({path:`${output}/${mode}-health-network-failure-390.png`});
  await context.unroute(healthUrl);await page.locator('.startup-badge[data-startup-checks="passed"]').waitFor();
  await page.getByText('Where do I find my key?',{exact:true}).click();await page.getByText('When Sanctum starts, it prints the location',{exact:false}).waitFor();

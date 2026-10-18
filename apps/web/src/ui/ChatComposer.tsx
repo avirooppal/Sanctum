@@ -236,7 +236,7 @@ export function ChatComposer({
           aria-label="Slash commands"
           className="absolute bottom-full left-0 mb-2 w-72 rounded-xl border ui-border ui-surface shadow-lg overflow-hidden z-30"
         >
-          <div className="text-[10px] uppercase font-mono tracking-wider px-3 py-1.5 border-b ui-border ui-text-secondary bg-black/5 dark:bg-white/5">
+          <div className="text-xs uppercase font-mono tracking-wider px-3 py-1.5 border-b ui-border ui-text-secondary bg-black/5 dark:bg-white/5">
             Commands
           </div>
           {filteredCommands.map((cmd, idx) => (
@@ -251,7 +251,7 @@ export function ChatComposer({
               }`}
             >
               <span className="font-mono font-semibold">{cmd.command}</span>
-              <span className="text-[11px] ui-text-secondary">{cmd.description}</span>
+              <span className="text-xs ui-text-secondary">{cmd.description}</span>
             </button>
           ))}
         </div>
@@ -309,7 +309,7 @@ export function ChatComposer({
               </button>
             )}
 
-            <span className="text-[11px] text-display ui-text-secondary hidden md:inline ml-1">
+            <span className="text-xs text-display ui-text-secondary hidden md:inline ml-1">
               {sendOnEnter ? 'Enter to send (Shift+Enter for newline)' : 'Shift+Enter to send'}
             </span>
           </div>
@@ -323,7 +323,7 @@ export function ChatComposer({
             <button
               disabled={busy || !prompt.trim()}
               onClick={onSend}
-              className="ui-primary text-white py-1.5 px-4 rounded-lg text-xs font-medium disabled:opacity-40 transition-opacity"
+              className="ui-primary text-white py-1.5 px-4 rounded-lg text-xs font-medium disabled:opacity-100 transition-opacity"
             >
               {busy ? 'Generating…' : 'Send ↑'}
             </button>

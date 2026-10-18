@@ -34,5 +34,6 @@ test('custom accent recomputes foreground instead of inheriting white label ink'
   const tokens=accentTokens(themeTokens(id,mode),'#48a87b');
   assert(contrastRatio(tokens['--ui-accent'],tokens['--ui-text-on-accent'])>=4.5);
   assert(contrastRatio(tokens['--ui-accent'],tokens['--ui-background'])>=4.5);
+  assert.equal(tokens['--ui-focus'],tokens['--ui-accent']);
  }
 });

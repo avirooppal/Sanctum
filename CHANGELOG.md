@@ -382,3 +382,6 @@ ink;add built-copy gate and real unlock to smoke. Whole redesign remains partial
 S1 iteration2:bounded real health-report disclosure with read timestamp and
 failure clearing;lifted local card surface,linked errors and retained attribution.
 No new dependency or font;whole redesign remains partial.
+
+S1 iteration3:stable health chip,accent focus,real preference serialization,
+12px metadata floor;authenticated shell/theme smoke coverage. Zoom gate open.

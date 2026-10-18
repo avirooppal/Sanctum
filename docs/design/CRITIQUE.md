@@ -159,3 +159,36 @@ Reference focus stays blue while owner accent is green;align override focus
 with the existing contrast guard. Next iteration must retest keyboard/status
 and preserve the original palette when no override is present. No overall UX,
 all-theme WCAG,axe,200% browser zoom,INP/CLS or two-hour-comfort claim.
+
+## S1 iteration3 — chip affordance and honest recovery
+
+Opened all10 round3 unlock screenshots and4 native-zoom captures. The distinct
+outlined chip separates status from key help. Its timestamp row remains present
+when health is unknown;the browser geometry assertion stays within1px. Green
+focus now agrees with the owner accent while the unmodified reference palette
+is retained. Existing failed-preference serialization was fixed test-first.
+The inherited11px labels and fake deletion Undo were exposed by runner review.
+
+S1 iteration3 (2026-10-18): stable two-line startup chip; guarded owner accent
+also controls focus. Preferences now serialize the actual preference object,
+not the Content-Type header object; API test and browser readback cover it.
+Malformed historical preferences are preserved with an honest recovery notice.
+Unsupported deletion Undo and local-only message deletion are hidden. Metadata
+floor is12px;notification duration remains5s without a layout-width animation.
+Evidence:evals/results/redesign-round3-*;182 source,70 Rust,89 web tests,
+typecheck/build,audit0,38 kernel probes;18 implemented smoke stages. Authenticated
+shell runner covers5 widths;theme runner covers96 samples and3 system checks.
+Unlock primary48px,contrast6.85586/7.16261;focus6.23336/5.83256;no foreign requests
+or page errors. Actual archived-baseline rebuild:JS+862/CSS+739 gzip bytes.
+Full redesign and release are NOT verified. Native Chrome reports zoom2 and
+711x402 CSS viewport, but screenshot inspection finds clipped content despite
+root overflow=false: zoom accessibility gate FAILED, not a passing claim.
+See ui-after/round-3/native-zoom/review.json. Capture/layout diagnosis,axe,
+all-theme contrast,streaming/performance and S2-S7 remain open. No tag or merge.
+
+Critique:the locked view is now a focused task with one primary action, but
+setup still uses the old workflow and authenticated controls need their own
+redesign. The native-zoom automated root-overflow metric is a false positive:
+visible clipping invalidates the accessibility claim. Preserve those images
+and strengthen the test before using it as a gate. No two-hour comfort or
+participant evidence exists;the five-person comparison remains UNVERIFIED.

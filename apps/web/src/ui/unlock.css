@@ -20,14 +20,20 @@
 .unlock-card :is(input,button,summary):focus-visible{outline:2px solid var(--ui-focus);outline-offset:4px}
 .unlock-error{font-size:14px;border-left:2px solid var(--ui-text-primary);padding:8px 12px;margin:0 0 16px;overflow-wrap:anywhere}
 .startup-badge{font-size:12px;line-height:1.6;color:var(--ui-text-secondary);margin-top:12px}
-.startup-badge summary{min-height:44px;box-sizing:border-box;cursor:pointer;padding:10px 0;align-content:center}
-.startup-badge p{margin:4px 0 12px;overflow-wrap:anywhere}
-.startup-state{color:var(--ui-text-primary)}
-.startup-time{display:block;padding-left:14px;font-variant-numeric:tabular-nums}
+.startup-badge summary{min-height:64px;box-sizing:border-box;display:flex;align-items:center;gap:12px;cursor:pointer;padding:10px 12px;border:1px solid var(--ui-border);border-radius:12px;background:var(--ui-background)}
+.startup-badge summary::-webkit-details-marker{display:none}
+.startup-badge p{margin:8px 12px 12px;overflow-wrap:anywhere}
+.startup-indicator{width:8px;height:8px;border:1px solid currentColor;border-radius:50%;flex-shrink:0}
+.startup-badge[data-startup-checks="passed"] .startup-indicator{background:var(--ui-accent);border-color:var(--ui-accent)}
+.startup-description{display:block;flex:1;min-width:0}
+.startup-state{display:block;color:var(--ui-text-primary)}
+.startup-time{display:block;font-variant-numeric:tabular-nums}
+.startup-chevron{flex-shrink:0;transition:transform 160ms ease-out}
+.startup-badge[open] .startup-chevron{transform:rotate(180deg)}
 .unlock-review{width:min(100%,600px);padding:32px}
 .unlock-review .setup-wizard-container{border:0;padding:24px 0;background:transparent}
 .unlock-review .setup-wizard-container h1{font-family:'Archivo',system-ui,sans-serif;font-variation-settings:'wdth' 100}
 .unlock-review .setup-wizard-container p{margin-block:12px}
 .unlock-review .setup-wizard-container [data-ui-button]{min-height:44px}
 @media(max-width:480px){.unlock-page{padding:24px 16px}.unlock-card{padding:28px 24px;border-radius:20px}.unlock-heading{margin-block:24px}.unlock-heading h1{font-size:26px}}
-@media(prefers-reduced-motion:reduce){.unlock-card .unlock-submit{transition:none}.unlock-submit:not(:disabled):active{transform:none}}
+@media(prefers-reduced-motion:reduce){.unlock-card .unlock-submit,.startup-chevron{transition:none}.unlock-submit:not(:disabled):active{transform:none}}

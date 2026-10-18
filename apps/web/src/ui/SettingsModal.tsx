@@ -362,7 +362,7 @@ export function SettingsModal({
                 </div>
                 <div
                   style={{
-                    fontSize: '11px',
+                    fontSize: '12px',
                     color: contrastCheck.compliant ? 'var(--ui-success, #34d399)' : 'var(--ui-warning, #fbbf24)',
                     fontWeight: 600,
                   }}
@@ -545,7 +545,7 @@ export function SettingsModal({
                       onClick={() => onUpdatePreferences({ activeLayout: layout.id })}
                     >
                       <span style={{ fontWeight: 600 }}>{layout.name}</span>
-                      <span style={{ fontSize: '11px', opacity: 0.7 }}>
+                      <span style={{ fontSize: '12px', opacity: 0.7 }}>
                         Left: {layout.slots.left} • Center: {layout.slots.center} • Right: {layout.slots.right}
                       </span>
                     </Button>
@@ -604,7 +604,7 @@ export function SettingsModal({
                         onChange={e => handleShortcutChange(action, e.target.value)}
                         style={{
                           width: '100px',
-                          fontSize: '11px',
+                          fontSize: '12px',
                           fontFamily: 'monospace',
                           padding: '4px 6px',
                           borderRadius: '3px',
@@ -615,7 +615,7 @@ export function SettingsModal({
                       />
                       <Button
                         variant="quiet"
-                        style={{ fontSize: '11px', padding: '2px 6px' }}
+                        style={{ fontSize: '12px', padding: '2px 6px' }}
                         onClick={() => handleShortcutChange(action, DEFAULT_SHORTCUTS[action] || '')}
                       >
                         Reset
@@ -680,7 +680,7 @@ export function SettingsModal({
                           {prof.name}{' '}
                           <span
                             style={{
-                              fontSize: '10px',
+                              fontSize: '12px',
                               padding: '2px 6px',
                               borderRadius: '4px',
                               background: 'var(--ui-border, #283832)',
@@ -694,7 +694,7 @@ export function SettingsModal({
                           {onSelectProfile && (
                             <Button
                               variant={activeProfileId === prof.id ? 'primary' : 'quiet'}
-                              style={{ fontSize: '11px', padding: '2px 8px' }}
+                              style={{ fontSize: '12px', padding: '2px 8px' }}
                               onClick={() => onSelectProfile(activeProfileId === prof.id ? null : prof.id)}
                             >
                               {activeProfileId === prof.id ? 'Active' : 'Apply'}
@@ -702,7 +702,7 @@ export function SettingsModal({
                           )}
                           <Button
                             variant="quiet"
-                            style={{ fontSize: '11px', padding: '2px 8px' }}
+                            style={{ fontSize: '12px', padding: '2px 8px' }}
                             onClick={() =>
                               setEditingProfile({
                                 id: prof.id,
@@ -716,7 +716,7 @@ export function SettingsModal({
                           </Button>
                           <Button
                             variant="quiet"
-                            style={{ fontSize: '11px', padding: '2px 8px', color: 'var(--ui-danger, #f87171)' }}
+                            style={{ fontSize: '12px', padding: '2px 8px', color: 'var(--ui-danger, #f87171)' }}
                             disabled={profileBusy} onClick={() => handleDeleteProfile(prof.id)}
                           >
                             Delete
@@ -725,7 +725,7 @@ export function SettingsModal({
                       </div>
                       <p
                         style={{
-                          fontSize: '11px',
+                          fontSize: '12px',
                           color: 'var(--ui-text-secondary, #9fb3a4)',
                           margin: 0,
                           fontFamily: 'monospace',
@@ -905,14 +905,14 @@ export function SettingsModal({
           {activeTab === 'licenses' && (
             <div style={{ display: 'flex', flexDirection: 'column', gap: '10px' }}>
               <span style={{ fontSize: '13px', fontWeight: 600 }}>{STRINGS.settings.licenses}</span>
-              <p style={{ fontSize: '11px', color: 'var(--ui-text-secondary, #9fb3a4)', margin: 0 }}>
+              <p style={{ fontSize: '12px', color: 'var(--ui-text-secondary, #9fb3a4)', margin: 0 }}>
                 Every bundled component, font, and dependency has been verified for permissive licensing (MIT, Apache 2.0, OFL).
               </p>
               <pre
                 style={{
                   maxHeight: '340px',
                   overflowY: 'auto',
-                  fontSize: '11px',
+                  fontSize: '12px',
                   fontFamily: 'monospace',
                   padding: '12px',
                   borderRadius: '6px',
@@ -954,7 +954,7 @@ export function SettingsModal({
                   style={{
                     width: '100%',
                     fontFamily: 'monospace',
-                    fontSize: '11px',
+                    fontSize: '12px',
                     padding: '8px',
                     border: '1px solid var(--ui-border, #283832)',
                     borderRadius: '4px',

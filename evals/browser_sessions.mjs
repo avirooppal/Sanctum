@@ -56,7 +56,9 @@ try {
  assert.equal(await page.getByRole('button',{name:title,exact:true}).count(),1,'dismiss must preserve conversation');
  await page.getByRole('button',{name:`Delete ${title}`,exact:true}).click();
  await page.getByRole('button',{name:'Confirm delete',exact:true}).click();
+ await page.waitForFunction(()=>document.querySelector('dialog[open]')===null);
  await page.getByText('No saved conversations found.',{exact:true}).waitFor();
+ assert.equal(await page.getByRole('button',{name:'Undo',exact:true}).count(),0,'hard deletion has no restore endpoint;do not offer a pretend Undo');
  const stored=await (await page.request.get(`${base}/v1/conversations/${session}`,{headers})).json();
  assert.deepEqual(stored.data,[]);
  assert.equal(await page.locator('article').count(),0);

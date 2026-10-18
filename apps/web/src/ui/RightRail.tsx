@@ -207,7 +207,7 @@ export function RightRail({
             <button
               type="button"
               onClick={() => setArtifactSubTab('files')}
-              className={`text-[11px] px-2 py-0.5 rounded transition-colors ${
+              className={`text-xs px-2 py-0.5 rounded transition-colors ${
                 artifactSubTab === 'files'
                   ? 'border ui-border font-medium ui-surface text-foreground shadow-2xs'
                   : 'ui-text-secondary hover:text-foreground'
@@ -218,7 +218,7 @@ export function RightRail({
             <button
               type="button"
               onClick={() => setArtifactSubTab('links')}
-              className={`text-[11px] px-2 py-0.5 rounded transition-colors ${
+              className={`text-xs px-2 py-0.5 rounded transition-colors ${
                 artifactSubTab === 'links'
                   ? 'border ui-border font-medium ui-surface text-foreground shadow-2xs'
                   : 'ui-text-secondary hover:text-foreground'
@@ -240,7 +240,7 @@ export function RightRail({
                     key={art.id}
                     className="p-2.5 rounded-lg border ui-border ui-surface space-y-2 group"
                   >
-                    <div className="flex items-center justify-between text-[11px]">
+                    <div className="flex items-center justify-between text-xs">
                       <span className="font-mono text-display ui-text-secondary">
                         {art.language} · {art.lineCount} lines
                       </span>
@@ -249,7 +249,7 @@ export function RightRail({
                           type="button"
                           onClick={() => copyToClipboard(art.content, art.id)}
                           aria-label="Copy snippet"
-                          className="px-1.5 py-0.5 rounded border ui-border text-[10px] ui-text-secondary hover:text-foreground"
+                          className="px-1.5 py-0.5 rounded border ui-border text-xs ui-text-secondary hover:text-foreground"
                         >
                           {copiedId === art.id ? '✓ Copied' : 'Copy'}
                         </button>
@@ -257,13 +257,13 @@ export function RightRail({
                           type="button"
                           onClick={() => downloadBlob(art.content, `snippet_${idx + 1}`, art.language)}
                           aria-label="Download snippet"
-                          className="px-1.5 py-0.5 rounded border ui-border text-[10px] ui-text-secondary hover:text-foreground"
+                          className="px-1.5 py-0.5 rounded border ui-border text-xs ui-text-secondary hover:text-foreground"
                         >
                           Download
                         </button>
                       </div>
                     </div>
-                    <pre className="text-[11px] font-mono overflow-x-auto p-2 rounded bg-black/5 dark:bg-white/5 max-h-28">
+                    <pre className="text-xs font-mono overflow-x-auto p-2 rounded bg-black/5 dark:bg-white/5 max-h-28">
                       <code>{art.content}</code>
                     </pre>
                   </div>
@@ -298,7 +298,7 @@ export function RightRail({
                         ↗ {item.label}
                       </a>
                     )}
-                    <span className="text-[10px] ui-text-secondary uppercase">
+                    <span className="text-xs ui-text-secondary uppercase">
                       {item.type}
                     </span>
                   </li>
@@ -328,11 +328,11 @@ export function RightRail({
                 >
                   <div className="flex items-center justify-between font-medium">
                     <span>📁 {ws.name}</span>
-                    <span className="text-[10px] px-1.5 py-0.5 rounded border border-emerald-500/20 text-emerald-600 dark:text-emerald-400 bg-emerald-500/10">
+                    <span className="text-xs px-1.5 py-0.5 rounded border border-emerald-500/20 text-emerald-600 dark:text-emerald-400 bg-emerald-500/10">
                       Indexed
                     </span>
                   </div>
-                  <div className="pl-4 text-[11px] ui-text-secondary space-y-1">
+                  <div className="pl-4 text-xs ui-text-secondary space-y-1">
                     <div className="flex items-center justify-between">
                       <span>📄 Ingested collection</span>
                       <span>Ready</span>

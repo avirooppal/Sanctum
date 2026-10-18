@@ -178,3 +178,22 @@ ADR0080 iteration2 measured:primary6.85586/7.16261;hint minimum8.90049;
 focus minimum4.90443;48px primary;JS+868/CSS+623 gzip bytes. Browser health
 network failure clears passed;recovery restores it. Actual read timestamps,
 not test-run times. S1 iteration3 chip/height refinement still pending.
+
+| [0081](adr/0081-unlock-stability-and-authenticated-ui-runners.md) | Stable chip,accent focus,authenticated legacy UI runners | New health-transition card geometry<=1 CSSpx;64px two-line chip;retain44px/text12px/AA floors and old237px gate | No skipped tests/threshold relaxation;isolated first-party zoom helper is dev-only,not a product extension |
+
+S1 iteration3 (2026-10-18): stable two-line startup chip; guarded owner accent
+also controls focus. Preferences now serialize the actual preference object,
+not the Content-Type header object; API test and browser readback cover it.
+Malformed historical preferences are preserved with an honest recovery notice.
+Unsupported deletion Undo and local-only message deletion are hidden. Metadata
+floor is12px;notification duration remains5s without a layout-width animation.
+Evidence:evals/results/redesign-round3-*;182 source,70 Rust,89 web tests,
+typecheck/build,audit0,38 kernel probes;18 implemented smoke stages. Authenticated
+shell runner covers5 widths;theme runner covers96 samples and3 system checks.
+Unlock primary48px,contrast6.85586/7.16261;focus6.23336/5.83256;no foreign requests
+or page errors. Actual archived-baseline rebuild:JS+862/CSS+739 gzip bytes.
+Full redesign and release are NOT verified. Native Chrome reports zoom2 and
+711x402 CSS viewport, but screenshot inspection finds clipped content despite
+root overflow=false: zoom accessibility gate FAILED, not a passing claim.
+See ui-after/round-3/native-zoom/review.json. Capture/layout diagnosis,axe,
+all-theme contrast,streaming/performance and S2-S7 remain open. No tag or merge.

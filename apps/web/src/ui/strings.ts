@@ -19,7 +19,6 @@ export const STRINGS = Object.freeze({
     firstTime: 'First time here?',
     review: 'Review local setup',
     back: 'Back to unlock',
-    scope: 'Startup checks describe the tested boundary. A full Privacy Ledger is not available yet.',
   },
   notices: {
     loading: 'Loading license notices…',
@@ -30,6 +29,7 @@ export const STRINGS = Object.freeze({
     unknown: 'Startup checks unknown',
     read: 'Health read',
     unavailable: 'Live health is unavailable. ',
+    noRead: 'No current health read',
     scope: 'This is a gateway report, not a new kernel test or continuous egress audit. Ledger unavailable.',
   },
   app: {
@@ -204,6 +204,7 @@ export const STRINGS = Object.freeze({
     docs: 'Offline Documentation',
   },
   toast: {
+    preferencesRecovered: 'Saved appearance settings could not be restored. Defaults are loaded.',
     sessionDeleted: 'Conversation deleted.',
     undo: 'Undo',
     dismiss: 'Dismiss',

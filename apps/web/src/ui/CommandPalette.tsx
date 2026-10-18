@@ -184,7 +184,7 @@ export function CommandPalette({ isOpen, onClose, actions }: Props) {
                   <div>
                     <span
                       style={{
-                        fontSize: '11px',
+                        fontSize: '12px',
                         textTransform: 'uppercase',
                         marginRight: '8px',
                         opacity: 0.7,
@@ -198,7 +198,7 @@ export function CommandPalette({ isOpen, onClose, actions }: Props) {
                   {action.shortcut && (
                     <span
                       style={{
-                        fontSize: '11px',
+                        fontSize: '12px',
                         opacity: 0.75,
                         fontFamily: 'monospace',
                         padding: '2px 6px',

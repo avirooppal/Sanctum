@@ -159,6 +159,8 @@ test('capabilities and preferences endpoints validate payload and authenticate o
   assert.equal(calls[2].options.method, 'POST');
   assert.equal(calls[2].options.headers['Content-Type'], 'application/json');
   assert.equal(calls[2].options.headers['Authorization'], 'Bearer owner-token');
+  assert.deepEqual(JSON.parse(calls[2].options.body), {theme:'github',density:'spacious'});
+  assert.equal(calls[2].options.headers['X-Sanctum-Conversation'],undefined);
 });
 
 test('profiles and full purge endpoints authenticate owner and reject invalid payloads', async () => {

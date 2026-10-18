@@ -117,7 +117,7 @@ export function ChatView({
                       {isUser ? 'You' : 'Sanctum'}
                     </span>
                     {isStreamingThis && (
-                      <span className="flex items-center gap-1 text-[11px] text-accent">
+                      <span className="flex items-center gap-1 text-xs text-accent">
                         <span className="w-1.5 h-1.5 rounded-full bg-accent animate-ping" />
                         <span className="text-display">Thinking locally…</span>
                       </span>
@@ -131,7 +131,7 @@ export function ChatView({
                         type="button"
                         onClick={() => copyMessage(m.content, i)}
                         aria-label="Copy message"
-                        className="text-[11px] px-1.5 py-0.5 rounded border ui-border ui-text-secondary hover:text-foreground"
+                        className="text-xs px-1.5 py-0.5 rounded border ui-border ui-text-secondary hover:text-foreground"
                       >
                         {copiedIndex === i ? '✓ Copied' : 'Copy'}
                       </button>
@@ -142,7 +142,7 @@ export function ChatView({
                         onClick={() => onRetry(i)}
                         disabled={busy}
                         aria-label="Retry prompt"
-                        className="text-[11px] px-1.5 py-0.5 rounded border ui-border ui-text-secondary hover:text-foreground"
+                        className="text-xs px-1.5 py-0.5 rounded border ui-border ui-text-secondary hover:text-foreground"
                       >
                         Retry
                       </button>
@@ -153,7 +153,7 @@ export function ChatView({
                         onClick={() => onDeleteMessage(i)}
                         disabled={busy}
                         aria-label="Delete message"
-                        className="text-[11px] px-1.5 py-0.5 rounded border ui-border ui-text-secondary hover:text-red-500"
+                        className="text-xs px-1.5 py-0.5 rounded border ui-border ui-text-secondary hover:text-red-500"
                       >
                         Delete
                       </button>
@@ -193,7 +193,7 @@ export function ChatView({
                     {isUser ? 'You' : 'Sanctum'}
                   </span>
                   {isStreamingThis && (
-                    <span className="flex items-center gap-1.5 text-[11px] text-accent">
+                    <span className="flex items-center gap-1.5 text-xs text-accent">
                       <span className="w-1.5 h-1.5 rounded-full bg-accent animate-ping" />
                       <span className="text-display">Thinking locally…</span>
                     </span>
@@ -207,7 +207,7 @@ export function ChatView({
                       type="button"
                       onClick={() => copyMessage(m.content, i)}
                       aria-label="Copy message"
-                      className="text-[11px] px-1.5 py-0.5 rounded border ui-border ui-text-secondary hover:text-foreground"
+                      className="text-xs px-1.5 py-0.5 rounded border ui-border ui-text-secondary hover:text-foreground"
                     >
                       {copiedIndex === i ? '✓ Copied' : 'Copy'}
                     </button>
@@ -218,7 +218,7 @@ export function ChatView({
                       onClick={() => onRetry(i)}
                       disabled={busy}
                       aria-label="Retry prompt"
-                      className="text-[11px] px-1.5 py-0.5 rounded border ui-border ui-text-secondary hover:text-foreground"
+                      className="text-xs px-1.5 py-0.5 rounded border ui-border ui-text-secondary hover:text-foreground"
                     >
                       Retry
                     </button>
@@ -229,7 +229,7 @@ export function ChatView({
                       onClick={() => onDeleteMessage(i)}
                       disabled={busy}
                       aria-label="Delete message"
-                      className="text-[11px] px-1.5 py-0.5 rounded border ui-border ui-text-secondary hover:text-red-500"
+                      className="text-xs px-1.5 py-0.5 rounded border ui-border ui-text-secondary hover:text-red-500"
                     >
                       Delete
                     </button>

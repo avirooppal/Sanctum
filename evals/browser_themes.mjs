@@ -1,13 +1,23 @@
 /** Exercise actual in-memory theme controls; no reference fidelity claim. */
 import {createRequire} from 'node:module';
-import {writeFileSync,mkdirSync} from 'node:fs';
+import {readFileSync,writeFileSync,mkdirSync} from 'node:fs';
 import assert from 'node:assert/strict';
-const [packagePath,output]=process.argv.slice(2);
+const [packagePath,output,tokenFile=process.env.SANCTUM_TOKEN_FILE]=process.argv.slice(2);
+if(!tokenFile)throw Error('An owner token FILE is required for authenticated UI verification');
+const key=readFileSync(tokenFile,'utf8').trim();
 const require=createRequire(import.meta.url);const {chromium}=require(packagePath);
 const base=new URL(process.env.SANCTUM_BASE_URL ?? 'http://127.0.0.1:8769');
 const browser=await chromium.launch({headless:true});const samples=[];const systemChecks=[];
 mkdirSync('.sanctum/ui-themes',{recursive:true});
+const apiContext=await browser.newContext();let originalPreferences;
+async function unlock(page){
+ assert.equal(await page.locator('.app-shell').count(),0);
+ await page.getByLabel('Local access key',{exact:true}).fill(key);
+ await page.getByRole('button',{name:'Unlock',exact:true}).click();
+ await page.getByLabel('Message',{exact:true}).waitFor();
+}
 try {
+ originalPreferences=(await (await apiContext.request.get(new URL('/v1/preferences',base).href,{headers:{Authorization:`Bearer ${key}`}})).json()).preferences;
   for(const viewport of [{width:1440,height:900},{width:820,height:1180},{width:390,height:844}]){
     const context=await browser.newContext({viewport,reducedMotion:'reduce'});const foreign=[];
     await context.route('**/*',route=>{
@@ -15,7 +25,7 @@ try {
       if(origin !== base.origin){foreign.push(origin);return route.abort();}
       return route.continue();
     });
-    const page=await context.newPage();await page.goto(base.href);
+    const page=await context.newPage();await page.goto(base.href);await unlock(page);
     if(viewport.width < 640)await page.getByRole('button',{name:'Open navigation',exact:true}).click();
     assert.equal(await page.getByLabel('Theme', {exact:true}).count(),1,'Actual theme control missing');
     const ids=await page.getByLabel('Theme',{exact:true}).locator('option').evaluateAll(nodes=>nodes.map(n=>n.value));
@@ -59,11 +69,19 @@ try {
     const lightBackground=await page.evaluate(()=>getComputedStyle(document.body).backgroundColor);
     assert.equal(lightBackground,'rgb(255, 255, 255)');
     systemChecks.push({viewport,dark_background:darkBackground,light_background:lightBackground});
+    const saved=page.waitForResponse(response=>response.url()===new URL('/v1/preferences',base).href&&response.request().method()==='POST');
     await page.getByLabel('Theme mode',{exact:true}).selectOption('light');
+    assert((await saved).ok(),'UI preferences save failed');
+    const persisted=(await(await apiContext.request.get(new URL('/v1/preferences',base).href,{headers:{Authorization:`Bearer ${key}`}})).json()).preferences;
+    assert(persisted.theme==='sanctum'&&persisted.mode==='light','UI preferences did not persist as their actual JSON values');
     await page.screenshot({path:`.sanctum/ui-themes/${viewport.width}.png`});
     assert.equal(foreign.length,0);await context.close();
   }
   writeFileSync(output,JSON.stringify({suite:'real-browser-themes-v1',samples,system_mode_checks:systemChecks,
-    foreign_http_origins:[],scope:'Color controls only; font tiers/fidelity/axe/WS blocking pending'},null,2)+'\n');
+    foreign_http_origins:[],preferences_round_trip:true,journeys:['J3','J11'],scope:'Authenticated controls,font/opacity floors,system mode and real preference save;not full fidelity/axe/WS/zoom coverage'},null,2)+'\n');
   console.log(JSON.stringify({samples:samples.length,system_mode_checks:systemChecks.length,foreign_http_origins:0}));
-}finally{await browser.close();}
+}catch(error){console.error(String(error.stack??error).split(key).join('[REDACTED]'));process.exitCode=1;}
+finally{
+ if(originalPreferences)await apiContext.request.post(new URL('/v1/preferences',base).href,{headers:{Authorization:`Bearer ${key}`},data:originalPreferences});
+ await browser.close();
+}

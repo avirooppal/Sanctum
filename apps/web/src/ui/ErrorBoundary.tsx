@@ -72,7 +72,7 @@ export class PanelErrorBoundary extends Component<Props, State> {
             <pre
               style={{
                 fontFamily: 'monospace',
-                fontSize: '11px',
+                fontSize: '12px',
                 padding: '8px',
                 background: 'var(--ui-background, #0f1412)',
                 borderRadius: '4px',

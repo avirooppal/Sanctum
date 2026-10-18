@@ -114,3 +114,8 @@ response-read timestamp and explicit no-ledger/no-new-kernel-test explanation.
 The card uses a semantic local surface mix;registered palette bytes and237px
 reference rail are unchanged. Public health reads have no auth or credentials.
 Bounds and failure behavior are ADR0080;no continuous-egress claim is made.
+
+ADR0081:chip has a reserved timestamp row and64px summary;owner-accent focus
+uses the existing contrast guard. Interface metadata floor is12px across app,
+website and docs. Unsupported message deletion and fake deletion Undo are hidden.
+Reference theme palette and237px rail remain. Native zoom gate remains failed.

@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useRef } from 'react';
 import { Button } from './primitives.js';
 
 export interface ToastItem {
@@ -23,7 +23,7 @@ export function UndoToastContainer({ toasts, onDismiss }: Props) {
       style={{
         position: 'fixed',
         bottom: '24px',
-        right: '24px',
+        right: '16px',
         zIndex: 'var(--ui-z-toast, 50)',
         display: 'flex',
         flexDirection: 'column',
@@ -42,22 +42,9 @@ export function UndoToastContainer({ toasts, onDismiss }: Props) {
 
 function SingleToast({ toast, onDismiss }: { toast: ToastItem; onDismiss: () => void }) {
   const duration = toast.durationMs ?? 5000;
-  const [progress, setProgress] = useState(100);
-
-  useEffect(() => {
-    const startTime = Date.now();
-    const interval = setInterval(() => {
-      const elapsed = Date.now() - startTime;
-      const remaining = Math.max(0, 100 - (elapsed / duration) * 100);
-      setProgress(remaining);
-      if (remaining <= 0) {
-        clearInterval(interval);
-        onDismiss();
-      }
-    }, 50);
-
-    return () => clearInterval(interval);
-  }, [duration, onDismiss]);
+  const dismiss=useRef(onDismiss);
+  useEffect(()=>{dismiss.current=onDismiss;},[onDismiss]);
+  useEffect(()=>{const timer=setTimeout(()=>dismiss.current(),duration);return ()=>clearTimeout(timer);},[duration]);
 
   return (
     <div
@@ -65,6 +52,7 @@ function SingleToast({ toast, onDismiss }: { toast: ToastItem; onDismiss: () => 
       style={{
         pointerEvents: 'auto',
         position: 'relative',
+        fontFamily: 'Archivo,system-ui,sans-serif',
         overflow: 'hidden',
         padding: '12px 16px',
         border: '1px solid var(--ui-accent, #48a87b)',
@@ -84,15 +72,15 @@ function SingleToast({ toast, onDismiss }: { toast: ToastItem; onDismiss: () => 
             fontSize: '13px',
             lineHeight: '18px',
             fontWeight: 500,
-            whiteSpace: 'nowrap',
+            whiteSpace: 'normal',
             overflow: 'hidden',
-            textOverflow: 'ellipsis',
+            overflowWrap: 'anywhere',
           }}
         >
           {toast.message}
         </div>
-        <div style={{ fontSize: '11px', color: 'var(--ui-text-secondary, #9fb3a4)' }}>
-          {toast.onUndo ? 'Item will be permanently removed shortly' : ''}
+        <div style={{ fontSize: '12px', color: 'var(--ui-text-secondary, #9fb3a4)' }}>
+          {toast.onUndo ? 'This action can be undone while the notification is visible.' : ''}
         </div>
       </div>
 
@@ -111,7 +99,7 @@ function SingleToast({ toast, onDismiss }: { toast: ToastItem; onDismiss: () => 
         )}
         <Button
           variant="quiet"
-          style={{ padding: '4px 8px', fontSize: '11px' }}
+          style={{ padding: '4px 8px', fontSize: '12px', minHeight:'44px' }}
           onClick={onDismiss}
           aria-label="Dismiss notification"
         >
@@ -119,19 +107,7 @@ function SingleToast({ toast, onDismiss }: { toast: ToastItem; onDismiss: () => 
         </Button>
       </div>
 
-      {/* Progress countdown bar */}
-      <div
-        aria-hidden="true"
-        style={{
-          position: 'absolute',
-          bottom: 0,
-          left: 0,
-          height: '3px',
-          width: `${progress}%`,
-          background: 'var(--ui-accent, #48a87b)',
-          transition: 'width 50ms linear',
-        }}
-      />
+
     </div>
   );
 }

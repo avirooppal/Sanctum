@@ -1,0 +1,11 @@
+{
+  "visual_review": "FAILED",
+  "reason": "Captured native-zoom images are visibly clipped despite root overflow=false. Automated metrics are insufficient; investigate capture/layout and strengthen assertions. No accessibility zoom pass claimed.",
+  "inspected": [
+    "unlock",
+    "setup",
+    "chat",
+    "settings"
+  ],
+  "product_change_required": "undetermined"
+}

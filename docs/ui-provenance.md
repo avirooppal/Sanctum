@@ -93,3 +93,8 @@ chunk. Existing license gates pass;copy gate excludes only that named chunk.
 ADR0080 observer and StartupBadge are first-party metadata/UI code,native
 fetch/details only. No dependency,font,icon or external asset added. Existing
 notices remain unchanged and are verified loading in the real browser.
+
+Round3 adds only first-party CSS/TypeScript/tests. The Chrome native-zoom helper
+is dev-only,restricted to loopback and never shipped/installed in the owner
+browser. No font,icon,asset or dependency added. Native zoom results require
+visual review;current clipped captures are retained as a failed gate.
