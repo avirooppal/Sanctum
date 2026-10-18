@@ -382,3 +382,7 @@ section captures inspected at readable resolution. Long mobile element captures
 can show a fixed skip-link screenshot artifact;separate actual viewport check
 observed focus=false and its bottom above0(landing-skip-diagnostic.log). No
 global accessibility/INP/pixel-fidelity/full-roadmap/release pass is claimed.
+
+Landing CI receipt:ff2ce220d8ef11d4e7599b424d732c1087a5cc3f,run39099696783,
+completed success/all5 jobs observed this session. Raw landing-hosted-ci.json.
+No promotion of media,accessibility,fidelity or release gates.

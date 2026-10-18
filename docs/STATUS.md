@@ -1,7 +1,7 @@
 # Current state
 
 - Step:liquid-glass public landing;ADR0083;codex/focused-unlock-redesign.
-- Last hosted green:c3c54a48f3ed43bde52d6f9afacc5c7f215ccf85;all5 success.
+- Last hosted green:ff2ce220d8ef11d4e7599b424d732c1087a5cc3f;all5 success.
 - Local:184 source,70 Rust,95 web/types/build,audit0,38 probes;19 smoke PASS.
 - Licenses:77 npm entries/7 OFL binaries admitted;0BSD reviewed,no waiver.
 - Public page:3 widths,normal/reduced motion,foreign HTTP/WS0,storage0.
@@ -18,8 +18,9 @@ tools/smoke_all.sh19;evals/browser_website.mjs;evals/landing_budget.mjs.
 Raw landing-*;full truth/limits in landing-media.md and PLAN_COVERAGE supplement.
 Failures retained;numeric budgets unchanged. Public React entry intentionally
 replaces former zero-script gate with one same-origin module plus no inline
-code,unchanged CSP and egress/storage zero. Current SHA requires hosted CI
-completion before green. Video behavior only clock-tested,not real-media proven.
+code,unchanged CSP and egress/storage zero. Implementation ff2ce22 hosted39099696783 completed success(all5 jobs).
+Receipt:evals/results/landing-hosted-ci.json. Evidence-only follow-up requires
+its own hosted completion. Video behavior only clock-tested,not real-media proven.
 
 ## Preserved history
 
