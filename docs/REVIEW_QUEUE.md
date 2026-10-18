@@ -221,3 +221,8 @@ while other tests ran(cause unproven,diagnostic and later real runs succeeded).
 No flaked/failed run counted as a pass. Full redesign remains PARTIAL:remaining
 critique rounds,custom controls,axe/all-theme contrast,zoom capture/layout,
 performance and first-run work are not promoted. No phase/release tag or merge.
+
+Focused-chat verification supplement:9988001 hosted39096933791 completed
+success(all5). Native Appearance disclosure is keyboard-reachable after Licenses
+on mobile;strengthened existing shell test passes5 widths. No product change,
+threshold or timeout change. Raw chat-clean-navigation-focus.* and hosted-ci.json.

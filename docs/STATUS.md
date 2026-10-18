@@ -1,7 +1,7 @@
 # Current state
 
 - Step:focused chat refinement1;ADR0082;codex/focused-unlock-redesign.
-- Last hosted green:1689b037ccf5d347519cd6edb4d58baaebd983f2;all5 completed success.
+- Last hosted green:9988001776a1e5a4d26acaecea46daa1698b0630;all5 completed success.
 - Local:182 source,70 Rust,92 web/types/build,audit0,38 probes;19 smoke PASS.
 - Real chat:760/543/366px composer,127px tall;0 overflow/foreign/page errors.
 - Changed:quiet history,disclosed Appearance/runtime,compact chat/speech tools.
@@ -17,8 +17,9 @@ tools/smoke_all.sh19;node evals/browser_focused_chat.mjs. Raw chat-clean-*.
 19 includes actual chat,RAG,speech files and real browser subflows,not full
 roadmap acceptance. Same archive rebuild:JS+796/CSS+1949 gzip bytes. Historical
 malformed owner preferences remain preserved;UI recovery notice can be dismissed.
-Native200% zoom visual gate from the previous slice stays open. Current commit
-requires hosted CI completion before a green claim. All evidence stays named.
+Native200% zoom visual gate from the previous slice stays open. Implementation9988001 hosted run39096933791 completed success(all5 jobs).
+Supplemental native-disclosure Tab assertion passed at5 widths;no product
+change was needed. The evidence/test-only follow-up requires its own CI receipt. All evidence stays named.
 
 ## Preserved history
 

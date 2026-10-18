@@ -40,6 +40,8 @@ try{
       const navigation=page.getByRole('dialog',{name:'Navigation',exact:true});await navigation.waitFor({state:'visible'});
       await page.screenshot({path:`.sanctum/ui-shell/${viewport.width}-navigation.png`});
       assert.equal(await page.locator('main').evaluate(node=>node.inert),true);
+      await navigation.getByRole('button',{name:'Licenses',exact:true}).focus();await page.keyboard.press('Tab');
+      assert.equal(await page.getByLabel('Appearance options',{exact:true}).evaluate(node=>node===document.activeElement),true,'native disclosure must be in the mobile focus sequence');
       await page.keyboard.press('Shift+Tab');
       assert.equal(await navigation.evaluate(node=>node.contains(document.activeElement)),true);
       await page.keyboard.press('Escape');await navigation.waitFor({state:'hidden'});
