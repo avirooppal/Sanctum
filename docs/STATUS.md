@@ -32,6 +32,7 @@
   - Client methods for `/api/capability`, `/api/settings*`, and `/api/pack/*` added to `SanctumClient`.
   - Built bundle verified: 10.99 KB gzip (well under 50 KB Preact budget and 100 KB hard gate).
   - 45 web unit tests passing (11 new tests in `panel-registry.test.mjs`, `tokens.test.mjs`, `m2-client.test.mjs`); 0 audit vulnerabilities.
+  - Hosted CI: commit `4b74be4` verified green across all 5 jobs in run 39471167224 (`evals/results/m3-hosted-ci.json`).
 - No native installer, desktop performance acceptance or whole-product security claim.
 
 Evidence: [A2–A5 commands/results](A2_A5_EVIDENCE.md), [PERFORMANCE](PERFORMANCE.md), [test audit](TEST_REMOVAL_AUDIT.md),

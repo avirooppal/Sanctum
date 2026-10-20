@@ -1,0 +1,39 @@
+{
+  "commit": "4b74be4cc47d959822e19ee0e14003aee6983a42",
+  "branch": "jan-style",
+  "workflow_run_id": 39471167224,
+  "workflow_url": "https://github.com/avirooppal/Sanctum/actions/runs/39471167224",
+  "status": "completed",
+  "conclusion": "success",
+  "duration_seconds": 339,
+  "jobs": [
+    {
+      "name": "source-gates (ubuntu-22.04)",
+      "conclusion": "success"
+    },
+    {
+      "name": "source-gates (windows-latest)",
+      "conclusion": "success"
+    },
+    {
+      "name": "source-gates (macos-latest)",
+      "conclusion": "success"
+    },
+    {
+      "name": "rust-foundation",
+      "conclusion": "success"
+    },
+    {
+      "name": "web",
+      "conclusion": "success"
+    }
+  ],
+  "verification_timestamp": "2026-10-20T23:38:30+05:30",
+  "features_verified": [
+    "desktop_tokens_customisation_density_wcag_aa",
+    "panel_registry_capability_filtering_and_crash_isolation",
+    "modular_desktop_panels_sidebar_composer_chat_models_packs_settings_status_command_palette",
+    "preact_compatible_clean_desktop_library_bundle",
+    "b7_ui_bundle_size_budget_10_99_kb_gzip"
+  ]
+}
