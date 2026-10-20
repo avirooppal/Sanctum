@@ -12,4 +12,5 @@ export * from './components/SettingsPanel.js';
 export * from './components/StatusBar.js';
 export * from './components/CommandPalette.js';
 export * from './Shell.js';
+export * from './strings.js';
 export { SafeMarkdown } from './ui/SafeMarkdown.js';

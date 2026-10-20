@@ -1,0 +1,40 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "title": "SanctumThemeTokens",
+  "type": "object",
+  "required": [
+    "surface",
+    "surfaceRaised",
+    "surfaceHover",
+    "border",
+    "borderSubtle",
+    "textPrimary",
+    "textSecondary",
+    "textTertiary",
+    "textDisabled",
+    "accent",
+    "accentHover",
+    "accentMuted",
+    "danger",
+    "success",
+    "warning"
+  ],
+  "properties": {
+    "surface": { "type": "string", "pattern": "^#[0-9a-fA-F]{6}$" },
+    "surfaceRaised": { "type": "string", "pattern": "^#[0-9a-fA-F]{6}$" },
+    "surfaceHover": { "type": "string", "pattern": "^#[0-9a-fA-F]{6}$" },
+    "border": { "type": "string", "pattern": "^#[0-9a-fA-F]{6}$" },
+    "borderSubtle": { "type": "string", "pattern": "^#[0-9a-fA-F]{6}$" },
+    "textPrimary": { "type": "string", "pattern": "^#[0-9a-fA-F]{6}$" },
+    "textSecondary": { "type": "string", "pattern": "^#[0-9a-fA-F]{6}$" },
+    "textTertiary": { "type": "string", "pattern": "^#[0-9a-fA-F]{6}$" },
+    "textDisabled": { "type": "string", "pattern": "^#[0-9a-fA-F]{6}$" },
+    "accent": { "type": "string", "pattern": "^#[0-9a-fA-F]{6}$" },
+    "accentHover": { "type": "string", "pattern": "^#[0-9a-fA-F]{6}$" },
+    "accentMuted": { "type": "string" },
+    "danger": { "type": "string", "pattern": "^#[0-9a-fA-F]{6}$" },
+    "success": { "type": "string", "pattern": "^#[0-9a-fA-F]{6}$" },
+    "warning": { "type": "string", "pattern": "^#[0-9a-fA-F]{6}$" }
+  },
+  "additionalProperties": false
+}
