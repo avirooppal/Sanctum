@@ -23,6 +23,7 @@
   - Cross-platform supervision and boot: native Windows execution without exit(78), unconfined fallback reporting "not verified", child process kill cleanup.
   - B7 CI budget enforcer (`tools/check_desktop_budgets.py`) wired into source gate.
   - All unit/integration tests passing (3 settings/packs Rust tests, 4 budget tests, 6 CLI config tests; full workspace and check.py green).
+  - Hosted CI: commit `c4551fe` verified green across all 5 jobs in run 39432364639 (`evals/results/m2-hosted-ci.json`).
 - No native installer, desktop performance acceptance or whole-product security claim.
 
 Evidence: [A2–A5 commands/results](A2_A5_EVIDENCE.md), [PERFORMANCE](PERFORMANCE.md), [test audit](TEST_REMOVAL_AUDIT.md),
