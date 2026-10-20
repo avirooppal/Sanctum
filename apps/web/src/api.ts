@@ -8,6 +8,32 @@ export type Workspace = {id:string;name:string};
 export type KnowledgeAnswer = {answer:string;abstained:boolean;citations:{source:string;page:number|null;quote:string;document_id:string;chunk_id:string;start:number;end:number}[]};
 export type ConversationUsage = {conversation_id:string;prompt_tokens:number;completion_tokens:number;total_tokens:number;context_length:number;has_data:boolean};
 export type AssistantProfile = {id:string;name:string;system_prompt:string;scope:string;created_at?:number;updated_at?:number};
+export type PackState = 'absent' | 'installed' | 'loaded' | 'unloading' | 'error';
+export type PackInfo = {
+  id: string;
+  name: string;
+  version: string;
+  state: PackState;
+  disk_bytes: number;
+  ram_budget_mb: number;
+  capabilities: string[];
+  description?: string;
+};
+export type CapabilityReport = {
+  capabilities: string[];
+  platform_assurance: string;
+  profile: string;
+  hardware: { threads: number; context: number };
+  packs: PackInfo[];
+};
+export type SettingEntry = {
+  value: unknown;
+  default: unknown;
+  type: string;
+  scope: string;
+  risk: string;
+  description: string;
+};
 type Socket = Pick<WebSocket,'close'|'addEventListener'>;
 type SocketFactory = (url:string, protocols:string[])=>Socket;
 
@@ -235,6 +261,64 @@ export class SanctumClient {
     const res = await this.request('/v1/purge', signal, { confirm }, 'POST');
     const data: unknown = await res.json();
     if (!record(data) || data.purged !== true) throw Error('Invalid purge response');
+  }
+
+  async getCapabilityReport(signal?: AbortSignal): Promise<CapabilityReport> {
+    const res = await this.request('/api/capability', signal);
+    const data: unknown = await res.json();
+    if (!record(data) || !Array.isArray(data.capabilities) || typeof data.platform_assurance !== 'string') {
+      throw Error('Invalid capability report response');
+    }
+    return data as CapabilityReport;
+  }
+
+  async getSettings(signal?: AbortSignal): Promise<Record<string, SettingEntry>> {
+    const res = await this.request('/api/settings', signal);
+    const data: unknown = await res.json();
+    if (!record(data)) throw Error('Invalid settings response');
+    return data as Record<string, SettingEntry>;
+  }
+
+  async setSetting(key: string, value: unknown, signal?: AbortSignal): Promise<{ saved: boolean; key: string; restart_required: boolean }> {
+    const res = await this.request('/api/settings', signal, { key, value }, 'POST');
+    const data: unknown = await res.json();
+    if (!record(data) || data.saved !== true) throw Error('Invalid set setting response');
+    return data as { saved: boolean; key: string; restart_required: boolean };
+  }
+
+  async exportSettings(signal?: AbortSignal): Promise<Record<string, unknown>> {
+    const res = await this.request('/api/settings/export', signal);
+    const data: unknown = await res.json();
+    if (!record(data)) throw Error('Invalid export settings response');
+    return data;
+  }
+
+  async importSettings(settings: Record<string, unknown>, signal?: AbortSignal): Promise<{ imported: number }> {
+    const res = await this.request('/api/settings/import', signal, { settings }, 'POST');
+    const data: unknown = await res.json();
+    if (!record(data) || typeof data.imported !== 'number') throw Error('Invalid import settings response');
+    return data as { imported: number };
+  }
+
+  async listPacks(signal?: AbortSignal): Promise<PackInfo[]> {
+    const res = await this.request('/api/pack/list', signal);
+    const data: unknown = await res.json();
+    if (!Array.isArray(data)) throw Error('Invalid pack list response');
+    return data as PackInfo[];
+  }
+
+  async loadPack(id: string, signal?: AbortSignal): Promise<PackInfo> {
+    const res = await this.request('/api/pack/load', signal, { id }, 'POST');
+    const data: unknown = await res.json();
+    if (!record(data) || typeof data.id !== 'string') throw Error('Invalid load pack response');
+    return data as PackInfo;
+  }
+
+  async unloadPack(id: string, signal?: AbortSignal): Promise<PackInfo> {
+    const res = await this.request('/api/pack/unload', signal, { id }, 'POST');
+    const data: unknown = await res.json();
+    if (!record(data) || typeof data.id !== 'string') throw Error('Invalid unload pack response');
+    return data as PackInfo;
   }
 }
 

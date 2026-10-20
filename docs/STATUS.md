@@ -24,6 +24,14 @@
   - B7 CI budget enforcer (`tools/check_desktop_budgets.py`) wired into source gate.
   - All unit/integration tests passing (3 settings/packs Rust tests, 4 budget tests, 6 CLI config tests; full workspace and check.py green).
   - Hosted CI: commit `c4551fe` verified green across all 5 jobs in run 39432364639 (`evals/results/m2-hosted-ci.json`).
+- M3: Desktop UI Assembly & Modular Components implemented:
+  - Design tokens & customisation engine (`tokens.ts`) with dark/light themes, density multipliers, and WCAG AA contrast guard.
+  - Typed PanelRegistry (`panels/registry.ts`) and PanelErrorBoundary (`panels/ErrorBoundary.tsx`) for capability-based panel rendering and crash isolation.
+  - Modular desktop components: `Sidebar`, `Composer`, `ChatPanel` (with streaming, citations, markdown, copy action), `ModelsPanel`, `PacksPanel`, `SettingsPanel`, `StatusBar`, `CommandPalette`.
+  - Desktop Shell (`Shell.tsx`) orchestrating layout, capability discovery (`/api/capability`), session management, and settings persistence.
+  - Client methods for `/api/capability`, `/api/settings*`, and `/api/pack/*` added to `SanctumClient`.
+  - Built bundle verified: 10.99 KB gzip (well under 50 KB Preact budget and 100 KB hard gate).
+  - 45 web unit tests passing (11 new tests in `panel-registry.test.mjs`, `tokens.test.mjs`, `m2-client.test.mjs`); 0 audit vulnerabilities.
 - No native installer, desktop performance acceptance or whole-product security claim.
 
 Evidence: [A2–A5 commands/results](A2_A5_EVIDENCE.md), [PERFORMANCE](PERFORMANCE.md), [test audit](TEST_REMOVAL_AUDIT.md),

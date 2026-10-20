@@ -14,10 +14,10 @@ reference-fidelity and conflicting stack/roadmap requirements are
 | M0 full desktop measurements | PENDING | Legacy JS101141B gzip/web2139977B measured; native install/no-model RSS/cold UI/CPU unavailable; PERFORMANCE.md |
 | M0 removals and reviewed salvage | VERIFIED retirement only | ADR0085; 1017 removed tracked paths in SHA256 inventory; initial11 narrowed to6 M3 modules by ADR0087; restored HTTP coverage; no app UI |
 | M1 Jan study and architecture ADRs | B1–B7 COMPLETED (PROVISIONAL) | JAN_STUDY.md/ADR0089: pin and study. ADR0090: MPL policy. ADR0091: B2 shell measurements. ADR0092: B3 UI stack measurements. ADR0093: B4 core contracts. THREAT_MODEL.md: B5 threat model. docs/design/wireframes/: B6 wireframes (2 review iterations). ADR0094: B7 measured performance budgets |
-| M2 Lightweight Core | IMPLEMENTED (Slice 1) | Typed settings engine (`settings.rs`), pack manager (`packs.rs`), capability endpoint (`/api/capability`), Windows supervision & unconfined boot fallback, B7 CI budget enforcer (`check_desktop_budgets.py`), CLI `sanctum config`; 13 new unit/integration tests passing |
-| A / M3 chat and threads | PENDING | Existing legacy chat/history tests are scoped reuse evidence only; new desktop journeys absent |
+| M2 Lightweight Core | IMPLEMENTED (Slice 1) | Typed settings engine (`settings.rs`), pack manager (`packs.rs`), capability endpoint (`/api/capability`), Windows supervision & unconfined boot fallback, B7 CI budget enforcer (`check_desktop_budgets.py`), CLI `sanctum config`; 13 new unit/integration tests passing; hosted run 39432364639 green |
+| A / M3 chat, shell, and UI | IMPLEMENTED (Components & Shell) | Desktop Shell (`Shell.tsx`), `PanelRegistry`, `PanelErrorBoundary`, `ChatPanel` (streaming, citations, markdown, copy), `Sidebar`, `Composer`, `ModelsPanel`, `PacksPanel`, `SettingsPanel`, `StatusBar`, `CommandPalette`; 45 web tests passing, 10.99 KB gzip bundle |
 | B / M5 assistants | PENDING | New contract and journey required |
-| C / M2–M3 models and engines | Partial | Retained Rust supervision/inference checks and Windows supervision cleanup verified; full model manager pending |
+| C / M2–M3 models and engines | Partial | Retained Rust supervision/inference checks, Windows supervision cleanup, and Models panel verified; full model manager pending |
 | D / M9 optional providers | PENDING | Egress, keychain, per-thread data consent, policies, ledger and kill-switch journeys required |
 | E / M6 local API | PENDING | Existing SDK smoke is partial reuse evidence; configurable native server acceptance absent |
 | F–H / M7 tools, permissions, built-ins, MCP | PENDING | Full permission/taint/schema/budget/manifest/change-detection journeys absent |
