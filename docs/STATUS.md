@@ -31,8 +31,9 @@
   - Desktop Shell (`Shell.tsx`) orchestrating layout, capability discovery (`/api/capability`), session management, and settings persistence.
   - Client methods for `/api/capability`, `/api/settings*`, and `/api/pack/*` added to `SanctumClient`.
   - Built bundle verified: 10.99 KB gzip (well under 50 KB Preact budget and 100 KB hard gate).
-  - 45 web unit tests passing (11 new tests in `panel-registry.test.mjs`, `tokens.test.mjs`, `m2-client.test.mjs`); 0 audit vulnerabilities.
+  - 47 web unit tests passing (13 new tests in `panel-registry.test.mjs`, `tokens.test.mjs`, `m2-client.test.mjs`, `strings.test.mjs`); 0 audit vulnerabilities.
   - Hosted CI: commit `4b74be4` verified green across all 5 jobs in run 39471167224 (`evals/results/m3-hosted-ci.json`).
+  - D0 design specifications complete: BRIEF, TOKENS (with schema), COMPONENTS, FLOWS, MICROCOPY, and string table; commit `3d7552a` verified green across all 5 jobs in run 39474771424 (`evals/results/d0-design-hosted-ci.json`).
 - No native installer, desktop performance acceptance or whole-product security claim.
 
 Evidence: [A2–A5 commands/results](A2_A5_EVIDENCE.md), [PERFORMANCE](PERFORMANCE.md), [test audit](TEST_REMOVAL_AUDIT.md),
