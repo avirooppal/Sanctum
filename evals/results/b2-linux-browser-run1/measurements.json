@@ -1,0 +1,404 @@
+{
+  "binary": "/home/aviroop/.cache/sanctum-shell-lab-target/release/sanctum-lab-browser",
+  "binary_bytes": 799344,
+  "binary_sha256": "4008967eaf2565adc8380dfb6da966eaebdb60f5139869dc327c5d2f5a93f5f3",
+  "platform": "Linux-6.6.87.2-microsoft-standard-WSL2-x86_64-with-glibc2.35",
+  "psutil": "7.2.2",
+  "installer_bytes": null,
+  "installer_status": "NOT_BUILT",
+  "runs": [
+    {
+      "ready_two_animation_frames_seconds": 9.975602496999954,
+      "root_rss_bytes": 26308608,
+      "descendant_tree_rss_sum_bytes": 565936128,
+      "tree_cpu_one_core_percent": 0.0,
+      "sample_seconds": 20.64718860000005,
+      "processes": [
+        {
+          "pid": 1234,
+          "created": 1792491101.07,
+          "name": "sanctum-lab-browser",
+          "rss_bytes": 26308608,
+          "cpu_seconds": 0.06
+        },
+        {
+          "pid": 1243,
+          "created": 1792491099.14,
+          "name": "xdg-open",
+          "rss_bytes": 1835008,
+          "cpu_seconds": 0.04
+        },
+        {
+          "pid": 1358,
+          "created": 1792491101.51,
+          "name": "epiphany",
+          "rss_bytes": 225472512,
+          "cpu_seconds": 5.71
+        },
+        {
+          "pid": 1365,
+          "created": 1792491101.61,
+          "name": "WebKitNetworkProcess",
+          "rss_bytes": 62767104,
+          "cpu_seconds": 0.8300000000000001
+        },
+        {
+          "pid": 1401,
+          "created": 1792491102.42,
+          "name": "bwrap",
+          "rss_bytes": 1966080,
+          "cpu_seconds": 0.0
+        },
+        {
+          "pid": 1405,
+          "created": 1792491102.43,
+          "name": "bwrap",
+          "rss_bytes": 1966080,
+          "cpu_seconds": 0.0
+        },
+        {
+          "pid": 1407,
+          "created": 1792491102.44,
+          "name": "bwrap",
+          "rss_bytes": 1310720,
+          "cpu_seconds": 0.01
+        },
+        {
+          "pid": 1408,
+          "created": 1792491102.45,
+          "name": "WebKitWebProcess",
+          "rss_bytes": 237092864,
+          "cpu_seconds": 0.78
+        },
+        {
+          "pid": 1402,
+          "created": 1792491102.42,
+          "name": "bwrap",
+          "rss_bytes": 1318912,
+          "cpu_seconds": 0.0
+        },
+        {
+          "pid": 1403,
+          "created": 1792491102.43,
+          "name": "xdg-dbus-proxy",
+          "rss_bytes": 5898240,
+          "cpu_seconds": 0.0
+        }
+      ],
+      "scope": "root plus current descendants; shared pages double-counted; detached/reused default browser excluded"
+    },
+    {
+      "ready_two_animation_frames_seconds": 4.160792158999982,
+      "root_rss_bytes": 26345472,
+      "descendant_tree_rss_sum_bytes": 694505472,
+      "tree_cpu_one_core_percent": 0.2895679274365114,
+      "sample_seconds": 20.720526797000048,
+      "processes": [
+        {
+          "pid": 1473,
+          "created": 1792491131.92,
+          "name": "sanctum-lab-browser",
+          "rss_bytes": 26345472,
+          "cpu_seconds": 0.12
+        },
+        {
+          "pid": 1482,
+          "created": 1792491132.04,
+          "name": "xdg-open",
+          "rss_bytes": 1835008,
+          "cpu_seconds": 0.05
+        },
+        {
+          "pid": 1597,
+          "created": 1792491134.67,
+          "name": "epiphany",
+          "rss_bytes": 214147072,
+          "cpu_seconds": 0.9099999999999999
+        },
+        {
+          "pid": 1604,
+          "created": 1792491134.73,
+          "name": "WebKitNetworkProcess",
+          "rss_bytes": 52297728,
+          "cpu_seconds": 0.11
+        },
+        {
+          "pid": 1648,
+          "created": 1792491135.42,
+          "name": "bwrap",
+          "rss_bytes": 1966080,
+          "cpu_seconds": 0.0
+        },
+        {
+          "pid": 1652,
+          "created": 1792491135.43,
+          "name": "bwrap",
+          "rss_bytes": 1966080,
+          "cpu_seconds": 0.0
+        },
+        {
+          "pid": 1655,
+          "created": 1792491135.53,
+          "name": "bwrap",
+          "rss_bytes": 1966080,
+          "cpu_seconds": 0.0
+        },
+        {
+          "pid": 1659,
+          "created": 1792491135.55,
+          "name": "bwrap",
+          "rss_bytes": 1966080,
+          "cpu_seconds": 0.0
+        },
+        {
+          "pid": 1662,
+          "created": 1792491135.56,
+          "name": "bwrap",
+          "rss_bytes": 1310720,
+          "cpu_seconds": 0.01
+        },
+        {
+          "pid": 1667,
+          "created": 1792491135.57,
+          "name": "WebKitWebProcess",
+          "rss_bytes": 225492992,
+          "cpu_seconds": 0.5700000000000001
+        },
+        {
+          "pid": 1656,
+          "created": 1792491135.54,
+          "name": "bwrap",
+          "rss_bytes": 1318912,
+          "cpu_seconds": 0.0
+        },
+        {
+          "pid": 1657,
+          "created": 1792491135.55,
+          "name": "xdg-dbus-proxy",
+          "rss_bytes": 5767168,
+          "cpu_seconds": 0.01
+        },
+        {
+          "pid": 1653,
+          "created": 1792491135.44,
+          "name": "bwrap",
+          "rss_bytes": 1310720,
+          "cpu_seconds": 0.01
+        },
+        {
+          "pid": 1654,
+          "created": 1792491135.45,
+          "name": "WebKitWebProcess",
+          "rss_bytes": 149725184,
+          "cpu_seconds": 0.25
+        },
+        {
+          "pid": 1649,
+          "created": 1792491135.42,
+          "name": "bwrap",
+          "rss_bytes": 1323008,
+          "cpu_seconds": 0.0
+        },
+        {
+          "pid": 1650,
+          "created": 1792491135.43,
+          "name": "xdg-dbus-proxy",
+          "rss_bytes": 5767168,
+          "cpu_seconds": 0.01
+        }
+      ],
+      "scope": "root plus current descendants; shared pages double-counted; detached/reused default browser excluded"
+    },
+    {
+      "ready_two_animation_frames_seconds": 3.9595793930000127,
+      "root_rss_bytes": 25952256,
+      "descendant_tree_rss_sum_bytes": 867422208,
+      "tree_cpu_one_core_percent": 0.0,
+      "sample_seconds": 20.288357726000015,
+      "processes": [
+        {
+          "pid": 1778,
+          "created": 1792491158.93,
+          "name": "sanctum-lab-browser",
+          "rss_bytes": 25952256,
+          "cpu_seconds": 0.11
+        },
+        {
+          "pid": 1787,
+          "created": 1792491157.05,
+          "name": "xdg-open",
+          "rss_bytes": 1572864,
+          "cpu_seconds": 0.02
+        },
+        {
+          "pid": 1902,
+          "created": 1792491159.26,
+          "name": "epiphany",
+          "rss_bytes": 215552000,
+          "cpu_seconds": 1.1600000000000001
+        },
+        {
+          "pid": 1909,
+          "created": 1792491159.3,
+          "name": "WebKitNetworkProcess",
+          "rss_bytes": 52297728,
+          "cpu_seconds": 0.11
+        },
+        {
+          "pid": 1953,
+          "created": 1792491160.26,
+          "name": "bwrap",
+          "rss_bytes": 1966080,
+          "cpu_seconds": 0.0
+        },
+        {
+          "pid": 1957,
+          "created": 1792491160.29,
+          "name": "bwrap",
+          "rss_bytes": 1966080,
+          "cpu_seconds": 0.0
+        },
+        {
+          "pid": 1959,
+          "created": 1792491160.32,
+          "name": "bwrap",
+          "rss_bytes": 1966080,
+          "cpu_seconds": 0.0
+        },
+        {
+          "pid": 1964,
+          "created": 1792491160.34,
+          "name": "bwrap",
+          "rss_bytes": 1966080,
+          "cpu_seconds": 0.0
+        },
+        {
+          "pid": 1970,
+          "created": 1792491160.44,
+          "name": "bwrap",
+          "rss_bytes": 1966080,
+          "cpu_seconds": 0.0
+        },
+        {
+          "pid": 1979,
+          "created": 1792491160.45,
+          "name": "bwrap",
+          "rss_bytes": 1966080,
+          "cpu_seconds": 0.0
+        },
+        {
+          "pid": 1980,
+          "created": 1792491160.46,
+          "name": "bwrap",
+          "rss_bytes": 1310720,
+          "cpu_seconds": 0.01
+        },
+        {
+          "pid": 1986,
+          "created": 1792491160.47,
+          "name": "WebKitWebProcess",
+          "rss_bytes": 221663232,
+          "cpu_seconds": 0.49
+        },
+        {
+          "pid": 1975,
+          "created": 1792491160.44,
+          "name": "bwrap",
+          "rss_bytes": 1323008,
+          "cpu_seconds": 0.0
+        },
+        {
+          "pid": 1977,
+          "created": 1792491160.45,
+          "name": "xdg-dbus-proxy",
+          "rss_bytes": 5505024,
+          "cpu_seconds": 0.01
+        },
+        {
+          "pid": 1965,
+          "created": 1792491160.34,
+          "name": "bwrap",
+          "rss_bytes": 1179648,
+          "cpu_seconds": 0.0
+        },
+        {
+          "pid": 1966,
+          "created": 1792491160.36,
+          "name": "WebKitWebProcess",
+          "rss_bytes": 164855808,
+          "cpu_seconds": 0.29000000000000004
+        },
+        {
+          "pid": 1960,
+          "created": 1792491160.32,
+          "name": "bwrap",
+          "rss_bytes": 1318912,
+          "cpu_seconds": 0.0
+        },
+        {
+          "pid": 1962,
+          "created": 1792491160.33,
+          "name": "xdg-dbus-proxy",
+          "rss_bytes": 5636096,
+          "cpu_seconds": 0.01
+        },
+        {
+          "pid": 1958,
+          "created": 1792491160.29,
+          "name": "bwrap",
+          "rss_bytes": 1310720,
+          "cpu_seconds": 0.03
+        },
+        {
+          "pid": 1961,
+          "created": 1792491160.33,
+          "name": "WebKitWebProcess",
+          "rss_bytes": 149319680,
+          "cpu_seconds": 0.26
+        },
+        {
+          "pid": 1954,
+          "created": 1792491160.26,
+          "name": "bwrap",
+          "rss_bytes": 1323008,
+          "cpu_seconds": 0.0
+        },
+        {
+          "pid": 1955,
+          "created": 1792491160.27,
+          "name": "xdg-dbus-proxy",
+          "rss_bytes": 5505024,
+          "cpu_seconds": 0.02
+        }
+      ],
+      "scope": "root plus current descendants; shared pages double-counted; detached/reused default browser excluded"
+    }
+  ],
+  "status": "PASS_MEASUREMENT_ONLY",
+  "summary": {
+    "ready_two_animation_frames_seconds": {
+      "median": 4.160792158999982,
+      "min": 3.9595793930000127,
+      "max": 9.975602496999954,
+      "spread": 6.016023103999942
+    },
+    "root_rss_bytes": {
+      "median": 26308608,
+      "min": 25952256,
+      "max": 26345472,
+      "spread": 393216
+    },
+    "descendant_tree_rss_sum_bytes": {
+      "median": 694505472,
+      "min": 565936128,
+      "max": 867422208,
+      "spread": 301486080
+    },
+    "tree_cpu_one_core_percent": {
+      "median": 0.0,
+      "min": 0.0,
+      "max": 0.2895679274365114,
+      "spread": 0.2895679274365114
+    }
+  }
+}

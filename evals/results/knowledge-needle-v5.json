@@ -1,0 +1,75 @@
+{
+  "suite": "knowledge-needle-v5",
+  "dataset_sha256": "0d2fb808e0d18185f8935c993ae9ebd4301062cf54ac94479734411dad38f97b",
+  "questions": 30,
+  "processed": 3,
+  "complete": false,
+  "records": [
+    {
+      "id": "needle-v5-01",
+      "vector_rank": 1,
+      "hybrid_rank": 1,
+      "answer": {
+        "abstained": false,
+        "answer": "Assigned sealant: sodium silicate.",
+        "citations": [
+          {
+            "chunk_id": "68c9027147274b67aaf04f819212f5c0",
+            "document_id": "1cb1f1243bc749ec8b56f65f862e0daf",
+            "end": 34,
+            "page": null,
+            "quote": "Assigned sealant: sodium silicate.",
+            "source": "register-targets.md",
+            "start": 0
+          }
+        ]
+      },
+      "citation_supported": true,
+      "answer_contains_expected": true
+    },
+    {
+      "id": "needle-v5-02",
+      "vector_rank": 1,
+      "hybrid_rank": 1,
+      "answer": {
+        "abstained": false,
+        "answer": "Assigned coolant: propylene glycol.",
+        "citations": [
+          {
+            "chunk_id": "67b1b4bc27b9486eaaeaf10cc01f13b2",
+            "document_id": "1cb1f1243bc749ec8b56f65f862e0daf",
+            "end": 35,
+            "page": null,
+            "quote": "Assigned coolant: propylene glycol.",
+            "source": "register-targets.md",
+            "start": 0
+          }
+        ]
+      },
+      "citation_supported": true,
+      "answer_contains_expected": true
+    },
+    {
+      "id": "needle-v5-03",
+      "vector_rank": 1,
+      "hybrid_rank": 1,
+      "answer": {
+        "abstained": false,
+        "answer": "Assigned filter grade: nominal 14 micron.",
+        "citations": [
+          {
+            "chunk_id": "08227d31b4484a2d9972ed0cc2899627",
+            "document_id": "1cb1f1243bc749ec8b56f65f862e0daf",
+            "end": 41,
+            "page": null,
+            "quote": "Assigned filter grade: nominal 14 micron.",
+            "source": "register-targets.md",
+            "start": 0
+          }
+        ]
+      },
+      "citation_supported": true,
+      "answer_contains_expected": true
+    }
+  ]
+}

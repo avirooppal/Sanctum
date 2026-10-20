@@ -1,0 +1,131 @@
+{
+  "binary": "/home/aviroop/.cache/sanctum-shell-lab-target/release/sanctum-lab-wry",
+  "binary_bytes": 705576,
+  "binary_sha256": "229641b1282bbd44bad27da7670cad49a1fcbc422d1ca746685f0c546f3fa773",
+  "platform": "Linux-6.6.87.2-microsoft-standard-WSL2-x86_64-with-glibc2.35",
+  "psutil": "7.2.2",
+  "installer_bytes": null,
+  "installer_status": "NOT_BUILT",
+  "runs": [
+    {
+      "ready_two_animation_frames_seconds": 3.6850025950000145,
+      "root_rss_bytes": 186449920,
+      "descendant_tree_rss_sum_bytes": 468946944,
+      "tree_cpu_one_core_percent": 0.09631536685272812,
+      "sample_seconds": 20.765118436999984,
+      "processes": [
+        {
+          "pid": 975,
+          "created": 1792491017.0,
+          "name": "sanctum-lab-wry",
+          "rss_bytes": 186449920,
+          "cpu_seconds": 1.12
+        },
+        {
+          "pid": 1010,
+          "created": 1792491017.98,
+          "name": "WebKitNetworkProcess",
+          "rss_bytes": 46661632,
+          "cpu_seconds": 0.13
+        },
+        {
+          "pid": 1012,
+          "created": 1792491018.01,
+          "name": "WebKitWebProcess",
+          "rss_bytes": 235835392,
+          "cpu_seconds": 1.38
+        }
+      ],
+      "scope": "root plus current descendants; shared pages double-counted; detached/reused default browser excluded"
+    },
+    {
+      "ready_two_animation_frames_seconds": 1.482427395000002,
+      "root_rss_bytes": 186855424,
+      "descendant_tree_rss_sum_bytes": 470134784,
+      "tree_cpu_one_core_percent": 0.04853017011776949,
+      "sample_seconds": 20.605738607000006,
+      "processes": [
+        {
+          "pid": 1061,
+          "created": 1792491042.68,
+          "name": "sanctum-lab-wry",
+          "rss_bytes": 186855424,
+          "cpu_seconds": 0.43
+        },
+        {
+          "pid": 1086,
+          "created": 1792491043.36,
+          "name": "WebKitNetworkProcess",
+          "rss_bytes": 47448064,
+          "cpu_seconds": 0.13
+        },
+        {
+          "pid": 1088,
+          "created": 1792491043.36,
+          "name": "WebKitWebProcess",
+          "rss_bytes": 235831296,
+          "cpu_seconds": 0.61
+        }
+      ],
+      "scope": "root plus current descendants; shared pages double-counted; detached/reused default browser excluded"
+    },
+    {
+      "ready_two_animation_frames_seconds": 1.1634857070000066,
+      "root_rss_bytes": 186118144,
+      "descendant_tree_rss_sum_bytes": 469196800,
+      "tree_cpu_one_core_percent": 0.049602884322962046,
+      "sample_seconds": 20.160117977999988,
+      "processes": [
+        {
+          "pid": 1144,
+          "created": 1792491066.95,
+          "name": "sanctum-lab-wry",
+          "rss_bytes": 186118144,
+          "cpu_seconds": 0.42000000000000004
+        },
+        {
+          "pid": 1169,
+          "created": 1792491065.56,
+          "name": "WebKitNetworkProcess",
+          "rss_bytes": 47054848,
+          "cpu_seconds": 0.05
+        },
+        {
+          "pid": 1171,
+          "created": 1792491065.56,
+          "name": "WebKitWebProcess",
+          "rss_bytes": 236023808,
+          "cpu_seconds": 0.47
+        }
+      ],
+      "scope": "root plus current descendants; shared pages double-counted; detached/reused default browser excluded"
+    }
+  ],
+  "status": "PASS_MEASUREMENT_ONLY",
+  "summary": {
+    "ready_two_animation_frames_seconds": {
+      "median": 1.482427395000002,
+      "min": 1.1634857070000066,
+      "max": 3.6850025950000145,
+      "spread": 2.521516888000008
+    },
+    "root_rss_bytes": {
+      "median": 186449920,
+      "min": 186118144,
+      "max": 186855424,
+      "spread": 737280
+    },
+    "descendant_tree_rss_sum_bytes": {
+      "median": 469196800,
+      "min": 468946944,
+      "max": 470134784,
+      "spread": 1187840
+    },
+    "tree_cpu_one_core_percent": {
+      "median": 0.049602884322962046,
+      "min": 0.04853017011776949,
+      "max": 0.09631536685272812,
+      "spread": 0.04778519673495863
+    }
+  }
+}

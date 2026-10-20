@@ -1,0 +1,12 @@
+
+** (epiphany:1902): WARNING **: 15:42:42.808: WebKitWebContext:use-system-appearance-for-scrollbars property is deprecated and does nothing
+
+** (epiphany:1902): WARNING **: 15:42:42.863: WebKitWebContext:use-system-appearance-for-scrollbars property is deprecated and does nothing
+
+** (epiphany:1902): WARNING **: 15:42:42.951: webkit_settings_set_enable_dns_prefetching is deprecated and does nothing.
+
+(epiphany:1902): epiphany-WARNING **: 15:42:43.129: Failed to search secrets in password schema: The name org.freedesktop.secrets was not provided by any .service files
+
+(epiphany:1902): epiphany-WARNING **: 15:43:04.111: Web process crashed
+
+(epiphany:1902): epiphany-WARNING **: 15:43:04.118: Web process crashed

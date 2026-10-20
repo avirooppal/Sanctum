@@ -1,0 +1,11 @@
+{
+  "productName": "Sanctum shell experiment",
+  "version": "0.0.0",
+  "identifier": "local.sanctum.shell-experiment",
+  "build": {"frontendDist": "ui"},
+  "app": {
+    "withGlobalTauri": true,
+    "windows": [{"title": "Sanctum shell experiment: Tauri", "width": 640, "height": 480}]
+  },
+  "bundle": {"active": false, "icon": []}
+}

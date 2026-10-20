@@ -1,0 +1,166 @@
+"""Measure development hello-world shells; requires separately provisioned psutil."""
+
+import argparse
+import hashlib
+import json
+import os
+import platform
+import queue
+import statistics
+import subprocess
+import threading
+import time
+from pathlib import Path
+
+import psutil
+
+
+def snapshot(root):
+    rows = []
+    for process in [root, *root.children(recursive=True)]:
+        try:
+            cpu = process.cpu_times()
+            rows.append(
+                {
+                    "pid": process.pid,
+                    "created": process.create_time(),
+                    "name": process.name(),
+                    "rss_bytes": process.memory_info().rss,
+                    "cpu_seconds": cpu.user + cpu.system,
+                }
+            )
+        except psutil.NoSuchProcess:
+            continue
+    return rows
+
+
+def measure(binary, seconds, log):
+    lines = queue.Queue()
+    started = time.monotonic()
+    with log.open("x", encoding="utf-8") as errors:
+        process = subprocess.Popen(
+            [str(binary)],
+            stdout=subprocess.PIPE,
+            stderr=errors,
+            text=True,
+            creationflags=subprocess.CREATE_NO_WINDOW if os.name == "nt" else 0,
+        )
+        root = psutil.Process(process.pid)
+        known = []
+
+        def collect():
+            for line in process.stdout:
+                lines.put(line.rstrip())
+            lines.put(None)
+
+        threading.Thread(target=collect, daemon=True).start()
+        try:
+            deadline = started + 120
+            while True:
+                remaining = deadline - time.monotonic()
+                if remaining <= 0:
+                    raise TimeoutError("No two-frame ready marker within 120s")
+                line = lines.get(timeout=remaining)
+                if line is None:
+                    raise RuntimeError("Shell exited before ready")
+                if line == "SANCTUM_LAB_READY":
+                    break
+            ready = time.monotonic() - started
+            time.sleep(2)
+            before = snapshot(root)
+            sample_start = time.monotonic()
+            for _ in range(seconds):
+                time.sleep(1)
+                known = snapshot(root)
+            elapsed = time.monotonic() - sample_start
+            old_cpu = {(p["pid"], p["created"]): p["cpu_seconds"] for p in before}
+            cpu = sum(
+                max(0, p["cpu_seconds"] - old_cpu.get((p["pid"], p["created"]), p["cpu_seconds"]))
+                for p in known
+            )
+            return {
+                "ready_two_animation_frames_seconds": ready,
+                "root_rss_bytes": next(p["rss_bytes"] for p in known if p["pid"] == root.pid),
+                "descendant_tree_rss_sum_bytes": sum(p["rss_bytes"] for p in known),
+                "tree_cpu_one_core_percent": cpu / elapsed * 100,
+                "sample_seconds": elapsed,
+                "processes": known,
+                "scope": "root plus current descendants; shared pages double-counted; detached/reused default browser excluded",
+            }
+        finally:
+            try:
+                children = root.children(recursive=True)
+            except psutil.NoSuchProcess:
+                children = []
+            for child in reversed(children):
+                try:
+                    child.terminate()
+                except psutil.NoSuchProcess:
+                    pass
+            if process.poll() is None:
+                process.terminate()
+            _, alive = psutil.wait_procs(children, timeout=5)
+            for child in alive:
+                child.kill()
+            try:
+                process.wait(timeout=5)
+            except subprocess.TimeoutExpired:
+                process.kill()
+                process.wait(timeout=5)
+
+
+def main():
+    parser = argparse.ArgumentParser(description=__doc__)
+    parser.add_argument("--binary", required=True, type=Path)
+    parser.add_argument("--output", required=True, type=Path)
+    parser.add_argument("--runs", type=int, default=3)
+    parser.add_argument("--idle-seconds", type=int, default=20)
+    args = parser.parse_args()
+    if args.output.exists():
+        raise FileExistsError("Preserve each named attempt; output already exists")
+    args.output.mkdir(parents=True)
+    binary = args.binary.resolve(strict=True)
+    result = {
+        "binary": str(binary),
+        "binary_bytes": binary.stat().st_size,
+        "binary_sha256": hashlib.sha256(binary.read_bytes()).hexdigest(),
+        "platform": platform.platform(),
+        "psutil": psutil.__version__,
+        "installer_bytes": None,
+        "installer_status": "NOT_BUILT",
+        "runs": [],
+        "status": "RUNNING",
+    }
+    try:
+        for i in range(args.runs):
+            result["runs"].append(
+                measure(binary, args.idle_seconds, args.output / f"run-{i + 1}.stderr.log")
+            )
+        result["summary"] = {}
+        for key in [
+            "ready_two_animation_frames_seconds",
+            "root_rss_bytes",
+            "descendant_tree_rss_sum_bytes",
+            "tree_cpu_one_core_percent",
+        ]:
+            values = [r[key] for r in result["runs"]]
+            result["summary"][key] = {
+                "median": statistics.median(values),
+                "min": min(values),
+                "max": max(values),
+                "spread": max(values) - min(values),
+            }
+        result["status"] = "PASS_MEASUREMENT_ONLY"
+    except BaseException as error:
+        result["status"] = "FAIL"
+        result["error_type"] = type(error).__name__
+        raise
+    finally:
+        (args.output / "measurements.json").write_text(
+            json.dumps(result, indent=2) + "\n", encoding="utf-8"
+        )
+    print(json.dumps(result["summary"], indent=2))
+
+
+if __name__ == "__main__":
+    main()

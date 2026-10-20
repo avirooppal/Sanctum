@@ -1,0 +1,230 @@
+All checks passed!
+154 files already formatted
+All checks passed!
+All checks passed!
+test_attribution_license_requires_provenance (test_contracts.ContractTests.test_attribution_license_requires_provenance) ... ok
+test_committed_registry (test_contracts.ContractTests.test_committed_registry) ... ok
+test_doctor_report (test_contracts.ContractTests.test_doctor_report) ... ok
+test_envelope_rejects_missing_identity_and_invalid_traces (test_contracts.ContractTests.test_envelope_rejects_missing_identity_and_invalid_traces) ... ok
+test_legacy_ggml_is_restricted_to_asr_or_vad (test_contracts.ContractTests.test_legacy_ggml_is_restricted_to_asr_or_vad) ... ok
+test_measured_bootstrap_response (test_contracts.ContractTests.test_measured_bootstrap_response) ... ok
+test_measured_runtime_health (test_contracts.ContractTests.test_measured_runtime_health) ... ok
+test_registry_rejects_noncommercial_and_unhashed_weights (test_contracts.ContractTests.test_registry_rejects_noncommercial_and_unhashed_weights) ... ok
+test_shared_envelope_fixtures (test_contracts.ContractTests.test_shared_envelope_fixtures) ... ok
+test_apple_profile (test_doctor.DoctorTests.test_apple_profile) ... ok
+test_does_not_sum_non_sharded_gpus (test_doctor.DoctorTests.test_does_not_sum_non_sharded_gpus) ... ok
+test_json_cli (test_doctor.DoctorTests.test_json_cli) ... ok
+test_missing_config_is_error (test_doctor.DoctorTests.test_missing_config_is_error) ... ok
+test_privacy_never_inferred_from_config (test_doctor.DoctorTests.test_privacy_never_inferred_from_config) ... ok
+test_probe_failure_is_unknown (test_doctor.DoctorTests.test_probe_failure_is_unknown) ... ok
+test_profiles_are_data (test_doctor.DoctorTests.test_profiles_are_data) ... ok
+test_team_requires_known_nvidia_vram (test_doctor.DoctorTests.test_team_requires_known_nvidia_vram) ... ok
+test_tier_boundaries (test_doctor.DoctorTests.test_tier_boundaries) ... ok
+test_unknown_ram_has_no_recommendation (test_doctor.DoctorTests.test_unknown_ram_has_no_recommendation) ... ok
+test_all_required_checks (test_install_check.InstallCheckTests.test_all_required_checks) ... ok
+test_complete_probe_and_wrong_trace (test_install_check.InstallCheckTests.test_complete_probe_and_wrong_trace) ... ok
+test_existing_install_is_reported_not_deleted (test_install_check.InstallCheckTests.test_existing_install_is_reported_not_deleted) ... ok
+test_low_disk_and_busy_port (test_install_check.InstallCheckTests.test_low_disk_and_busy_port) ... ok
+test_missing_probe_and_root_refuse (test_install_check.InstallCheckTests.test_missing_probe_and_root_refuse) ... ok
+test_partial_or_forged_probe_refuses (test_install_check.InstallCheckTests.test_partial_or_forged_probe_refuses) ... ok
+test_platforms_fail_closed (test_install_check.InstallCheckTests.test_platforms_fail_closed) ... ok
+test_restricted_apparmor_does_not_bypass_failed_probe (test_install_check.InstallCheckTests.test_restricted_apparmor_does_not_bypass_failed_probe) ... ok
+test_filename_traversal_rejected (test_provisioning.ProvisioningTests.test_filename_traversal_rejected) ... ok
+test_hash_mismatch_never_installs (test_provisioning.ProvisioningTests.test_hash_mismatch_never_installs) ... ok
+test_network_is_explicit (test_provisioning.ProvisioningTests.test_network_is_explicit) ... ok
+test_offline_import_and_reuse (test_provisioning.ProvisioningTests.test_offline_import_and_reuse) ... ok
+test_speed_not_fabricated (test_provisioning.ProvisioningTests.test_speed_not_fabricated) ... ok
+
+----------------------------------------------------------------------
+Ran 32 tests in 1.424s
+
+OK
+test_fresh_destination_and_refusal_to_overwrite (test_dev_bundle.DevBundleTests.test_fresh_destination_and_refusal_to_overwrite) ... ok
+test_regression_and_missing_metrics_fail (test_evals.EvalTests.test_regression_and_missing_metrics_fail) ... ok
+test_security_has_zero_tolerance (test_evals.EvalTests.test_security_has_zero_tolerance) ... ok
+test_connection_refusal_is_not_denial (test_isolation.IsolationTests.test_connection_refusal_is_not_denial) ... ok
+test_kernel_no_route_is_denial (test_isolation.IsolationTests.test_kernel_no_route_is_denial) ... ok
+test_rejects_host_interfaces_before_probing (test_isolation.IsolationTests.test_rejects_host_interfaces_before_probing) ... ok
+test_successful_connection_fails_gate (test_isolation.IsolationTests.test_successful_connection_fails_gate) ... ok
+test_timeout_is_not_evidence_of_denial (test_isolation.IsolationTests.test_timeout_is_not_evidence_of_denial) ... ok
+test_dual_license_requires_explicit_permissive_selection (test_rust_licenses.RustLicenseTests.test_dual_license_requires_explicit_permissive_selection) ... ok
+test_missing_registry_entry_is_rejected (test_rust_licenses.RustLicenseTests.test_missing_registry_entry_is_rejected) ... ok
+test_nonpermissive_license_is_rejected (test_rust_licenses.RustLicenseTests.test_nonpermissive_license_is_rejected) ... ok
+test_prefix_prose_and_ignored_credentials_are_not_scanned (test_secret_scan.SecretScanTests.test_prefix_prose_and_ignored_credentials_are_not_scanned) ... ok
+test_redacts_provider_error_without_echo (test_secret_scan.SecretScanTests.test_redacts_provider_error_without_echo) ... ok
+test_scans_tracked_and_untracked_results (test_secret_scan.SecretScanTests.test_scans_tracked_and_untracked_results) ... ok
+test_failed_stage_cannot_copy_old_measurement_as_current (test_smoke_all.SmokeResultTests.test_failed_stage_cannot_copy_old_measurement_as_current) ... ok
+test_historical_bytes_restored_and_new_result_retained (test_smoke_all.SmokeResultTests.test_historical_bytes_restored_and_new_result_retained) ... ok
+test_dependency_versions_and_out_of_scope_files (test_ui_inventory.UIInventoryTests.test_dependency_versions_and_out_of_scope_files) ... ok
+test_records_candidates_and_exact_asset_hash (test_ui_inventory.UIInventoryTests.test_records_candidates_and_exact_asset_hash) ... ok
+test_rejects_path_escape_and_mismatched_pin (test_ui_inventory.UIInventoryTests.test_rejects_path_escape_and_mismatched_pin) ... ok
+test_admitted_files_and_hashes (test_web_font_assets.WebFontAssetTests.test_admitted_files_and_hashes) ... ok
+test_non_ofl_and_unregistered_assets_fail (test_web_font_assets.WebFontAssetTests.test_non_ofl_and_unregistered_assets_fail) ... ok
+test_path_escape_fails_before_read (test_web_font_assets.WebFontAssetTests.test_path_escape_fails_before_read) ... ok
+test_tamper_is_not_a_passing_license_gate (test_web_font_assets.WebFontAssetTests.test_tamper_is_not_a_passing_license_gate) ... ok
+test_matching_registry_does_not_admit_proprietary_license (test_web_license_admission.WebLicenseAdmissionTests.test_matching_registry_does_not_admit_proprietary_license) ... ok
+test_reviewed_zero_clause_bsd_is_permissive (test_web_license_admission.WebLicenseAdmissionTests.test_reviewed_zero_clause_bsd_is_permissive) ... ok
+test_budget_drift_fails (test_workflow_check.WorkflowCheckTests.test_budget_drift_fails) ... ok
+test_current_registry_is_consistent (test_workflow_check.WorkflowCheckTests.test_current_registry_is_consistent) ... ok
+test_duplicate_test_id_fails (test_workflow_check.WorkflowCheckTests.test_duplicate_test_id_fails) ... ok
+test_journey_without_test_fails (test_workflow_check.WorkflowCheckTests.test_journey_without_test_fails) ... ok
+test_missing_gap_step_fails (test_workflow_check.WorkflowCheckTests.test_missing_gap_step_fails) ... ok
+test_public_status_drift_fails (test_workflow_check.WorkflowCheckTests.test_public_status_drift_fails) ... ok
+test_release_status_drift_fails (test_workflow_check.WorkflowCheckTests.test_release_status_drift_fails) ... ok
+test_unannotated_acceptance_test_fails (test_workflow_check.WorkflowCheckTests.test_unannotated_acceptance_test_fails) ... ok
+test_unmapped_regression_test_fails (test_workflow_check.WorkflowCheckTests.test_unmapped_regression_test_fails) ... ok
+test_unmapped_smoke_stage_fails (test_workflow_check.WorkflowCheckTests.test_unmapped_smoke_stage_fails) ... ok
+
+----------------------------------------------------------------------
+Ran 35 tests in 1.397s
+
+OK
+/tmp/tmphupbxoyu/output
+PASS: 1 locked frontend dependencies have reviewed permissive licenses/integrity
+test_cross_workspace_and_membership_are_denied (test_acl.AclTests.test_cross_workspace_and_membership_are_denied) ... ok
+test_dedup_version_and_parent_expansion_acl (test_acl.AclTests.test_dedup_version_and_parent_expansion_acl) ... ok
+test_document_acl_and_revocation_apply_before_candidates (test_acl.AclTests.test_document_acl_and_revocation_apply_before_candidates) ... ok
+test_nonmember_readers_and_sql_injection (test_acl.AclTests.test_nonmember_readers_and_sql_injection) ... ok
+test_expired_work_never_acquires_an_available_execution_lease (test_engine_admission.ExecutionDeadlineTests.test_expired_work_never_acquires_an_available_execution_lease) ... ok
+test_large_embedding_input_preserves_order_with_bounded_batches (test_local_models.EmbeddingBatchTests.test_large_embedding_input_preserves_order_with_bounded_batches) ... ok
+test_answer_uses_heading_context_but_cites_child_text (test_local_models.LocalModelTests.test_answer_uses_heading_context_but_cites_child_text) ... ok
+test_exact_identifier_in_heading_filters_near_duplicate_evidence (test_local_models.LocalModelTests.test_exact_identifier_in_heading_filters_near_duplicate_evidence) ... ok
+test_judge_rejects_evidence_for_a_different_exact_identifier (test_local_models.LocalModelTests.test_judge_rejects_evidence_for_a_different_exact_identifier) ... ok
+test_judge_treats_evidence_as_untrusted_and_checks_local_result (test_local_models.LocalModelTests.test_judge_treats_evidence_as_untrusted_and_checks_local_result) ... ok
+test_nonverbatim_model_quote_falls_back_to_selected_chunk (test_local_models.LocalModelTests.test_nonverbatim_model_quote_falls_back_to_selected_chunk) ... ok
+test_unknown_selected_chunk_abstains (test_local_models.LocalModelTests.test_unknown_selected_chunk_abstains) ... ok
+test_pair_scores_keep_global_indices_without_opaque_candidate_queues (test_local_models.RerankBatchTests.test_pair_scores_keep_global_indices_without_opaque_candidate_queues) ... ok
+test_heading_parent_and_untrusted_markup (test_retrieval.RetrievalTests.test_heading_parent_and_untrusted_markup) ... ok
+test_parent_heading_flows_into_embedding_lexical_search_and_reranking (test_retrieval.RetrievalTests.test_parent_heading_flows_into_embedding_lexical_search_and_reranking) ... ok
+test_rrf_and_grounding_do_not_trust_model_citations (test_retrieval.RetrievalTests.test_rrf_and_grounding_do_not_trust_model_citations) ... ok
+test_vectors_prefilter_before_top_k (test_retrieval.RetrievalTests.test_vectors_prefilter_before_top_k) ... ok
+test_gateway_and_workspace_are_restricted_before_network_access (test_watch.FolderWatchTests.test_gateway_and_workspace_are_restricted_before_network_access) ... ok
+test_oversized_files_are_skipped (test_watch.FolderWatchTests.test_oversized_files_are_skipped) ... ok
+test_scan_is_root_confined_and_tracks_content_hashes (test_watch.FolderWatchTests.test_scan_is_root_confined_and_tracks_content_hashes) ... ok
+test_symbolic_links_are_not_followed (test_watch.FolderWatchTests.test_symbolic_links_are_not_followed) ... ok
+test_operation_deadline_raises_recoverable_timeout (test_worker.WorkerDeadlineTests.test_operation_deadline_raises_recoverable_timeout) ... ok
+test_judge_answer_size_and_type_are_validated (test_worker.WorkerJudgeTests.test_judge_answer_size_and_type_are_validated) ... ok
+test_judge_request_uses_worker_retrieval_evidence (test_worker.WorkerJudgeTests.test_judge_request_uses_worker_retrieval_evidence) ... ok
+
+----------------------------------------------------------------------
+Ran 24 tests in 0.435s
+
+OK
+test_decodes_supported_local_pcm_wav (test_audio_io.AudioDecodeTests.test_decodes_supported_local_pcm_wav) ... ok
+test_rejects_empty_or_truncated_payload (test_audio_io.AudioDecodeTests.test_rejects_empty_or_truncated_payload) ... ok
+test_rejects_invalid_container_or_excessive_size (test_audio_io.AudioDecodeTests.test_rejects_invalid_container_or_excessive_size) ... ok
+test_rejects_unsupported_pcm_parameters (test_audio_io.AudioDecodeTests.test_rejects_unsupported_pcm_parameters) ... ok
+test_profile_requires_local_model_path_and_egress_denial (test_backend_contract.SpeechProfileContractTests.test_profile_requires_local_model_path_and_egress_denial) ... ok
+test_local_benchmark_manifest_contract (test_contracts.SpeechContractTests.test_local_benchmark_manifest_contract) ... ok
+test_openai_audio_routes_are_local_and_authenticated (test_contracts.SpeechContractTests.test_openai_audio_routes_are_local_and_authenticated) ... ok
+test_realtime_event_schema_accepts_bounded_audio_and_rejects_unknown_events (test_contracts.SpeechContractTests.test_realtime_event_schema_accepts_bounded_audio_and_rejects_unknown_events) ... ok
+test_speech_evaluation_requires_audio_hash_license_and_hardware_tier (test_contracts.SpeechContractTests.test_speech_evaluation_requires_audio_hash_license_and_hardware_tier) ... ok
+test_speech_request_rejects_unknown_and_out_of_range_values (test_contracts.SpeechContractTests.test_speech_request_rejects_unknown_and_out_of_range_values) ... ok
+test_transcription_requires_private_request_context (test_contracts.SpeechContractTests.test_transcription_requires_private_request_context) ... ok
+test_profile_must_deny_egress_and_pin_artifact (test_flite.FliteTests.test_profile_must_deny_egress_and_pin_artifact) ... ok
+test_rejects_unregistered_voice_and_invalid_parameters (test_flite.FliteTests.test_rejects_unregistered_voice_and_invalid_parameters) ... ok
+test_text_is_a_private_file_and_speed_is_forwarded (test_flite.FliteTests.test_text_is_a_private_file_and_speed_is_forwarded) ... ok
+test_tts_profile_contract_rejects_voice_urls_and_unknown_fields (test_flite.FliteTests.test_tts_profile_contract_rejects_voice_urls_and_unknown_fields) ... ok
+test_authorizes_before_model_and_stores_restricted_notes (test_hosted_meeting.HostedMeetingTests.test_authorizes_before_model_and_stores_restricted_notes) ... ok
+test_denied_workspace_never_reaches_model (test_hosted_meeting.HostedMeetingTests.test_denied_workspace_never_reaches_model) ... ok
+test_rejects_identity_spoof_and_unregistered_model_hash (test_hosted_meeting.HostedMeetingTests.test_rejects_identity_spoof_and_unregistered_model_hash) ... ok
+test_cancel_suppresses_inflight_result_and_concurrent_decode (test_incremental.IncrementalTests.test_cancel_suppresses_inflight_result_and_concurrent_decode) ... ok
+test_engine_error_clears_audio (test_incremental.IncrementalTests.test_engine_error_clears_audio) ... ok
+test_partial_snapshots_replace_and_finish_clears (test_incremental.IncrementalTests.test_partial_snapshots_replace_and_finish_clears) ... ok
+test_rejects_overflow_and_bad_frames_without_mutation (test_incremental.IncrementalTests.test_rejects_overflow_and_bad_frames_without_mutation) ... ok
+test_audio_buffer_duration_and_crop_are_sample_aligned (test_interfaces.SpeechInterfaceTests.test_audio_buffer_duration_and_crop_are_sample_aligned) ... ok
+test_diarization_is_optional_and_preserves_transcript_timing (test_interfaces.SpeechInterfaceTests.test_diarization_is_optional_and_preserves_transcript_timing) ... ok
+test_diarization_requires_configured_engine (test_interfaces.SpeechInterfaceTests.test_diarization_requires_configured_engine) ... ok
+test_invalid_vad_interval_is_rejected_before_asr (test_interfaces.SpeechInterfaceTests.test_invalid_vad_interval_is_rejected_before_asr) ... ok
+test_no_speech_does_not_call_asr (test_interfaces.SpeechInterfaceTests.test_no_speech_does_not_call_asr) ... ok
+test_pipeline_applies_vad_and_offsets_asr_timestamps (test_interfaces.SpeechInterfaceTests.test_pipeline_applies_vad_and_offsets_asr_timestamps) ... ok
+test_captures_meeting_notes_into_selected_workspace_with_acl_and_classification (test_meeting_knowledge.MeetingKnowledgeTests.test_captures_meeting_notes_into_selected_workspace_with_acl_and_classification) ... ok
+test_ingests_meeting_into_real_knowledge_catalog_with_acl_filtering (test_meeting_knowledge.MeetingKnowledgeTests.test_ingests_meeting_into_real_knowledge_catalog_with_acl_filtering) ... ok
+test_rejects_action_item_without_verbatim_transcript_support (test_meeting_knowledge.MeetingKnowledgeTests.test_rejects_action_item_without_verbatim_transcript_support) ... ok
+test_rejects_cloud_summarizer_and_invalid_or_oversized_inputs (test_meeting_knowledge.MeetingKnowledgeTests.test_rejects_cloud_summarizer_and_invalid_or_oversized_inputs) ... ok
+test_binary_file_and_text_fields_preserved (test_multipart.MultipartTests.test_binary_file_and_text_fields_preserved) ... ok
+test_rejects_bad_framing_headers_and_size_before_parsing (test_multipart.MultipartTests.test_rejects_bad_framing_headers_and_size_before_parsing) ... ok
+test_rejects_duplicates_unknown_fields_and_missing_file (test_multipart.MultipartTests.test_rejects_duplicates_unknown_fields_and_missing_file) ... ok
+test_missing_or_cloud_profile_is_rejected (test_parakeet_cpp.ParakeetTests.test_missing_or_cloud_profile_is_rejected) ... ok
+test_reads_text_artifact_and_reports_coarse_timing (test_parakeet_cpp.ParakeetTests.test_reads_text_artifact_and_reports_coarse_timing) ... ok
+test_rejects_prompt_and_unsupported_audio_before_launch (test_parakeet_cpp.ParakeetTests.test_rejects_prompt_and_unsupported_audio_before_launch) ... ok
+test_appends_and_commits_audio_as_engine_neutral_pcm (test_realtime_buffer.RealtimeAudioBufferTests.test_appends_and_commits_audio_as_engine_neutral_pcm) ... ok
+test_commit_rejects_empty_buffer (test_realtime_buffer.RealtimeAudioBufferTests.test_commit_rejects_empty_buffer) ... ok
+test_configured_limit_has_a_hard_ceiling (test_realtime_buffer.RealtimeAudioBufferTests.test_configured_limit_has_a_hard_ceiling) ... ok
+test_rejects_aggregate_limit_and_requires_complete_pcm_frames (test_realtime_buffer.RealtimeAudioBufferTests.test_rejects_aggregate_limit_and_requires_complete_pcm_frames) ... ok
+test_rejects_bad_base64_and_format_changes_without_corrupting_buffer (test_realtime_buffer.RealtimeAudioBufferTests.test_rejects_bad_base64_and_format_changes_without_corrupting_buffer) ... ok
+test_rejects_oversized_encoded_input_before_decoding (test_realtime_buffer.RealtimeAudioBufferTests.test_rejects_oversized_encoded_input_before_decoding) ... ok
+test_small_appends_preserve_order_and_clear_resets_format (test_realtime_buffer.RealtimeAudioBufferTests.test_small_appends_preserve_order_and_clear_resets_format) ... ok
+test_cancel_clears_buffer_without_calling_asr (test_realtime_session.RealtimeDictationSessionTests.test_cancel_clears_buffer_without_calling_asr) ... ok
+test_chunk_append_commit_returns_final_local_transcript (test_realtime_session.RealtimeDictationSessionTests.test_chunk_append_commit_returns_final_local_transcript) ... ok
+test_rejects_cloud_context_and_client_output_events (test_realtime_session.RealtimeDictationSessionTests.test_rejects_cloud_context_and_client_output_events) ... ok
+test_json_and_text_formats_match_openai_contract (test_responses.TranscriptionResponseTests.test_json_and_text_formats_match_openai_contract) ... ok
+test_unsupported_format_is_rejected (test_responses.TranscriptionResponseTests.test_unsupported_format_is_rejected) ... ok
+test_verbose_json_includes_timed_speaker_segments (test_responses.TranscriptionResponseTests.test_verbose_json_includes_timed_speaker_segments) ... ok
+test_vtt_uses_stable_millisecond_timestamps (test_responses.TranscriptionResponseTests.test_vtt_uses_stable_millisecond_timestamps) ... ok
+test_rejects_invalid_context_unknown_fields_and_remote_model_names (test_service.TranscriptionServiceTests.test_rejects_invalid_context_unknown_fields_and_remote_model_names) ... ok
+test_rejects_oversized_upload_before_pipeline (test_service.TranscriptionServiceTests.test_rejects_oversized_upload_before_pipeline) ... ok
+test_text_and_vtt_responses_are_supported (test_service.TranscriptionServiceTests.test_text_and_vtt_responses_are_supported) ... ok
+test_upload_runs_local_pipeline_and_returns_contract_response (test_service.TranscriptionServiceTests.test_upload_runs_local_pipeline_and_returns_contract_response) ... ok
+test_converts_centiseconds_and_uses_local_process (test_silero_cpp.SileroCppTests.test_converts_centiseconds_and_uses_local_process) ... ok
+test_rejects_unpinned_or_cloud_profile (test_silero_cpp.SileroCppTests.test_rejects_unpinned_or_cloud_profile) ... ok
+test_silence_and_malformed_output (test_silero_cpp.SileroCppTests.test_silence_and_malformed_output) ... ok
+test_rejects_invalid_voice_registry_and_oversized_audio (test_synthesis_service.SpeechSynthesisServiceTests.test_rejects_invalid_voice_registry_and_oversized_audio) ... ok
+test_rejects_unknown_voice_model_extra_fields_and_cloud_policy (test_synthesis_service.SpeechSynthesisServiceTests.test_rejects_unknown_voice_model_extra_fields_and_cloud_policy) ... ok
+test_returns_pcm_and_wav_from_configured_local_voice (test_synthesis_service.SpeechSynthesisServiceTests.test_returns_pcm_and_wav_from_configured_local_voice) ... ok
+test_adapter_rejects_non_mono_16khz_audio (test_whisper_cpp.WhisperCppAdapterTests.test_adapter_rejects_non_mono_16khz_audio) ... ok
+test_invokes_local_cli_without_shell_and_parses_json_timestamps (test_whisper_cpp.WhisperCppAdapterTests.test_invokes_local_cli_without_shell_and_parses_json_timestamps) ... ok
+test_profile_requires_local_executable_model_and_denied_egress (test_whisper_cpp.WhisperCppAdapterTests.test_profile_requires_local_executable_model_and_denied_egress) ... ok
+test_direct_host_startup_refuses_before_processing (test_worker.SpeechWorkerTests.test_direct_host_startup_refuses_before_processing) ... ok
+test_rejects_workspace_spoof_before_loading_engine (test_worker.SpeechWorkerTests.test_rejects_workspace_spoof_before_loading_engine) ... ok
+test_synthesis_preserves_audio_and_rejects_forged_context (test_worker.SpeechWorkerTests.test_synthesis_preserves_audio_and_rejects_forged_context) ... ok
+test_worker_rejects_unregistered_weights_before_launch (test_worker.SpeechWorkerTests.test_worker_rejects_unregistered_weights_before_launch) ... ok
+
+----------------------------------------------------------------------
+Ran 69 tests in 1.056s
+
+OK
+test_follows_children_from_every_thread_and_nested_process (test_cancellation_release.DescendantTests.test_follows_children_from_every_thread_and_nested_process) ... ok
+test_cache_evidence_requires_integer_counter (test_chat_cache_cost.ChatCacheCostTests.test_cache_evidence_requires_integer_counter) ... ok
+test_guardian_alias_does_not_count_as_model_worker (test_chat_cache_cost.ChatCacheCostTests.test_guardian_alias_does_not_count_as_model_worker) ... ok
+test_role_event_is_not_first_token (test_chat_cache_cost.ChatCacheCostTests.test_role_event_is_not_first_token) ... ok
+test_full_ingestion_rates (test_embedding_cost.EmbeddingCostTests.test_full_ingestion_rates) ... ok
+test_historical_batch_order_and_validation (test_embedding_cost.EmbeddingCostTests.test_historical_batch_order_and_validation) ... ok
+test_missing_or_malformed_counters_never_mean_idle (test_engine_observer.ObserverValidationTests.test_missing_or_malformed_counters_never_mean_idle) ... ok
+test_rejects_each_resource_leak_and_missing_process (test_engine_storms.LeakGateTests.test_rejects_each_resource_leak_and_missing_process) ... ok
+test_health_cannot_turn_unknown_checks_into_privacy_proof (test_journey_runner.JourneyReadinessTests.test_health_cannot_turn_unknown_checks_into_privacy_proof) ... ok
+test_local_readiness_rejects_cloud_model (test_journey_runner.JourneyReadinessTests.test_local_readiness_rejects_cloud_model) ... ok
+test_redirect_is_refused (test_journey_runner.JourneyReadinessTests.test_redirect_is_refused) ... ok
+test_response_is_bounded_without_content_in_diagnostics (test_journey_runner.JourneyReadinessTests.test_response_is_bounded_without_content_in_diagnostics) ... ok
+test_control_shapes_fail_closed (test_realtime_control_contract.RealtimeControlTests.test_control_shapes_fail_closed) ... ok
+test_credential_contract_is_bounded_and_authenticated (test_realtime_ticket_contract.RealtimeTicketContractTests.test_credential_contract_is_bounded_and_authenticated) ... ok
+test_rejects_hash_mismatch_and_invalid_wav (test_run_speech_asr.SpeechASRRunnerTests.test_rejects_hash_mismatch_and_invalid_wav) ... ok
+test_rejects_path_escape (test_run_speech_asr.SpeechASRRunnerTests.test_rejects_path_escape) ... ok
+test_runs_hash_verified_local_wav_and_produces_asr_only_results (test_run_speech_asr.SpeechASRRunnerTests.test_runs_hash_verified_local_wav_and_produces_asr_only_results) ... ok
+test_asr_only_does_not_claim_voice_metrics_or_phase_slo (test_speech_eval.SpeechEvaluationTests.test_asr_only_does_not_claim_voice_metrics_or_phase_slo) ... ok
+test_empty_reference_is_rejected (test_speech_eval.SpeechEvaluationTests.test_empty_reference_is_rejected) ... ok
+test_evaluate_reports_weighted_wer_by_language_and_voice_metrics (test_speech_eval.SpeechEvaluationTests.test_evaluate_reports_weighted_wer_by_language_and_voice_metrics) ... ok
+test_word_error_rate_counts_substitutions_insertions_and_deletions (test_speech_eval.SpeechEvaluationTests.test_word_error_rate_counts_substitutions_insertions_and_deletions) ... ok
+test_word_error_rate_normalizes_case_unicode_and_punctuation (test_speech_eval.SpeechEvaluationTests.test_word_error_rate_normalizes_case_unicode_and_punctuation) ... ok
+test_all_decodes_must_succeed (test_speech_residency.SpeechResidencyTests.test_all_decodes_must_succeed) ... ok
+test_percentile_keeps_tail (test_speech_residency.SpeechResidencyTests.test_percentile_keeps_tail) ... ok
+
+----------------------------------------------------------------------
+Ran 24 tests in 0.079s
+
+OK
+PASS: 26 installed dependency licenses matched reviewed registry
+PASS: 77 locked frontend dependencies have reviewed permissive licenses/integrity
+PASS: 7 browser fonts and exact OFL notices match reviewed hashes
+{"workflow_check": "PASS", "errors": []}
+{"secret_scan": "PASS", "findings": []}
+{
+  "suite": "foundation-profiles-v1",
+  "cases": 8,
+  "dataset_sha256": "1c8437a7acc3f70de328ca59303105a22e8f9c19597354d9a274bd2ab325f7c4",
+  "metrics": {
+    "profile_accuracy": 1.0,
+    "false_ready_count": 0
+  }
+}
+PASS: all foundation source gates

@@ -1,0 +1,12 @@
+{
+  "binary": "/home/aviroop/.cache/sanctum-shell-lab-target/release/sanctum-lab-wry",
+  "binary_bytes": 719256,
+  "binary_sha256": "272b1cf67471e483fa8ba0902e4bb234630f9ad14a0a86b19a959d4ec201e0a4",
+  "platform": "Linux-6.6.87.2-microsoft-standard-WSL2-x86_64-with-glibc2.35",
+  "psutil": "7.2.2",
+  "installer_bytes": null,
+  "installer_status": "NOT_BUILT",
+  "runs": [],
+  "status": "FAIL",
+  "error_type": "Empty"
+}

@@ -1,0 +1,236 @@
+{
+  "binary": "C:\\Users\\aviroop\\Desktop\\Sanctum\\.sanctum\\shell-lab-windows\\sanctum-lab-tauri.exe",
+  "binary_bytes": 3235840,
+  "binary_sha256": "0b7e1467b170f9ee770e2c0e23e365c689cc5959aaaeac7476bacb69a01b6fdd",
+  "platform": "Windows-11-10.0.26300-SP0",
+  "psutil": "7.2.2",
+  "installer_bytes": null,
+  "installer_status": "NOT_BUILT",
+  "runs": [
+    {
+      "ready_two_animation_frames_seconds": 1.1856639999896288,
+      "root_rss_bytes": 31641600,
+      "descendant_tree_rss_sum_bytes": 380940288,
+      "tree_cpu_one_core_percent": 2.0639806758967634,
+      "sample_seconds": 20.439871599897742,
+      "processes": [
+        {
+          "pid": 9868,
+          "created": 1792490653.2186236,
+          "name": "sanctum-lab-tauri.exe",
+          "rss_bytes": 31641600,
+          "cpu_seconds": 0.203125
+        },
+        {
+          "pid": 29312,
+          "created": 1792490653.2523222,
+          "name": "conhost.exe",
+          "rss_bytes": 8945664,
+          "cpu_seconds": 0.03125
+        },
+        {
+          "pid": 33320,
+          "created": 1792490653.5952654,
+          "name": "msedgewebview2.exe",
+          "rss_bytes": 124276736,
+          "cpu_seconds": 1.234375
+        },
+        {
+          "pid": 35936,
+          "created": 1792490653.652492,
+          "name": "msedgewebview2.exe",
+          "rss_bytes": 11501568,
+          "cpu_seconds": 0.0
+        },
+        {
+          "pid": 26604,
+          "created": 1792490653.842524,
+          "name": "msedgewebview2.exe",
+          "rss_bytes": 86876160,
+          "cpu_seconds": 0.390625
+        },
+        {
+          "pid": 17676,
+          "created": 1792490653.8453884,
+          "name": "msedgewebview2.exe",
+          "rss_bytes": 42528768,
+          "cpu_seconds": 0.34375
+        },
+        {
+          "pid": 22228,
+          "created": 1792490653.8871243,
+          "name": "msedgewebview2.exe",
+          "rss_bytes": 20189184,
+          "cpu_seconds": 0.09375
+        },
+        {
+          "pid": 4228,
+          "created": 1792490654.0295448,
+          "name": "msedgewebview2.exe",
+          "rss_bytes": 54980608,
+          "cpu_seconds": 0.125
+        }
+      ],
+      "scope": "root plus current descendants; shared pages double-counted; detached/reused default browser excluded"
+    },
+    {
+      "ready_two_animation_frames_seconds": 0.6807210999540985,
+      "root_rss_bytes": 30330880,
+      "descendant_tree_rss_sum_bytes": 374423552,
+      "tree_cpu_one_core_percent": 2.2851895163603153,
+      "sample_seconds": 20.512521900003776,
+      "processes": [
+        {
+          "pid": 15180,
+          "created": 1792490676.959442,
+          "name": "sanctum-lab-tauri.exe",
+          "rss_bytes": 30330880,
+          "cpu_seconds": 0.3125
+        },
+        {
+          "pid": 4236,
+          "created": 1792490676.9829147,
+          "name": "conhost.exe",
+          "rss_bytes": 8962048,
+          "cpu_seconds": 0.0
+        },
+        {
+          "pid": 1608,
+          "created": 1792490677.1736324,
+          "name": "msedgewebview2.exe",
+          "rss_bytes": 124092416,
+          "cpu_seconds": 1.125
+        },
+        {
+          "pid": 23572,
+          "created": 1792490677.2317274,
+          "name": "msedgewebview2.exe",
+          "rss_bytes": 11419648,
+          "cpu_seconds": 0.03125
+        },
+        {
+          "pid": 27584,
+          "created": 1792490677.3778784,
+          "name": "msedgewebview2.exe",
+          "rss_bytes": 82284544,
+          "cpu_seconds": 0.21875
+        },
+        {
+          "pid": 15700,
+          "created": 1792490677.401988,
+          "name": "msedgewebview2.exe",
+          "rss_bytes": 42217472,
+          "cpu_seconds": 0.21875
+        },
+        {
+          "pid": 35120,
+          "created": 1792490677.4320636,
+          "name": "msedgewebview2.exe",
+          "rss_bytes": 20287488,
+          "cpu_seconds": 0.078125
+        },
+        {
+          "pid": 26280,
+          "created": 1792490677.4869723,
+          "name": "msedgewebview2.exe",
+          "rss_bytes": 54829056,
+          "cpu_seconds": 0.125
+        }
+      ],
+      "scope": "root plus current descendants; shared pages double-counted; detached/reused default browser excluded"
+    },
+    {
+      "ready_two_animation_frames_seconds": 0.6397725001443177,
+      "root_rss_bytes": 30138368,
+      "descendant_tree_rss_sum_bytes": 360820736,
+      "tree_cpu_one_core_percent": 1.3770032833523735,
+      "sample_seconds": 20.42478789994493,
+      "processes": [
+        {
+          "pid": 10576,
+          "created": 1792490700.3695955,
+          "name": "sanctum-lab-tauri.exe",
+          "rss_bytes": 30138368,
+          "cpu_seconds": 0.203125
+        },
+        {
+          "pid": 5488,
+          "created": 1792490700.3995645,
+          "name": "conhost.exe",
+          "rss_bytes": 8957952,
+          "cpu_seconds": 0.015625
+        },
+        {
+          "pid": 36188,
+          "created": 1792490700.5916195,
+          "name": "msedgewebview2.exe",
+          "rss_bytes": 122736640,
+          "cpu_seconds": 0.96875
+        },
+        {
+          "pid": 2188,
+          "created": 1792490700.632922,
+          "name": "msedgewebview2.exe",
+          "rss_bytes": 11415552,
+          "cpu_seconds": 0.03125
+        },
+        {
+          "pid": 33876,
+          "created": 1792490700.7494159,
+          "name": "msedgewebview2.exe",
+          "rss_bytes": 73842688,
+          "cpu_seconds": 0.1875
+        },
+        {
+          "pid": 10332,
+          "created": 1792490700.7530766,
+          "name": "msedgewebview2.exe",
+          "rss_bytes": 38572032,
+          "cpu_seconds": 0.203125
+        },
+        {
+          "pid": 30352,
+          "created": 1792490700.7815387,
+          "name": "msedgewebview2.exe",
+          "rss_bytes": 20275200,
+          "cpu_seconds": 0.0625
+        },
+        {
+          "pid": 18024,
+          "created": 1792490700.8532703,
+          "name": "msedgewebview2.exe",
+          "rss_bytes": 54882304,
+          "cpu_seconds": 0.09375
+        }
+      ],
+      "scope": "root plus current descendants; shared pages double-counted; detached/reused default browser excluded"
+    }
+  ],
+  "status": "PASS_MEASUREMENT_ONLY",
+  "summary": {
+    "ready_two_animation_frames_seconds": {
+      "median": 0.6807210999540985,
+      "min": 0.6397725001443177,
+      "max": 1.1856639999896288,
+      "spread": 0.545891499845311
+    },
+    "root_rss_bytes": {
+      "median": 30330880,
+      "min": 30138368,
+      "max": 31641600,
+      "spread": 1503232
+    },
+    "descendant_tree_rss_sum_bytes": {
+      "median": 374423552,
+      "min": 360820736,
+      "max": 380940288,
+      "spread": 20119552
+    },
+    "tree_cpu_one_core_percent": {
+      "median": 2.0639806758967634,
+      "min": 1.3770032833523735,
+      "max": 2.2851895163603153,
+      "spread": 0.9081862330079418
+    }
+  }
+}

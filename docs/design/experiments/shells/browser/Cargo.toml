@@ -1,0 +1,9 @@
+[package]
+name = "sanctum-lab-browser"
+version = "0.0.0"
+edition = "2021"
+license = "MIT"
+
+[dependencies]
+tao = "=0.37.1"
+tray-icon = "=0.26.1"

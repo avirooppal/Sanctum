@@ -90,3 +90,4 @@ evals/results/a2-retained-state-first-executed-source.txt -text whitespace=cr-at
 # ADR0089: primary license bytes are preserved exactly.
 docs/licenses/jan-e7cbcf6-LICENSE.txt -text whitespace=cr-at-eol,-blank-at-eof,-blank-at-eol
 docs/licenses/Apache-2.0-primary.txt -text whitespace=cr-at-eol,-blank-at-eof,-blank-at-eol
+docs/licenses/WebView2-1.0.3800.47-*.txt -text whitespace=cr-at-eol,-blank-at-eof,-blank-at-eol

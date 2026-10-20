@@ -1,0 +1,9 @@
+[package]
+name = "sanctum-lab-wry"
+version = "0.0.0"
+edition = "2021"
+license = "MIT"
+
+[dependencies]
+wry = "=0.57.0"
+tao = "=0.37.1"

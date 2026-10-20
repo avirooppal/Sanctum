@@ -1,0 +1,131 @@
+{
+  "binary": "/home/aviroop/.cache/sanctum-shell-lab-target/release/sanctum-lab-tauri",
+  "binary_bytes": 3498248,
+  "binary_sha256": "8c3abfecacaba4214389152b493257a34087864ede31eeeaf0e542aeb528791c",
+  "platform": "Linux-6.6.87.2-microsoft-standard-WSL2-x86_64-with-glibc2.35",
+  "psutil": "7.2.2",
+  "installer_bytes": null,
+  "installer_status": "NOT_BUILT",
+  "runs": [
+    {
+      "ready_two_animation_frames_seconds": 1.992772934000186,
+      "root_rss_bytes": 184496128,
+      "descendant_tree_rss_sum_bytes": 474013696,
+      "tree_cpu_one_core_percent": 0.049038274444995984,
+      "sample_seconds": 20.39223466400017,
+      "processes": [
+        {
+          "pid": 991,
+          "created": 1792490546.64,
+          "name": "sanctum-lab-tauri",
+          "rss_bytes": 184496128,
+          "cpu_seconds": 0.5800000000000001
+        },
+        {
+          "pid": 1017,
+          "created": 1792490545.17,
+          "name": "WebKitNetworkProcess",
+          "rss_bytes": 48758784,
+          "cpu_seconds": 0.11
+        },
+        {
+          "pid": 1035,
+          "created": 1792490545.7,
+          "name": "WebKitWebProcess",
+          "rss_bytes": 240758784,
+          "cpu_seconds": 0.76
+        }
+      ],
+      "scope": "root plus current descendants; shared pages double-counted; detached/reused default browser excluded"
+    },
+    {
+      "ready_two_animation_frames_seconds": 1.4764627330000621,
+      "root_rss_bytes": 184578048,
+      "descendant_tree_rss_sum_bytes": 474001408,
+      "tree_cpu_one_core_percent": 0.0,
+      "sample_seconds": 20.16094224499966,
+      "processes": [
+        {
+          "pid": 1104,
+          "created": 1792490569.24,
+          "name": "sanctum-lab-tauri",
+          "rss_bytes": 184578048,
+          "cpu_seconds": 0.48
+        },
+        {
+          "pid": 1114,
+          "created": 1792490568.39,
+          "name": "WebKitNetworkProcess",
+          "rss_bytes": 48627712,
+          "cpu_seconds": 0.07
+        },
+        {
+          "pid": 1136,
+          "created": 1792490569.05,
+          "name": "WebKitWebProcess",
+          "rss_bytes": 240795648,
+          "cpu_seconds": 0.52
+        }
+      ],
+      "scope": "root plus current descendants; shared pages double-counted; detached/reused default browser excluded"
+    },
+    {
+      "ready_two_animation_frames_seconds": 1.384681085000011,
+      "root_rss_bytes": 183951360,
+      "descendant_tree_rss_sum_bytes": 474181632,
+      "tree_cpu_one_core_percent": 0.09619911398817005,
+      "sample_seconds": 20.79021227000021,
+      "processes": [
+        {
+          "pid": 1197,
+          "created": 1792490592.01,
+          "name": "sanctum-lab-tauri",
+          "rss_bytes": 183951360,
+          "cpu_seconds": 0.44999999999999996
+        },
+        {
+          "pid": 1207,
+          "created": 1792490592.16,
+          "name": "WebKitNetworkProcess",
+          "rss_bytes": 48758784,
+          "cpu_seconds": 0.06
+        },
+        {
+          "pid": 1229,
+          "created": 1792490592.77,
+          "name": "WebKitWebProcess",
+          "rss_bytes": 241471488,
+          "cpu_seconds": 0.54
+        }
+      ],
+      "scope": "root plus current descendants; shared pages double-counted; detached/reused default browser excluded"
+    }
+  ],
+  "status": "PASS_MEASUREMENT_ONLY",
+  "summary": {
+    "ready_two_animation_frames_seconds": {
+      "median": 1.4764627330000621,
+      "min": 1.384681085000011,
+      "max": 1.992772934000186,
+      "spread": 0.608091849000175
+    },
+    "root_rss_bytes": {
+      "median": 184496128,
+      "min": 183951360,
+      "max": 184578048,
+      "spread": 626688
+    },
+    "descendant_tree_rss_sum_bytes": {
+      "median": 474013696,
+      "min": 474001408,
+      "max": 474181632,
+      "spread": 180224
+    },
+    "tree_cpu_one_core_percent": {
+      "median": 0.049038274444995984,
+      "min": 0.0,
+      "max": 0.09619911398817005,
+      "spread": 0.09619911398817005
+    }
+  }
+}

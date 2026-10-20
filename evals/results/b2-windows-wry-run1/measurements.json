@@ -1,0 +1,236 @@
+{
+  "binary": "C:\\Users\\aviroop\\Desktop\\Sanctum\\.sanctum\\shell-lab-windows\\sanctum-lab-wry.exe",
+  "binary_bytes": 613888,
+  "binary_sha256": "7cf62d0b7b3af988b0de69a3ffe3a3c3612b7e9f2c699c1f67528613c2d44de3",
+  "platform": "Windows-11-10.0.26300-SP0",
+  "psutil": "7.2.2",
+  "installer_bytes": null,
+  "installer_status": "NOT_BUILT",
+  "runs": [
+    {
+      "ready_two_animation_frames_seconds": 0.8025384000502527,
+      "root_rss_bytes": 26656768,
+      "descendant_tree_rss_sum_bytes": 367947776,
+      "tree_cpu_one_core_percent": 1.2254366853329237,
+      "sample_seconds": 20.4008908001706,
+      "processes": [
+        {
+          "pid": 32684,
+          "created": 1792490763.7936833,
+          "name": "sanctum-lab-wry.exe",
+          "rss_bytes": 26656768,
+          "cpu_seconds": 0.234375
+        },
+        {
+          "pid": 29860,
+          "created": 1792490763.820508,
+          "name": "conhost.exe",
+          "rss_bytes": 7815168,
+          "cpu_seconds": 0.03125
+        },
+        {
+          "pid": 27892,
+          "created": 1792490764.0494196,
+          "name": "msedgewebview2.exe",
+          "rss_bytes": 122163200,
+          "cpu_seconds": 1.03125
+        },
+        {
+          "pid": 16652,
+          "created": 1792490764.0989592,
+          "name": "msedgewebview2.exe",
+          "rss_bytes": 11509760,
+          "cpu_seconds": 0.03125
+        },
+        {
+          "pid": 29116,
+          "created": 1792490764.2171416,
+          "name": "msedgewebview2.exe",
+          "rss_bytes": 86667264,
+          "cpu_seconds": 0.296875
+        },
+        {
+          "pid": 23576,
+          "created": 1792490764.2209685,
+          "name": "msedgewebview2.exe",
+          "rss_bytes": 41742336,
+          "cpu_seconds": 0.21875
+        },
+        {
+          "pid": 18352,
+          "created": 1792490764.2518058,
+          "name": "msedgewebview2.exe",
+          "rss_bytes": 19701760,
+          "cpu_seconds": 0.046875
+        },
+        {
+          "pid": 36852,
+          "created": 1792490764.345512,
+          "name": "msedgewebview2.exe",
+          "rss_bytes": 51691520,
+          "cpu_seconds": 0.125
+        }
+      ],
+      "scope": "root plus current descendants; shared pages double-counted; detached/reused default browser excluded"
+    },
+    {
+      "ready_two_animation_frames_seconds": 0.5903771999292076,
+      "root_rss_bytes": 26341376,
+      "descendant_tree_rss_sum_bytes": 362442752,
+      "tree_cpu_one_core_percent": 1.378150307666082,
+      "sample_seconds": 20.40778849995695,
+      "processes": [
+        {
+          "pid": 34804,
+          "created": 1792490787.1789908,
+          "name": "sanctum-lab-wry.exe",
+          "rss_bytes": 26341376,
+          "cpu_seconds": 0.109375
+        },
+        {
+          "pid": 24096,
+          "created": 1792490787.2047396,
+          "name": "conhost.exe",
+          "rss_bytes": 7815168,
+          "cpu_seconds": 0.015625
+        },
+        {
+          "pid": 21736,
+          "created": 1792490787.369176,
+          "name": "msedgewebview2.exe",
+          "rss_bytes": 121917440,
+          "cpu_seconds": 0.875
+        },
+        {
+          "pid": 32992,
+          "created": 1792490787.4171329,
+          "name": "msedgewebview2.exe",
+          "rss_bytes": 11460608,
+          "cpu_seconds": 0.015625
+        },
+        {
+          "pid": 284,
+          "created": 1792490787.5376832,
+          "name": "msedgewebview2.exe",
+          "rss_bytes": 81899520,
+          "cpu_seconds": 0.234375
+        },
+        {
+          "pid": 492,
+          "created": 1792490787.5399663,
+          "name": "msedgewebview2.exe",
+          "rss_bytes": 41467904,
+          "cpu_seconds": 0.21875
+        },
+        {
+          "pid": 27808,
+          "created": 1792490787.5680883,
+          "name": "msedgewebview2.exe",
+          "rss_bytes": 19816448,
+          "cpu_seconds": 0.0625
+        },
+        {
+          "pid": 29844,
+          "created": 1792490787.6247478,
+          "name": "msedgewebview2.exe",
+          "rss_bytes": 51724288,
+          "cpu_seconds": 0.125
+        }
+      ],
+      "scope": "root plus current descendants; shared pages double-counted; detached/reused default browser excluded"
+    },
+    {
+      "ready_two_animation_frames_seconds": 0.669553600018844,
+      "root_rss_bytes": 26574848,
+      "descendant_tree_rss_sum_bytes": 347951104,
+      "tree_cpu_one_core_percent": 1.6834246221270777,
+      "sample_seconds": 20.419684699969366,
+      "processes": [
+        {
+          "pid": 35524,
+          "created": 1792490810.3865583,
+          "name": "sanctum-lab-wry.exe",
+          "rss_bytes": 26574848,
+          "cpu_seconds": 0.25
+        },
+        {
+          "pid": 35744,
+          "created": 1792490810.4310465,
+          "name": "conhost.exe",
+          "rss_bytes": 7815168,
+          "cpu_seconds": 0.015625
+        },
+        {
+          "pid": 7296,
+          "created": 1792490810.6444008,
+          "name": "msedgewebview2.exe",
+          "rss_bytes": 120573952,
+          "cpu_seconds": 0.796875
+        },
+        {
+          "pid": 30096,
+          "created": 1792490810.693674,
+          "name": "msedgewebview2.exe",
+          "rss_bytes": 11456512,
+          "cpu_seconds": 0.03125
+        },
+        {
+          "pid": 19960,
+          "created": 1792490810.8216813,
+          "name": "msedgewebview2.exe",
+          "rss_bytes": 73367552,
+          "cpu_seconds": 0.1875
+        },
+        {
+          "pid": 34932,
+          "created": 1792490810.8238893,
+          "name": "msedgewebview2.exe",
+          "rss_bytes": 36765696,
+          "cpu_seconds": 0.171875
+        },
+        {
+          "pid": 20336,
+          "created": 1792490810.855129,
+          "name": "msedgewebview2.exe",
+          "rss_bytes": 19808256,
+          "cpu_seconds": 0.0625
+        },
+        {
+          "pid": 29972,
+          "created": 1792490810.9273028,
+          "name": "msedgewebview2.exe",
+          "rss_bytes": 51589120,
+          "cpu_seconds": 0.109375
+        }
+      ],
+      "scope": "root plus current descendants; shared pages double-counted; detached/reused default browser excluded"
+    }
+  ],
+  "status": "PASS_MEASUREMENT_ONLY",
+  "summary": {
+    "ready_two_animation_frames_seconds": {
+      "median": 0.669553600018844,
+      "min": 0.5903771999292076,
+      "max": 0.8025384000502527,
+      "spread": 0.2121612001210451
+    },
+    "root_rss_bytes": {
+      "median": 26574848,
+      "min": 26341376,
+      "max": 26656768,
+      "spread": 315392
+    },
+    "descendant_tree_rss_sum_bytes": {
+      "median": 362442752,
+      "min": 347951104,
+      "max": 367947776,
+      "spread": 19996672
+    },
+    "tree_cpu_one_core_percent": {
+      "median": 1.378150307666082,
+      "min": 1.2254366853329237,
+      "max": 1.6834246221270777,
+      "spread": 0.45798793679415395
+    }
+  }
+}

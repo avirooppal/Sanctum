@@ -1,0 +1,13 @@
+{
+  "suite": "retired-ui-and-markdown",
+  "passed": [
+    "retired /",
+    "retired /index.html",
+    "retired /website.html",
+    "retired /docs.html",
+    "retired /assets/missing.js",
+    "health and API authentication preserved",
+    "browser Markdown injection and passive network denial"
+  ],
+  "release_complete": false
+}

@@ -1,0 +1,6 @@
+Traceback (most recent call last):
+  File "/mnt/c/Users/aviroop/Desktop/Sanctum/tools/rust_license_scan.py", line 58, in <module>
+    scan(json.loads(Path(sys.argv[1]).read_text()))
+  File "/mnt/c/Users/aviroop/Desktop/Sanctum/tools/rust_license_scan.py", line 39, in scan
+    entry = registered[(package["name"], package["version"])]
+KeyError: ('adler2', '2.0.1')

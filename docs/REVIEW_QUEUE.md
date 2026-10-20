@@ -2,6 +2,12 @@
 
 | ADR | Decision | Scope effect | Owner review |
 |---|---|---|---|
+| [0091](adr/0091-b2-shell-candidate-measurements.md) | B2 shell measurements: wry provisionally recommended over tauri and browser launcher | Linux tree 469 MB / Windows tree 362 MB; Windows idle CPU 1.38% exceeds 1% ADR0084 proposal; 3-run shortfall; MPL via option-ext; no browser-launcher Windows measurement | PROVISIONAL: owner must confirm before M2 restructuring; 5-run protocol and idle CPU budget (B7) must be resolved first |
+| [0091](adr/0091-b2-shell-candidate-measurements.md) | Windows idle CPU budget: wry 1.38% median exceeds ADR0084 proposed 1% one-core ceiling | B7 must set an explicit measured ceiling; do not claim 1% passes until B7 ADR is approved | OPEN: stays in REVIEW_QUEUE until B7 ADR approved |
+| [0090](adr/0090-file-level-mpl-policy.md) | Permit individually reviewed MPL files with exact source archives and notices | Explicit amendment of blanket MPL exclusion; no blanket SPDX admission; product gate/source bundle checks still required | PROVISIONAL recommendation; all three B2 candidates include MPL; no dependencies admitted yet |
+
+| ADR | Decision | Scope effect | Owner review |
+|---|---|---|---|
 | [0089](adr/0089-jan-study-and-fresh-implementation.md) | Jan source study, pinned Apache declaration/full text and NOTICE absence; original Sanctum components | No code/assets adapted; retain verified Sanctum runtime; B2/B3 experiments still required | PROVISIONAL: proceed fresh; no Jan source copying approved |
 
 | ADR | Decision | Scope effect | Owner review |
