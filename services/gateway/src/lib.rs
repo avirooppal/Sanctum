@@ -6,9 +6,11 @@ pub mod cancellable_io;
 pub mod dispatch;
 #[cfg(all(target_os = "linux", target_arch = "x86_64"))]
 pub mod ingress;
+pub mod packs;
 #[cfg(all(target_os = "linux", target_arch = "x86_64"))]
 pub mod realtime;
 pub mod realtime_tickets;
+pub mod settings;
 pub mod storage;
 #[cfg(all(target_os = "linux", target_arch = "x86_64"))]
 pub mod supervision;

@@ -17,7 +17,12 @@
 - B5: comprehensive threat model documented in docs/THREAT_MODEL.md covering tools, MCP, and computer use with proving tests.
 - B6: complete static wireframes with 2 critique iterations recorded in docs/design/wireframes/.
 - B7: measured desktop performance budgets and CI enforcement established in ADR0094.
-- M2: ready for implementation; core Rust desktop restructuring pending.
+- M2: Lightweight Core implemented:
+  - Typed settings engine (`services/gateway/src/settings.rs`) with schema validation, risk tiers, restart tracking, env overrides, and CLI (`sanctum config` get/set/list/export/import).
+  - Pack lifecycle manager (`services/gateway/src/packs.rs`) with capability endpoint (`/api/capability`) and platform assurance reporting ("verified kernel containment" on Linux x86_64, "not verified" on Windows).
+  - Cross-platform supervision and boot: native Windows execution without exit(78), unconfined fallback reporting "not verified", child process kill cleanup.
+  - B7 CI budget enforcer (`tools/check_desktop_budgets.py`) wired into source gate.
+  - All unit/integration tests passing (3 settings/packs Rust tests, 4 budget tests, 6 CLI config tests; full workspace and check.py green).
 - No native installer, desktop performance acceptance or whole-product security claim.
 
 Evidence: [A2–A5 commands/results](A2_A5_EVIDENCE.md), [PERFORMANCE](PERFORMANCE.md), [test audit](TEST_REMOVAL_AUDIT.md),

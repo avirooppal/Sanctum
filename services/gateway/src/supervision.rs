@@ -1,7 +1,8 @@
 //! Trusted-worker process groups; the guardian stays alive to reap descendants.
+#[cfg(unix)]
+use std::os::unix::process::CommandExt;
 use std::{
     io,
-    os::unix::process::CommandExt,
     process::{Child, Command, ExitStatus},
     sync::atomic::{AtomicBool, Ordering},
     thread,
@@ -28,21 +29,26 @@ impl Drop for OwnedChild {
     }
 }
 
+#[cfg(unix)]
 fn signal(group: i32, number: i32) {
     // SAFETY: positive PID of an owned process-group leader, never caller's group.
     unsafe {
         libc::kill(-group, number);
     }
 }
+#[cfg(unix)]
 fn alive(group: i32) -> bool {
     // SAFETY: signal zero only observes this owned process group.
     unsafe { libc::kill(-group, 0) == 0 }
 }
+#[cfg(unix)]
 fn reap(group: i32) {
     let mut status = 0;
     // SAFETY: valid status pointer; only adopted children in this owned group.
     while unsafe { libc::waitpid(-group, &mut status, libc::WNOHANG) } > 0 {}
 }
+
+#[cfg(unix)]
 pub fn run(command: &mut Command, stop: &AtomicBool) -> io::Result<ExitStatus> {
     // SAFETY: enables adoption of descendants solely within this guardian process.
     if unsafe { libc::prctl(libc::PR_SET_CHILD_SUBREAPER, 1) } != 0 {
@@ -100,29 +106,53 @@ pub fn run(command: &mut Command, stop: &AtomicBool) -> io::Result<ExitStatus> {
     ))
 }
 
+#[cfg(not(unix))]
+pub fn run(command: &mut Command, stop: &AtomicBool) -> io::Result<ExitStatus> {
+    let mut child = command.spawn()?;
+    loop {
+        if let Some(status) = child.try_wait()? {
+            return Ok(status);
+        }
+        if stop.load(Ordering::Acquire) {
+            let _ = child.kill();
+            return child.wait();
+        }
+        thread::sleep(Duration::from_millis(10));
+    }
+}
+
 /// Signal the guardian, allowing it to clean its owned worker group before exit.
 pub fn terminate(child: &mut Child) -> io::Result<()> {
     if child.try_wait()?.is_some() {
         return Ok(());
     }
-    // SAFETY: PID of our live child guardian; not a caller-supplied process ID.
-    unsafe {
-        libc::kill(child.id() as i32, libc::SIGTERM);
-    }
-    let until = Instant::now() + Duration::from_millis(1250);
-    while Instant::now() < until {
-        if child.try_wait()?.is_some() {
-            return Ok(());
+    #[cfg(unix)]
+    {
+        // SAFETY: PID of our live child guardian; not a caller-supplied process ID.
+        unsafe {
+            libc::kill(child.id() as i32, libc::SIGTERM);
         }
-        thread::sleep(Duration::from_millis(10));
+        let until = Instant::now() + Duration::from_millis(1250);
+        while Instant::now() < until {
+            if child.try_wait()?.is_some() {
+                return Ok(());
+            }
+            thread::sleep(Duration::from_millis(10));
+        }
     }
-    // An unhealthy guardian is a failure, not successful cleanup evidence.
     child.kill()?;
     child.wait()?;
-    Err(io::Error::new(
-        io::ErrorKind::TimedOut,
-        "guardian failed its cleanup deadline",
-    ))
+    #[cfg(unix)]
+    {
+        Err(io::Error::new(
+            io::ErrorKind::TimedOut,
+            "guardian failed its cleanup deadline",
+        ))
+    }
+    #[cfg(not(unix))]
+    {
+        Ok(())
+    }
 }
 
 /// Restart only resident workers after reaping their failed group; never replay jobs.

@@ -102,6 +102,8 @@ pub struct Chat {
     _engines: Engines,
     knowledge: Option<Mutex<crate::knowledge::Knowledge>>,
     realtime: Option<Arc<sanctum_gateway::realtime_tickets::SessionAuth>>,
+    settings: Mutex<sanctum_gateway::settings::SettingsEngine>,
+    packs: Mutex<sanctum_gateway::packs::PackManager>,
 }
 
 impl Chat {
@@ -239,6 +241,8 @@ impl Chat {
         } else {
             None
         };
+        let settings = sanctum_gateway::settings::SettingsEngine::new(&config.state_dir);
+        let packs = sanctum_gateway::packs::PackManager::new(&config.state_dir);
         Ok(Self {
             config,
             token,
@@ -248,6 +252,8 @@ impl Chat {
             _engines: engines,
             knowledge: knowledge.map(Mutex::new),
             realtime: None,
+            settings: Mutex::new(settings),
+            packs: Mutex::new(packs),
         })
     }
     pub fn token_path(&self) -> PathBuf {
@@ -549,6 +555,50 @@ impl Chat {
         }
         if request.method() == &tiny_http::Method::Get {
             return match path.as_str() {
+                "/api/capability" => {
+                    let packs = self.packs.lock().map_err(|_| "packs lock poisoned")?;
+                    respond(
+                        request,
+                        200,
+                        packs.capability_report(self.config.threads, self.config.context),
+                    )
+                }
+                "/api/settings" => {
+                    let settings = self.settings.lock().map_err(|_| "settings lock poisoned")?;
+                    let list = settings.list(None);
+                    let serialized: Vec<Value> = list
+                        .into_iter()
+                        .map(|(def, val)| {
+                            json!({
+                                "key": def.key,
+                                "type": def.setting_type,
+                                "scope": def.scope,
+                                "risk": def.risk,
+                                "restart_required": def.restart_required,
+                                "description": def.description,
+                                "default": def.default_value,
+                                "value": val
+                            })
+                        })
+                        .collect();
+                    respond(request, 200, json!({"settings": serialized}))
+                }
+                "/api/settings/export" => {
+                    let settings = self.settings.lock().map_err(|_| "settings lock poisoned")?;
+                    respond(request, 200, settings.export_json())
+                }
+                p if p.starts_with("/api/settings/") => {
+                    let key = p.trim_start_matches("/api/settings/");
+                    let settings = self.settings.lock().map_err(|_| "settings lock poisoned")?;
+                    match settings.get(key) {
+                        Some(val) => respond(request, 200, json!({"key": key, "value": val})),
+                        None => respond(
+                            request,
+                            404,
+                            json!({"error":{"message":"Setting not found"}}),
+                        ),
+                    }
+                }
                 "/v1/capabilities" => {
                     let mut caps = vec!["chat", "models", "history", "dashboard", "preferences"];
                     if self.config.knowledge_python.is_some() {
@@ -615,6 +665,113 @@ impl Chat {
                     json!({"data":self.store.lock().map_err(|_| "store lock poisoned")?.turns("local-owner",p.trim_start_matches("/v1/conversations/"))?}),
                 ),
                 _ => respond(request, 404, json!({"error":{"message":"Not found"}})),
+            };
+        }
+        if request.method() == &tiny_http::Method::Post && path == "/api/settings" {
+            let mut body = Vec::new();
+            request.as_reader().take(65536 + 1).read_to_end(&mut body)?;
+            let parsed: Value = match serde_json::from_slice::<Value>(&body) {
+                Ok(v) => v,
+                Err(_) => {
+                    return respond(
+                        request,
+                        400,
+                        json!({"error":{"message":"Invalid JSON payload"}}),
+                    )
+                }
+            };
+            let key = match parsed.get("key").and_then(|k| k.as_str()) {
+                Some(k) => k,
+                None => {
+                    return respond(
+                        request,
+                        400,
+                        json!({"error":{"message":"Missing required 'key' field"}}),
+                    )
+                }
+            };
+            let value = match parsed.get("value") {
+                Some(v) => v.clone(),
+                None => {
+                    return respond(
+                        request,
+                        400,
+                        json!({"error":{"message":"Missing required 'value' field"}}),
+                    )
+                }
+            };
+            let mut settings = self.settings.lock().map_err(|_| "settings lock poisoned")?;
+            return match settings.set(key, value) {
+                Ok(_) => respond(request, 200, json!({"status": "saved", "key": key})),
+                Err(e) => respond(request, 400, json!({"error":{"message": e}})),
+            };
+        }
+        if request.method() == &tiny_http::Method::Post && path == "/api/settings/import" {
+            let mut body = Vec::new();
+            request.as_reader().take(65536 + 1).read_to_end(&mut body)?;
+            let parsed: Value = match serde_json::from_slice::<Value>(&body) {
+                Ok(v) => v,
+                Err(_) => {
+                    return respond(
+                        request,
+                        400,
+                        json!({"error":{"message":"Invalid JSON payload"}}),
+                    )
+                }
+            };
+            let mut settings = self.settings.lock().map_err(|_| "settings lock poisoned")?;
+            return match settings.import_json(&parsed) {
+                Ok(count) => respond(request, 200, json!({"status": "imported", "count": count})),
+                Err(e) => respond(request, 400, json!({"error":{"message": e}})),
+            };
+        }
+        if request.method() == &tiny_http::Method::Post && path.starts_with("/api/pack/") {
+            let op = path.trim_start_matches("/api/pack/");
+            let mut body = Vec::new();
+            request.as_reader().take(65536 + 1).read_to_end(&mut body)?;
+            let parsed: Value = match serde_json::from_slice::<Value>(&body) {
+                Ok(v) => v,
+                Err(_) => {
+                    return respond(
+                        request,
+                        400,
+                        json!({"error":{"message":"Invalid JSON payload"}}),
+                    )
+                }
+            };
+            let id = match parsed.get("id").and_then(|k| k.as_str()) {
+                Some(k) => k,
+                None => {
+                    return respond(
+                        request,
+                        400,
+                        json!({"error":{"message":"Missing required 'id' field"}}),
+                    )
+                }
+            };
+            let mut packs = self.packs.lock().map_err(|_| "packs lock poisoned")?;
+            let res = match op {
+                "load" => packs.load(id),
+                "unload" => packs.unload(id),
+                "install" => {
+                    let source = parsed
+                        .get("source")
+                        .and_then(|s| s.as_str())
+                        .unwrap_or("builtin://");
+                    packs.install(id, source)
+                }
+                "uninstall" => packs.uninstall(id),
+                _ => {
+                    return respond(
+                        request,
+                        404,
+                        json!({"error":{"message":"Unknown pack operation"}}),
+                    )
+                }
+            };
+            return match res {
+                Ok(p) => respond(request, 200, json!({"status": "ok", "pack": p})),
+                Err(e) => respond(request, 400, json!({"error":{"message": e}})),
             };
         }
         if request.method() == &tiny_http::Method::Post && path == "/v1/preferences" {

@@ -33,7 +33,57 @@ def main() -> int:
             command.add_argument("--store", type=Path, default=Path(".sanctum/artifacts"))
         else:
             command.add_argument("--ram-gib", type=float)
+
+    config_cmd = commands.add_parser("config", help="Manage typed settings and configuration")
+    config_sub = config_cmd.add_subparsers(dest="config_action", required=True)
+    c_get = config_sub.add_parser("get", help="Get a setting value")
+    c_get.add_argument("key", help="Setting key dot-path")
+    c_set = config_sub.add_parser("set", help="Set a setting value")
+    c_set.add_argument("key", help="Setting key dot-path")
+    c_set.add_argument("value", help="Setting value")
+    c_list = config_sub.add_parser("list", help="List all settings")
+    c_list.add_argument("--scope", choices=["global", "assistant", "thread", "model"])
+    c_export = config_sub.add_parser("export", help="Export configuration as JSON")
+    c_export.add_argument("--output", type=Path, help="Target file path")
+    c_import = config_sub.add_parser("import", help="Import configuration from JSON")
+    c_import.add_argument("path", type=Path, help="JSON file path to import")
+    config_cmd.add_argument("--config-dir", type=Path, help="Custom data directory")
+
     args = parser.parse_args()
+
+    if args.command == "config":
+        from . import config as config_mod
+
+        custom_dir = getattr(args, "config_dir", None)
+        try:
+            if args.config_action == "get":
+                val = config_mod.get_setting(args.key, custom_dir)
+                print(json.dumps(val) if isinstance(val, (dict, list)) else val)
+                return 0
+            elif args.config_action == "set":
+                config_mod.set_setting(args.key, args.value, custom_dir)
+                print(f"Setting '{args.key}' saved.")
+                return 0
+            elif args.config_action == "list":
+                res = config_mod.list_settings(args.scope, custom_dir)
+                print(json.dumps(res, indent=2))
+                return 0
+            elif args.config_action == "export":
+                res = config_mod.export_settings(custom_dir)
+                out = json.dumps(res, indent=2)
+                if args.output:
+                    args.output.write_text(out, encoding="utf-8")
+                    print(f"Exported settings to {args.output}")
+                else:
+                    print(out)
+                return 0
+            elif args.config_action == "import":
+                applied = config_mod.import_settings(args.path, custom_dir)
+                print(f"Imported {applied} setting(s) from {args.path}")
+                return 0
+        except Exception as exc:
+            print(f"sanctum config error: {exc}", file=sys.stderr)
+            return 2
     if args.command == "doctor" and args.install_check:
         from .install_check import check
 

@@ -305,13 +305,78 @@ fn main() {
     #[cfg(all(target_os = "linux", target_arch = "x86_64"))]
     let result = run();
     #[cfg(not(all(target_os = "linux", target_arch = "x86_64")))]
-    let result: Result<(), Box<dyn std::error::Error + Send + Sync>> =
-        Err("runtime containment unsupported on this platform".into());
+    let result: Result<(), Box<dyn std::error::Error + Send + Sync>> = run_unconfined();
     if let Err(error) = result {
         eprintln!("sanctum-runtime: {error}");
         std::process::exit(78);
     }
 }
+
+#[cfg(not(all(target_os = "linux", target_arch = "x86_64")))]
+fn run_unconfined() -> Result<(), Box<dyn std::error::Error + Send + Sync>> {
+    use std::io::Write;
+    use std::net::TcpListener;
+
+    let args: Vec<String> = std::env::args().collect();
+    let port = args
+        .iter()
+        .position(|a| a == "--port")
+        .and_then(|i| args.get(i + 1))
+        .and_then(|s| s.parse::<u16>().ok())
+        .unwrap_or(8765);
+
+    let listener = TcpListener::bind(("127.0.0.1", port))?;
+    let address = listener.local_addr()?;
+    let checks = sanctum_policy::runtime::checks()?;
+
+    println!(
+        "{}",
+        serde_json::json!({
+            "address": address.to_string(),
+            "ready": true,
+            "platform_assurance": sanctum_policy::platform_assurance_tier(),
+            "token_file": null
+        })
+    );
+    std::io::stdout().flush()?;
+
+    let server = tiny_http::Server::from_listener(listener, None)?;
+    let health = serde_json::json!({
+        "status": "ok",
+        "cloud_connectors": "disabled",
+        "isolation": "unverified-host",
+        "platform_assurance": sanctum_policy::platform_assurance_tier(),
+        "checks": checks
+    });
+
+    for request in server.incoming_requests() {
+        let url = request.url().to_string();
+        if url == "/health" {
+            let body = serde_json::to_vec(&health)?;
+            let response = tiny_http::Response::from_data(body)
+                .with_status_code(200)
+                .with_header(
+                    tiny_http::Header::from_bytes("Content-Type", "application/json").unwrap(),
+                );
+            let _ = request.respond(response);
+        } else if url == "/api/capability" {
+            let manager =
+                sanctum_gateway::packs::PackManager::new(std::path::Path::new(".sanctum"));
+            let body = serde_json::to_vec(&manager.capability_report(1, 2048))?;
+            let response = tiny_http::Response::from_data(body)
+                .with_status_code(200)
+                .with_header(
+                    tiny_http::Header::from_bytes("Content-Type", "application/json").unwrap(),
+                );
+            let _ = request.respond(response);
+        } else {
+            let response = tiny_http::Response::from_string("not found").with_status_code(404);
+            let _ = request.respond(response);
+        }
+    }
+    Ok(())
+}
+
 #[cfg(all(target_os = "linux", target_arch = "x86_64"))]
 mod chat;
 #[cfg(all(target_os = "linux", target_arch = "x86_64"))]

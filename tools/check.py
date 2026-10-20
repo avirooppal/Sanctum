@@ -25,6 +25,7 @@ def main():
         ["tools/web_font_assets.py"],
         ["tools/workflow_check.py"],
         ["tools/secret_scan.py"],
+        ["tools/check_desktop_budgets.py", "--fixture-check"],
         ["evals/run.py"],
     ]
     for args in commands:

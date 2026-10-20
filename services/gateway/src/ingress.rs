@@ -83,7 +83,10 @@ pub fn inspect(bytes: &[u8]) -> Result<Head, u16> {
         | "/v1/sessions"
         | "/v1/preferences"
         | "/v1/purge"
-        | "/v1/profiles" => 2,
+        | "/v1/profiles"
+        | "/api/capability"
+        | "/v1/capabilities" => 2,
+        value if value.starts_with("/api/settings") || value.starts_with("/api/pack") => 2,
         value if value.starts_with("/v1/workspaces") => 3,
         _ => 0,
     };

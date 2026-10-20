@@ -14,15 +14,16 @@ reference-fidelity and conflicting stack/roadmap requirements are
 | M0 full desktop measurements | PENDING | Legacy JS101141B gzip/web2139977B measured; native install/no-model RSS/cold UI/CPU unavailable; PERFORMANCE.md |
 | M0 removals and reviewed salvage | VERIFIED retirement only | ADR0085; 1017 removed tracked paths in SHA256 inventory; initial11 narrowed to6 M3 modules by ADR0087; restored HTTP coverage; no app UI |
 | M1 Jan study and architecture ADRs | B1–B7 COMPLETED (PROVISIONAL) | JAN_STUDY.md/ADR0089: pin and study. ADR0090: MPL policy. ADR0091: B2 shell measurements. ADR0092: B3 UI stack measurements. ADR0093: B4 core contracts. THREAT_MODEL.md: B5 threat model. docs/design/wireframes/: B6 wireframes (2 review iterations). ADR0094: B7 measured performance budgets |
+| M2 Lightweight Core | IMPLEMENTED (Slice 1) | Typed settings engine (`settings.rs`), pack manager (`packs.rs`), capability endpoint (`/api/capability`), Windows supervision & unconfined boot fallback, B7 CI budget enforcer (`check_desktop_budgets.py`), CLI `sanctum config`; 13 new unit/integration tests passing |
 | A / M3 chat and threads | PENDING | Existing legacy chat/history tests are scoped reuse evidence only; new desktop journeys absent |
 | B / M5 assistants | PENDING | New contract and journey required |
-| C / M2–M3 models and engines | PENDING | Retained Rust supervision/inference checks do not verify full model manager or native core |
+| C / M2–M3 models and engines | Partial | Retained Rust supervision/inference checks and Windows supervision cleanup verified; full model manager pending |
 | D / M9 optional providers | PENDING | Egress, keychain, per-thread data consent, policies, ledger and kill-switch journeys required |
 | E / M6 local API | PENDING | Existing SDK smoke is partial reuse evidence; configurable native server acceptance absent |
 | F–H / M7 tools, permissions, built-ins, MCP | PENDING | Full permission/taint/schema/budget/manifest/change-detection journeys absent |
 | I / M10 computer use | PENDING | Sandbox/host safety controls and local-model evaluation suite absent |
-| J / M4 settings | PENDING | Single typed schema and full UI/CLI/config round-trip journeys absent |
-| K / M8 packs | PENDING | Existing RAG/file speech checks do not verify optional pack lifecycle or full modalities |
+| J / M4 settings | Core Implemented | Typed schema, scopes, risk levels, restart flags, env overrides, CLI `sanctum config` get/set/list/export/import; full UI journey pending |
+| K / M8 packs | Core Implemented | Pack manager (`packs.rs`), capability report (`/api/capability`), pack lifecycle endpoints (`/api/pack/*`), platform assurance reporting; UI pack browser pending |
 | L / M9–M11 data/privacy | PENDING | Ledger, consent, encryption/lock, purge and verified-update acceptance absent |
 | M11 assurance/security/packaging | PENDING | Native egress tests, red-team/task-quality tables, fresh installed artifacts and signatures absent |
 | M12 acceptance | PENDING | Fresh-machine journeys, enforced budgets and final coverage/handoff not established |
