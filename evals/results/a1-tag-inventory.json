@@ -1,0 +1,44 @@
+{
+  "commit": "1bee37bc777318b1913aac0a95eb9315e29cfa05",
+  "method": "One fresh release build and unsigned uncompressed reference bundle per revision; five independent size reads of those same bytes, not five rebuilds. Bundle includes mandatory chat+embedding GGUF and Linux engine libraries. Release binary explicitly copied into helper's target/debug input path. No installer claim.",
+  "bundle_bytes": {
+    "runs": 5,
+    "median": 1359608697,
+    "min": 1359608697,
+    "max": 1359608697,
+    "spread": 0
+  },
+  "gguf_bytes": {
+    "runs": 5,
+    "median": 1278597280,
+    "min": 1278597280,
+    "max": 1278597280,
+    "spread": 0
+  },
+  "bundle_excluding_gguf_bytes": {
+    "runs": 5,
+    "median": 81011417,
+    "min": 81011417,
+    "max": 81011417,
+    "spread": 0
+  },
+  "runtime_binary_bytes": {
+    "runs": 5,
+    "median": 4907720,
+    "min": 4907720,
+    "max": 4907720,
+    "spread": 0
+  },
+  "runtime_sha256": "5bb46f21da3b5aa56d42ac3cf4524fe3211ba7533f3095f8c0fbe0e6e8b689fa",
+  "initial_ui_js_gzip_bytes": {
+    "runs": 5,
+    "median": 101141,
+    "min": 101141,
+    "max": 101141,
+    "spread": 0
+  },
+  "native_windows": {
+    "status": "UNAVAILABLE",
+    "reason": "Both revisions explicitly exit 78 for non-Linux runtime. No native runtime binary/toolchain installed at baseline; old Windows package has only a WSL launcher. No Windows RSS/startup/CPU samples claimed."
+  }
+}

@@ -1,5 +1,9 @@
 # Decision review queue
 
+| ADR | Decision | Effect | Review |
+|---|---|---|---|
+| [0086](adr/0086-repeatable-runtime-baselines.md) | Five-run reference protocol,60-second idle samples; fresh processes with OS caches intact | No performance budgets;240s startup/5s health/10s shutdown harness bounds preserve failed evidence | Compare scoped gateway and mandatory chat+embedding numbers; Windows values unavailable until a native runtime exists |
+
 | ADR | Decision | Scope effect | Remaining review |
 |---|---|---|---|
 | [0085](adr/0085-retire-legacy-ui.md) | Retire entire old UI; retain development reuse library only | Explicitly remove old product browser/public projection/fidelity tests; preserve backend and budget contracts; all full journeys PENDING | M1 architecture, M3 real desktop UI, M11 packaging remain pending; no threshold relaxation |

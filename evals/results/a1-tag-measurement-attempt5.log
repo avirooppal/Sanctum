@@ -1,0 +1,20 @@
+no_model run 1/5 starting
+no_model run 1/5: ready=0.0435s RSS=3538944
+no_model run 2/5 starting
+no_model run 2/5: ready=0.0614s RSS=3670016
+no_model run 3/5 starting
+no_model run 3/5: ready=0.0878s RSS=3670016
+no_model run 4/5 starting
+no_model run 4/5: ready=0.0730s RSS=3670016
+no_model run 5/5 starting
+no_model run 5/5: ready=0.1029s RSS=3670016
+chat_and_embedding_loaded run 1/5 starting
+chat_and_embedding_loaded run 1/5: ready=34.9822s RSS=6291456
+chat_and_embedding_loaded run 2/5 starting
+chat_and_embedding_loaded run 2/5: ready=39.7134s RSS=6684672
+chat_and_embedding_loaded run 3/5 starting
+chat_and_embedding_loaded run 3/5: ready=27.1031s RSS=6684672
+chat_and_embedding_loaded run 4/5 starting
+chat_and_embedding_loaded run 4/5: ready=29.4180s RSS=6422528
+chat_and_embedding_loaded run 5/5 starting
+chat_and_embedding_loaded run 5/5: ready=27.0187s RSS=6160384

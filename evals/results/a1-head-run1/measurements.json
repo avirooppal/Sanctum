@@ -1,0 +1,596 @@
+{
+  "commit": "09c9b3d02b6de599791e7e4708b98e0175631402",
+  "clean_source_receipt": {
+    "commit": "09c9b3d02b6de599791e7e4708b98e0175631402",
+    "tracked_status": "",
+    "checkout": "C:\\Users\\aviroop\\.codex\\worktrees\\jan-head-baseline\\Sanctum",
+    "verified_at_utc": "2026-10-20T07:34:53.645546+00:00",
+    "command": [
+      "git",
+      "-C",
+      "C:\\Users\\aviroop\\.codex\\worktrees\\jan-head-baseline\\Sanctum",
+      "status",
+      "--porcelain",
+      "--untracked-files=no"
+    ]
+  },
+  "platform": "Linux-6.6.87.2-microsoft-standard-WSL2-x86_64-with-glibc2.35",
+  "cpuinfo": "processor\t: 0\nvendor_id\t: GenuineIntel\ncpu family\t: 6\nmodel\t\t: 186\nmodel name\t: 13th Gen Intel(R) Core(TM) i5-1334U\nstepping\t: 3\nmicrocode\t: 0xffffffff\ncpu MHz\t\t: 2496.011\ncache size\t: 12288 KB\nphysical id\t: 0\nsiblings\t: 12\ncore id\t\t: 0\ncpu cores\t: 6\napicid\t\t: 0\ninitial apicid\t: 0\nfpu\t\t: yes\nfpu_exception\t: yes\ncpuid level\t: 28\nwp\t\t: yes\nflags\t\t: fpu vme de pse tsc msr pae mce cx8 apic sep mtrr pge mca cmov pat pse36 clflush mmx fxsr sse sse2 ss ht syscall nx pdpe1gb rdtscp lm constant_tsc rep_good nopl xtopology tsc_reliable nonstop_tsc cpuid tsc_known_freq pni pclmulqdq vmx ssse3 fma cx16 pcid sse4_1 sse4_2 x2apic movbe popcnt tsc_deadline_timer aes xsave avx f16c rdrand hypervisor lahf_lm abm 3dnowprefetch ssbd ibrs ibpb stibp ibrs_enhanced tpr_shadow ept vpid ept_ad fsgsbase tsc_adjust bmi1 avx2 smep bmi2 erms invpcid rdseed adx smap clflushopt clwb sha_ni xsaveopt xsavec xgetbv1 xsaves avx_vnni vnmi umip waitpkg gfni vaes vpclmulqdq rdpid movdiri movdir64b fsrm md_clear serialize flush_l1d arch_capabilities\nvmx flags\t: vnmi invvpid ept_x_only ept_ad ept_1gb tsc_offset vtpr ept vpid unrestricted_guest ept_mode_based_exec tsc_scaling usr_wait_pause\nbugs\t\t: spectre_v1 spectre_v2 spec_store_bypass swapgs retbleed eibrs_pbrsb rfds bhi\nbogomips\t: 4992.02\nclflush size\t: 64\ncache_alignment\t: 64\naddress sizes\t: 39 bits physical, 48 bits virtual\npower management:\n\nprocessor\t: 1\nvendor_id\t: GenuineIntel\ncpu family\t: 6\nmodel\t\t: 186\nmodel name\t: 13th Gen Intel(R) Core(TM) i5-1334U\nstepping\t: 3\nmicrocode\t: 0xffffffff\ncpu MHz\t\t: 2496.011\ncache size\t: 12288 KB\nphysical id\t: 0\nsiblings\t: 12\ncore id\t\t: 0\ncpu cores\t: 6\napicid\t\t: 1\ninitial apicid\t: 1\nfpu\t\t: yes\nfpu_exception\t: yes\ncpuid level\t: 28\nwp\t\t: yes\nflags\t\t: fpu vme de pse tsc msr pae mce cx8 apic sep mtrr pge mca cmov pat pse36 clflush mmx fxsr sse sse2 ss ht syscall nx pdpe1gb rdtscp lm constant_tsc rep_good nopl xtopology tsc_reliable nonstop_tsc cpuid tsc_known_freq pni pclmulqdq vmx ssse3 fma cx16 pcid sse4_1 sse4_2 x2apic movbe popcnt tsc_deadline_timer aes xsave avx f16c rdrand hypervisor lahf_lm abm 3dnowprefetch ssbd ibrs ibpb stibp ibrs_enhanced tpr_shadow ept vpid ept_ad fsgsbase tsc_adjust bmi1 avx2 smep bmi2 erms invpcid rdseed adx smap clflushopt clwb sha_ni xsaveopt xsavec xgetbv1 xsaves avx_vnni vnmi umip waitpkg gfni vaes vpclmulqdq rdpid movdiri movdir64b fsrm md_clear serialize flush_l1d arch_capabilities\nvmx flags\t: vnmi invvpid ept_x_only ept_ad ept_1gb tsc_offset vtpr ept vpid unrestricted_guest ept_mode_based_exec tsc_scaling usr_wait_pause\nbugs\t\t: spectre_v1 spectre_v2 spec_store_bypass swapgs retbleed eibrs_pbrsb rfds bhi\nbogomips\t: 4992.02\nclflush size\t: 64\ncache_alignment\t: 64\naddress sizes\t: 39 bits physical, 48 bits virtual\npower management:\n\nprocessor\t: 2\nvendor_id\t: GenuineIntel\ncpu family\t: 6\nmodel\t\t: 186\nmodel name\t: 13th Gen Intel(R) Core(TM) i5-1334U\nstepping\t: 3\nmicrocode\t: 0xffffffff\ncpu MHz\t\t: 2496.011\ncache size\t: 12288 KB\nphysical id\t: 0\nsiblings\t: 12\ncore id\t\t: 1\ncpu cores\t: 6\napicid\t\t: 2\ninitial apicid\t: 2\nfpu\t\t: yes\nfpu_exception\t: yes\ncpuid level\t: 28\nwp\t\t: yes\nflags\t\t: fpu vme de pse tsc msr pae mce cx8 apic sep mtrr pge mca cmov pat pse36 clflush mmx fxsr sse sse2 ss ht syscall nx pdpe1gb rdtscp lm constant_tsc rep_good nopl xtopology tsc_reliable nonstop_tsc cpuid tsc_known_freq pni pclmulqdq vmx ssse3 fma cx16 pcid sse4_1 sse4_2 x2apic movbe popcnt tsc_deadline_timer aes xsave avx f16c rdrand hypervisor lahf_lm abm 3dnowprefetch ssbd ibrs ibpb stibp ibrs_enhanced tpr_shadow ept vpid ept_ad fsgsbase tsc_adjust bmi1 avx2 smep bmi2 erms invpcid rdseed adx smap clflushopt clwb sha_ni xsaveopt xsavec xgetbv1 xsaves avx_vnni vnmi umip waitpkg gfni vaes vpclmulqdq rdpid movdiri movdir64b fsrm md_clear serialize flush_l1d arch_capabilities\nvmx flags\t: vnmi invvpid ept_x_only ept_ad ept_1gb tsc_offset vtpr ept vpid unrestricted_guest ept_mode_based_exec tsc_scaling usr_wait_pause\nbugs\t\t: spectre_v1 spectre_v2 spec_store_bypass swapgs retbleed eibrs_pbrsb rfds bhi\nbogomips\t: 4992.02\nclflush size\t: 64\ncache_alignment\t: 64\naddress sizes\t: 39 bits physical, 48 bits virtual\npower management:\n\nprocessor\t: 3\nvendor_id\t: GenuineIntel\ncpu family\t: 6\nmodel\t\t: 186\nmodel name\t: 13th Gen Intel(R) Core(TM) i5-1334U\nstepping\t: 3\nmicrocode\t: 0xffffffff\ncpu MHz\t\t: 2496.011\ncache size\t: 12288 KB\nphysical id\t: 0\nsiblings\t: 12\ncore id\t\t: 1\ncpu cores\t: 6\napicid\t\t: 3\ninitial apicid\t: 3\nfpu\t\t: yes\nfpu_exception\t: yes\ncpuid level\t: 28\nwp\t\t: yes\nflags\t\t: fpu vme de pse tsc msr pae mce cx8 apic sep mtrr pge mca cmov pat pse36 clflush mmx fxsr sse sse2 ss ht syscall nx pdpe1gb rdtscp lm constant_tsc rep_good nopl xtopology tsc_reliable nonstop_tsc cpuid tsc_known_freq pni pclmulqdq vmx ssse3 fma cx16 pcid sse4_1 sse4_2 x2apic movbe popcnt tsc_deadline_timer aes xsave avx f16c rdrand hypervisor lahf_lm abm 3dnowprefetch ssbd ibrs ibpb stibp ibrs_enhanced tpr_shadow ept vpid ept_ad fsgsbase tsc_adjust bmi1 avx2 smep bmi2 erms invpcid rdseed adx smap clflushopt clwb sha_ni xsaveopt xsavec xgetbv1 xsaves avx_vnni vnmi umip waitpkg gfni vaes vpclmulqdq rdpid movdiri movdir64b fsrm md_clear serialize flush_l1d arch_capabilities\nvmx flags\t: vnmi invvpid ept_x_only ept_ad ept_1gb tsc_offset vtpr ept vpid unrestricted_guest ept_mode_based_exec tsc_scaling usr_wait_pause\nbugs\t\t: spectre_v1 spectre_v2 spec_store_bypass swapgs retbleed eibrs_pbrsb rfds bhi\nbogomips\t: 4992.02\nclflush size\t: 64\ncache_alignment\t: 64\naddress sizes\t: 39 bits physical, 48 bits virtual\npower management:\n\nprocessor\t: 4\nvendor_id\t: GenuineIntel\ncpu family\t: 6\nmodel\t\t: 186\nmodel name\t: 13th Gen Intel(R) Core(TM) i5-1334U\nstepping\t: 3\nmicrocode\t: 0xffffffff\ncpu MHz\t\t: 2496.011\ncache size\t: 12288 KB\nphysical id\t: 0\nsiblings\t: 12\ncore id\t\t: 2\ncpu cores\t: 6\napicid\t\t: 4\ninitial apicid\t: 4\nfpu\t\t: yes\nfpu_exception\t: yes\ncpuid level\t: 28\nwp\t\t: yes\nflags\t\t: fpu vme de pse tsc msr pae mce cx8 apic sep mtrr pge mca cmov pat pse36 clflush mmx fxsr sse sse2 ss ht syscall nx pdpe1gb rdtscp lm constant_tsc rep_good nopl xtopology tsc_reliable nonstop_tsc cpuid tsc_known_freq pni pclmulqdq vmx ssse3 fma cx16 pcid sse4_1 sse4_2 x2apic movbe popcnt tsc_deadline_timer aes xsave avx f16c rdrand hypervisor lahf_lm abm 3dnowprefetch ssbd ibrs ibpb stibp ibrs_enhanced tpr_shadow ept vpid ept_ad fsgsbase tsc_adjust bmi1 avx2 smep bmi2 erms invpcid rdseed adx smap clflushopt clwb sha_ni xsaveopt xsavec xgetbv1 xsaves avx_vnni vnmi umip waitpkg gfni vaes vpclmulqdq rdpid movdiri movdir64b fsrm md_clear serialize flush_l1d arch_capabilities\nvmx flags\t: vnmi invvpid ept_x_only ept_ad ept_1gb tsc_offset vtpr ept vpid unrestricted_guest ept_mode_based_exec tsc_scaling usr_wait_pause\nbugs\t\t: spectre_v1 spectre_v2 spec_store_bypass swapgs retbleed eibrs_pbrsb rfds bhi\nbogomips\t: 4992.02\nclflush size\t: 64\ncache_alignment\t: 64\naddress sizes\t: 39 bits physical, 48 bits virtual\npower management:\n\nprocessor\t: 5\nvendor_id\t: GenuineIntel\ncpu family\t: 6\nmodel\t\t: 186\nmodel name\t: 13th Gen Intel(R) Core(TM) i5-1334U\nstepping\t: 3\nmicrocode\t: 0xffffffff\ncpu MHz\t\t: 2496.011\ncache size\t: 12288 KB\nphysical id\t: 0\nsiblings\t: 12\ncore id\t\t: 2\ncpu cores\t: 6\napicid\t\t: 5\ninitial apicid\t: 5\nfpu\t\t: yes\nfpu_exception\t: yes\ncpuid level\t: 28\nwp\t\t: yes\nflags\t\t: fpu vme de pse tsc msr pae mce cx8 apic sep mtrr pge mca cmov pat pse36 clflush mmx fxsr sse sse2 ss ht syscall nx pdpe1gb rdtscp lm constant_tsc rep_good nopl xtopology tsc_reliable nonstop_tsc cpuid tsc_known_freq pni pclmulqdq vmx ssse3 fma cx16 pcid sse4_1 sse4_2 x2apic movbe popcnt tsc_deadline_timer aes xsave avx f16c rdrand hypervisor lahf_lm abm 3dnowprefetch ssbd ibrs ibpb stibp ibrs_enhanced tpr_shadow ept vpid ept_ad fsgsbase tsc_adjust bmi1 avx2 smep bmi2 erms invpcid rdseed adx smap clflushopt clwb sha_ni xsaveopt xsavec xgetbv1 xsaves avx_vnni vnmi umip waitpkg gfni vaes vpclmulqdq rdpid movdiri movdir64b fsrm md_clear serialize flush_l1d arch_capabilities\nvmx flags\t: vnmi invvpid ept_x_only ept_ad ept_1gb tsc_offset vtpr ept vpid unrestricted_guest ept_mode_based_exec tsc_scaling usr_wait_pause\nbugs\t\t: spectre_v1 spectre_v2 spec_store_bypass swapgs retbleed eibrs_pbrsb rfds bhi\nbogomips\t: 4992.02\nclflush size\t: 64\ncache_alignment\t: 64\naddress sizes\t: 39 bits physical, 48 bits virtual\npower management:\n\nprocessor\t: 6\nvendor_id\t: GenuineIntel\ncpu family\t: 6\nmodel\t\t: 186\nmodel name\t: 13th Gen Intel(R) Core(TM) i5-1334U\nstepping\t: 3\nmicrocode\t: 0xffffffff\ncpu MHz\t\t: 2496.011\ncache size\t: 12288 KB\nphysical id\t: 0\nsiblings\t: 12\ncore id\t\t: 3\ncpu cores\t: 6\napicid\t\t: 6\ninitial apicid\t: 6\nfpu\t\t: yes\nfpu_exception\t: yes\ncpuid level\t: 28\nwp\t\t: yes\nflags\t\t: fpu vme de pse tsc msr pae mce cx8 apic sep mtrr pge mca cmov pat pse36 clflush mmx fxsr sse sse2 ss ht syscall nx pdpe1gb rdtscp lm constant_tsc rep_good nopl xtopology tsc_reliable nonstop_tsc cpuid tsc_known_freq pni pclmulqdq vmx ssse3 fma cx16 pcid sse4_1 sse4_2 x2apic movbe popcnt tsc_deadline_timer aes xsave avx f16c rdrand hypervisor lahf_lm abm 3dnowprefetch ssbd ibrs ibpb stibp ibrs_enhanced tpr_shadow ept vpid ept_ad fsgsbase tsc_adjust bmi1 avx2 smep bmi2 erms invpcid rdseed adx smap clflushopt clwb sha_ni xsaveopt xsavec xgetbv1 xsaves avx_vnni vnmi umip waitpkg gfni vaes vpclmulqdq rdpid movdiri movdir64b fsrm md_clear serialize flush_l1d arch_capabilities\nvmx flags\t: vnmi invvpid ept_x_only ept_ad ept_1gb tsc_offset vtpr ept vpid unrestricted_guest ept_mode_based_exec tsc_scaling usr_wait_pause\nbugs\t\t: spectre_v1 spectre_v2 spec_store_bypass swapgs retbleed eibrs_pbrsb rfds bhi\nbogomips\t: 4992.02\nclflush size\t: 64\ncache_alignment\t: 64\naddress sizes\t: 39 bits physical, 48 bits virtual\npower management:\n\nprocessor\t: 7\nvendor_id\t: GenuineIntel\ncpu family\t: 6\nmodel\t\t: 186\nmodel name\t: 13th Gen Intel(R) Core(TM) i5-1334U\nstepping\t: 3\nmicrocode\t: 0xffffffff\ncpu MHz\t\t: 2496.011\ncache size\t: 12288 KB\nphysical id\t: 0\nsiblings\t: 12\ncore id\t\t: 3\ncpu cores\t: 6\napicid\t\t: 7\ninitial apicid\t: 7\nfpu\t\t: yes\nfpu_exception\t: yes\ncpuid level\t: 28\nwp\t\t: yes\nflags\t\t: fpu vme de pse tsc msr pae mce cx8 apic sep mtrr pge mca cmov pat pse36 clflush mmx fxsr sse sse2 ss ht syscall nx pdpe1gb rdtscp lm constant_tsc rep_good nopl xtopology tsc_reliable nonstop_tsc cpuid tsc_known_freq pni pclmulqdq vmx ssse3 fma cx16 pcid sse4_1 sse4_2 x2apic movbe popcnt tsc_deadline_timer aes xsave avx f16c rdrand hypervisor lahf_lm abm 3dnowprefetch ssbd ibrs ibpb stibp ibrs_enhanced tpr_shadow ept vpid ept_ad fsgsbase tsc_adjust bmi1 avx2 smep bmi2 erms invpcid rdseed adx smap clflushopt clwb sha_ni xsaveopt xsavec xgetbv1 xsaves avx_vnni vnmi umip waitpkg gfni vaes vpclmulqdq rdpid movdiri movdir64b fsrm md_clear serialize flush_l1d arch_capabilities\nvmx flags\t: vnmi invvpid ept_x_only ept_ad ept_1gb tsc_offset vtpr ept vpid unrestricted_guest ept_mode_based_exec tsc_scaling usr_wait_pause\nbugs\t\t: spectre_v1 spectre_v2 spec_store_bypass swapgs retbleed eibrs_pbrsb rfds bhi\nbogomips\t: 4992.02\nclflush size\t: 64\ncache_alignment\t: 64\naddress sizes\t: 39 bits physical, 48 bits virtual\npower management:\n\nprocessor\t: 8\nvendor_id\t: GenuineIntel\ncpu family\t: 6\nmodel\t\t: 186\nmodel name\t: 13th Gen Intel(R) Core(TM) i5-1334U\nstepping\t: 3\nmicrocode\t: 0xffffffff\ncpu MHz\t\t: 2496.011\ncache size\t: 12288 KB\nphysical id\t: 0\nsiblings\t: 12\ncore id\t\t: 4\ncpu cores\t: 6\napicid\t\t: 8\ninitial apicid\t: 8\nfpu\t\t: yes\nfpu_exception\t: yes\ncpuid level\t: 28\nwp\t\t: yes\nflags\t\t: fpu vme de pse tsc msr pae mce cx8 apic sep mtrr pge mca cmov pat pse36 clflush mmx fxsr sse sse2 ss ht syscall nx pdpe1gb rdtscp lm constant_tsc rep_good nopl xtopology tsc_reliable nonstop_tsc cpuid tsc_known_freq pni pclmulqdq vmx ssse3 fma cx16 pcid sse4_1 sse4_2 x2apic movbe popcnt tsc_deadline_timer aes xsave avx f16c rdrand hypervisor lahf_lm abm 3dnowprefetch ssbd ibrs ibpb stibp ibrs_enhanced tpr_shadow ept vpid ept_ad fsgsbase tsc_adjust bmi1 avx2 smep bmi2 erms invpcid rdseed adx smap clflushopt clwb sha_ni xsaveopt xsavec xgetbv1 xsaves avx_vnni vnmi umip waitpkg gfni vaes vpclmulqdq rdpid movdiri movdir64b fsrm md_clear serialize flush_l1d arch_capabilities\nvmx flags\t: vnmi invvpid ept_x_only ept_ad ept_1gb tsc_offset vtpr ept vpid unrestricted_guest ept_mode_based_exec tsc_scaling usr_wait_pause\nbugs\t\t: spectre_v1 spectre_v2 spec_store_bypass swapgs retbleed eibrs_pbrsb rfds bhi\nbogomips\t: 4992.02\nclflush size\t: 64\ncache_alignment\t: 64\naddress sizes\t: 39 bits physical, 48 bits virtual\npower management:\n\nprocessor\t: 9\nvendor_id\t: GenuineIntel\ncpu family\t: 6\nmodel\t\t: 186\nmodel name\t: 13th Gen Intel(R) Core(TM) i5-1334U\nstepping\t: 3\nmicrocode\t: 0xffffffff\ncpu MHz\t\t: 2496.011\ncache size\t: 12288 KB\nphysical id\t: 0\nsiblings\t: 12\ncore id\t\t: 4\ncpu cores\t: 6\napicid\t\t: 9\ninitial apicid\t: 9\nfpu\t\t: yes\nfpu_exception\t: yes\ncpuid level\t: 28\nwp\t\t: yes\nflags\t\t: fpu vme de pse tsc msr pae mce cx8 apic sep mtrr pge mca cmov pat pse36 clflush mmx fxsr sse sse2 ss ht syscall nx pdpe1gb rdtscp lm constant_tsc rep_good nopl xtopology tsc_reliable nonstop_tsc cpuid tsc_known_freq pni pclmulqdq vmx ssse3 fma cx16 pcid sse4_1 sse4_2 x2apic movbe popcnt tsc_deadline_timer aes xsave avx f16c rdrand hypervisor lahf_lm abm 3dnowprefetch ssbd ibrs ibpb stibp ibrs_enhanced tpr_shadow ept vpid ept_ad fsgsbase tsc_adjust bmi1 avx2 smep bmi2 erms invpcid rdseed adx smap clflushopt clwb sha_ni xsaveopt xsavec xgetbv1 xsaves avx_vnni vnmi umip waitpkg gfni vaes vpclmulqdq rdpid movdiri movdir64b fsrm md_clear serialize flush_l1d arch_capabilities\nvmx flags\t: vnmi invvpid ept_x_only ept_ad ept_1gb tsc_offset vtpr ept vpid unrestricted_guest ept_mode_based_exec tsc_scaling usr_wait_pause\nbugs\t\t: spectre_v1 spectre_v2 spec_store_bypass swapgs retbleed eibrs_pbrsb rfds bhi\nbogomips\t: 4992.02\nclflush size\t: 64\ncache_alignment\t: 64\naddress sizes\t: 39 bits physical, 48 bits virtual\npower management:\n\nprocessor\t: 10\nvendor_id\t: GenuineIntel\ncpu family\t: 6\nmodel\t\t: 186\nmodel name\t: 13th Gen Intel(R) Core(TM) i5-1334U\nstepping\t: 3\nmicrocode\t: 0xffffffff\ncpu MHz\t\t: 2496.011\ncache size\t: 12288 KB\nphysical id\t: 0\nsiblings\t: 12\ncore id\t\t: 5\ncpu cores\t: 6\napicid\t\t: 10\ninitial apicid\t: 10\nfpu\t\t: yes\nfpu_exception\t: yes\ncpuid level\t: 28\nwp\t\t: yes\nflags\t\t: fpu vme de pse tsc msr pae mce cx8 apic sep mtrr pge mca cmov pat pse36 clflush mmx fxsr sse sse2 ss ht syscall nx pdpe1gb rdtscp lm constant_tsc rep_good nopl xtopology tsc_reliable nonstop_tsc cpuid tsc_known_freq pni pclmulqdq vmx ssse3 fma cx16 pcid sse4_1 sse4_2 x2apic movbe popcnt tsc_deadline_timer aes xsave avx f16c rdrand hypervisor lahf_lm abm 3dnowprefetch ssbd ibrs ibpb stibp ibrs_enhanced tpr_shadow ept vpid ept_ad fsgsbase tsc_adjust bmi1 avx2 smep bmi2 erms invpcid rdseed adx smap clflushopt clwb sha_ni xsaveopt xsavec xgetbv1 xsaves avx_vnni vnmi umip waitpkg gfni vaes vpclmulqdq rdpid movdiri movdir64b fsrm md_clear serialize flush_l1d arch_capabilities\nvmx flags\t: vnmi invvpid ept_x_only ept_ad ept_1gb tsc_offset vtpr ept vpid unrestricted_guest ept_mode_based_exec tsc_scaling usr_wait_pause\nbugs\t\t: spectre_v1 spectre_v2 spec_store_bypass swapgs retbleed eibrs_pbrsb rfds bhi\nbogomips\t: 4992.02\nclflush size\t: 64\ncache_alignment\t: 64\naddress sizes\t: 39 bits physical, 48 bits virtual\npower management:\n\nprocessor\t: 11\nvendor_id\t: GenuineIntel\ncpu family\t: 6\nmodel\t\t: 186\nmodel name\t: 13th Gen Intel(R) Core(TM) i5-1334U\nstepping\t: 3\nmicrocode\t: 0xffffffff\ncpu MHz\t\t: 2496.011\ncache size\t: 12288 KB\nphysical id\t: 0\nsiblings\t: 12\ncore id\t\t: 5\ncpu cores\t: 6\napicid\t\t: 11\ninitial apicid\t: 11\nfpu\t\t: yes\nfpu_exception\t: yes\ncpuid level\t: 28\nwp\t\t: yes\nflags\t\t: fpu vme de pse tsc msr pae mce cx8 apic sep mtrr pge mca cmov pat pse36 clflush mmx fxsr sse sse2 ss ht syscall nx pdpe1gb rdtscp lm constant_tsc rep_good nopl xtopology tsc_reliable nonstop_tsc cpuid tsc_known_freq pni pclmulqdq vmx ssse3 fma cx16 pcid sse4_1 sse4_2 x2apic movbe popcnt tsc_deadline_timer aes xsave avx f16c rdrand hypervisor lahf_lm abm 3dnowprefetch ssbd ibrs ibpb stibp ibrs_enhanced tpr_shadow ept vpid ept_ad fsgsbase tsc_adjust bmi1 avx2 smep bmi2 erms invpcid rdseed adx smap clflushopt clwb sha_ni xsaveopt xsavec xgetbv1 xsaves avx_vnni vnmi umip waitpkg gfni vaes vpclmulqdq rdpid movdiri movdir64b fsrm md_clear serialize flush_l1d arch_capabilities\nvmx flags\t: vnmi invvpid ept_x_only ept_ad ept_1gb tsc_offset vtpr ept vpid unrestricted_guest ept_mode_based_exec tsc_scaling usr_wait_pause\nbugs\t\t: spectre_v1 spectre_v2 spec_store_bypass swapgs retbleed eibrs_pbrsb rfds bhi\nbogomips\t: 4992.02\nclflush size\t: 64\ncache_alignment\t: 64\naddress sizes\t: 39 bits physical, 48 bits virtual\npower management:\n\n",
+  "meminfo": "MemTotal:        7976152 kB\nMemFree:         6927176 kB\nMemAvailable:    7380048 kB\nBuffers:           56252 kB\nCached:           528020 kB\nSwapCached:            0 kB\nActive:           160632 kB\nInactive:         568476 kB\nActive(anon):       3084 kB\nInactive(anon):   145444 kB\nActive(file):     157548 kB\nInactive(file):   423032 kB\nUnevictable:           0 kB\nMlocked:               0 kB\nSwapTotal:       2097152 kB\nSwapFree:        2097152 kB\nDirty:              6988 kB\nWriteback:             0 kB\nAnonPages:        145024 kB\nMapped:           240424 kB\nShmem:              3612 kB\nKReclaimable:      23648 kB\nSlab:              88120 kB\nSReclaimable:      23648 kB\nSUnreclaim:        64472 kB\nKernelStack:        4576 kB\nPageTables:         3856 kB\nSecPageTables:         0 kB\nNFS_Unstable:          0 kB\nBounce:                0 kB\nWritebackTmp:          0 kB\nCommitLimit:     6085228 kB\nCommitted_AS:     907132 kB\nVmallocTotal:   34359738367 kB\nVmallocUsed:       29696 kB\nVmallocChunk:          0 kB\nPercpu:             7296 kB\nHardwareCorrupted:     0 kB\nAnonHugePages:         0 kB\nShmemHugePages:        0 kB\nShmemPmdMapped:        0 kB\nFileHugePages:         0 kB\nFilePmdMapped:         0 kB\nUnaccepted:            0 kB\nHugePages_Total:       0\nHugePages_Free:        0\nHugePages_Rsvd:        0\nHugePages_Surp:        0\nHugepagesize:       2048 kB\nHugetlb:               0 kB\nDirectMap4k:       84992 kB\nDirectMap2M:     4999168 kB\nDirectMap1G:    11534336 kB\n",
+  "binary_sha256": "1d6b998eee078b9456fae64aa1ab9dab8c6c2ba1d43fd0e54d48ae0a03219f54",
+  "binary_size_bytes": {
+    "runs": 5,
+    "median": 4899096,
+    "min": 4899096,
+    "max": 4899096,
+    "spread": 0
+  },
+  "method": "Release binary. Five sequential fresh processes per mode. OS caches NOT dropped. Two-second settle. No-model idle sampled for 60s. Loaded chat + mandatory embedding sampled for 2s. RSS sums count shared pages per process; not PSS. No UI or Python worker. No thresholds.",
+  "no_model": [
+    {
+      "command": [
+        "/mnt/c/Users/aviroop/.codex/worktrees/jan-head-baseline/Sanctum/target/release/sanctum-runtime",
+        "--port",
+        "0"
+      ],
+      "ready_to_health_seconds": 0.05373330999987047,
+      "idle_sample_seconds": 60.804262949000076,
+      "gateway_rss_bytes": 3801088,
+      "tree_rss_sum_bytes": 3801088,
+      "gateway_peak_sampled_rss_bytes": 3801088,
+      "gateway_cpu_one_core_percent": 1.7926374683864579,
+      "processes": {
+        "975": {
+          "ppid": 851,
+          "cpu_ticks": 112,
+          "rss_bytes": 3801088,
+          "exe": "/mnt/c/Users/aviroop/.codex/worktrees/jan-head-baseline/Sanctum/target/release/sanctum-runtime"
+        }
+      },
+      "health": {
+        "checks": {
+          "host_fd_import": "denied",
+          "host_unix_socket": "denied",
+          "io_uring": "denied",
+          "ipv4_tcp": "denied",
+          "ipv4_udp": "denied",
+          "ipv6_tcp": "denied",
+          "ipv6_udp": "denied",
+          "namespace_change": "denied"
+        },
+        "cloud_connectors": "disabled",
+        "isolation": "linux-user-netns-seccomp",
+        "status": "ok"
+      },
+      "shutdown_exit_code": 0
+    },
+    {
+      "command": [
+        "/mnt/c/Users/aviroop/.codex/worktrees/jan-head-baseline/Sanctum/target/release/sanctum-runtime",
+        "--port",
+        "0"
+      ],
+      "ready_to_health_seconds": 0.057992061000049944,
+      "idle_sample_seconds": 60.75494305699999,
+      "gateway_rss_bytes": 3801088,
+      "tree_rss_sum_bytes": 3801088,
+      "gateway_peak_sampled_rss_bytes": 3801088,
+      "gateway_cpu_one_core_percent": 1.7611735706774199,
+      "processes": {
+        "999": {
+          "ppid": 851,
+          "cpu_ticks": 111,
+          "rss_bytes": 3801088,
+          "exe": "/mnt/c/Users/aviroop/.codex/worktrees/jan-head-baseline/Sanctum/target/release/sanctum-runtime"
+        }
+      },
+      "health": {
+        "checks": {
+          "host_fd_import": "denied",
+          "host_unix_socket": "denied",
+          "io_uring": "denied",
+          "ipv4_tcp": "denied",
+          "ipv4_udp": "denied",
+          "ipv6_tcp": "denied",
+          "ipv6_udp": "denied",
+          "namespace_change": "denied"
+        },
+        "cloud_connectors": "disabled",
+        "isolation": "linux-user-netns-seccomp",
+        "status": "ok"
+      },
+      "shutdown_exit_code": 0
+    },
+    {
+      "command": [
+        "/mnt/c/Users/aviroop/.codex/worktrees/jan-head-baseline/Sanctum/target/release/sanctum-runtime",
+        "--port",
+        "0"
+      ],
+      "ready_to_health_seconds": 0.0640668859998641,
+      "idle_sample_seconds": 60.74936095399994,
+      "gateway_rss_bytes": 3670016,
+      "tree_rss_sum_bytes": 3670016,
+      "gateway_peak_sampled_rss_bytes": 3670016,
+      "gateway_cpu_one_core_percent": 1.7777964789091156,
+      "processes": {
+        "1026": {
+          "ppid": 851,
+          "cpu_ticks": 111,
+          "rss_bytes": 3670016,
+          "exe": "/mnt/c/Users/aviroop/.codex/worktrees/jan-head-baseline/Sanctum/target/release/sanctum-runtime"
+        }
+      },
+      "health": {
+        "checks": {
+          "host_fd_import": "denied",
+          "host_unix_socket": "denied",
+          "io_uring": "denied",
+          "ipv4_tcp": "denied",
+          "ipv4_udp": "denied",
+          "ipv6_tcp": "denied",
+          "ipv6_udp": "denied",
+          "namespace_change": "denied"
+        },
+        "cloud_connectors": "disabled",
+        "isolation": "linux-user-netns-seccomp",
+        "status": "ok"
+      },
+      "shutdown_exit_code": 0
+    },
+    {
+      "command": [
+        "/mnt/c/Users/aviroop/.codex/worktrees/jan-head-baseline/Sanctum/target/release/sanctum-runtime",
+        "--port",
+        "0"
+      ],
+      "ready_to_health_seconds": 0.062247915000170906,
+      "idle_sample_seconds": 60.64613267300001,
+      "gateway_rss_bytes": 3538944,
+      "tree_rss_sum_bytes": 3538944,
+      "gateway_peak_sampled_rss_bytes": 3538944,
+      "gateway_cpu_one_core_percent": 1.5334860757148345,
+      "processes": {
+        "1046": {
+          "ppid": 851,
+          "cpu_ticks": 97,
+          "rss_bytes": 3538944,
+          "exe": "/mnt/c/Users/aviroop/.codex/worktrees/jan-head-baseline/Sanctum/target/release/sanctum-runtime"
+        }
+      },
+      "health": {
+        "checks": {
+          "host_fd_import": "denied",
+          "host_unix_socket": "denied",
+          "io_uring": "denied",
+          "ipv4_tcp": "denied",
+          "ipv4_udp": "denied",
+          "ipv6_tcp": "denied",
+          "ipv6_udp": "denied",
+          "namespace_change": "denied"
+        },
+        "cloud_connectors": "disabled",
+        "isolation": "linux-user-netns-seccomp",
+        "status": "ok"
+      },
+      "shutdown_exit_code": 0
+    },
+    {
+      "command": [
+        "/mnt/c/Users/aviroop/.codex/worktrees/jan-head-baseline/Sanctum/target/release/sanctum-runtime",
+        "--port",
+        "0"
+      ],
+      "ready_to_health_seconds": 0.03383962899988546,
+      "idle_sample_seconds": 60.576117233000105,
+      "gateway_rss_bytes": 3801088,
+      "tree_rss_sum_bytes": 3801088,
+      "gateway_peak_sampled_rss_bytes": 3801088,
+      "gateway_cpu_one_core_percent": 1.1555709279079716,
+      "processes": {
+        "1066": {
+          "ppid": 851,
+          "cpu_ticks": 73,
+          "rss_bytes": 3801088,
+          "exe": "/mnt/c/Users/aviroop/.codex/worktrees/jan-head-baseline/Sanctum/target/release/sanctum-runtime"
+        }
+      },
+      "health": {
+        "checks": {
+          "host_fd_import": "denied",
+          "host_unix_socket": "denied",
+          "io_uring": "denied",
+          "ipv4_tcp": "denied",
+          "ipv4_udp": "denied",
+          "ipv6_tcp": "denied",
+          "ipv6_udp": "denied",
+          "namespace_change": "denied"
+        },
+        "cloud_connectors": "disabled",
+        "isolation": "linux-user-netns-seccomp",
+        "status": "ok"
+      },
+      "shutdown_exit_code": 0
+    }
+  ],
+  "chat_and_embedding_loaded": [
+    {
+      "command": [
+        "/mnt/c/Users/aviroop/.codex/worktrees/jan-head-baseline/Sanctum/target/release/sanctum-runtime",
+        "--port",
+        "0",
+        "--config",
+        "/mnt/c/Users/aviroop/.codex/worktrees/jan-head-baseline/Sanctum/.sanctum/baseline.json"
+      ],
+      "ready_to_health_seconds": 29.51390039199987,
+      "idle_sample_seconds": 2.075304982000034,
+      "gateway_rss_bytes": 6553600,
+      "tree_rss_sum_bytes": 1897791488,
+      "gateway_peak_sampled_rss_bytes": 6553600,
+      "gateway_cpu_one_core_percent": 0.9637137757326345,
+      "processes": {
+        "1092": {
+          "ppid": 851,
+          "cpu_ticks": 234,
+          "rss_bytes": 6553600,
+          "exe": "/mnt/c/Users/aviroop/.codex/worktrees/jan-head-baseline/Sanctum/target/release/sanctum-runtime"
+        },
+        "1098": {
+          "ppid": 1092,
+          "cpu_ticks": 6,
+          "rss_bytes": 3145728,
+          "exe": "/mnt/c/Users/aviroop/.codex/worktrees/jan-head-baseline/Sanctum/target/release/sanctum-runtime"
+        },
+        "1100": {
+          "ppid": 1098,
+          "cpu_ticks": 324,
+          "rss_bytes": 942551040,
+          "exe": "/mnt/c/Users/aviroop/.codex/worktrees/jan-head-baseline/Sanctum/.sanctum/engines/llama-b11429/llama-server"
+        },
+        "1097": {
+          "ppid": 1092,
+          "cpu_ticks": 7,
+          "rss_bytes": 3145728,
+          "exe": "/mnt/c/Users/aviroop/.codex/worktrees/jan-head-baseline/Sanctum/target/release/sanctum-runtime"
+        },
+        "1099": {
+          "ppid": 1097,
+          "cpu_ticks": 336,
+          "rss_bytes": 942395392,
+          "exe": "/mnt/c/Users/aviroop/.codex/worktrees/jan-head-baseline/Sanctum/.sanctum/engines/llama-b11429/llama-server"
+        }
+      },
+      "health": {
+        "checks": {
+          "host_fd_import": "denied",
+          "host_unix_socket": "denied",
+          "io_uring": "denied",
+          "ipv4_tcp": "denied",
+          "ipv4_udp": "denied",
+          "ipv6_tcp": "denied",
+          "ipv6_udp": "denied",
+          "namespace_change": "denied"
+        },
+        "cloud_connectors": "disabled",
+        "isolation": "linux-user-netns-seccomp",
+        "status": "ok"
+      },
+      "shutdown_exit_code": 0
+    },
+    {
+      "command": [
+        "/mnt/c/Users/aviroop/.codex/worktrees/jan-head-baseline/Sanctum/target/release/sanctum-runtime",
+        "--port",
+        "0",
+        "--config",
+        "/mnt/c/Users/aviroop/.codex/worktrees/jan-head-baseline/Sanctum/.sanctum/baseline.json"
+      ],
+      "ready_to_health_seconds": 29.150324833000013,
+      "idle_sample_seconds": 2.0750864619999447,
+      "gateway_rss_bytes": 6422528,
+      "tree_rss_sum_bytes": 1894440960,
+      "gateway_peak_sampled_rss_bytes": 6422528,
+      "gateway_cpu_one_core_percent": 0.9638152610144364,
+      "processes": {
+        "1148": {
+          "ppid": 851,
+          "cpu_ticks": 259,
+          "rss_bytes": 6422528,
+          "exe": "/mnt/c/Users/aviroop/.codex/worktrees/jan-head-baseline/Sanctum/target/release/sanctum-runtime"
+        },
+        "1152": {
+          "ppid": 1148,
+          "cpu_ticks": 4,
+          "rss_bytes": 3145728,
+          "exe": "/mnt/c/Users/aviroop/.codex/worktrees/jan-head-baseline/Sanctum/target/release/sanctum-runtime"
+        },
+        "1154": {
+          "ppid": 1152,
+          "cpu_ticks": 303,
+          "rss_bytes": 942620672,
+          "exe": "/mnt/c/Users/aviroop/.codex/worktrees/jan-head-baseline/Sanctum/.sanctum/engines/llama-b11429/llama-server"
+        },
+        "1151": {
+          "ppid": 1148,
+          "cpu_ticks": 4,
+          "rss_bytes": 3276800,
+          "exe": "/mnt/c/Users/aviroop/.codex/worktrees/jan-head-baseline/Sanctum/target/release/sanctum-runtime"
+        },
+        "1153": {
+          "ppid": 1151,
+          "cpu_ticks": 306,
+          "rss_bytes": 938975232,
+          "exe": "/mnt/c/Users/aviroop/.codex/worktrees/jan-head-baseline/Sanctum/.sanctum/engines/llama-b11429/llama-server"
+        }
+      },
+      "health": {
+        "checks": {
+          "host_fd_import": "denied",
+          "host_unix_socket": "denied",
+          "io_uring": "denied",
+          "ipv4_tcp": "denied",
+          "ipv4_udp": "denied",
+          "ipv6_tcp": "denied",
+          "ipv6_udp": "denied",
+          "namespace_change": "denied"
+        },
+        "cloud_connectors": "disabled",
+        "isolation": "linux-user-netns-seccomp",
+        "status": "ok"
+      },
+      "shutdown_exit_code": 0
+    },
+    {
+      "command": [
+        "/mnt/c/Users/aviroop/.codex/worktrees/jan-head-baseline/Sanctum/target/release/sanctum-runtime",
+        "--port",
+        "0",
+        "--config",
+        "/mnt/c/Users/aviroop/.codex/worktrees/jan-head-baseline/Sanctum/.sanctum/baseline.json"
+      ],
+      "ready_to_health_seconds": 30.652373597000178,
+      "idle_sample_seconds": 2.056927728000119,
+      "gateway_rss_bytes": 6291456,
+      "tree_rss_sum_bytes": 1897959424,
+      "gateway_peak_sampled_rss_bytes": 6291456,
+      "gateway_cpu_one_core_percent": 0.972323904615031,
+      "processes": {
+        "1204": {
+          "ppid": 851,
+          "cpu_ticks": 262,
+          "rss_bytes": 6291456,
+          "exe": "/mnt/c/Users/aviroop/.codex/worktrees/jan-head-baseline/Sanctum/target/release/sanctum-runtime"
+        },
+        "1208": {
+          "ppid": 1204,
+          "cpu_ticks": 4,
+          "rss_bytes": 3145728,
+          "exe": "/mnt/c/Users/aviroop/.codex/worktrees/jan-head-baseline/Sanctum/target/release/sanctum-runtime"
+        },
+        "1210": {
+          "ppid": 1208,
+          "cpu_ticks": 268,
+          "rss_bytes": 942772224,
+          "exe": "/mnt/c/Users/aviroop/.codex/worktrees/jan-head-baseline/Sanctum/.sanctum/engines/llama-b11429/llama-server"
+        },
+        "1207": {
+          "ppid": 1204,
+          "cpu_ticks": 4,
+          "rss_bytes": 3145728,
+          "exe": "/mnt/c/Users/aviroop/.codex/worktrees/jan-head-baseline/Sanctum/target/release/sanctum-runtime"
+        },
+        "1209": {
+          "ppid": 1207,
+          "cpu_ticks": 274,
+          "rss_bytes": 942604288,
+          "exe": "/mnt/c/Users/aviroop/.codex/worktrees/jan-head-baseline/Sanctum/.sanctum/engines/llama-b11429/llama-server"
+        }
+      },
+      "health": {
+        "checks": {
+          "host_fd_import": "denied",
+          "host_unix_socket": "denied",
+          "io_uring": "denied",
+          "ipv4_tcp": "denied",
+          "ipv4_udp": "denied",
+          "ipv6_tcp": "denied",
+          "ipv6_udp": "denied",
+          "namespace_change": "denied"
+        },
+        "cloud_connectors": "disabled",
+        "isolation": "linux-user-netns-seccomp",
+        "status": "ok"
+      },
+      "shutdown_exit_code": 0
+    },
+    {
+      "command": [
+        "/mnt/c/Users/aviroop/.codex/worktrees/jan-head-baseline/Sanctum/target/release/sanctum-runtime",
+        "--port",
+        "0",
+        "--config",
+        "/mnt/c/Users/aviroop/.codex/worktrees/jan-head-baseline/Sanctum/.sanctum/baseline.json"
+      ],
+      "ready_to_health_seconds": 31.62035289100004,
+      "idle_sample_seconds": 2.126284313000042,
+      "gateway_rss_bytes": 6553600,
+      "tree_rss_sum_bytes": 1892102144,
+      "gateway_peak_sampled_rss_bytes": 6553600,
+      "gateway_cpu_one_core_percent": 1.8812159670012676,
+      "processes": {
+        "1258": {
+          "ppid": 851,
+          "cpu_ticks": 271,
+          "rss_bytes": 6553600,
+          "exe": "/mnt/c/Users/aviroop/.codex/worktrees/jan-head-baseline/Sanctum/target/release/sanctum-runtime"
+        },
+        "1277": {
+          "ppid": 1258,
+          "cpu_ticks": 4,
+          "rss_bytes": 3276800,
+          "exe": "/mnt/c/Users/aviroop/.codex/worktrees/jan-head-baseline/Sanctum/target/release/sanctum-runtime"
+        },
+        "1279": {
+          "ppid": 1277,
+          "cpu_ticks": 281,
+          "rss_bytes": 942604288,
+          "exe": "/mnt/c/Users/aviroop/.codex/worktrees/jan-head-baseline/Sanctum/.sanctum/engines/llama-b11429/llama-server"
+        },
+        "1276": {
+          "ppid": 1258,
+          "cpu_ticks": 5,
+          "rss_bytes": 3145728,
+          "exe": "/mnt/c/Users/aviroop/.codex/worktrees/jan-head-baseline/Sanctum/target/release/sanctum-runtime"
+        },
+        "1278": {
+          "ppid": 1276,
+          "cpu_ticks": 283,
+          "rss_bytes": 936521728,
+          "exe": "/mnt/c/Users/aviroop/.codex/worktrees/jan-head-baseline/Sanctum/.sanctum/engines/llama-b11429/llama-server"
+        }
+      },
+      "health": {
+        "checks": {
+          "host_fd_import": "denied",
+          "host_unix_socket": "denied",
+          "io_uring": "denied",
+          "ipv4_tcp": "denied",
+          "ipv4_udp": "denied",
+          "ipv6_tcp": "denied",
+          "ipv6_udp": "denied",
+          "namespace_change": "denied"
+        },
+        "cloud_connectors": "disabled",
+        "isolation": "linux-user-netns-seccomp",
+        "status": "ok"
+      },
+      "shutdown_exit_code": 0
+    },
+    {
+      "command": [
+        "/mnt/c/Users/aviroop/.codex/worktrees/jan-head-baseline/Sanctum/target/release/sanctum-runtime",
+        "--port",
+        "0",
+        "--config",
+        "/mnt/c/Users/aviroop/.codex/worktrees/jan-head-baseline/Sanctum/.sanctum/baseline.json"
+      ],
+      "ready_to_health_seconds": 28.328517335000015,
+      "idle_sample_seconds": 2.1096965790000013,
+      "gateway_rss_bytes": 6684672,
+      "tree_rss_sum_bytes": 1898573824,
+      "gateway_peak_sampled_rss_bytes": 6684672,
+      "gateway_cpu_one_core_percent": 1.4220054342705546,
+      "processes": {
+        "1329": {
+          "ppid": 851,
+          "cpu_ticks": 239,
+          "rss_bytes": 6684672,
+          "exe": "/mnt/c/Users/aviroop/.codex/worktrees/jan-head-baseline/Sanctum/target/release/sanctum-runtime"
+        },
+        "1333": {
+          "ppid": 1329,
+          "cpu_ticks": 4,
+          "rss_bytes": 3145728,
+          "exe": "/mnt/c/Users/aviroop/.codex/worktrees/jan-head-baseline/Sanctum/target/release/sanctum-runtime"
+        },
+        "1335": {
+          "ppid": 1333,
+          "cpu_ticks": 271,
+          "rss_bytes": 943050752,
+          "exe": "/mnt/c/Users/aviroop/.codex/worktrees/jan-head-baseline/Sanctum/.sanctum/engines/llama-b11429/llama-server"
+        },
+        "1332": {
+          "ppid": 1329,
+          "cpu_ticks": 3,
+          "rss_bytes": 3145728,
+          "exe": "/mnt/c/Users/aviroop/.codex/worktrees/jan-head-baseline/Sanctum/target/release/sanctum-runtime"
+        },
+        "1334": {
+          "ppid": 1332,
+          "cpu_ticks": 271,
+          "rss_bytes": 942546944,
+          "exe": "/mnt/c/Users/aviroop/.codex/worktrees/jan-head-baseline/Sanctum/.sanctum/engines/llama-b11429/llama-server"
+        }
+      },
+      "health": {
+        "checks": {
+          "host_fd_import": "denied",
+          "host_unix_socket": "denied",
+          "io_uring": "denied",
+          "ipv4_tcp": "denied",
+          "ipv4_udp": "denied",
+          "ipv6_tcp": "denied",
+          "ipv6_udp": "denied",
+          "namespace_change": "denied"
+        },
+        "cloud_connectors": "disabled",
+        "isolation": "linux-user-netns-seccomp",
+        "status": "ok"
+      },
+      "shutdown_exit_code": 0
+    }
+  ],
+  "summaries": {
+    "no_model": {
+      "ready_to_health_seconds": {
+        "runs": 5,
+        "median": 0.057992061000049944,
+        "min": 0.03383962899988546,
+        "max": 0.0640668859998641,
+        "spread": 0.030227256999978636
+      },
+      "gateway_rss_bytes": {
+        "runs": 5,
+        "median": 3801088,
+        "min": 3538944,
+        "max": 3801088,
+        "spread": 262144
+      },
+      "tree_rss_sum_bytes": {
+        "runs": 5,
+        "median": 3801088,
+        "min": 3538944,
+        "max": 3801088,
+        "spread": 262144
+      },
+      "gateway_cpu_one_core_percent": {
+        "runs": 5,
+        "median": 1.7611735706774199,
+        "min": 1.1555709279079716,
+        "max": 1.7926374683864579,
+        "spread": 0.6370665404784863
+      }
+    },
+    "chat_and_embedding_loaded": {
+      "ready_to_health_seconds": {
+        "runs": 5,
+        "median": 29.51390039199987,
+        "min": 28.328517335000015,
+        "max": 31.62035289100004,
+        "spread": 3.2918355560000236
+      },
+      "gateway_rss_bytes": {
+        "runs": 5,
+        "median": 6553600,
+        "min": 6291456,
+        "max": 6684672,
+        "spread": 393216
+      },
+      "tree_rss_sum_bytes": {
+        "runs": 5,
+        "median": 1897791488,
+        "min": 1892102144,
+        "max": 1898573824,
+        "spread": 6471680
+      },
+      "gateway_cpu_one_core_percent": {
+        "runs": 5,
+        "median": 0.972323904615031,
+        "min": 0.9637137757326345,
+        "max": 1.8812159670012676,
+        "spread": 0.9175021912686331
+      }
+    }
+  },
+  "status": "measured"
+}

@@ -89,8 +89,9 @@ threshold/scope change or timeout relaxation without ADR plus REVIEW_QUEUE entry
 Preserve failed runs. Unproven features stay hidden and PENDING; old tests do not
 automatically verify rewritten components. Keep main green.
 
-Current checkpoint: baseline/decision work only. M0 removals and M1–M12 remain
-pending; [PERFORMANCE](docs/PERFORMANCE.md) distinguishes measured legacy numbers
+Current checkpoint: legacy UI retirement recorded under ADR0085; five-run A1
+reference measurements recorded under ADR0086. M0 audit/dead-code follow-ups and
+M1–M12 remain pending; [PERFORMANCE](docs/PERFORMANCE.md) distinguishes measured legacy numbers
 from unavailable desktop measurements. No whole-product completion is claimed.
 
 ---

@@ -1,0 +1,19 @@
+from pathlib import Path
+import json,subprocess,datetime
+for label,name in [('tag','pre-pivot-baseline'),('head','jan-head-baseline')]:
+ p=Path('C:/Users/aviroop/.codex/worktrees')/name/'Sanctum'
+ status=subprocess.check_output(['git','-C',str(p),'status','--porcelain','--untracked-files=no'],text=True)
+ assert not status,status
+ record={'commit':subprocess.check_output(['git','-C',str(p),'rev-parse','HEAD'],text=True).strip(),'tracked_status':status,'checkout':str(p),'verified_at_utc':datetime.datetime.now(datetime.timezone.utc).isoformat(),'command':['git','-C',str(p),'status','--porcelain','--untracked-files=no']}
+ Path(f'evals/results/a1-{label}-clean-source.json').write_text(json.dumps(record,indent=2)+'\n',encoding='utf-8')
+p=Path('tools/runtime_baselines.py');s=p.read_text(encoding='utf-8').replace('    parser.add_argument("--checkout", type=Path, required=True)','    parser.add_argument("--source-receipt", type=Path, help="Fresh host-Git clean-check receipt for cross-OS worktrees")\n    parser.add_argument("--checkout", type=Path, required=True)');start=s.index('    if subprocess.check_output(');end=s.index('    record = {',start);s=s[:start]+'''    receipt = None
+    if args.source_receipt:
+        receipt = json.loads(args.source_receipt.read_text(encoding="utf-8"))
+        if receipt["tracked_status"] != "":
+            raise ValueError("Host Git reported tracked changes")
+    elif subprocess.check_output([*git, "status", "--porcelain", "--untracked-files=no"], cwd=checkout):
+        raise ValueError("Measurement checkout has tracked changes")
+    commit = subprocess.check_output([*git, "rev-parse", "HEAD"], cwd=checkout, text=True).strip()
+    if receipt and receipt["commit"] != commit:
+        raise ValueError("Source receipt and measured commit differ")
+'''+s[end:];a=s.index('        "commit": subprocess.check_output(');b=s.index('        "platform":',a);s=s[:a]+'        "commit": commit,\n        "clean_source_receipt": receipt,\n'+s[b:];p.write_text(s,encoding='utf-8')

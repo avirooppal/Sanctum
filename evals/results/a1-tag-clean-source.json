@@ -1,0 +1,14 @@
+{
+  "commit": "1bee37bc777318b1913aac0a95eb9315e29cfa05",
+  "tracked_status": "",
+  "checkout": "C:\\Users\\aviroop\\.codex\\worktrees\\pre-pivot-baseline\\Sanctum",
+  "verified_at_utc": "2026-10-20T07:34:53.364924+00:00",
+  "command": [
+    "git",
+    "-C",
+    "C:\\Users\\aviroop\\.codex\\worktrees\\pre-pivot-baseline\\Sanctum",
+    "status",
+    "--porcelain",
+    "--untracked-files=no"
+  ]
+}

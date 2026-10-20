@@ -1,0 +1,14 @@
+{
+  "commit": "09c9b3d02b6de599791e7e4708b98e0175631402",
+  "tracked_status": "",
+  "checkout": "C:\\Users\\aviroop\\.codex\\worktrees\\jan-head-baseline\\Sanctum",
+  "verified_at_utc": "2026-10-20T07:34:53.645546+00:00",
+  "command": [
+    "git",
+    "-C",
+    "C:\\Users\\aviroop\\.codex\\worktrees\\jan-head-baseline\\Sanctum",
+    "status",
+    "--porcelain",
+    "--untracked-files=no"
+  ]
+}

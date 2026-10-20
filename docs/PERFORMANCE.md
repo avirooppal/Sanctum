@@ -1,5 +1,104 @@
 # Performance evidence
 
+## Baselines — A1, 2026-10-20
+
+Measured in separate clean worktrees at tag `pre-pivot-2026-10-20`
+(`1bee37bc777318b1913aac0a95eb9315e29cfa05`) and then-current `jan-style`
+(`09c9b3d02b6de599791e7e4708b98e0175631402`). Source unchanged while measuring.
+Hardware: Intel Core i5-1334U,12 logical CPUs. Windows11 Home Single Language
+10.0.26300,16,463,352KiB visible RAM; WSL Ubuntu22.04, Linux6.6.87.2 x86_64,
+8,167,579,648B visible RAM. Native Windows and WSL are not interchangeable.
+
+Every cell is **median [minimum, maximum]; spread=max−min**, with n=5.
+Size values are five independent inventories of one session-built artifact per
+revision, not five builds. Runtime values are five sequential fresh processes
+per mode. Release builds, default compiler release profile, no strip/LTO override.
+OS caches were NOT dropped; fresh-process startup is not disk-cache-cold startup.
+Host desktop apps remained open. No product budget is set by this table.
+
+| WSL/Linux reference metric | Archived tag | jan-style head |
+|---|---|---|
+| Runtime binary (B) | 4,907,720 [4,907,720, 4,907,720]; spread 0 | 4,899,096 [4,899,096, 4,899,096]; spread 0 |
+| Unsigned uncompressed dev bundle including two GGUF (B) | 1,359,608,697 [1,359,608,697, 1,359,608,697]; spread 0 | 1,357,452,185 [1,357,452,185, 1,357,452,185]; spread 0 |
+| Same bundle excluding GGUF, including engine libraries (B) | 81,011,417 [81,011,417, 81,011,417]; spread 0 | 78,854,905 [78,854,905, 78,854,905]; spread 0 |
+| Initial app JS, gzip level9 (B) | 101,141 [101,141, 101,141]; spread 0 | Not applicable: UI retired |
+| No-model gateway RSS (B) | 3,670,016 [3,538,944, 3,670,016]; spread 131,072 | 3,801,088 [3,538,944, 3,801,088]; spread 262,144 |
+| No-model start through health response (s) | 0.072995 [0.043496, 0.102881]; spread 0.059385 | 0.057992 [0.033840, 0.064067]; spread 0.030227 |
+| No-model idle CPU over ≥60s (% of one core) | 1.794154 [1.760176, 1.904392]; spread 0.144216 | 1.761174 [1.155571, 1.792637]; spread 0.637067 |
+| Chat+embedding loaded, gateway RSS (B) | 6,422,528 [6,160,384, 6,684,672]; spread 524,288 | 6,553,600 [6,291,456, 6,684,672]; spread 393,216 |
+| Chat+embedding loaded, process-tree RSS sum (B) | 1,897,467,904 [1,897,312,256, 1,898,610,688]; spread 1,298,432 | 1,897,791,488 [1,892,102,144, 1,898,573,824]; spread 6,471,680 |
+| Chat+embedding start through health response (s) | 29.417976 [27.018667, 39.713386]; spread 12.694719 | 29.513900 [28.328517, 31.620353]; spread 3.291836 |
+
+The no-model invocation is the existing unconfigured gateway: no UI, model,
+Python worker or SQLite session. It is not a usable desktop or M2 core baseline.
+Configured mode has SQLite, Qwen3-0.6B-Q8_0 chat plus mandatory Qwen3-Embedding-0.6B-Q8_0,
+context2048,2 CPU threads, no RAG/speech/Python worker. Both models' GGUF files total
+1,278,597,280B. Readiness includes existing artifact verification and model loading.
+RSS sums count shared pages for each process; they are not PSS. Gateway RSS alone
+would conceal worker memory. Loaded-mode CPU samples are only2s diagnostics in raw
+JSON; the headline idle CPU measurements above are the five ≥60s no-model samples.
+
+**Native Windows:** binary, bundle, RSS, CPU and readiness measurements are
+UNAVAILABLE, not zero. Both source revisions explicitly exit78 on non-Linux.
+No native Rust toolchain/runtime binary was present; the old Windows distribution
+contains only a WSL launcher script. No executable Windows samples are claimed.
+M2 must add and measure the native implementation without claiming containment.
+
+### Commands and raw evidence
+
+See ADR0086 for the protocol and watchdogs (not performance budgets). Fresh initial
+checks: `bash tools/run_source_gate.sh` PASS183; `bash tools/check_rust.sh` PASS70/38
+probes; `npm test --prefix apps/web` PASS45; provisioned `bash tools/smoke_all.sh`
+PASS8. Logs are `evals/results/a1-start-*`. Both source SHAs' hosted starting state
+was checked; current-head receipt is preserved with this slice.
+
+Windows-managed worktree roots:
+`C:/Users/aviroop/.codex/worktrees/pre-pivot-baseline/Sanctum` and
+`C:/Users/aviroop/.codex/worktrees/jan-head-baseline/Sanctum`.
+Explicit dev setup ran `npm ci --prefix <tag-root>/apps/web` and
+`npm run build --prefix <tag-root>/apps/web`. For each checkout in WSL:
+
+```sh
+export PATH="$HOME/.cargo/bin:$PATH"
+cargo build --locked --offline --release --bin sanctum-runtime
+mkdir -p target/debug
+cp target/release/sanctum-runtime target/debug/sanctum-runtime
+python3 tools/build_dev_bundle.py --output dist/a1-reference
+```
+
+The helper expects a debug-path input; the copied bytes were the measured release
+binary, not a debug build. Offline inputs/config were prepared by the exact saved
+script `evals/results/a1-input-preparation-source.txt` (executed from `.sanctum/`).
+It reused local verified models via hard links and copied engine libraries; it
+performed no downloads. Configs point to separate private Linux state directories.
+Raw inventories include binary SHA256. Measurement commands were:
+
+```sh
+python3 tools/runtime_baselines.py --git-dir /mnt/c/Users/aviroop/Desktop/Sanctum/.git/worktrees/Sanctum --source-receipt evals/results/a1-tag-clean-source.json --checkout /mnt/c/Users/aviroop/.codex/worktrees/pre-pivot-baseline/Sanctum --binary /mnt/c/Users/aviroop/.codex/worktrees/pre-pivot-baseline/Sanctum/target/release/sanctum-runtime --config /mnt/c/Users/aviroop/.codex/worktrees/pre-pivot-baseline/Sanctum/.sanctum/baseline.json --output evals/results/a1-tag-run5
+python3 tools/runtime_baselines.py --git-dir /mnt/c/Users/aviroop/Desktop/Sanctum/.git/worktrees/Sanctum1 --source-receipt evals/results/a1-head-clean-source.json --checkout /mnt/c/Users/aviroop/.codex/worktrees/jan-head-baseline/Sanctum --binary /mnt/c/Users/aviroop/.codex/worktrees/jan-head-baseline/Sanctum/target/release/sanctum-runtime --config /mnt/c/Users/aviroop/.codex/worktrees/jan-head-baseline/Sanctum/.sanctum/baseline.json --output evals/results/a1-head-run1
+```
+
+On rerun choose new output paths and fresh clean-source receipts from Windows Git
+(`git -C <checkout> status --porcelain --untracked-files=no`, empty; `git -C
+<checkout> rev-parse HEAD`). The receipt records commit, empty tracked_status,
+checkout, verified_at_utc and command. The harness matches the receipt SHA against
+native Git rev-parse. Recheck both worktrees after measurements. Do not reuse stale
+receipts. Single-run locking prevents overlapping measurement harnesses.
+
+Size inventory command, Windows development Python:
+`python tools/runtime_baseline_inventory.py --checkout <root> --commit <SHA>
+--output <new-json>`; add `--legacy-ui` only for the archived tag.
+Results: `a1-tag-inventory.json`, `a1-head-inventory.json`,
+`a1-tag-run5/measurements.json`, `a1-head-run1/measurements.json`, individual stderr
+logs and `a1-*-measurement*.log`. Hardware receipts: `a1-cpu-host.json`,
+`a1-windows-host.json`; Linux cpuinfo/meminfo are embedded in raw measurements.
+All ten processes per revision exited cleanly. Failed harness attempts and the
+initial failing contract are preserved; explanations are in
+`a1-measurement-failure-notes.md`. No successful performance sample was filtered.
+
+---
+
+
 ADR0085: legacy HTML/build artifacts are retired. The baseline below is historical;
 run its measurement tool from the archive checkpoint, not the current library.
 A library gzip size cannot stand in for a desktop initial UI measurement. All

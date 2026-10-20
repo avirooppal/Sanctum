@@ -1,5 +1,10 @@
 # Current state
 
+A1 follow-up: five-run release gateway/model-loaded measurements now recorded in
+PERFORMANCE.md (Baselines), with raw a1-* evidence and ADR0086. Native Windows
+metrics remain unavailable because these revisions refuse native startup. A2–A5
+audit/dead-code/status/merge-policy follow-ups and M1/M2 remain pending.
+
 - Slice: M0 legacy UI retirement on jan-style; ADR0084 and ADR0085.
 - Archive tag: pre-pivot-2026-10-20 -> 1bee37bc777318b1913aac0a95eb9315e29cfa05.
 - Fresh before-change baseline: source187, Rust70/38 denial probes, web95,

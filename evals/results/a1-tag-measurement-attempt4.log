@@ -1,0 +1,9 @@
+no_model run 1/5 starting
+Traceback (most recent call last):
+  File "/mnt/c/Users/aviroop/Desktop/Sanctum/tools/runtime_baselines.py", line 209, in <module>
+    main()
+  File "/mnt/c/Users/aviroop/Desktop/Sanctum/tools/runtime_baselines.py", line 174, in main
+    row = one_run(
+  File "/mnt/c/Users/aviroop/Desktop/Sanctum/tools/runtime_baselines.py", line 85, in one_run
+    time.sleep(1)
+KeyboardInterrupt

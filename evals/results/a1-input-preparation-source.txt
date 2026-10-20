@@ -1,0 +1,19 @@
+from pathlib import Path
+import json,subprocess,shutil,os,hashlib,sys
+root=Path.cwd(); old=Path('C:/Users/aviroop/.codex/worktrees/pre-pivot-baseline/Sanctum'); head=Path('C:/Users/aviroop/.codex/worktrees/jan-head-baseline/Sanctum')
+profile=json.loads((root/'profiles/runtime-cpu.json').read_text(encoding='utf-8'))
+for label,checkout in [('tag',old),('head',head)]:
+ stage=checkout/'.sanctum';stage.mkdir(exist_ok=True)
+ for relative in [profile['chat']['artifact']['path'],profile['embedding']['artifact']['path']]:
+  target=checkout/relative;target.parent.mkdir(parents=True,exist_ok=True)
+  if not target.exists():os.link(root/relative,target)
+ src=root/'.sanctum/engines/llama-b11429';dst=checkout/'.sanctum/engines/llama-b11429'
+ if not dst.exists():shutil.copytree(src,dst)
+ config=json.loads(json.dumps(profile))
+ for artifact in [*config['engine_files'],config['chat']['artifact'],config['embedding']['artifact']]:artifact['path']='/mnt/c/'+str(checkout/artifact['path'])[3:].replace('\\','/')
+ config['engine']='/mnt/c/'+str(checkout/config['engine'])[3:].replace('\\','/')
+ config['state_dir']=f'/home/aviroop/.local/share/sanctum-baselines/{label}'
+ config['ui_dir']='/mnt/c/'+str(checkout/'apps/web/dist')[3:].replace('\\','/')
+ config['chat']['port']=28081;config['embedding']['port']=28082
+ (stage/'baseline.json').write_text(json.dumps(config,indent=2)+'\n',encoding='utf-8')
+ print(label,'configuration and offline model/engine inputs prepared')

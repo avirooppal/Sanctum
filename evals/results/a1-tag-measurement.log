@@ -1,0 +1,11 @@
+fatal: not a git repository: /mnt/c/Users/aviroop/.codex/worktrees/pre-pivot-baseline/Sanctum/C:/Users/aviroop/Desktop/Sanctum/.git/worktrees/Sanctum
+Traceback (most recent call last):
+  File "/mnt/c/Users/aviroop/Desktop/Sanctum/tools/runtime_baselines.py", line 199, in <module>
+    main()
+  File "/mnt/c/Users/aviroop/Desktop/Sanctum/tools/runtime_baselines.py", line 139, in main
+    if subprocess.check_output(
+  File "/usr/lib/python3.10/subprocess.py", line 421, in check_output
+    return run(*popenargs, stdout=PIPE, timeout=timeout, check=True,
+  File "/usr/lib/python3.10/subprocess.py", line 526, in run
+    raise CalledProcessError(retcode, process.args,
+subprocess.CalledProcessError: Command '['git', 'status', '--porcelain', '--untracked-files=no']' returned non-zero exit status 128.
