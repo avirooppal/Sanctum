@@ -1,36 +1,22 @@
-# Sanctum
+# Sanctum Desktop — development pivot
 
-The canonical owner journeys and current gaps are in
-[WORKFLOW.md](docs/WORKFLOW.md) and [WORKFLOW_GAPS.md](docs/WORKFLOW_GAPS.md).
-Signed installation,live voice,vision,governed agents,Privacy Ledger,cloud
-connectors,LAN TLS and encryption remain unfinished release requirements.
+Sanctum is being rebuilt as a local-first desktop app with optional engines,
+explicit network controls, tools and MCP. The new desktop is PENDING. There is no
+end-user UI or verified installer at this checkpoint. The public website, docs
+site and old Hermes-style shell have been retired under [ADR0085](docs/adr/0085-retire-legacy-ui.md).
+Do not open the old local UI URL: it now returns 404.
 
-Private local AI platform. Architecture and phase gates: [plan.md](plan.md).
-Single-owner scope: [ADR 0027](docs/adr/0027-single-user-scope.md). Workspaces organize
-personal data; team storage, SSO, collaboration and Helm are out of scope.
-Working Linux x86_64 reference: confined llama.cpp chat/embeddings, local auth,
-SQLite history, React/Tailwind UI, verified offline artifact import. Optional local
-file/microphone dictation and WAV playback: [speech setup](services/speech/README.md).
-Phases 0–6 are not complete; current limitations and evidence are in [STATUS](docs/STATUS.md).
+The retained Linux/WSL runtime supports local inference, auth, engine supervision,
+SQLite history and existing knowledge/speech APIs. Windows/macOS native runtime,
+new desktop onboarding, model manager, settings, tools/MCP, providers and computer
+use remain pending. Python belongs to existing development/engine paths; the new
+Rust-only core/optional pack split has not been implemented.
 
-## Five-minute offline bundle quickstart
-
-Requires Linux x86_64 with user/network namespaces, glibc, libstdc++, libgomp,
-and libssl3. WSL Ubuntu 22.04 is verified. Native Windows/macOS runtime is unsupported.
-With the development bundle already available, copy its contents into an empty
-folder, then run from that folder:
-
-```sh
-bin/sanctum-runtime --config profiles/runtime-cpu.json
-```
-
-Open http://127.0.0.1:8765 and enter the key from the printed token-file path.
-The key is only held in browser memory. Runtime startup verifies all engine/model
-hashes and kernel egress denial; failures prevent startup. Cloud is disabled.
-
-Measured offline bundle copy through first answer: **31.7311 seconds** in a fresh
-Linux container. Downloads, compiling, and creating the bundle are excluded;
-this is an unsigned development artifact, not the Phase 6 signed release.
+[plan.md](plan.md) is the ground truth. See [STATUS](docs/STATUS.md),
+[performance evidence](docs/PERFORMANCE.md), [release checklist](docs/RELEASE_CHECKLIST.md)
+and [required journeys](docs/WORKFLOW.md). No desktop performance or whole-product
+security claim follows from legacy runtime checks. `apps/web` is now a development
+reuse library with no HTML entry point, documented in [UI provenance](docs/ui-provenance.md).
 
 ## Source setup
 
@@ -91,50 +77,11 @@ Supply `SANCTUM_CONFIG`, `SANCTUM_TOKEN_FILE` (file path, never the key itself),
 `SANCTUM_AUDIO` (16kHz mono recorded WAV), `SANCTUM_PYTHON` (provisioned dev venv),
 `SANCTUM_NODE`, `SANCTUM_PLAYWRIGHT` (installed package path) and
 `SANCTUM_TTS_VOICE` (public voice ID from the configured TTS profile).
-The command runs real chat, cited RAG, file ASR/TTS, ticket admission and browser
-dictation/playback/mobile checks, preserving historical results.
+The command runs real chat, cited RAG, file ASR/TTS, ticket admission, purge safety,
+journey readiness, retired-route checks and isolated browser Markdown safety.
 
 This initial scope is not release acceptance: authenticated WebSocket voice and
 barge-in, diarization, vision, agents/ledger, LAN and fresh-clone offline bundles
 remain unfinished. The result names these gaps. `SANCTUM_RELEASE_GATE=1` refuses
 release success until they are implemented. Missing prerequisites fail the smoke;
-no browser or speech test is skipped. See ADR0048 and docs/contracts/smoke-all-v1.md.
-
-## Product overview
-
-The web build also includes `/website.html` on your local gateway. It presents
-Sanctum setup,features and current support with bundled fonts and no external
-requests. The chat application remains at `/`. Desktop installers and the full
-Hermes-inspired documentation/dashboard port are still in development.
-
-## Workflow verification
-
-`python tools/workflow_check.py` verifies journey/status/test mappings;
-`python tools/secret_scan.py` rejects credential-shaped tracked/eval content.
-These also run in the source gate and hosted source CI. Against a real runtime:
-
-```sh
-python evals/journey_runner.py --token-file "$SANCTUM_TOKEN_FILE" --output evals/results/owner-journey-readiness.json
-```
-
-This is readiness only:it reports zero complete journeys verified and does not
-measure human action budgets. `--require-verified` refuses full acceptance.
-Full Playwright/engine/chaos/ledger journeys remain in WORKFLOW_GAPS.
-
-### First-run review
-
-The optional `?wizard=1` setup page asks for the local access key and checks
-the configured runtime before opening the workspace. It does not download a
-model or detect a hardware tier;run `sanctum doctor` for that recommendation.
-Unavailable fit/speed information is shown as Unknown. The privacy badge proves
-only the reported startup denial checks;Privacy Ledger is not yet available.
-See docs/WORKFLOW.md and docs/WORKFLOW_GAPS.md for remaining owner journeys.
-
-### Installation packaging status
-
-No end-user installer is verified yet. ADR0077 selects Linux x86_64 glibc
-packages and a dedicated-WSL2 Windows launcher;native Windows containment is
-unsupported. Development-only preflight:
-`sanctum doctor --install-check --probe-binary /absolute/path/sanctum-foundation --port 8770 --json`.
-It refuses unsupported/missing containment and reports prerequisites only.
-See [release checklist](docs/RELEASE_CHECKLIST.md);do not treat this as a GUI install.
+no configured stage is skipped. Scope amendment: ADR0085.

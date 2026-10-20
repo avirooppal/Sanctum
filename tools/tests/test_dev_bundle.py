@@ -23,6 +23,7 @@ class DevBundleTests(unittest.TestCase):
             destination = root / "output"
             module.build_bundle(root, destination)
             self.assertEqual((destination / "bin/sanctum-runtime").read_text(), "fixture")
+            self.assertFalse((destination / "apps/web").exists())
             with self.assertRaises(ValueError):
                 module.build_bundle(root, destination)
             with self.assertRaises(ValueError):

@@ -1,0 +1,16 @@
+[
+  {
+    "package": "react",
+    "version": "19.1.1",
+    "source": "https://raw.githubusercontent.com/facebook/react/v19.1.1/LICENSE",
+    "sha256": "da6d3703ed11cbe42bd212c725957c98da23cbff1998c05fa4b3d976d1a58e93",
+    "local_exact_match": true
+  },
+  {
+    "package": "react-dom",
+    "version": "19.1.1",
+    "source": "https://raw.githubusercontent.com/facebook/react/v19.1.1/LICENSE",
+    "sha256": "da6d3703ed11cbe42bd212c725957c98da23cbff1998c05fa4b3d976d1a58e93",
+    "local_exact_match": true
+  }
+]

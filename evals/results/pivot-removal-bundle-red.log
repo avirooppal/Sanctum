@@ -1,0 +1,14 @@
+C:\Users\aviroop\AppData\Local\Temp\tmpwn3i_dq_\output
+F
+======================================================================
+FAIL: test_fresh_destination_and_refusal_to_overwrite (test_dev_bundle.DevBundleTests.test_fresh_destination_and_refusal_to_overwrite)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "C:\Users\aviroop\Desktop\Sanctum\tools\tests\test_dev_bundle.py", line 26, in test_fresh_destination_and_refusal_to_overwrite
+    self.assertFalse((destination / "apps/web").exists())
+AssertionError: True is not false
+
+----------------------------------------------------------------------
+Ran 1 test in 0.067s
+
+FAILED (failures=1)

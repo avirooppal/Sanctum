@@ -1,5 +1,10 @@
 # Performance evidence
 
+ADR0085: legacy HTML/build artifacts are retired. The baseline below is historical;
+run its measurement tool from the archive checkpoint, not the current library.
+A library gzip size cannot stand in for a desktop initial UI measurement. All
+native desktop metrics and enforcement remain PENDING M1/M2.
+
 ## Pre-pivot measurement, 2026-10-20
 
 Source head: `1bee37bc777318b1913aac0a95eb9315e29cfa05`.

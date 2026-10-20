@@ -1,1 +1,0 @@
-docs/licenses/altercation-solarized-MIT.txt:20: new blank line at EOF.

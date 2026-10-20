@@ -55,7 +55,8 @@ struct Config {
     threads: usize,
     context: usize,
     state_dir: PathBuf,
-    ui_dir: PathBuf,
+    #[serde(rename = "ui_dir")]
+    _retired_ui_dir: PathBuf,
 }
 
 fn verify(artifact: &Artifact) -> Result<()> {
@@ -278,7 +279,7 @@ impl Chat {
         context.check()?;
         let path = request.url().to_string();
         if !path.starts_with("/v1/") {
-            return self.static_file(request);
+            return respond(request, 404, json!({"error":"not_found"}));
         }
         let authorized = self.authorized(&request);
         if !authorized {
@@ -859,31 +860,6 @@ impl Chat {
                 stream,
             )?;
         }
-        Ok(())
-    }
-    fn static_file(&self, request: tiny_http::Request) -> Result<()> {
-        let path = request.url().split('?').next().unwrap_or("/");
-        let relative = if path == "/" {
-            "index.html"
-        } else {
-            path.trim_start_matches('/')
-        };
-        if request.method() != &tiny_http::Method::Get
-            || relative.split('/').any(|p| p == ".." || p.contains('\\'))
-        {
-            return respond(request, 404, json!({"error":"not_found"}));
-        }
-        let file = self.config.ui_dir.join(relative);
-        let content = match fs::read(&file) {
-            Ok(content) => content,
-            Err(_) => return respond(request, 404, json!({"error":"not_found"})),
-        };
-        let mime = match file.extension().and_then(|s| s.to_str()) {
-            Some("js") => "text/javascript",
-            Some("css") => "text/css",
-            _ => "text/html",
-        };
-        request.respond(tiny_http::Response::from_data(content).with_header(tiny_http::Header::from_bytes("Content-Type",mime).unwrap()).with_header(tiny_http::Header::from_bytes("Content-Security-Policy","default-src 'self'; style-src 'self'; connect-src 'self'; media-src blob:; frame-ancestors 'none'").unwrap()))?;
         Ok(())
     }
 }

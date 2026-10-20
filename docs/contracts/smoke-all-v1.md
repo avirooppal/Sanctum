@@ -1,27 +1,18 @@
-# Offline smoke entry point v1
+# Implemented backend smoke — ADR0085
 
-`bash tools/smoke_all.sh` runs against a configured local gateway on8769, with
-explicit token-file, recorded WAV, ASR/TTS IDs and browser runtime supplied via
-environment variables. It runs real SDK chat, upload/retrieve/cited answer,
-file ASR and TTS, ticket HTTP admission and real browser dictation/playback flows.
-Any stage failure fails the command, preserves output and stops. Credentials
-are never printed. Existing fixed-path historical results are preserved bytewise.
+`bash tools/smoke_all.sh` requires a real configured gateway on port 8769,
+recorded WAV, installed Playwright and ASR/TTS model/voice IDs. See README for
+environment variables. No configured stage is skipped; any failure is named.
 
-This initial implemented-feature scope is **not release acceptance**: real
-WebSocket voice/barge-in/diarization, vision, agents/approval/ledger, LAN and
-fresh-clone installation are still pending. The result explicitly lists them;
-`SANCTUM_RELEASE_GATE=1` refuses success while any remain. Extend the command
-as those backends land; final acceptance still requires all five offline flows.
-Missing browser/assets/runtime is a failure, never a skipped test.
+Eight stages: chat, cited RAG, file ASR, file TTS, ticket admission, purge safety,
+journey readiness, and ui_salvage. The last checks that withdrawn UI routes return
+404 from the actual gateway, health remains available, API authentication remains
+required, and hostile Markdown in Chromium creates no executable DOM or passive
+network request. This is isolated renderer testing, not a replacement app screen.
 
-Public-website v1 adds ui_website: three responsive viewports, same-origin
-request blocking, no WebSockets, local anchor integrity, FAQ interaction,
-keyboard skip navigation, reduced motion and navigation into the real app.
-It is not a substitute for full UI fidelity or accessibility acceptance.
-
-Workflow v1 adds STAGE_JOURNEYS:every existing stage has canonical journey IDs,
-validated bidirectionally by workflow_check.py. journey_readiness runs one real
-gateway metadata/auth/capability-denial check per journey and reports12 readiness
-checks with0 complete journeys verified. It never substitutes for real engine
-smoke or full Playwright,budget,ledger and chaos acceptance. The full release
-gate remains false while those gaps exist;no test or old stage is discarded.
+The twelve old browser stages are explicitly retired by ADR0085 with the withdrawn
+UI. Existing backend timeout/quality thresholds and journey budgets are unchanged.
+STAGE_JOURNEYS remains bidirectionally checked. Readiness reports 12 checks and
+zero complete journeys. SANCTUM_RELEASE_GATE=1 continues to fail while product
+requirements remain pending. The smoke does not certify desktop UX, optional pack
+lifecycle, tools/MCP, providers, computer use, fresh installs or the future broker.

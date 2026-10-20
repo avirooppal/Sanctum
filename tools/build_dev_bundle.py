@@ -9,7 +9,7 @@ ROOT = Path(__file__).resolve().parents[1]
 
 def build_bundle(root: Path, bundle: Path):
     root, bundle = root.resolve(), bundle.resolve()
-    sources = ["profiles", "apps/web/dist", ".sanctum/artifacts", ".sanctum/engines"]
+    sources = ["profiles", ".sanctum/artifacts", ".sanctum/engines"]
     if any(bundle.is_relative_to(root / relative) for relative in sources):
         raise ValueError("bundle cannot be inside a copied source directory")
     if bundle.exists():

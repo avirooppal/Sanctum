@@ -1,7 +1,0 @@
-
-> sanctum-web@0.1.0 test
-> tsc --outDir build/tests --noEmit false --target ES2022 --module NodeNext --moduleResolution NodeNext --jsx react-jsx --esModuleInterop src/speech.ts src/pcm.ts src/meeting.ts src/api.ts src/ui/primitives.tsx && node --test tests/*.test.mjs && node --test ../../evals/tests/ui-font-metrics.test.mjs
-
-error TS6053: File 'src/ui/primitives.tsx' not found.
-  The file is in the program because:
-    Root file specified for compilation

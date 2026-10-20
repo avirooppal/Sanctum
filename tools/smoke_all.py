@@ -15,19 +15,7 @@ STAGE_JOURNEYS = {
     "file_asr": ["J5"],
     "file_tts": ["J5"],
     "tickets": ["J5", "J12"],
-    "ui": ["J3", "J5"],
-    "ui_knowledge": ["J4"],
-    "ui_chat_stop": ["J3", "J12"],
-    "ui_sessions": ["J3"],
-    "ui_workflow": ["J2", "J9", "J12"],
     "purge_safety": ["J11", "J12"],
-    "ui_dashboard_profiles": ["J9", "J11", "J12"],
-    "ui_website": ["J1", "J9"],
-    "ui_fidelity": ["J3", "J4", "J9", "J11"],
-    "ui_unlock": ["J2", "J9", "J12"],
-    "ui_shell": ["J2", "J3", "J11"],
-    "ui_theme_controls": ["J3", "J11"],
-    "ui_focused_chat": ["J3", "J9"],
     "journey_readiness": [
         "J1",
         "J2",
@@ -42,8 +30,10 @@ STAGE_JOURNEYS = {
         "J11",
         "J12",
     ],
+    "ui_salvage": ["J3", "J9"],
 }
 PENDING = [
+    "desktop_ui_first_run_models_settings_tools_mcp_providers_packs_computer_use",
     "websocket_voice_barge_in_diarization",
     "vision",
     "agents_approvals_ledger",
@@ -92,15 +82,12 @@ def main():
     base = "http://127.0.0.1:8769"
     env = os.environ.copy()
     env["SANCTUM_BASE_URL"] = base
-    if node.endswith(".exe") and os.name != "nt":
-        env["WSLENV"] = env.get("WSLENV", "") + ":SANCTUM_BASE_URL"
-        browser_token = subprocess.check_output(["wslpath", "-w", str(token)], text=True).strip()
-        browser_audio = subprocess.check_output(
-            ["wslpath", "-w", str(audio.resolve())], text=True
-        ).strip()
-    else:
-        browser_token, browser_audio = str(token), str(audio)
     stages = [
+        (
+            "ui_salvage",
+            [node, "evals/retired_ui.mjs", package, str(directory / "smoke-ui-salvage.json")],
+            None,
+        ),
         (
             "chat",
             [
@@ -174,64 +161,6 @@ def main():
             None,
         ),
         (
-            "ui",
-            [
-                node,
-                "evals/browser_speech.mjs",
-                package,
-                browser_token,
-                browser_audio,
-                asr,
-                tts,
-                voice,
-            ],
-            "speech-browser.json",
-        ),
-        (
-            "ui_knowledge",
-            [
-                node,
-                "evals/browser_knowledge.mjs",
-                package,
-                browser_token,
-                str(directory / "smoke-ui-knowledge.json"),
-            ],
-            None,
-        ),
-        (
-            "ui_chat_stop",
-            [
-                node,
-                "evals/browser_chat_stop.mjs",
-                package,
-                browser_token,
-                str(directory / "smoke-ui-chat-stop.json"),
-            ],
-            None,
-        ),
-        (
-            "ui_sessions",
-            [
-                node,
-                "evals/browser_sessions.mjs",
-                package,
-                browser_token,
-                str(directory / "smoke-ui-sessions.json"),
-            ],
-            None,
-        ),
-        (
-            "ui_workflow",
-            [
-                node,
-                "evals/browser_workflow_alignment.mjs",
-                package,
-                browser_token,
-                str(directory / "smoke-ui-workflow.json"),
-            ],
-            None,
-        ),
-        (
             "purge_safety",
             [
                 sys.executable,
@@ -240,38 +169,6 @@ def main():
                 str(token),
                 "--output",
                 str(directory / "smoke-purge-safety.json"),
-            ],
-            None,
-        ),
-        (
-            "ui_dashboard_profiles",
-            [
-                node,
-                "evals/browser_dashboard_profiles.mjs",
-                package,
-                browser_token,
-                str(directory / "smoke-ui-dashboard-profiles.json"),
-            ],
-            None,
-        ),
-        (
-            "ui_website",
-            [
-                node,
-                "evals/browser_website.mjs",
-                package,
-                str(directory / "smoke-ui-website.json"),
-            ],
-            None,
-        ),
-        (
-            "ui_fidelity",
-            [
-                node,
-                "evals/browser_fidelity.mjs",
-                package,
-                browser_token,
-                str(directory / "smoke-ui-fidelity.json"),
             ],
             None,
         ),
@@ -286,50 +183,6 @@ def main():
                 base,
                 "--output",
                 str(directory / "smoke-journey-readiness.json"),
-            ],
-            None,
-        ),
-        (
-            "ui_unlock",
-            [
-                node,
-                "evals/browser_unlock.mjs",
-                package,
-                browser_token,
-                str(directory / "smoke-ui-unlock"),
-            ],
-            None,
-        ),
-        (
-            "ui_shell",
-            [
-                node,
-                "evals/browser_shell.mjs",
-                package,
-                str(directory / "smoke-ui-shell.json"),
-                browser_token,
-            ],
-            None,
-        ),
-        (
-            "ui_theme_controls",
-            [
-                node,
-                "evals/browser_themes.mjs",
-                package,
-                str(directory / "smoke-ui-theme-controls.json"),
-                browser_token,
-            ],
-            None,
-        ),
-        (
-            "ui_focused_chat",
-            [
-                node,
-                "evals/browser_focused_chat.mjs",
-                package,
-                browser_token,
-                str(directory / "smoke-ui-focused-chat"),
             ],
             None,
         ),

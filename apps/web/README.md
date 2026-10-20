@@ -1,97 +1,10 @@
-# Web client
+# Development UI reuse library
 
-Knowledge opens a local workspace/upload/question surface. It supports Markdown
-and text-based PDF (10 MiB), owner-only restricted uploads, cited answers and
-explicit abstention. Source text is inert; citations are not remote links. Closing
-the dialog cancels outstanding UI requests. OCR and page-region overlays remain
-pending. Contract: docs/contracts/knowledge-ui-v1.md. Real verification:
-`node evals/browser_knowledge.mjs PLAYWRIGHT_PACKAGE TOKEN_FILE OUTPUT_JSON`.
+ADR0085 retired all HTML entry points and the old shell. This package is not a
+runnable product. It retains first-party protocol/audio/Markdown utilities for
+reviewed reuse in the future desktop. No UI capability is claimed by its build.
 
-Stop generation aborts the active chat without retrying; partial text remains
-visible but is not guaranteed saved. Test with `evals/browser_chat_stop.mjs` using
-the same arguments. Both real flows run in `bash tools/smoke_all.sh`.
-
-Build uses pinned Tailwind 4 core with a local literal-class collector, without the
-v3 scanner tree or optional native integrations (ADR 0025). `npm run build` generates
-ignored `build/styles.css` from TS/TSX and index.html before Vite bundles the app.
-Use complete literal utility names; dynamically constructing class names is unsupported.
-`npm audit --prefix apps/web --audit-level=low` is a separate online development/CI
-gate. Runtime has no registry calls. All 72 locked dependency licenses are reviewed.
-React, TypeScript, Tailwind; same-origin local API only. Contract: docs/contracts/chat.openapi.json.
-Local bearer key is held in memory, never localStorage. Includes streaming chat,
-configured model picker and saved conversation restoration. Build assets are served
-by the confined Rust gateway. No remote fonts, scripts, analytics or CDN assets.
-
-Run `npm ci --prefix apps/web`, `npm run typecheck --prefix apps/web`, and
-`npm run build --prefix apps/web`. Browser smoke test: log in, send a prompt, create
-a new conversation, restore the prior conversation. Verified against real inference.
-
-`npm test --prefix apps/web` runs speech/meeting/compiler, HTTP/realtime adapter
-and font raster-metric tests. The existing chat/history/model screen uses
-`src/api.ts`: fixed same-origin routes, memory-only bearer, cookie omission,
-redirect refusal, no retries, runtime response checks and cancellable SSE reads.
-Contract: `docs/contracts/web-adapter-v1.md`. `evals/browser_adapter.mjs` runs the
-compiled adapter against actual local chat/storage and ticket WebSocket ingress;
-arguments: Playwright package path, owner token file, result JSON path. Optional
-SANCTUM_BASE_URL selects the already-running gateway (default loopback8769).
-The same-origin test-module interception is harness-only, not a product endpoint.
-
-Licenses opens a native modal with the exact bundled THIRD_PARTY_NOTICES text.
-Keyboard Enter/Close/Escape restore focus; notice text is not interpreted as HTML
-or fetched from another origin. Contract: `docs/contracts/web-primitives-v1.md`.
-`evals/browser_licenses.mjs <playwright-package> <output-json>` verifies the actual
-served dialog at desktop/tablet/mobile sizes. This does not complete full Hermes
-theme/renderer fidelity or axe checks. Native primitives use the existing palette
-until a theme is chosen; unverified upstream font and brand assets remain absent.
-
-Theme/Mode controls apply16 pinned local palettes in memory without API writes,
-storage, remote fonts or update calls. `evals/browser_themes.mjs` exercises32
-theme/mode combinations at each of the three prescribed viewports. Current
-shell fonts remain system-provided while full typography/fidelity is built.
-
-Selected OFL fonts are now bundled and applied per component (ADR0060), with
-primary notices/source hashes in profiles/registry.json. No remote fonts or brand
-assets. `python tools/web_font_assets.py` checks all shipped faces/notices offline
-and runs in normal source CI. `evals/browser_fonts.mjs <playwright> <output-json>`
-proves actual decoded faces under the unchanged CSP. Full per-theme typography
-and shell migration still remain; do not interpret this as full fidelity.
-
-The shell now uses the inspected237px desktop rail at640px and wider. On mobile,
-Open navigation shows one inert-background drawer; Escape/Close returns focus.
-Login stays in the first viewport; history and transcript scrolling are bounded.
-`evals/browser_shell.mjs` checks the three target viewports,639/640px boundaries
-and retained theme state through desktop/mobile/desktop resizing. Source and
-spacing decisions are ADR0061; full reference fidelity and axe remain pending.
-Local speech expands optional file dictation and playback controls. Enter configured
-ASR/TTS/voice IDs, choose a mono PCM16 16 kHz WAV, review the draft, then send.
-Read answer synthesizes the last response; Stop audio cancels browser delivery/playback.
-Start microphone requests device access only on click. Finish dictation closes the
-device and transcribes up to 30 seconds; Stop audio discards capture. The worklet
-and capture buffer enforce the limit independently. Unsupported device/browser
-formats fail explicitly. Server request disconnect/deadline cancellation is owned
-by the common cancellation context and process supervisor (Step0). Resident
-speech, streaming TTS and the voice loop are still pending; realtime currently
-advertises transport only and speech_pipeline=false. Contract:
-`docs/contracts/web-speech-v1.md`. Run `evals/browser_speech.mjs` against a configured
-gateway for real integration; CLI arguments are documented at the top of the script.
-
-`evals/browser_microphone.mjs` runs Chromium's emulated microphone through the real
-capture worklet and ASR. It needs full Chromium headless (`channel: chromium`), not
-headless-shell. Physical microphone and speaker verification remains a separate check.
-
-History uses POST /v1/sessions for owner-scoped title/ID search, paginated lists,
-rename and confirmed deletion. Titles render as text. Deletion removes saved
-turns but is not secure erasure of backups or SQLite remnants. Credentials,
-search text and rename drafts remain in memory. Run evals/browser_sessions.mjs
-with the Playwright package path, owner token file and output JSON path; it creates
-and deletes only its own new conversation against the real local engine.
-# Public website entry
-
-The same Vite build emits website.html alongside the existing chat index.html.
-Open /website.html on the configured gateway for the offline product overview;
-the application remains at /. This static entry adds no JavaScript dependencies,
-credentials or browser storage. Contract: docs/contracts/public-website-v1.md.
-Run node evals/browser_website.mjs with the Playwright package path and output
-JSON path against SANCTUM_BASE_URL (default http://127.0.0.1:8769).
-The source website and application assets can share a future desktop bundle;
-this does not establish native gateway or installer support.
+Run `npm ci`, `npm test`, `npm run typecheck`, `npm run build`, `npm audit`.
+The real-gateway check is `node ../../evals/retired_ui.mjs <playwright-package-path>
+<output-json>` with SANCTUM_BASE_URL pointing at the provisioned runtime.
+See ../../docs/ui-provenance.md for limitations and license provenance.

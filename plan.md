@@ -1,3 +1,12 @@
+## Pivot removal amendment (ADR0085)
+
+The public website, docs site, entire legacy shell, reference mock environment,
+themes and fidelity gates are retired. apps/web is a development reuse library
+only. All full journeys are PENDING; numeric journey budgets remain unchanged.
+Historical UI-specific implementation sections below are SUPERSEDED (ADR0085).
+See docs/legacy-ui-removal.json and docs/ui-provenance.md. M1 architecture study
+and M3 replacement UI remain pending; no placeholder product is exposed.
+
 # Pivot amendment — Sanctum Desktop (2026-10-20)
 
 [ADR-0084: pivot-to-jan-style-app](docs/adr/0084-pivot-to-jan-style-app.md)

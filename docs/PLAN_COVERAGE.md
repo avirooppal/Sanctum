@@ -11,7 +11,7 @@ reference-fidelity and conflicting stack/roadmap requirements are
 |---|---|---|
 | M0 baseline, archive tag, ADR, amendment | Partial | 184 source/70 Rust/95 web, 38 denial probes, audit0, 19-stage smoke rerun; named pivot-m0-baseline evidence; archive tag pushed; decision/docs recorded |
 | M0 full desktop measurements | PENDING | Legacy JS101141B gzip/web2139977B measured; native install/no-model RSS/cold UI/CPU unavailable; PERFORMANCE.md |
-| M0 removals and reviewed salvage | PENDING | Website/docs/Hermes work still exists; ARCHIVE.md records tag, not removal |
+| M0 removals and reviewed salvage | Implemented; validation in STATUS | ADR0085; 1017 removed tracked paths in SHA256 inventory; 11 first-party modules retained; real-route/renderer checks; no app UI |
 | M1 Jan study and architecture ADRs | PENDING | Pin, license/NOTICE, shell/MPL, packs/settings/permissions/egress/assurance decisions not verified |
 | A / M3 chat and threads | PENDING | Existing legacy chat/history tests are scoped reuse evidence only; new desktop journeys absent |
 | B / M5 assistants | PENDING | New contract and journey required |
@@ -27,7 +27,7 @@ reference-fidelity and conflicting stack/roadmap requirements are
 | M12 acceptance | PENDING | Fresh-machine journeys, enforced budgets and final coverage/handoff not established |
 
 No new desktop feature is promoted to VERIFIED by this checkpoint. The new UI
-must not expose unproven features. Existing historical UI is awaiting removal.
+must not expose unproven features. The historical UI is withdrawn; all new desktop features remain hidden.
 
 Checkpoint `eaa411058c8a8b8c25f07a960b120f725e0d7ff0`: hosted run39382453266
 observed completed/success on all five jobs; raw `pivot-m0-checkpoint-ci.json`.

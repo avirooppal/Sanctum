@@ -1,15 +1,11 @@
-"""Validate canonical journey IDs and read-only public release projections."""
+"""Validate canonical journey IDs, budgets, test mappings and documentation."""
 
-import argparse
 import ast
-import html
 import json
 import re
 from pathlib import Path
 
 ROOT = Path(__file__).resolve().parents[1]
-START, END = "<!-- workflow-status:start -->", "<!-- workflow-status:end -->"
-PUBLIC = ("apps/web/website.html", "apps/web/docs.html")
 
 
 def registry(root: Path) -> dict:
@@ -57,36 +53,6 @@ def accepted_tests(root: Path) -> set[str]:
     if len(identifiers) != len(set(identifiers)):
         raise ValueError("Duplicate journey test ID")
     return set(identifiers)
-
-
-def public_status(data: dict) -> str:
-    rows = "\n".join(
-        f'<tr data-journey-id="{j["id"]}" data-workflow-status="{j["status"]}">'
-        f"<td>{j['id']}</td><td>{html.escape(j['title'])}</td><td>{j['status']}</td></tr>"
-        for j in data["journeys"]
-    )
-    return (
-        f'{START}\n<section id="workflow-status" data-workflow-version="{data["version"]}">\n'
-        "<h2>Owner workflow status</h2><p>Development status; partial subflows are not full journey acceptance.</p>\n"
-        "<table><thead><tr><th>Journey</th><th>Purpose</th><th>Status</th></tr></thead>\n"
-        f"<tbody>\n{rows}\n</tbody></table></section>\n{END}"
-    )
-
-
-def write_public_status(root: Path) -> None:
-    projection = public_status(registry(root))
-    for name in PUBLIC:
-        path = root / name
-        text = path.read_text(encoding="utf-8")
-        if START in text and END in text:
-            before, remainder = text.split(START, 1)
-            _, after = remainder.split(END, 1)
-            text = before + projection + after
-        else:
-            if "</main>" not in text:
-                raise ValueError(f"Missing public main element: {name}")
-            text = text.replace("</main>", projection + "\n</main>", 1)
-        path.write_bytes(text.encode("utf-8"))
 
 
 def check(root: Path) -> list[str]:
@@ -166,22 +132,12 @@ def check(root: Path) -> list[str]:
             )
             if len(rows) != len(steps) or set(rows) != steps:
                 raise ValueError(f"Missing,duplicate or orphan journey step: {name}")
-        projection = public_status(data)
-        for name in PUBLIC:
-            text = (root / name).read_text(encoding="utf-8")
-            if text.count(START) != 1 or text.count(END) != 1 or projection not in text:
-                raise ValueError(f"Public workflow status drift: {name}")
     except (OSError, ValueError, KeyError, TypeError, SyntaxError) as exc:
         return [str(exc)]
     return []
 
 
 def main() -> int:
-    parser = argparse.ArgumentParser(description=__doc__)
-    parser.add_argument("--write-public-status", action="store_true")
-    args = parser.parse_args()
-    if args.write_public_status:
-        write_public_status(ROOT)
     errors = check(ROOT)
     print(json.dumps({"workflow_check": "FAIL" if errors else "PASS", "errors": errors}))
     return 1 if errors else 0

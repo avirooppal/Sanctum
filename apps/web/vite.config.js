@@ -1,3 +1,3 @@
-import { defineConfig } from 'vite';
-export default defineConfig({build: {assetsInlineLimit: 0,rollupOptions:{input:{app:'index.html',website:'website.html',docs:'docs.html'}}}});
-
+import {defineConfig} from 'vite';
+// Development reuse library; this is not a desktop app or a user-facing route.
+export default defineConfig({build:{lib:{entry:{api:'src/api.ts',markdown:'src/ui/SafeMarkdown.tsx',speech:'src/speech.ts'},formats:['es']},rollupOptions:{external:['react','react/jsx-runtime']}}});

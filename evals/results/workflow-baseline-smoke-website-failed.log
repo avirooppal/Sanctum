@@ -1,6 +1,0 @@
-Traceback (most recent call last):
-  File "C:\Users\aviroop\Desktop\Sanctum\tools\smoke_all.py", line 247, in <module>
-    main()
-  File "C:\Users\aviroop\Desktop\Sanctum\tools\smoke_all.py", line 234, in main
-    raise RuntimeError(f"smoke {name} failed; see named log")
-RuntimeError: smoke ui_website failed; see named log

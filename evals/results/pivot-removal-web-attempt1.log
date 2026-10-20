@@ -1,0 +1,56 @@
+
+> sanctum-ui-reuse@0.1.0 test
+> tsc --outDir build/tests --noEmit false --module NodeNext --moduleResolution NodeNext && node --test tests/*.test.mjs
+
+✔ Knowledge uses authenticated fixed paths and owner-only restricted uploads (69.847ms)
+✔ Knowledge validates answers and rejects unsupported uploads before sending (2.9619ms)
+✔ default fetch retains the Window/global receiver (1.49ms)
+✔ fixed same-origin requests omit cookies, reject redirects and never retry (2.2408ms)
+✔ models are validated and conversation IDs cannot change origin or path structure (2.711ms)
+✔ stream decodes split Unicode and SSE lines without fabricated text (8.2089ms)
+✔ consumer cancellation releases stream and ignored fetch abort cannot yield stale text (1.5407ms)
+✔ ticket is in subprotocol only and abort closes the socket (2.8288ms)
+✔ invalid ticket and cancellation after ticket never open a socket (3.2574ms)
+✔ abort while waiting for a stalled stream releases the reader (16.0326ms)
+✔ session management uses owner-authenticated fixed paths and validates pages (3.2789ms)
+✔ session mutations never retry and malformed lists are rejected (2.0266ms)
+✔ capabilities and preferences endpoints validate payload and authenticate owner (2.148ms)
+✔ profiles and full purge endpoints authenticate owner and reject invalid payloads (2.4138ms)
+✔ stop aborts the admitted run, suppresses late output and never retries (11.8988ms)
+✔ overlapping starts are refused; an explicit next run has a fresh signal (3.8859ms)
+✔ abort rejection is stopped but real engine failures are preserved (0.8588ms)
+✔ bounded same-origin read omits credentials and retains only parsed health (65.0583ms)
+✔ failed,invalid,redirected and oversized responses become unknown (5.2709ms)
+✔ real observer deadline aborts a stalled transport (5008.3706ms)
+✔ sanitizeUrl allows safe http, https, and hash links (1.6665ms)
+✔ sanitizeUrl blocks javascript:, data:, and malicious protocol injection (0.4401ms)
+✔ parseMarkdownBlocks isolates code blocks from paragraphs (0.565ms)
+✔ parseMarkdownBlocks handles unclosed code fence without crashing (0.2766ms)
+✔ SafeMarkdown renders without throwing and escapes dangerous html elements (64.4972ms)
+✔ SafeMarkdown renders code block with language label, copy button, and citation chips (4.9872ms)
+✔ meeting save uses restricted same-origin authenticated request (68.236ms)
+✔ invalid workspace and oversized or blank input never send requests (1.8179ms)
+✔ failed writes are surfaced without retrying (1.1345ms)
+✔ encodes finite mono PCM16 with accurate WAV header and clamping (11.322ms)
+✔ bounded memory accepts no partial overflow and resets after discard (1.4235ms)
+✔ rejects nonfinite data without mutating captured audio (0.5585ms)
+✔ retired product entrypoints and reference environment cannot return (3.321ms)
+✔ retained sources cannot import the old reference environment (8.3648ms)
+✔ privacy badge cannot turn absent or partial health into egress-history proof (2.3878ms)
+✔ unknown provider errors cannot leak raw content and busy errors retain metadata (1.8195ms)
+✔ uses same-origin multipart and bearer auth without storing credentials (45.2145ms)
+✔ stop discards stale audio even if fetch ignores abort (0.8696ms)
+✔ stop releases playback and next operation cannot reuse it (8.4071ms)
+✔ rejects oversized inputs and unexpected audio content types (6.9871ms)
+✔ worklet itself stops after 30 seconds even if UI messages are not handled (20.4448ms)
+✔ workspace metadata is sequential and publishes only real capabilities (2.926ms)
+✔ failed discovery cannot fall back to enabled capabilities (1.0984ms)
+✔ cancellation between steps stops subsequent metadata requests (0.4889ms)
+ℹ tests 44
+ℹ suites 0
+ℹ pass 44
+ℹ fail 0
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 5343.4986

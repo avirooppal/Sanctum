@@ -1,1 +1,0 @@
-CI recording script failed reading UTF-8 PLAN_COVERAGE.md with the Windows CP1252 default: UnicodeDecodeError at byte0x9d. Re-ran with explicit UTF-8. No product change or gate waiver.

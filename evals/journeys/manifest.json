@@ -1,12 +1,12 @@
 {
-  "version": "1.0.0",
+  "version": "1.1.0",
   "journeys": [
     {
       "id": "J1",
       "title": "Install and verify",
       "test_id": "journey:J1",
       "status": "PENDING",
-      "blocker": "Signed installers/bundle verification absent",
+      "blocker": "Desktop UI retired under ADR0085; replacement and full journey acceptance pending. Signed installers/bundle verification absent",
       "steps": [
         "J1.1",
         "J1.2",
@@ -26,8 +26,8 @@
       "id": "J2",
       "title": "First run",
       "test_id": "journey:J2",
-      "status": "PARTIAL",
-      "blocker": "Real hardware onboarding/import progress missing",
+      "status": "PENDING",
+      "blocker": "Desktop UI retired under ADR0085; replacement and full journey acceptance pending. Real hardware onboarding/import progress missing",
       "steps": [
         "J2.1",
         "J2.2",
@@ -48,8 +48,8 @@
       "id": "J3",
       "title": "Ask locally",
       "test_id": "journey:J3",
-      "status": "PARTIAL",
-      "blocker": "Journey budgets/chaos/ledger not established",
+      "status": "PENDING",
+      "blocker": "Desktop UI retired under ADR0085; replacement and full journey acceptance pending. Journey budgets/chaos/ledger not established",
       "steps": [
         "J3.1",
         "J3.2",
@@ -67,8 +67,8 @@
       "id": "J4",
       "title": "Ask my documents",
       "test_id": "journey:J4",
-      "status": "PARTIAL",
-      "blocker": "Folder/progress/restart and quality gates incomplete",
+      "status": "PENDING",
+      "blocker": "Desktop UI retired under ADR0085; replacement and full journey acceptance pending. Folder/progress/restart and quality gates incomplete",
       "steps": [
         "J4.1",
         "J4.2",
@@ -88,8 +88,8 @@
       "id": "J5",
       "title": "Voice",
       "test_id": "journey:J5",
-      "status": "PARTIAL",
-      "blocker": "Full resident WebSocket voice/barge-in absent",
+      "status": "PENDING",
+      "blocker": "Desktop UI retired under ADR0085; replacement and full journey acceptance pending. Full resident WebSocket voice/barge-in absent",
       "steps": [
         "J5.1",
         "J5.2",
@@ -110,8 +110,8 @@
       "id": "J6",
       "title": "Meetings",
       "test_id": "journey:J6",
-      "status": "PARTIAL",
-      "blocker": "Recording,diarization and speaker-note pipeline absent",
+      "status": "PENDING",
+      "blocker": "Desktop UI retired under ADR0085; replacement and full journey acceptance pending. Recording,diarization and speaker-note pipeline absent",
       "steps": [
         "J6.1",
         "J6.2",
@@ -133,7 +133,7 @@
       "title": "Images and scanned documents",
       "test_id": "journey:J7",
       "status": "PENDING",
-      "blocker": "Vision/OCR/indexing/evaluation absent",
+      "blocker": "Desktop UI retired under ADR0085; replacement and full journey acceptance pending. Vision/OCR/indexing/evaluation absent",
       "steps": [
         "J7.1",
         "J7.2",
@@ -155,7 +155,7 @@
       "title": "Agent task",
       "test_id": "journey:J8",
       "status": "PENDING",
-      "blocker": "Governed agent runtime/policy/ledger absent",
+      "blocker": "Desktop UI retired under ADR0085; replacement and full journey acceptance pending. Governed agent runtime/policy/ledger absent",
       "steps": [
         "J8.1",
         "J8.2",
@@ -177,8 +177,8 @@
       "id": "J9",
       "title": "Verify privacy",
       "test_id": "journey:J9",
-      "status": "PARTIAL",
-      "blocker": "Startup self-test exists;Privacy Ledger absent",
+      "status": "PENDING",
+      "blocker": "Desktop UI retired under ADR0085; replacement and full journey acceptance pending. Startup self-test exists;Privacy Ledger absent",
       "steps": [
         "J9.1",
         "J9.2",
@@ -199,7 +199,7 @@
       "title": "Use a cloud model (optional)",
       "test_id": "journey:J10",
       "status": "PENDING",
-      "blocker": "Prerequisite policy/ledger/broker absent",
+      "blocker": "Desktop UI retired under ADR0085; replacement and full journey acceptance pending. Prerequisite policy/ledger/broker absent",
       "steps": [
         "J10.1",
         "J10.2",
@@ -220,8 +220,8 @@
       "id": "J11",
       "title": "Manage",
       "test_id": "journey:J11",
-      "status": "PARTIAL",
-      "blocker": "LAN/crypto/update/full-purge contracts incomplete",
+      "status": "PENDING",
+      "blocker": "Desktop UI retired under ADR0085; replacement and full journey acceptance pending. LAN/crypto/update/full-purge contracts incomplete",
       "steps": [
         "J11.1",
         "J11.2",
@@ -248,8 +248,8 @@
       "id": "J12",
       "title": "Recover",
       "test_id": "journey:J12",
-      "status": "PARTIAL",
-      "blocker": "Unified recovery,diagnostics and chaos evidence absent",
+      "status": "PENDING",
+      "blocker": "Desktop UI retired under ADR0085; replacement and full journey acceptance pending. Unified recovery,diagnostics and chaos evidence absent",
       "steps": [
         "J12.1",
         "J12.2",

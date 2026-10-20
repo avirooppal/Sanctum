@@ -5,7 +5,7 @@ import unittest
 from pathlib import Path
 
 sys.path.insert(0, str(Path(__file__).resolve().parents[1]))
-from workflow_check import check, write_public_status
+from workflow_check import check
 
 ROOT = Path(__file__).resolve().parents[2]
 
@@ -23,13 +23,10 @@ class WorkflowCheckTests(unittest.TestCase):
             "tools/smoke_all.py",
             "evals/journeys/manifest.json",
             "evals/journeys/test_journeys.py",
-            "apps/web/website.html",
-            "apps/web/docs.html",
         ]:
             target = self.root / name
             target.parent.mkdir(parents=True, exist_ok=True)
             shutil.copyfile(ROOT / name, target)
-        write_public_status(self.root)
 
     def edit(self, name, transform):
         path = self.root / name
@@ -56,15 +53,6 @@ class WorkflowCheckTests(unittest.TestCase):
         self.edit("docs/WORKFLOW_GAPS.md", lambda s: s.replace("| J4.2 |", "| REMOVED |"))
         self.assertTrue(check(self.root))
 
-    def test_public_status_drift_fails(self):
-        self.edit(
-            "apps/web/website.html",
-            lambda s: s.replace(
-                'data-workflow-status="PENDING"', 'data-workflow-status="VERIFIED"', 1
-            ),
-        )
-        self.assertTrue(check(self.root))
-
     def test_release_status_drift_fails(self):
         self.edit(
             "docs/RELEASE_CHECKLIST.md",
@@ -88,7 +76,7 @@ class WorkflowCheckTests(unittest.TestCase):
     def test_unmapped_smoke_stage_fails(self):
         self.edit(
             "tools/smoke_all.py",
-            lambda s: s.replace('"ui_sessions": ["J3"]', '"orphan_stage": ["J3"]'),
+            lambda s: s.replace('"chat": ["J2", "J3"]', '"orphan_stage": ["J3"]'),
         )
         self.assertTrue(check(self.root))
 

@@ -1,5 +1,9 @@
 # Decision review queue
 
+| ADR | Decision | Scope effect | Remaining review |
+|---|---|---|---|
+| [0085](adr/0085-retire-legacy-ui.md) | Retire entire old UI; retain development reuse library only | Explicitly remove old product browser/public projection/fidelity tests; preserve backend and budget contracts; all full journeys PENDING | M1 architecture, M3 real desktop UI, M11 packaging remain pending; no threshold relaxation |
+
 ## Desktop pivot, 2026-10-20
 
 | ADR | Decision | Gate/scope effect | Review / remaining work |
