@@ -1,0 +1,83 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Wireframe: Computer Use & Live Sandbox View</title>
+  <link rel="stylesheet" href="styles.css">
+  <style>
+    .banner { background: #991b1b; color: #fff; padding: 10px 20px; display: flex; align-items: center; justify-content: space-between; font-size: 13px; font-weight: 600; }
+    .cu-container { display: flex; flex: 1; overflow: hidden; }
+    .cu-main { flex: 1; padding: 20px; display: flex; flex-direction: column; gap: 16px; background: var(--bg-app); }
+    .cu-sidebar { width: 340px; background: var(--bg-surface); border-left: 1px solid var(--border-subtle); padding: 16px; display: flex; flex-direction: column; gap: 12px; }
+    .screen-preview { flex: 1; background: #000; border: 1px solid var(--border-strong); border-radius: 8px; display: flex; align-items: center; justify-content: center; position: relative; }
+    .pointer { position: absolute; width: 14px; height: 14px; background: rgba(220, 38, 38, 0.8); border: 2px solid #fff; border-radius: 50%; transform: translate(-50%, -50%); }
+    .action-entry { padding: 8px 10px; background: var(--bg-surface-elevated); border-radius: 6px; font-size: 12px; }
+  </style>
+</head>
+<body>
+  <!-- Persistent Always-on-top Banner -->
+  <div class="banner">
+    <div style="display:flex; align-items:center; gap:10px;">
+      <span style="display:inline-block; width:10px; height:10px; background:#ef4444; border-radius:50%; animation: pulse 1.5s infinite;"></span>
+      <span>SANCTUM COMPUTER USE ACTIVE · Controlling Sandboxed Desktop</span>
+    </div>
+    <div style="display:flex; align-items:center; gap:12px;">
+      <span style="font-size:12px; background:rgba(0,0,0,0.3); padding:4px 8px; border-radius:4px; font-family:var(--font-mono);">Emergency Kill: [Ctrl + Shift + Esc]</span>
+      <button class="btn btn-secondary" style="background:#fff; color:#991b1b; font-weight:bold; font-size:11px;">PAUSE</button>
+      <button class="btn btn-danger" style="background:#000; color:#fff; font-weight:bold; font-size:11px;">TERMINATE NOW</button>
+    </div>
+  </div>
+
+  <div class="wireframe-nav">
+    <a href="index.html">← All Wireframes</a>
+    <span style="color:var(--text-muted)">|</span>
+    <strong>7. Computer Use & Live Sandbox View</strong>
+  </div>
+
+  <div class="wireframe-body">
+    <div class="cu-container">
+      <div class="cu-main">
+        <div style="display:flex; justify-content:space-between; align-items:center;">
+          <div>
+            <h3>Live Desktop View (Disposable Sandbox)</h3>
+            <span style="font-size:12px; color:var(--text-muted);">OS Boundary: Linux bubblewrap / Windows restricted token. Outbound network: BLOCKED.</span>
+          </div>
+          <span class="badge badge-verified">Target Resolution: 1280x720</span>
+        </div>
+
+        <div class="screen-preview">
+          <!-- Mock pointer action -->
+          <div class="pointer" style="left: 45%; top: 38%;"></div>
+          <div style="position:absolute; bottom:12px; left:12px; background:rgba(0,0,0,0.7); padding:6px 12px; border-radius:4px; font-size:11px; font-family:var(--font-mono); color:#4ade80;">
+            Action #14: click(x=576, y=274) -> Target: "Save Document Button"
+          </div>
+        </div>
+      </div>
+
+      <div class="cu-sidebar">
+        <h4>Action Ledger</h4>
+        <div style="font-size:12px; color:var(--text-muted);">
+          Session limits: 14 / 100 actions · 02:45 / 30:00 elapsed
+        </div>
+        <div style="flex:1; overflow-y:auto; display:flex; flex-direction:column; gap:8px;">
+          <div class="action-entry">
+            <span style="color:var(--text-muted); font-size:10px;">02:44:12</span>
+            <strong>screenshot()</strong>
+            <div style="color:var(--text-muted);">Captured 1280x720 frame</div>
+          </div>
+          <div class="action-entry">
+            <span style="color:var(--text-muted); font-size:10px;">02:44:15</span>
+            <strong>pointer_move(x=576, y=274)</strong>
+            <div style="color:var(--text-muted);">Hovered over Save Document</div>
+          </div>
+          <div class="action-entry" style="border-left: 2px solid var(--accent);">
+            <span style="color:var(--text-muted); font-size:10px;">02:44:18</span>
+            <strong>mouse_click(left)</strong>
+            <div style="color:var(--text-muted);">Button clicked</div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</body>
+</html>

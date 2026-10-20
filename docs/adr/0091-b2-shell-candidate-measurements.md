@@ -1,8 +1,9 @@
 # ADR0091: B2 shell candidate measurements and provisional recommendation
 
 Date: 2026-10-20. Status: PROVISIONAL — owner review required before any
-shell is selected for M2. Rust and source CI gates must be green at the
-exact head that includes these results; hosted CI receipt to be added after push.
+shell is selected for M2. Rust and source CI gates verified green at exact
+head d8d81b8: hosted run 39412991239 completed success on all 5 jobs
+(evals/results/b2-reconciliation-hosted-ci.json).
 
 ## Context
 

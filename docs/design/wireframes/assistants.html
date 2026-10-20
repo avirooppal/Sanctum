@@ -1,0 +1,77 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Wireframe: Assistants Manager</title>
+  <link rel="stylesheet" href="styles.css">
+  <style>
+    .assistants-container { max-width: 900px; margin: 24px auto; padding: 24px; overflow-y: auto; display: flex; flex-direction: column; gap: 20px; width: 100%; }
+    .assistant-card { background: var(--bg-surface); border: 1px solid var(--border-subtle); border-radius: 8px; padding: 16px; display: flex; justify-content: space-between; align-items: flex-start; }
+    .tag { font-size: 11px; background: var(--bg-surface-elevated); padding: 2px 6px; border-radius: 4px; color: var(--text-muted); }
+  </style>
+</head>
+<body>
+  <div class="wireframe-nav">
+    <a href="index.html">← All Wireframes</a>
+    <span style="color:var(--text-muted)">|</span>
+    <strong>4. Assistants Manager</strong>
+  </div>
+  <div class="wireframe-body" style="overflow-y:auto;">
+    <div class="assistants-container">
+      <div style="display:flex; justify-content:space-between; align-items:center;">
+        <div>
+          <h2>Custom Assistants</h2>
+          <p style="font-size:13px; color:var(--text-muted);">Configure personas with dedicated instructions, model parameters, and scoped tools.</p>
+        </div>
+        <div style="display:flex; gap:8px;">
+          <button class="btn btn-secondary">Import JSON...</button>
+          <button class="btn btn-primary">+ New Assistant</button>
+        </div>
+      </div>
+
+      <div class="assistant-card">
+        <div>
+          <div style="display:flex; align-items:center; gap:8px;">
+            <h3>Code Architect</h3>
+            <span class="badge badge-verified">Default</span>
+          </div>
+          <p style="font-size:13px; color:var(--text-muted); margin: 6px 0 10px 0;">
+            Specialized for systems programming in Rust and C++. Emphasizes safety, zero-copy design, and bounded latency.
+          </p>
+          <div style="display:flex; gap:8px; align-items:center;">
+            <span class="tag">Model: Qwen 2.5 Coder 7B</span>
+            <span class="tag">Temp: 0.20</span>
+            <span class="tag">Tools: File Read (Ask), Git (Ask)</span>
+          </div>
+        </div>
+        <div style="display:flex; gap:6px;">
+          <button class="btn btn-secondary" style="font-size:12px;">Edit</button>
+          <button class="btn btn-secondary" style="font-size:12px;">Export</button>
+          <button class="btn btn-secondary" style="font-size:12px;">Duplicate</button>
+        </div>
+      </div>
+
+      <div class="assistant-card">
+        <div>
+          <div style="display:flex; align-items:center; gap:8px;">
+            <h3>Research Synthesizer</h3>
+          </div>
+          <p style="font-size:13px; color:var(--text-muted); margin: 6px 0 10px 0;">
+            Extracts grounded factual claims from local PDF and Markdown documents using the local Knowledge pack.
+          </p>
+          <div style="display:flex; gap:8px; align-items:center;">
+            <span class="tag">Model: Llama 3.2 3B</span>
+            <span class="tag">Temp: 0.50</span>
+            <span class="tag">Packs: Knowledge (sqlite-vec)</span>
+          </div>
+        </div>
+        <div style="display:flex; gap:6px;">
+          <button class="btn btn-secondary" style="font-size:12px;">Edit</button>
+          <button class="btn btn-secondary" style="font-size:12px;">Export</button>
+          <button class="btn btn-secondary" style="font-size:12px;">Duplicate</button>
+        </div>
+      </div>
+    </div>
+  </div>
+</body>
+</html>

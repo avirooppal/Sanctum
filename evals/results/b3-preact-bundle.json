@@ -1,0 +1,23 @@
+{
+  "candidate": "Preact",
+  "raw_js_bytes": 16542,
+  "gzip_js_bytes": 6859,
+  "js_files": [
+    {
+      "name": "index-Bi6S7Z20.js",
+      "raw": 16542,
+      "gzip": 6859
+    }
+  ],
+  "dependency_count": 136,
+  "licenses": [
+    "MIT",
+    "Apache-2.0",
+    "ISC",
+    "CC-BY-4.0",
+    "BSD-2-Clause",
+    "BSD-3-Clause"
+  ],
+  "vulnerabilities": 0,
+  "timestamp": "2026-10-20T12:39:30.331Z"
+}

@@ -1,0 +1,166 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Sanctum Desktop — Wireframe Design Gallery & Critique Record</title>
+  <link rel="stylesheet" href="styles.css">
+  <style>
+    .gallery-container { max-width: 960px; margin: 32px auto; padding: 24px; overflow-y: auto; display: flex; flex-direction: column; gap: 24px; }
+    .wireframe-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 16px; margin-top: 12px; }
+    .wireframe-card { background: var(--bg-surface); border: 1px solid var(--border-subtle); border-radius: 8px; padding: 16px; text-decoration: none; color: inherit; display: flex; flex-direction: column; justify-content: space-between; transition: border-color 0.2s; }
+    .wireframe-card:hover { border-color: var(--accent); }
+    .iteration-box { background: var(--bg-surface); border: 1px solid var(--border-subtle); border-radius: 8px; padding: 16px; margin-top: 8px; font-size: 13px; }
+  </style>
+</head>
+<body>
+  <div class="wireframe-nav">
+    <strong>Sanctum Desktop Wireframe Gallery (Milestone 1 — B6)</strong>
+    <span style="color:var(--text-muted); margin-left:auto;">Date: 2026-10-20 · Iteration 2 Active</span>
+  </div>
+
+  <div class="wireframe-body" style="overflow-y:auto;">
+    <div class="gallery-container">
+      <div>
+        <h2>Sanctum Desktop Interface Wireframes</h2>
+        <p style="color:var(--text-muted); font-size:14px; margin-top:4px;">
+          Clean, local-first desktop application wireframes designed for Preact/wry implementation (Milestone 3).
+          Free of marketing clutter, public website components, and ungrounded placeholders.
+        </p>
+      </div>
+
+      <div class="wireframe-grid">
+        <a class="wireframe-card" href="first_run.html">
+          <div>
+            <strong>1. First Run Onboarding</strong>
+            <p style="font-size:12px; color:var(--text-muted); margin-top:4px;">
+              Data directory selection, hardware RAM/VRAM/core detection, and starter GGUF recommendation.
+            </p>
+          </div>
+          <span style="font-size:11px; color:var(--accent); margin-top:12px;">Open Wireframe →</span>
+        </a>
+
+        <a class="wireframe-card" href="chat_with_drawer.html">
+          <div>
+            <strong>2. Chat with Thread Settings Drawer</strong>
+            <p style="font-size:12px; color:var(--text-muted); margin-top:4px;">
+              Sidebar search/pin/rename, streaming message list, token speed metrics, and collapsible parameter drawer.
+            </p>
+          </div>
+          <span style="font-size:11px; color:var(--accent); margin-top:12px;">Open Wireframe →</span>
+        </a>
+
+        <a class="wireframe-card" href="models_engine_settings.html">
+          <div>
+            <strong>3. Models & Engine Settings</strong>
+            <p style="font-size:12px; color:var(--text-muted); margin-top:4px;">
+              GGUF management, SHA256 integrity, license disclosures, hardware fit badges, and GPU offloading.
+            </p>
+          </div>
+          <span style="font-size:11px; color:var(--accent); margin-top:12px;">Open Wireframe →</span>
+        </a>
+
+        <a class="wireframe-card" href="assistants.html">
+          <div>
+            <strong>4. Assistants Manager</strong>
+            <p style="font-size:12px; color:var(--text-muted); margin-top:4px;">
+              Persona instructions, starter prompts, tool permission bindings, and JSON export/import.
+            </p>
+          </div>
+          <span style="font-size:11px; color:var(--accent); margin-top:12px;">Open Wireframe →</span>
+        </a>
+
+        <a class="wireframe-card" href="tools_mcp_manager.html">
+          <div>
+            <strong>5. Tools & MCP Manager</strong>
+            <p style="font-size:12px; color:var(--text-muted); margin-top:4px;">
+              Built-in tool gating, external MCP stdio child processes, log inspection, and schema hashing.
+            </p>
+          </div>
+          <span style="font-size:11px; color:var(--accent); margin-top:12px;">Open Wireframe →</span>
+        </a>
+
+        <a class="wireframe-card" href="permission_prompt.html">
+          <div>
+            <strong>6. Permission Prompt Modal</strong>
+            <p style="font-size:12px; color:var(--text-muted); margin-top:4px;">
+              Argument-bound approval dialog, Taint-Elevated alerts, SHA256 signature, and Deny / Ask / Allow options.
+            </p>
+          </div>
+          <span style="font-size:11px; color:var(--accent); margin-top:12px;">Open Wireframe →</span>
+        </a>
+
+        <a class="wireframe-card" href="computer_use.html">
+          <div>
+            <strong>7. Computer Use & Live Sandbox View</strong>
+            <p style="font-size:12px; color:var(--text-muted); margin-top:4px;">
+              Persistent emergency kill banner, sandbox desktop viewport, pointer indicator, and action ledger.
+            </p>
+          </div>
+          <span style="font-size:11px; color:var(--accent); margin-top:12px;">Open Wireframe →</span>
+        </a>
+
+        <a class="wireframe-card" href="settings_sections.html">
+          <div>
+            <strong>8. Typed Settings Engine</strong>
+            <p style="font-size:12px; color:var(--text-muted); margin-top:4px;">
+              Full TOML-backed configuration schema, search, accessibility scale, and live reset.
+            </p>
+          </div>
+          <span style="font-size:11px; color:var(--accent); margin-top:12px;">Open Wireframe →</span>
+        </a>
+
+        <a class="wireframe-card" href="providers_privacy.html">
+          <div>
+            <strong>9. Providers, Egress Broker & Privacy Ledger</strong>
+            <p style="font-size:12px; color:var(--text-muted); margin-top:4px;">
+              Disabled-by-default cloud providers, OS keychain storage, global kill switch, and audit ledger.
+            </p>
+          </div>
+          <span style="font-size:11px; color:var(--accent); margin-top:12px;">Open Wireframe →</span>
+        </a>
+
+        <a class="wireframe-card" href="packs.html">
+          <div>
+            <strong>10. Optional Capability Packs</strong>
+            <p style="font-size:12px; color:var(--text-muted); margin-top:4px;">
+              Knowledge (RAG), Speech (ASR/TTS), Vision, and Computer Use pack lifecycle with honest RAM budgets.
+            </p>
+          </div>
+          <span style="font-size:11px; color:var(--accent); margin-top:12px;">Open Wireframe →</span>
+        </a>
+      </div>
+
+      <div>
+        <h3>Design Review & Critique Record</h3>
+
+        <div class="iteration-box">
+          <div style="display:flex; justify-content:space-between; align-items:center;">
+            <strong>Iteration 1 Review (Initial Skeleton Review)</strong>
+            <span class="badge badge-warning">Changes Requested</span>
+          </div>
+          <ul style="margin: 8px 0 0 16px; color:var(--text-muted); display:flex; flex-direction:column; gap:4px;">
+            <li><strong>Critique 1 (Honest Metrics)</strong>: Chat interface lacked visible token statistics; users must see exact prompt/completion counts and generation speed or an honest "unknown".</li>
+            <li><strong>Critique 2 (Safety Banner)</strong>: Computer use interface lacked an immediate, unambiguous global emergency kill switch visible at all times.</li>
+            <li><strong>Critique 3 (Egress Clarity)</strong>: Cloud provider configuration did not clarify where API keys reside; must state they are in the OS keychain and never on disk.</li>
+            <li><strong>Critique 4 (Argument Binding)</strong>: Permission dialog was too generic; must display the exact cryptographic hash of the arguments being approved.</li>
+          </ul>
+        </div>
+
+        <div class="iteration-box" style="border-left: 3px solid var(--success);">
+          <div style="display:flex; justify-content:space-between; align-items:center;">
+            <strong>Iteration 2 Review (Refinement & Acceptance)</strong>
+            <span class="badge badge-verified">Approved for M3 Implementation</span>
+          </div>
+          <ul style="margin: 8px 0 0 16px; color:var(--text-muted); display:flex; flex-direction:column; gap:4px;">
+            <li><strong>Resolution 1</strong>: Implemented real-time token/speed metric bar on assistant messages in <code>chat_with_drawer.html</code>.</li>
+            <li><strong>Resolution 2</strong>: Added top-level red emergency kill banner with persistent hotkey <code>[Ctrl+Shift+Esc]</code> and immediate process pause in <code>computer_use.html</code>.</li>
+            <li><strong>Resolution 3</strong>: Explicitly marked cloud providers as opt-in only with OS Keychain integration in <code>providers_privacy.html</code>.</li>
+            <li><strong>Resolution 4</strong>: Added cryptographic argument SHA256 binding and Taint-Elevated warning in <code>permission_prompt.html</code>.</li>
+            <li><strong>Resolution 5</strong>: Added disk footprint, idle/peak RAM budgets, and idle-unload rules in <code>packs.html</code>.</li>
+          </ul>
+        </div>
+      </div>
+    </div>
+  </div>
+</body>
+</html>

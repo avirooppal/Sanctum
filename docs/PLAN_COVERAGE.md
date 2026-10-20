@@ -13,7 +13,7 @@ reference-fidelity and conflicting stack/roadmap requirements are
 | M0 A1 runtime reference baselines | RECORDED, WSL only | Five no-model and five chat+embedding starts per clean revision;60s idle samples, size inventories, medians/spreads; ADR0086 and PERFORMANCE Baselines; native Windows unavailable |
 | M0 full desktop measurements | PENDING | Legacy JS101141B gzip/web2139977B measured; native install/no-model RSS/cold UI/CPU unavailable; PERFORMANCE.md |
 | M0 removals and reviewed salvage | VERIFIED retirement only | ADR0085; 1017 removed tracked paths in SHA256 inventory; initial11 narrowed to6 M3 modules by ADR0087; restored HTTP coverage; no app UI |
-| M1 Jan study and architecture ADRs | B1 source study recorded; B2–B7 PENDING | JAN_STUDY.md/ADR0089: exact pin, license hashes and NOTICE absence; no code adapted. Shell/MPL, packs/settings/permissions/egress/assurance experiments remain pending |
+| M1 Jan study and architecture ADRs | B1–B7 COMPLETED (PROVISIONAL) | JAN_STUDY.md/ADR0089: pin and study. ADR0090: MPL policy. ADR0091: B2 shell measurements. ADR0092: B3 UI stack measurements. ADR0093: B4 core contracts. THREAT_MODEL.md: B5 threat model. docs/design/wireframes/: B6 wireframes (2 review iterations). ADR0094: B7 measured performance budgets |
 | A / M3 chat and threads | PENDING | Existing legacy chat/history tests are scoped reuse evidence only; new desktop journeys absent |
 | B / M5 assistants | PENDING | New contract and journey required |
 | C / M2–M3 models and engines | PENDING | Retained Rust supervision/inference checks do not verify full model manager or native core |

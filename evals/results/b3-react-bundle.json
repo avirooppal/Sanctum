@@ -1,0 +1,22 @@
+{
+  "candidate": "React",
+  "raw_js_bytes": 189176,
+  "gzip_js_bytes": 59792,
+  "js_files": [
+    {
+      "name": "index-BeOGfUEF.js",
+      "raw": 189176,
+      "gzip": 59792
+    }
+  ],
+  "dependency_count": 115,
+  "licenses": [
+    "MIT",
+    "Apache-2.0",
+    "CC-BY-4.0",
+    "ISC",
+    "BSD-3-Clause"
+  ],
+  "vulnerabilities": 0,
+  "timestamp": "2026-10-20T12:38:48.967Z"
+}

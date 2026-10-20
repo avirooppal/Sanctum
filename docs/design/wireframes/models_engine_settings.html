@@ -1,0 +1,118 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Wireframe: Models & Engine Settings</title>
+  <link rel="stylesheet" href="styles.css">
+  <style>
+    .models-container { max-width: 900px; margin: 24px auto; padding: 24px; overflow-y: auto; display: flex; flex-direction: column; gap: 20px; width: 100%; }
+    .model-table { width: 100%; border-collapse: collapse; margin-top: 12px; font-size: 13px; }
+    .model-table th, .model-table td { padding: 10px 12px; text-align: left; border-bottom: 1px solid var(--border-subtle); }
+    .model-table th { color: var(--text-muted); font-weight: 500; }
+    .engine-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 16px; margin-top: 12px; }
+  </style>
+</head>
+<body>
+  <div class="wireframe-nav">
+    <a href="index.html">← All Wireframes</a>
+    <span style="color:var(--text-muted)">|</span>
+    <strong>3. Models & Engine Settings</strong>
+  </div>
+  <div class="wireframe-body" style="overflow-y:auto;">
+    <div class="models-container">
+      <div style="display:flex; justify-content:space-between; align-items:center;">
+        <div>
+          <h2>Installed Local Models (GGUF)</h2>
+          <p style="font-size:13px; color:var(--text-muted);">Manage weights, SHA256 integrity, licenses, and memory allocation.</p>
+        </div>
+        <div style="display:flex; gap:8px;">
+          <button class="btn btn-secondary">Import Local GGUF...</button>
+          <button class="btn btn-primary">+ Download Model</button>
+        </div>
+      </div>
+
+      <div class="card">
+        <table class="model-table">
+          <thead>
+            <tr>
+              <th>Model Name</th>
+              <th>Format</th>
+              <th>Size</th>
+              <th>License</th>
+              <th>Hardware Fit</th>
+              <th>Actions</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td>
+                <strong>Qwen 2.5 Coder 7B</strong>
+                <div style="font-size:11px; color:var(--text-muted); font-family:var(--font-mono);">sha256: 8a4c9b2...</div>
+              </td>
+              <td>Q4_K_M</td>
+              <td>4.4 GB</td>
+              <td>Apache-2.0</td>
+              <td><span class="badge badge-verified">Full VRAM (32 layers)</span></td>
+              <td>
+                <button class="btn btn-secondary" style="padding:4px 8px; font-size:11px;">Configure</button>
+                <button class="btn btn-secondary" style="padding:4px 8px; font-size:11px; color:var(--danger);">Delete</button>
+              </td>
+            </tr>
+            <tr>
+              <td>
+                <strong>Llama 3.2 3B</strong>
+                <div style="font-size:11px; color:var(--text-muted); font-family:var(--font-mono);">sha256: 3c71a8e...</div>
+              </td>
+              <td>Q8_0</td>
+              <td>3.2 GB</td>
+              <td>Llama 3.2 Community</td>
+              <td><span class="badge badge-verified">Full VRAM (28 layers)</span></td>
+              <td>
+                <button class="btn btn-secondary" style="padding:4px 8px; font-size:11px;">Configure</button>
+                <button class="btn btn-secondary" style="padding:4px 8px; font-size:11px; color:var(--danger);">Delete</button>
+              </td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+
+      <div>
+        <h3>Engine & Hardware Settings</h3>
+        <div class="engine-grid">
+          <div class="card">
+            <label style="font-size:13px; font-weight:600; display:block; margin-bottom:6px;">Inference Backend</label>
+            <select style="width:100%; background:var(--bg-app); border:1px solid var(--border-subtle); color:var(--text-main); padding:8px; border-radius:6px;">
+              <option>Auto-detected: NVIDIA CUDA (v12.4)</option>
+              <option>Vulkan (Universal GPU)</option>
+              <option>CPU Only (AVX2 / AVX-512)</option>
+            </select>
+            <span style="font-size:11px; color:var(--text-muted); display:block; margin-top:4px;">Worker process restarts automatically on backend switch.</span>
+          </div>
+
+          <div class="card">
+            <label style="font-size:13px; font-weight:600; display:block; margin-bottom:6px;">GPU Layer Offload</label>
+            <input type="number" value="32" style="width:100%; background:var(--bg-app); border:1px solid var(--border-subtle); color:var(--text-main); padding:8px; border-radius:6px;" />
+            <span style="font-size:11px; color:var(--text-muted); display:block; margin-top:4px;">Set to -1 for maximum auto-offload based on available VRAM.</span>
+          </div>
+
+          <div class="card">
+            <label style="font-size:13px; font-weight:600; display:block; margin-bottom:6px;">CPU Inference Threads</label>
+            <input type="number" value="6" style="width:100%; background:var(--bg-app); border:1px solid var(--border-subtle); color:var(--text-main); padding:8px; border-radius:6px;" />
+            <span style="font-size:11px; color:var(--text-muted); display:block; margin-top:4px;">Optimal: physical cores minus 2 for UI responsiveness.</span>
+          </div>
+
+          <div class="card">
+            <label style="font-size:13px; font-weight:600; display:block; margin-bottom:6px;">Model Keep-Alive Duration</label>
+            <select style="width:100%; background:var(--bg-app); border:1px solid var(--border-subtle); color:var(--text-main); padding:8px; border-radius:6px;">
+              <option>5 minutes (idle unload)</option>
+              <option>15 minutes</option>
+              <option>Always resident in RAM/VRAM</option>
+            </select>
+            <span style="font-size:11px; color:var(--text-muted); display:block; margin-top:4px;">Unloading frees VRAM for other host applications.</span>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</body>
+</html>

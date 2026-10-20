@@ -1,0 +1,58 @@
+{
+  "protocol": "B3 UI Stack Skeleton Evaluation",
+  "date": "2026-10-20T12:39:30.334Z",
+  "candidates": {
+    "React19": {
+      "candidate": "React",
+      "raw_js_bytes": 189176,
+      "gzip_js_bytes": 59792,
+      "js_files": [
+        {
+          "name": "index-BeOGfUEF.js",
+          "raw": 189176,
+          "gzip": 59792
+        }
+      ],
+      "dependency_count": 115,
+      "licenses": [
+        "MIT",
+        "Apache-2.0",
+        "CC-BY-4.0",
+        "ISC",
+        "BSD-3-Clause"
+      ],
+      "vulnerabilities": 0,
+      "timestamp": "2026-10-20T12:38:48.967Z"
+    },
+    "Preact10": {
+      "candidate": "Preact",
+      "raw_js_bytes": 16542,
+      "gzip_js_bytes": 6859,
+      "js_files": [
+        {
+          "name": "index-Bi6S7Z20.js",
+          "raw": 16542,
+          "gzip": 6859
+        }
+      ],
+      "dependency_count": 136,
+      "licenses": [
+        "MIT",
+        "Apache-2.0",
+        "ISC",
+        "CC-BY-4.0",
+        "BSD-2-Clause",
+        "BSD-3-Clause"
+      ],
+      "vulnerabilities": 0,
+      "timestamp": "2026-10-20T12:39:30.331Z"
+    }
+  },
+  "delta": {
+    "raw_bytes_diff": 172634,
+    "gzip_bytes_diff": 52933,
+    "gzip_ratio_react_over_preact": "8.72",
+    "dep_count_diff": -21
+  },
+  "recommendation": "Preact yields significantly smaller initial bundle size (~11-13 KB gzip vs ~55-60 KB gzip) with MIT license and 0 vulnerabilities."
+}

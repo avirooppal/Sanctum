@@ -1,0 +1,91 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Wireframe: Tools & MCP Manager</title>
+  <link rel="stylesheet" href="styles.css">
+  <style>
+    .mcp-container { max-width: 900px; margin: 24px auto; padding: 24px; overflow-y: auto; display: flex; flex-direction: column; gap: 20px; width: 100%; }
+    .tool-list { display: flex; flex-direction: column; gap: 12px; margin-top: 12px; }
+  </style>
+</head>
+<body>
+  <div class="wireframe-nav">
+    <a href="index.html">← All Wireframes</a>
+    <span style="color:var(--text-muted)">|</span>
+    <strong>5. Tools & MCP Manager</strong>
+  </div>
+  <div class="wireframe-body" style="overflow-y:auto;">
+    <div class="mcp-container">
+      <div style="display:flex; justify-content:space-between; align-items:center;">
+        <div>
+          <h2>Model Context Protocol (MCP) & Built-in Tools</h2>
+          <p style="font-size:13px; color:var(--text-muted);">Manage external process extensions, tool manifests, and argument permissions.</p>
+        </div>
+        <div style="display:flex; gap:8px;">
+          <button class="btn btn-secondary">Import config.json</button>
+          <button class="btn btn-primary">+ Add MCP Server</button>
+        </div>
+      </div>
+
+      <div class="card">
+        <h3>Built-in Governed Tools</h3>
+        <div class="tool-list">
+          <div style="display:flex; justify-content:space-between; align-items:center; padding: 10px; background:var(--bg-surface-elevated); border-radius:6px;">
+            <div>
+              <strong>read_file</strong>
+              <div style="font-size:12px; color:var(--text-muted);">Read file contents within authorized workspace folders. Defends against symlinks and path traversal.</div>
+            </div>
+            <select style="background:var(--bg-app); border:1px solid var(--border-subtle); color:var(--text-main); padding:6px; border-radius:4px; font-size:12px;">
+              <option>Ask Every Time</option>
+              <option>Allow This Thread</option>
+              <option>Always Allow</option>
+              <option>Deny</option>
+            </select>
+          </div>
+
+          <div style="display:flex; justify-content:space-between; align-items:center; padding: 10px; background:var(--bg-surface-elevated); border-radius:6px;">
+            <div>
+              <strong>host_shell (Risk: High)</strong>
+              <div style="font-size:12px; color:var(--text-muted);">Run shell commands on the host. Requires confirmation on every invocation.</div>
+            </div>
+            <select style="background:var(--bg-app); border:1px solid var(--border-subtle); color:var(--text-main); padding:6px; border-radius:4px; font-size:12px;">
+              <option>Ask Every Time (Forced)</option>
+              <option>Deny</option>
+            </select>
+          </div>
+        </div>
+      </div>
+
+      <div class="card">
+        <div style="display:flex; justify-content:space-between; align-items:center;">
+          <div>
+            <h3>Configured MCP Servers</h3>
+            <span style="font-size:12px; color:var(--text-muted);">Servers run as isolated child processes communicating over stdio.</span>
+          </div>
+          <span class="badge badge-verified">2 Running</span>
+        </div>
+
+        <div class="tool-list">
+          <div style="padding:12px; background:var(--bg-app); border:1px solid var(--border-subtle); border-radius:6px;">
+            <div style="display:flex; justify-content:space-between; align-items:center;">
+              <div>
+                <strong>sqlite-explorer</strong>
+                <span style="font-size:11px; font-family:var(--font-mono); color:var(--text-muted); margin-left:8px;">stdio: uvx mcp-server-sqlite --db local.db</span>
+              </div>
+              <div style="display:flex; gap:6px;">
+                <button class="btn btn-secondary" style="font-size:11px; padding:3px 8px;">Logs</button>
+                <button class="btn btn-secondary" style="font-size:11px; padding:3px 8px;">Inspect Manifest</button>
+                <button class="btn btn-secondary" style="font-size:11px; padding:3px 8px; color:var(--danger);">Stop</button>
+              </div>
+            </div>
+            <div style="font-size:11px; color:var(--text-muted); margin-top:6px; font-family:var(--font-mono);">
+              Pinned SHA256: 7f3b89a... · 3 tools registered (query, schema, tables) · Permissions: Ask
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</body>
+</html>

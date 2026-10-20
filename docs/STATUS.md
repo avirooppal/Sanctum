@@ -10,7 +10,14 @@
 - A2–A5 local gates pass:188 source/71 Rust/34 web,38 denial probes,9 smoke stages.
 - Restored HTTP test found a history timeout; indexed migration fixes it (ADR0088).
 - A2–A5 head37c9981: hosted run39401230501 completed/success, all5 jobs.
-- B1: pinned Jan source/license study recorded; B2–B7/M2 remain pending.
+- B1: pinned Jan source/license study recorded (ADR0089).
+- B2: shell candidate measurements recorded in ADR0091 (wry provisionally recommended); commit d8d81b8 verified hosted-green on all 5 jobs (run 39412991239).
+- B3: UI stack measurements recorded in ADR0092 (Preact 10 6.86 KB vs React 19 59.93 KB gzip; Preact provisionally recommended).
+- B4: core contracts established in ADR0093 (process model, pack lifecycle, typed settings, permission broker, egress broker, platform assurance).
+- B5: comprehensive threat model documented in docs/THREAT_MODEL.md covering tools, MCP, and computer use with proving tests.
+- B6: complete static wireframes with 2 critique iterations recorded in docs/design/wireframes/.
+- B7: measured desktop performance budgets and CI enforcement established in ADR0094.
+- M2: ready for implementation; core Rust desktop restructuring pending.
 - No native installer, desktop performance acceptance or whole-product security claim.
 
 Evidence: [A2–A5 commands/results](A2_A5_EVIDENCE.md), [PERFORMANCE](PERFORMANCE.md), [test audit](TEST_REMOVAL_AUDIT.md),

@@ -1,0 +1,91 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Wireframe: Typed Settings Engine</title>
+  <link rel="stylesheet" href="styles.css">
+  <style>
+    .settings-layout { display: flex; width: 100%; height: 100%; }
+    .settings-nav { width: 220px; background: var(--bg-surface); border-right: 1px solid var(--border-subtle); padding: 12px 8px; display: flex; flex-direction: column; gap: 4px; }
+    .nav-item { padding: 8px 12px; font-size: 13px; border-radius: 6px; color: var(--text-muted); cursor: pointer; }
+    .nav-item.active { background: var(--bg-surface-elevated); color: var(--text-main); font-weight: 500; }
+    .settings-content { flex: 1; padding: 24px 32px; overflow-y: auto; display: flex; flex-direction: column; gap: 24px; max-width: 800px; }
+    .setting-row { display: flex; justify-content: space-between; align-items: center; padding: 12px 0; border-bottom: 1px solid var(--border-subtle); }
+    .setting-info { max-width: 65%; }
+  </style>
+</head>
+<body>
+  <div class="wireframe-nav">
+    <a href="index.html">← All Wireframes</a>
+    <span style="color:var(--text-muted)">|</span>
+    <strong>8. Typed Settings Engine</strong>
+  </div>
+  <div class="wireframe-body">
+    <div class="settings-layout">
+      <div class="settings-nav">
+        <input placeholder="Search settings..." style="background:var(--bg-app); border:1px solid var(--border-subtle); color:var(--text-main); padding:6px 10px; border-radius:4px; font-size:12px; margin-bottom:8px;" />
+        <div class="nav-item">General</div>
+        <div class="nav-item active">Appearance</div>
+        <div class="nav-item">Models & Inference</div>
+        <div class="nav-item">Assistants</div>
+        <div class="nav-item">Tools & Permissions</div>
+        <div class="nav-item">MCP Extensions</div>
+        <div class="nav-item">Computer Use</div>
+        <div class="nav-item">Cloud Providers</div>
+        <div class="nav-item">Local API Server</div>
+        <div class="nav-item">Packs & Storage</div>
+        <div class="nav-item">Keyboard Shortcuts</div>
+        <div class="nav-item">About Sanctum</div>
+      </div>
+
+      <div class="settings-content">
+        <div>
+          <h2>Appearance Settings</h2>
+          <p style="font-size:13px; color:var(--text-muted);">Config schema key: <code>ui.appearance.*</code> · Saved to <code>config.toml</code></p>
+        </div>
+
+        <div class="setting-row">
+          <div class="setting-info">
+            <strong>Color Theme</strong>
+            <div style="font-size:12px; color:var(--text-muted);">Interface theme. Follows system appearance or overrides.</div>
+          </div>
+          <select style="background:var(--bg-surface); border:1px solid var(--border-subtle); color:var(--text-main); padding:6px 10px; border-radius:4px;">
+            <option>Dark (Default)</option>
+            <option>Light</option>
+            <option>System Follow</option>
+          </select>
+        </div>
+
+        <div class="setting-row">
+          <div class="setting-info">
+            <strong>UI Scaling Factor</strong>
+            <div style="font-size:12px; color:var(--text-muted);">Adjusts application scale for high-DPI displays. Supports WCAG 2.2 up to 200%.</div>
+          </div>
+          <select style="background:var(--bg-surface); border:1px solid var(--border-subtle); color:var(--text-main); padding:6px 10px; border-radius:4px;">
+            <option>100%</option>
+            <option>125%</option>
+            <option>150%</option>
+            <option>200% (High Accessibility)</option>
+          </select>
+        </div>
+
+        <div class="setting-row">
+          <div class="setting-info">
+            <strong>Reduced Motion</strong>
+            <div style="font-size:12px; color:var(--text-muted);">Disables animations and transitions across the entire desktop shell.</div>
+          </div>
+          <input type="checkbox" style="transform: scale(1.2);">
+        </div>
+
+        <div style="display:flex; justify-content:space-between; align-items:center; margin-top:20px;">
+          <button class="btn btn-secondary">Reset Section Defaults</button>
+          <div style="display:flex; gap:8px;">
+            <button class="btn btn-secondary">Export TOML...</button>
+            <button class="btn btn-primary">Save Changes</button>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</body>
+</html>

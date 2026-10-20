@@ -1,0 +1,116 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Wireframe: Optional Capability Packs</title>
+  <link rel="stylesheet" href="styles.css">
+  <style>
+    .packs-container { max-width: 900px; margin: 24px auto; padding: 24px; overflow-y: auto; display: flex; flex-direction: column; gap: 20px; width: 100%; }
+    .pack-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 16px; margin-top: 12px; }
+  </style>
+</head>
+<body>
+  <div class="wireframe-nav">
+    <a href="index.html">← All Wireframes</a>
+    <span style="color:var(--text-muted)">|</span>
+    <strong>10. Optional Capability Packs</strong>
+  </div>
+  <div class="wireframe-body" style="overflow-y:auto;">
+    <div class="packs-container">
+      <div style="display:flex; justify-content:space-between; align-items:center;">
+        <div>
+          <h2>Optional Capability Packs</h2>
+          <p style="font-size:13px; color:var(--text-muted);">Packs extend the core with speech, knowledge indexing, and vision without bloating the core runtime.</p>
+        </div>
+        <button class="btn btn-secondary">Import .sanctum-pack Bundle...</button>
+      </div>
+
+      <div class="pack-grid">
+        <!-- Pack 1: Knowledge -->
+        <div class="card" style="display:flex; flex-direction:column; justify-content:space-between;">
+          <div>
+            <div style="display:flex; justify-content:space-between; align-items:center;">
+              <h3>Knowledge (RAG)</h3>
+              <span class="badge badge-verified">Installed · Active</span>
+            </div>
+            <p style="font-size:12px; color:var(--text-muted); margin: 6px 0 12px 0;">
+              Local document parser (PDF/Markdown) and vector search powered by sqlite-vec and local embedding weights.
+            </p>
+            <div style="font-size:11px; color:var(--text-muted); display:flex; flex-direction:column; gap:4px;">
+              <span>Disk Footprint: 210 MB</span>
+              <span>RAM Allocation: 512 MB peak</span>
+              <span>Lifecycle: Lazy load on query / Idle unload after 10m</span>
+            </div>
+          </div>
+          <div style="margin-top:16px; display:flex; gap:8px;">
+            <button class="btn btn-secondary" style="font-size:12px;">Configure</button>
+            <button class="btn btn-secondary" style="font-size:12px; color:var(--danger);">Uninstall</button>
+          </div>
+        </div>
+
+        <!-- Pack 2: Speech -->
+        <div class="card" style="display:flex; flex-direction:column; justify-content:space-between;">
+          <div>
+            <div style="display:flex; justify-content:space-between; align-items:center;">
+              <h3>Speech (Voice & ASR)</h3>
+              <span class="badge" style="background:var(--bg-surface-elevated); color:var(--text-muted);">Not Installed</span>
+            </div>
+            <p style="font-size:12px; color:var(--text-muted); margin: 6px 0 12px 0;">
+              Whisper.cpp speech transcription and local neural TTS synthesis. Runs 100% locally on CPU/Vulkan.
+            </p>
+            <div style="font-size:11px; color:var(--text-muted); display:flex; flex-direction:column; gap:4px;">
+              <span>Estimated Download: ~450 MB</span>
+              <span>Required RAM: 1.5 GB</span>
+              <span>Notice: Requires user confirmation before download.</span>
+            </div>
+          </div>
+          <div style="margin-top:16px;">
+            <button class="btn btn-primary" style="font-size:12px;">Install Speech Pack</button>
+          </div>
+        </div>
+
+        <!-- Pack 3: Vision -->
+        <div class="card" style="display:flex; flex-direction:column; justify-content:space-between;">
+          <div>
+            <div style="display:flex; justify-content:space-between; align-items:center;">
+              <h3>Vision (Multimodal VLM)</h3>
+              <span class="badge" style="background:var(--bg-surface-elevated); color:var(--text-muted);">Not Installed</span>
+            </div>
+            <p style="font-size:12px; color:var(--text-muted); margin: 6px 0 12px 0;">
+              Image inspection, visual Q&A, and screenshot reasoning using LLaVA/MiniCPM vision adapters.
+            </p>
+            <div style="font-size:11px; color:var(--text-muted); display:flex; flex-direction:column; gap:4px;">
+              <span>Estimated Download: ~2.2 GB</span>
+              <span>Required VRAM: 4 GB</span>
+            </div>
+          </div>
+          <div style="margin-top:16px;">
+            <button class="btn btn-primary" style="font-size:12px;">Install Vision Pack</button>
+          </div>
+        </div>
+
+        <!-- Pack 4: Computer Use -->
+        <div class="card" style="display:flex; flex-direction:column; justify-content:space-between;">
+          <div>
+            <div style="display:flex; justify-content:space-between; align-items:center;">
+              <h3>Computer Use (Experimental)</h3>
+              <span class="badge badge-warning">Sandboxed Desktop</span>
+            </div>
+            <p style="font-size:12px; color:var(--text-muted); margin: 6px 0 12px 0;">
+              Automated GUI agent running in disposable OS containers with persistent kill switch and rate limiting.
+            </p>
+            <div style="font-size:11px; color:var(--text-muted); display:flex; flex-direction:column; gap:4px;">
+              <span>Disk Footprint: 32 MB daemon</span>
+              <span>Memory Budget: 64 MB</span>
+              <span>Status: Experimental / Owner review required</span>
+            </div>
+          </div>
+          <div style="margin-top:16px; display:flex; gap:8px;">
+            <button class="btn btn-secondary" style="font-size:12px;">Configure Sandbox</button>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</body>
+</html>
