@@ -29,6 +29,11 @@ reference-fidelity and conflicting stack/roadmap requirements are
 No new desktop feature is promoted to VERIFIED by this checkpoint. The new UI
 must not expose unproven features. Existing historical UI is awaiting removal.
 
+Checkpoint `eaa411058c8a8b8c25f07a960b120f725e0d7ff0`: hosted run39382453266
+observed completed/success on all five jobs; raw `pivot-m0-checkpoint-ci.json`.
+Final source checks passed187 tests including3 new measurement contracts;
+Rust70/38 probes and web95 also passed. No desktop acceptance row is promoted.
+
 Date:2026-10-17. Source base:c91cc58a249aa14db97d625116e8f4ca1a4b294d plus
 current UI slice. Old audit archived verbatim at
 [archive](status-archive/2026-10-17-coverage-before-ui-alignment.md),SHA256

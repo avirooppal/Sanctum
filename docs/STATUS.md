@@ -8,7 +8,7 @@
 - Initial chat JS101141B gzip; web build2139977B. Native desktop metrics UNVERIFIED.
 - Gateway-only diagnostic: RSS5898240B, CPU1.498427% one core; not desktop acceptance.
 - Starting head and remote main: hosted completed/success all5, receipts saved.
-- New pivot-head hosted CI: pending commit/push and exact-SHA observation.
+- Pivot checkpoint `eaa4110`: hosted run39382453266 completed/success, all5 jobs.
 - M0 removals/salvage and M1–M12: PENDING; old website/Hermes work still present.
 - Next: removal/salvage review, then pinned Jan study and architecture decisions.
 - No merge, release, whole-product completion, or desktop performance claim.

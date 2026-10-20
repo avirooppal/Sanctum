@@ -17,7 +17,7 @@ approved. Native Windows/Linux/macOS installer execution is UNVERIFIED.
 | Installers, signatures, SBOM, update verification | UNVERIFIED | No session-built clean-installed native artifacts; implement executable build/install runners in M11 before listing owner commands |
 | OS helper egress assurance | UNVERIFIED for native Windows/macOS | Platform implementations and outbound-probe runners absent; Linux denial evidence is separate |
 | A–L desktop journeys and evaluations | PENDING | PLAN_COVERAGE pivot rows; legacy smoke does not certify replacements |
-| Hosted CI on pivot head | PENDING until observed | Push jan-style and poll that exact commit to completed; starting-head/main receipts are historical for the new commit |
+| Hosted CI on pivot checkpoint | PASS, scoped to eaa411058c8a8b8c25f07a960b120f725e0d7ff0 | Run39382453266 completed/success, all5 jobs; any follow-up commit requires its own exact-SHA observation |
 
 Missing native runners are software blockers, not accepted hardware exceptions.
 Do not publish a GitHub release. Existing dist archives have measured byte sizes
