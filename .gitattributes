@@ -86,4 +86,4 @@ evals/results/pivot-m0-*.log whitespace=-blank-at-eof,-blank-at-eol
 # ADR0087/0088: exact STATUS archive and unedited failed/passing console evidence.
 docs/status-archive/2026-10-20-before-a2-a5.md -text whitespace=cr-at-eol,-blank-at-eof
 evals/results/a2-*.log -text whitespace=cr-at-eol,-blank-at-eof,-blank-at-eol
-evals/results/a2-retained-state-first-executed-source.txt -text
+evals/results/a2-retained-state-first-executed-source.txt -text whitespace=cr-at-eol,-blank-at-eof,-blank-at-eol

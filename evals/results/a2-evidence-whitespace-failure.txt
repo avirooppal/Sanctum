@@ -1,0 +1,7 @@
+Observed before commit 9850cbf (git diff --cached --check):
+evals/results/a2-retained-state-first-executed-source.txt:107: trailing whitespace.
+The archived source contains original CRLF bytes. Its -text attribute preserved
+them but initially omitted whitespace=cr-at-eol. The console command continued
+to commit because PowerShell command separators do not gate subsequent commands.
+Corrective change: preserve the exact source bytes and specify raw-evidence
+whitespace attributes, consistent with ADR0087/0088. No source bytes edited.
