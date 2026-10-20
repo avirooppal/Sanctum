@@ -6,6 +6,56 @@ fn command(value: serde_json::Value) -> SessionRequest {
 }
 
 #[test]
+fn populated_history_search_fits_existing_metadata_deadline() {
+    let path = std::env::temp_dir().join(format!(
+        "sanctum-search-{}-{}.sqlite",
+        std::process::id(),
+        std::time::SystemTime::now()
+            .duration_since(std::time::UNIX_EPOCH)
+            .unwrap()
+            .as_nanos()
+    ));
+    {
+        let db = rusqlite::Connection::open(&path).unwrap();
+        db.execute_batch(
+            "CREATE TABLE conversations(id TEXT PRIMARY KEY, owner TEXT NOT NULL);
+             CREATE TABLE turns(id INTEGER PRIMARY KEY, conversation TEXT NOT NULL
+             REFERENCES conversations(id), request TEXT NOT NULL, response TEXT NOT NULL,
+             streaming INTEGER NOT NULL);
+             BEGIN;
+             WITH RECURSIVE n(x) AS (VALUES(1) UNION ALL SELECT x+1 FROM n WHERE x<4000)
+             INSERT INTO conversations SELECT 'history-'||x,'owner' FROM n;
+             INSERT INTO turns(conversation,request,response,streaming)
+             SELECT id,'{\"prompt\":\"'||printf('%04000d',0)||'\"}','preserved answer',0
+             FROM conversations;
+             COMMIT;",
+        )
+        .unwrap();
+    }
+    for _ in 0..2 {
+        let mut store = Store::open(&path).unwrap();
+        let started = std::time::Instant::now();
+        let result = store
+            .sessions(
+                "owner",
+                command(json!({"operation":"list","query":"absent-needle","offset":0})),
+            )
+            .unwrap();
+        assert_eq!(result["data"], json!([]));
+        assert!(
+            started.elapsed() < std::time::Duration::from_secs(10),
+            "history search exceeded existing 10-second metadata deadline: {:?}",
+            started.elapsed()
+        );
+        assert_eq!(
+            store.turns("owner", "history-1").unwrap()[0]["response"],
+            "preserved answer"
+        );
+    }
+    std::fs::remove_file(path).unwrap();
+}
+
+#[test]
 fn session_search_rename_and_owner_boundaries() {
     let mut store = Store::memory().unwrap();
     store.save("a", "id1", &json!({}), "answer", false).unwrap();

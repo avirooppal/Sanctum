@@ -7,7 +7,8 @@ const root=resolve(dirname(fileURLToPath(import.meta.url)),'../../..');
 test('retired product entrypoints and reference environment cannot return',()=>{
  for(const name of ['apps/web/index.html','apps/web/website.html','apps/web/docs.html','tools/reference/runner.mjs']) assert(!existsSync(resolve(root,name)),name);
  const pkg=JSON.parse(readFileSync(resolve(root,'apps/web/package.json'),'utf8'));
- for(const name of ['electron','framer-motion','lucide-react','@hermes/shared','@nous-research/ui']) assert(!pkg.dependencies?.[name],name);
+ const allDeps={...pkg.dependencies,...pkg.devDependencies};
+ for(const name of ['electron','framer-motion','lucide-react','@hermes/shared','@nous-research/ui','node-pty','xterm','@xterm/xterm','three','@react-three/fiber']) assert(!allDeps[name],name);
 });
 test('retained sources cannot import the old reference environment',()=>{
  const visit=dir=>{for(const entry of readdirSync(dir,{withFileTypes:true})){

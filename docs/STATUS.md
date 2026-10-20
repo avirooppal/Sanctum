@@ -1,52 +1,18 @@
 # Current state
 
-A1 follow-up: five-run release gateway/model-loaded measurements now recorded in
-PERFORMANCE.md (Baselines), with raw a1-* evidence and ADR0086. Native Windows
-metrics remain unavailable because these revisions refuse native startup. A2–A5
-audit/dead-code/status/merge-policy follow-ups and M1/M2 remain pending.
+- Branch: jan-style; main unchanged. Merge timing remains the owner's decision.
+- A1: five-run WSL baselines recorded in PERFORMANCE.md; native Windows unavailable.
+- A1 commit efe257d: hosted run39389771024 completed/success, all5 jobs observed.
+- A2: named removal audit records the HTTP/dependency coverage gaps and restorations.
+- A3: six modules planned for M3; five M8-only audio helpers and11 tests removed.
+- A4: full previous evidence/history archived below; no numbers discarded.
+- A5: PROVISIONAL recommendation—do not merge before a usable M3 desktop exists.
+- A2–A5 local gates pass:188 source/71 Rust/34 web,38 denial probes,9 smoke stages.
+- Restored HTTP test found a history timeout; indexed migration fixes it (ADR0088).
+- Next: commit/check A2–A5, then B1 pinned Jan study; M1/M2 remain pending.
+- No native installer, desktop performance acceptance or whole-product security claim.
 
-- Slice: M0 legacy UI retirement on jan-style; ADR0084 and ADR0085.
-- Archive tag: pre-pivot-2026-10-20 -> 1bee37bc777318b1913aac0a95eb9315e29cfa05.
-- Fresh before-change baseline: source187, Rust70/38 denial probes, web95,
-  all19 old implemented-feature smoke stages PASS.
-- Retired1017 tracked paths, each archived Git-blob SHA256 in legacy-ui-removal.json.
-  Website/docs HTML, old shell, reference/mock bridge, themes/assets and their
-  fidelity/browser gates are gone. Eleven first-party modules remain as a dev library.
-- Rechecked: source183, Rust70/38 probes, web45, types/build PASS, npm audit0.
-  Test reductions are explicit ADR0085 scope changes; numeric budgets unchanged.
-- Real smoke: all8 stages PASS: chat, RAG, file ASR/TTS, tickets, purge safety,
-  12 journey readiness checks, and real retired-route/browser Markdown safety.
-  Full journey acceptance remains false. Supervision checks: zero surviving children.
-- Red contracts preserved: old root returned200 instead of404; old runtime bundle
-  included web assets. Both fixed without weakening assertions.
-- React19.1.1 and React DOM license exact bytes verified at upstream source;
-  remaining dependency admission gates pass; no Jan code or MPL exception introduced.
-- Old ignored upstream environment/dist and67 untracked UI result files quarantined
-  locally under .sanctum/retired/2026-10-20; unrelated user files preserved.
-- Main remains a1342cdb3a8b06b74b61e79954740a39e36b3d7b (remote observed).
-  Main run39053995599 was re-observed completed/success, all5 jobs.
-- Retirement commit906a25335bff44f26e579f687a4228b01ec16f3c: hosted run39385330454
-  completed/success, all5 jobs. Raw pivot-removal-hosted-ci.json. A documentation
-  receipt commit requires its own final observation; see the final slice report.
-- M1 next: pin/study Jan, verify LICENSE/NOTICE, choose shell/MPL policy and record
-  packs/settings/permissions/egress/assurance architecture. M2–M12 remain PENDING.
-- No replacement app UI, native installer, native performance acceptance or full
-  product security claim. PERFORMANCE.md retains scoped legacy measurements only.
-
-## Commands and evidence
-
-`bash tools/run_source_gate.sh evals/results/pivot-removal-source-final.log`: PASS183.
-`bash tools/check_rust.sh`: PASS70/38, pivot-removal-rust-attempt1.log.
-`npm test --prefix apps/web`: PASS45, pivot-removal-web-final.log.
-`npm run typecheck --prefix apps/web`; `npm run build --prefix apps/web`: PASS.
-`npm audit --prefix apps/web --json`: zero, pivot-removal-audit.json.
-Provisioned README environment, then `bash tools/smoke_all.sh`: PASS8,
-pivot-removal-smoke-attempt1.log and pivot-removal-smoke-all-reference.json.
-All are development checks, not full owner journey acceptance. Current smoke
-scope is in docs/contracts/smoke-all-v1.md. No new desktop feature is exposed.
-
-## Preserved history
-
-ARCHIVE.md records exact prior STATUS/workflow/checklist SHA256 values and paths.
-Named baseline, expected red failures and post-change results use pivot-removal-*.
-Earlier UI-only evidence lives in the archive commits, not the active results tree.
+Evidence: [A2–A5 commands/results](A2_A5_EVIDENCE.md), [PERFORMANCE](PERFORMANCE.md), [test audit](TEST_REMOVAL_AUDIT.md),
+[module decisions](UI_MODULE_RETENTION.md), ADR0086/0087 and evals/results/a1-*.
+[Previous full STATUS](status-archive/2026-10-20-before-a2-a5.md), SHA256
+`d15ab35c3c79b880614b01a8087cd81a44892133b7f2418d9c069a29bdc95f50`.

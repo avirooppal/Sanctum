@@ -1,0 +1,47 @@
+[
+  {
+    "path": "apps/web/src/meeting.ts",
+    "archive_commit": "efe257d02915efee04ee124f5609d9692ba6276c",
+    "sha256": "39fa796cf1c91ce2f85611b05230abc8fb2027770188125af2cc812ba8bfa9ba"
+  },
+  {
+    "path": "apps/web/src/microphone.ts",
+    "archive_commit": "efe257d02915efee04ee124f5609d9692ba6276c",
+    "sha256": "9977857ac2100f803adbe15b52496ff4d433efb5773120c14607f234ac6af57f"
+  },
+  {
+    "path": "apps/web/src/pcm.ts",
+    "archive_commit": "efe257d02915efee04ee124f5609d9692ba6276c",
+    "sha256": "7110e9ab1cbcbaba46831f3e3385d9ae6ccf49da9608cd738f7345d3f424ad32"
+  },
+  {
+    "path": "apps/web/src/speech.ts",
+    "archive_commit": "efe257d02915efee04ee124f5609d9692ba6276c",
+    "sha256": "97f34d69f0def17faf262af240f27ec7f16a96937f54df9e54224c3fb07f15cd"
+  },
+  {
+    "path": "apps/web/src/capture-worklet.js",
+    "archive_commit": "efe257d02915efee04ee124f5609d9692ba6276c",
+    "sha256": "f513145cace3b839fd919700994bd9947aff188bfa5d03cfe004da07de5bdb34"
+  },
+  {
+    "path": "apps/web/tests/meeting.test.mjs",
+    "archive_commit": "efe257d02915efee04ee124f5609d9692ba6276c",
+    "sha256": "3415b7c77d78ad163c3db3fd451fd91bdc3a80de15b69658129f711493fa796a"
+  },
+  {
+    "path": "apps/web/tests/pcm.test.mjs",
+    "archive_commit": "efe257d02915efee04ee124f5609d9692ba6276c",
+    "sha256": "c9ee96ed20743e9365e280b74573afd21707f41b8e0ccb2b52ac68fee6f63d95"
+  },
+  {
+    "path": "apps/web/tests/speech.test.mjs",
+    "archive_commit": "efe257d02915efee04ee124f5609d9692ba6276c",
+    "sha256": "f4bd4bb6de85f01050665f63c3ee32bbe882ec7cef2e3e174fa7b29d12e45090"
+  },
+  {
+    "path": "apps/web/tests/worklet.test.mjs",
+    "archive_commit": "efe257d02915efee04ee124f5609d9692ba6276c",
+    "sha256": "88dde7ae6a66a4f075632a992bc393c9819981f8b9bd2edfac387cb62b90aedd"
+  }
+]

@@ -10,6 +10,7 @@ from pathlib import Path
 
 ROOT = Path(__file__).resolve().parents[1]
 STAGE_JOURNEYS = {
+    "retained_state": ["J3", "J11", "J12"],
     "chat": ["J2", "J3"],
     "rag": ["J4"],
     "file_asr": ["J5"],
@@ -83,6 +84,18 @@ def main():
     env = os.environ.copy()
     env["SANCTUM_BASE_URL"] = base
     stages = [
+        (
+            "retained_state",
+            [
+                sys.executable,
+                "evals/retained_state_http.py",
+                "--token-file",
+                str(token),
+                "--output",
+                str(directory / "smoke-retained-state.json"),
+            ],
+            None,
+        ),
         (
             "ui_salvage",
             [node, "evals/retired_ui.mjs", package, str(directory / "smoke-ui-salvage.json")],

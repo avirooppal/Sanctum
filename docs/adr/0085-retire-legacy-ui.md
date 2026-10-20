@@ -45,3 +45,10 @@ The archived commits retain old tracked results; unrelated user files are preser
 The unsigned runtime development-bundle helper remains, but no longer copies web
 assets. Its existing overwrite/path-safety test also rejects bundled apps/web.
 This helper is not a native desktop installer.
+
+## Named test-removal audit and follow-up
+
+See [TEST_REMOVAL_AUDIT](../TEST_REMOVAL_AUDIT.md) for every removed test/stage,
+feature/evidence mapping and187→183/95→45/19→8 count reconciliation. ADR0087
+records restored retained HTTP/dependency assertions and the subsequent dead-code
+removal. The original retirement was not lossless; the gaps are explicitly repaired.

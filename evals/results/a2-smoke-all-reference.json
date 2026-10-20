@@ -1,0 +1,71 @@
+{
+  "suite": "smoke-all-v1",
+  "scope": "currently_implemented",
+  "passed": [
+    "retained_state",
+    "ui_salvage",
+    "chat",
+    "rag",
+    "file_asr",
+    "file_tts",
+    "tickets",
+    "purge_safety",
+    "journey_readiness"
+  ],
+  "release_complete": false,
+  "pending_release_requirements": [
+    "desktop_ui_first_run_models_settings_tools_mcp_providers_packs_computer_use",
+    "websocket_voice_barge_in_diarization",
+    "vision",
+    "agents_approvals_ledger",
+    "lan_tls",
+    "fresh_clone_offline_bundle"
+  ],
+  "journey_support": {
+    "retained_state": [
+      "J3",
+      "J11",
+      "J12"
+    ],
+    "chat": [
+      "J2",
+      "J3"
+    ],
+    "rag": [
+      "J4"
+    ],
+    "file_asr": [
+      "J5"
+    ],
+    "file_tts": [
+      "J5"
+    ],
+    "tickets": [
+      "J5",
+      "J12"
+    ],
+    "purge_safety": [
+      "J11",
+      "J12"
+    ],
+    "journey_readiness": [
+      "J1",
+      "J2",
+      "J3",
+      "J4",
+      "J5",
+      "J6",
+      "J7",
+      "J8",
+      "J9",
+      "J10",
+      "J11",
+      "J12"
+    ],
+    "ui_salvage": [
+      "J3",
+      "J9"
+    ]
+  },
+  "full_journey_acceptance_verified": false
+}

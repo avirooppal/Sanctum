@@ -29,6 +29,9 @@ impl Store {
         connection.execute_batch(include_str!("../migrations/0002-user-preferences.sql"))?;
         connection.execute_batch(include_str!("../migrations/0003-session-pins.sql"))?;
         connection.execute_batch(include_str!("../migrations/0004-assistant-profiles.sql"))?;
+        connection.execute_batch(include_str!(
+            "../migrations/0005-turn-conversation-index.sql"
+        ))?;
         Ok(Self { connection })
     }
     pub fn save(

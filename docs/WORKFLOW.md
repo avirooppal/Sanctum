@@ -102,3 +102,7 @@ The existing journey runner checks twelve backend readiness contracts and report
 zero full journeys verified. `--require-verified` fails while these gaps remain.
 A–L additions (MCP, computer use, packs, providers and typed settings) are tracked
 in PLAN_COVERAGE.md and require new contracts and full acceptance before exposure.
+
+ADR0087: retained_state_http.py restores real HTTP sessions boundaries and owner
+state CRUD (J3/J11/J12) independently of the removed UI. It is supporting backend
+evidence, not full desktop acceptance; no click/key budget is changed.

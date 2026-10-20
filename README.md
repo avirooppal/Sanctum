@@ -77,11 +77,11 @@ Supply `SANCTUM_CONFIG`, `SANCTUM_TOKEN_FILE` (file path, never the key itself),
 `SANCTUM_AUDIO` (16kHz mono recorded WAV), `SANCTUM_PYTHON` (provisioned dev venv),
 `SANCTUM_NODE`, `SANCTUM_PLAYWRIGHT` (installed package path) and
 `SANCTUM_TTS_VOICE` (public voice ID from the configured TTS profile).
-The command runs real chat, cited RAG, file ASR/TTS, ticket admission, purge safety,
+The command runs real chat/history and profile HTTP CRUD, cited RAG, file ASR/TTS, ticket admission, purge safety,
 journey readiness, retired-route checks and isolated browser Markdown safety.
 
 This initial scope is not release acceptance: authenticated WebSocket voice and
 barge-in, diarization, vision, agents/ledger, LAN and fresh-clone offline bundles
 remain unfinished. The result names these gaps. `SANCTUM_RELEASE_GATE=1` refuses
 release success until they are implemented. Missing prerequisites fail the smoke;
-no configured stage is skipped. Scope amendment: ADR0085.
+no configured stage is skipped. Scope amendments: ADR0085/0087.

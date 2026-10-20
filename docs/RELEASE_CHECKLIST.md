@@ -8,7 +8,7 @@ archived with SHA256 in ARCHIVE.md. Main is not changed by this branch.
 |---|---|---|
 | Archive | Recorded | `git rev-parse 'pre-pivot-2026-10-20^{commit}'`: 1bee37bc777318b1913aac0a95eb9315e29cfa05 |
 | UI retirement | Implemented | ADR0085, docs/legacy-ui-removal.json; gateway refuses retired routes |
-| Retained runtime/library | Checks recorded in STATUS | Source/Rust/web tests and eight-stage real smoke; not desktop acceptance |
+| Retained runtime/library | Checks recorded in STATUS | Source/Rust/web tests and nine-stage real smoke (ADR0087); not desktop acceptance |
 | Native desktop metrics and enforced budgets | PENDING | PERFORMANCE.md contains legacy measurements only; M1/M2 must implement native runners |
 | Jan source/LICENSE/NOTICE; shell/MPL | PENDING M1 | No Jan adaptation or MPL exception admitted |
 | Providers, tools/MCP, computer use, packs | PENDING | Full contracts, safety, evaluation and journey evidence required |

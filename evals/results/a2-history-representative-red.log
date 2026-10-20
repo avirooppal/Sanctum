@@ -1,0 +1,19 @@
+   Compiling sanctum-gateway v0.1.0 (/mnt/c/Users/aviroop/Desktop/Sanctum/services/gateway)
+    Finished `test` profile [unoptimized + debuginfo] target(s) in 19.00s
+     Running tests/sessions.rs (target/debug/deps/sessions-8c257fe3d7a55986)
+
+running 1 test
+
+thread 'populated_history_search_fits_existing_metadata_deadline' (1546) panicked at services/gateway/tests/sessions.rs:42:9:
+history search exceeded existing 10-second metadata deadline: 29.656910603s
+note: run with `RUST_BACKTRACE=1` environment variable to display a backtrace
+test populated_history_search_fits_existing_metadata_deadline ... FAILED
+
+failures:
+
+failures:
+    populated_history_search_fits_existing_metadata_deadline
+
+test result: FAILED. 0 passed; 1 failed; 0 ignored; 0 measured; 9 filtered out; finished in 29.94s
+
+error: test failed, to rerun pass `-p sanctum-gateway --test sessions`

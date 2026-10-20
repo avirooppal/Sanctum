@@ -16,3 +16,5 @@ Prior WORKFLOW.md: `docs/status-archive/2026-10-20-pre-retirement-workflow.md`, 
 Prior WORKFLOW_GAPS.md: `docs/status-archive/2026-10-20-pre-retirement-workflow_gaps.md`, SHA256 `6aeb305f69e31195e28bff24855a6e98c020fbd6b2a2c14b916ef2103c0bfa84`.
 
 Prior RELEASE_CHECKLIST: `docs/status-archive/2026-10-20-pre-retirement-release-checklist.md`, SHA256 `0e01ec297d489a0ae602214024aa36ea341d316f8520b476f940f54156370d4e`.
+
+A4 full prior STATUS: `docs/status-archive/2026-10-20-before-a2-a5.md`, SHA256 `d15ab35c3c79b880614b01a8087cd81a44892133b7f2418d9c069a29bdc95f50`.

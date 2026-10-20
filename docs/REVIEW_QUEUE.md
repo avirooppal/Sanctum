@@ -1,5 +1,10 @@
 # Decision review queue
 
+| ADR | Decision | Scope effect | Owner review |
+|---|---|---|---|
+| [0087](adr/0087-retirement-test-audit-and-dead-code.md) | Restore retained HTTP and dependency-boundary assertions; remove5 frontend audio helpers used only by M8 | Web45→34 (11 dead-helper tests removed), smoke8→9 (real HTTP restoration); backend gates unchanged | Adopted under explicit A2/A3 direction; no numeric relaxation |
+| [0087](adr/0087-retirement-test-audit-and-dead-code.md) | When jan-style merges to main | PROVISIONAL recommendation: keep main as pre-pivot snapshot until a usable M3 desktop app exists | Owner decides; do not merge main in this work |
+
 | ADR | Decision | Effect | Review |
 |---|---|---|---|
 | [0086](adr/0086-repeatable-runtime-baselines.md) | Five-run reference protocol,60-second idle samples; fresh processes with OS caches intact | No performance budgets;240s startup/5s health/10s shutdown harness bounds preserve failed evidence | Compare scoped gateway and mandatory chat+embedding numbers; Windows values unavailable until a native runtime exists |
@@ -293,3 +298,5 @@ section captures inspected at readable resolution. Long mobile element captures
 can show a fixed skip-link screenshot artifact;separate actual viewport check
 observed focus=false and its bottom above0(landing-skip-diagnostic.log). No
 global accessibility/INP/pixel-fidelity/full-roadmap/release pass is claimed.
+
+- ADR0088: retained history search exceeded the unchanged metadata deadline on populated history; add conversation index and a 4,000-session regression. Preserve the failed A2 run. Corrective scope, no threshold relaxation.

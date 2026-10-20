@@ -1,4 +1,9 @@
-# UI reuse provenance — ADR0085
+# UI reuse provenance — ADR0085/0087
+
+A3 current boundary: six modules with named M3 consumers remain. Five audio/meeting
+helpers with only M8 use were removed with11 dedicated tests. See
+UI_MODULE_RETENTION.md and a3-dead-code-removal.json for paths/hashes. The review
+below describes the earlier eleven-module salvage, now narrowed by ADR0087.
 
 No Jan source, marks or assets have been introduced. Pinned study and license/NOTICE
 verification are PENDING M1. The Hermes shell, palettes, fonts, artwork, reference

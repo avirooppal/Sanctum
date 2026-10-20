@@ -1,0 +1,18 @@
+import sqlite3
+import time
+
+path = "/home/aviroop/.local/share/sanctum-dispatch-smoke/sanctum.sqlite3"
+connection = sqlite3.connect("file:" + path + "?mode=ro", uri=True)
+print({t: connection.execute("select count(*) from " + t).fetchone()[0]
+       for t in ["conversations", "turns"]})
+print(connection.execute("pragma index_list(turns)").fetchall())
+started = time.monotonic()
+connection.set_progress_handler(lambda: time.monotonic() - started > 15, 10000)
+try:
+    print(connection.execute(
+        "select count(*) from conversations c where exists("
+        "select 1 from turns tr where tr.conversation=c.id "
+        "and instr(tr.request,'audit-probe-absent')>0)").fetchone())
+except Exception as error:
+    print(type(error).__name__, str(error))
+print("seconds", time.monotonic() - started)

@@ -5,14 +5,14 @@
 Current authority: plan.md pivot amendment and ADR0084. Historical rows below are
 not acceptance evidence for rewritten desktop behavior. Website/Hermes product,
 reference-fidelity and conflicting stack/roadmap requirements are
-**SUPERSEDED (ADR-0084)**; their working-tree removal is still pending.
+**SUPERSEDED (ADR-0084)**; working-tree retirement is recorded in ADR0085.
 
 | Pivot scope | Status | Evidence / remaining work |
 |---|---|---|
 | M0 baseline, archive tag, ADR, amendment | Partial | 184 source/70 Rust/95 web, 38 denial probes, audit0, 19-stage smoke rerun; named pivot-m0-baseline evidence; archive tag pushed; decision/docs recorded |
 | M0 A1 runtime reference baselines | RECORDED, WSL only | Five no-model and five chat+embedding starts per clean revision;60s idle samples, size inventories, medians/spreads; ADR0086 and PERFORMANCE Baselines; native Windows unavailable |
 | M0 full desktop measurements | PENDING | Legacy JS101141B gzip/web2139977B measured; native install/no-model RSS/cold UI/CPU unavailable; PERFORMANCE.md |
-| M0 removals and reviewed salvage | VERIFIED retirement only | ADR0085; 1017 removed tracked paths in SHA256 inventory; 11 first-party modules retained; real-route/renderer checks; no app UI |
+| M0 removals and reviewed salvage | VERIFIED retirement only | ADR0085; 1017 removed tracked paths in SHA256 inventory; initial11 narrowed to6 M3 modules by ADR0087; restored HTTP coverage; no app UI |
 | M1 Jan study and architecture ADRs | PENDING | Pin, license/NOTICE, shell/MPL, packs/settings/permissions/egress/assurance decisions not verified |
 | A / M3 chat and threads | PENDING | Existing legacy chat/history tests are scoped reuse evidence only; new desktop journeys absent |
 | B / M5 assistants | PENDING | New contract and journey required |

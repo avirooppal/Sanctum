@@ -1,0 +1,13 @@
+{
+  "suite": "retained-state-http",
+  "passed": [
+    "session_auth",
+    "session_unknown_field",
+    "session_missing",
+    "session_body_limit",
+    "real_chat_saved"
+  ],
+  "full_journey_verified": false,
+  "status": "FAIL",
+  "error_type": "TimeoutError"
+}

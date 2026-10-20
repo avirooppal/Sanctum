@@ -1,0 +1,46 @@
+
+> sanctum-ui-reuse@0.1.0 test
+> tsc --outDir build/tests --noEmit false --module NodeNext --moduleResolution NodeNext && node --test tests/*.test.mjs
+
+✔ Knowledge uses authenticated fixed paths and owner-only restricted uploads (93.7904ms)
+✔ Knowledge validates answers and rejects unsupported uploads before sending (2.5675ms)
+✔ default fetch retains the Window/global receiver (1.9065ms)
+✔ fixed same-origin requests omit cookies, reject redirects and never retry (2.5309ms)
+✔ models are validated and conversation IDs cannot change origin or path structure (3.6375ms)
+✔ stream decodes split Unicode and SSE lines without fabricated text (7.2235ms)
+✔ consumer cancellation releases stream and ignored fetch abort cannot yield stale text (1.6609ms)
+✔ ticket is in subprotocol only and abort closes the socket (2.1771ms)
+✔ invalid ticket and cancellation after ticket never open a socket (5.823ms)
+✔ abort while waiting for a stalled stream releases the reader (17.5355ms)
+✔ session management uses owner-authenticated fixed paths and validates pages (2.4288ms)
+✔ session mutations never retry and malformed lists are rejected (1.2839ms)
+✔ capabilities and preferences endpoints validate payload and authenticate owner (1.5455ms)
+✔ profiles and full purge endpoints authenticate owner and reject invalid payloads (2.2656ms)
+✔ stop aborts the admitted run, suppresses late output and never retries (11.372ms)
+✔ overlapping starts are refused; an explicit next run has a fresh signal (2.1642ms)
+✔ abort rejection is stopped but real engine failures are preserved (0.6931ms)
+✔ bounded same-origin read omits credentials and retains only parsed health (61.6148ms)
+✔ failed,invalid,redirected and oversized responses become unknown (4.7345ms)
+✔ real observer deadline aborts a stalled transport (5007.6665ms)
+✔ sanitizeUrl allows safe http, https, and hash links (1.4092ms)
+✔ sanitizeUrl blocks javascript:, data:, and malicious protocol injection (0.3787ms)
+✔ parseMarkdownBlocks isolates code blocks from paragraphs (0.4799ms)
+✔ parseMarkdownBlocks handles unclosed code fence without crashing (0.2615ms)
+✔ SafeMarkdown renders without throwing and escapes dangerous html elements (62.5898ms)
+✔ SafeMarkdown renders code block with language label, copy button, and citation chips (4.8773ms)
+✔ retired product entrypoints and reference environment cannot return (2.0785ms)
+✔ retained sources cannot import the old reference environment (3.8502ms)
+✔ every archived UI-only path is absent from the active checkout (56.5521ms)
+✔ privacy badge cannot turn absent or partial health into egress-history proof (1.9422ms)
+✔ unknown provider errors cannot leak raw content and busy errors retain metadata (1.0973ms)
+✔ workspace metadata is sequential and publishes only real capabilities (3.3997ms)
+✔ failed discovery cannot fall back to enabled capabilities (1.2559ms)
+✔ cancellation between steps stops subsequent metadata requests (0.5835ms)
+ℹ tests 34
+ℹ suites 0
+ℹ pass 34
+ℹ fail 0
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 5308.2754

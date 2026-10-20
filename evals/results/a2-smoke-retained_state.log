@@ -1,0 +1,1 @@
+{"suite": "retained-state-http", "passed": ["session_auth", "session_unknown_field", "session_missing", "session_body_limit", "real_chat_saved", "rename", "search", "title_preserved_as_data", "legacy_turns_deleted", "profile_create_read_update_delete"], "full_journey_verified": false, "status": "PASS"}
