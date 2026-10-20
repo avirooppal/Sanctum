@@ -31,3 +31,7 @@ The library is rechecked with TypeScript, unit tests, production library build,
 license/secret gates and a real Chromium Markdown injection check. The runtime
 retirement test additionally checks real 404 responses, health and API authentication.
 This does not verify a desktop experience, pack lifecycle, tool host or egress broker.
+
+## B1 Jan source study
+
+ADR0089 and docs/design/JAN_STUDY.md pin e7cbcf6d232f331313fd646b9131793ab2c5dc5c. Adapted source/asset inventory: empty. Only exact license evidence was copied to docs/licenses; fresh Sanctum implementation is recommended. Any future adaptation needs a new ADR/provenance row before copying.

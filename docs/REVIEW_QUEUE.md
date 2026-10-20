@@ -2,6 +2,10 @@
 
 | ADR | Decision | Scope effect | Owner review |
 |---|---|---|---|
+| [0089](adr/0089-jan-study-and-fresh-implementation.md) | Jan source study, pinned Apache declaration/full text and NOTICE absence; original Sanctum components | No code/assets adapted; retain verified Sanctum runtime; B2/B3 experiments still required | PROVISIONAL: proceed fresh; no Jan source copying approved |
+
+| ADR | Decision | Scope effect | Owner review |
+|---|---|---|---|
 | [0087](adr/0087-retirement-test-audit-and-dead-code.md) | Restore retained HTTP and dependency-boundary assertions; remove5 frontend audio helpers used only by M8 | Web45→34 (11 dead-helper tests removed), smoke8→9 (real HTTP restoration); backend gates unchanged | Adopted under explicit A2/A3 direction; no numeric relaxation |
 | [0087](adr/0087-retirement-test-audit-and-dead-code.md) | When jan-style merges to main | PROVISIONAL recommendation: keep main as pre-pivot snapshot until a usable M3 desktop app exists | Owner decides; do not merge main in this work |
 

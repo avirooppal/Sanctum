@@ -48,3 +48,8 @@ AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
 LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 SOFTWARE.
+
+## Jan development reference (ADR0089)
+
+Jan source at e7cbcf6d232f331313fd646b9131793ab2c5dc5c was studied; no source or assets were adapted into Sanctum. Copyright 2025 Menlo Research. Its exact Apache-2.0 declaration is preserved in docs/licenses/jan-e7cbcf6-LICENSE.txt; the full primary license is docs/licenses/Apache-2.0-primary.txt. No NOTICE file exists in the pinned tracked tree. See docs/design/JAN_STUDY.md for hashes and obligations. Jan names and logos are not Sanctum branding.
+

@@ -9,7 +9,8 @@
 - A5: PROVISIONAL recommendation—do not merge before a usable M3 desktop exists.
 - A2–A5 local gates pass:188 source/71 Rust/34 web,38 denial probes,9 smoke stages.
 - Restored HTTP test found a history timeout; indexed migration fixes it (ADR0088).
-- Next: commit/check A2–A5, then B1 pinned Jan study; M1/M2 remain pending.
+- A2–A5 head37c9981: hosted run39401230501 completed/success, all5 jobs.
+- B1: pinned Jan source/license study recorded; B2–B7/M2 remain pending.
 - No native installer, desktop performance acceptance or whole-product security claim.
 
 Evidence: [A2–A5 commands/results](A2_A5_EVIDENCE.md), [PERFORMANCE](PERFORMANCE.md), [test audit](TEST_REMOVAL_AUDIT.md),
