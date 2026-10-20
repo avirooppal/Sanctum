@@ -1,0 +1,84 @@
+Traceback (most recent call last):
+  File "C:\Users\aviroop\Desktop\Sanctum\.sanctum\windows-workflow-venv\Lib\site-packages\httpx2\_transports\default.py", line 98, in map_httpcore_exceptions
+    yield
+  File "C:\Users\aviroop\Desktop\Sanctum\.sanctum\windows-workflow-venv\Lib\site-packages\httpx2\_transports\default.py", line 245, in handle_request
+    resp = self._pool.handle_request(req)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\aviroop\Desktop\Sanctum\.sanctum\windows-workflow-venv\Lib\site-packages\httpcore2\_sync\connection_pool.py", line 242, in handle_request
+    raise exc from None
+  File "C:\Users\aviroop\Desktop\Sanctum\.sanctum\windows-workflow-venv\Lib\site-packages\httpcore2\_sync\connection_pool.py", line 224, in handle_request
+    response = connection.handle_request(pool_request.request)
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\aviroop\Desktop\Sanctum\.sanctum\windows-workflow-venv\Lib\site-packages\httpcore2\_sync\connection.py", line 94, in handle_request
+    raise exc
+  File "C:\Users\aviroop\Desktop\Sanctum\.sanctum\windows-workflow-venv\Lib\site-packages\httpcore2\_sync\connection.py", line 74, in handle_request
+    stream = self._connect(request)
+             ^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\aviroop\Desktop\Sanctum\.sanctum\windows-workflow-venv\Lib\site-packages\httpcore2\_sync\connection.py", line 117, in _connect
+    stream = self._network_backend.connect_tcp(**kwargs)
+             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\aviroop\Desktop\Sanctum\.sanctum\windows-workflow-venv\Lib\site-packages\httpcore2\_backends\sync.py", line 203, in connect_tcp
+    with map_exceptions(exc_map):
+         ^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\aviroop\AppData\Roaming\uv\python\cpython-3.12-windows-x86_64-none\Lib\contextlib.py", line 158, in __exit__
+    self.gen.throw(value)
+  File "C:\Users\aviroop\Desktop\Sanctum\.sanctum\windows-workflow-venv\Lib\site-packages\httpcore2\_exceptions.py", line 17, in map_exceptions
+    raise to_exc(exc) from exc
+httpcore2.ConnectError: [WinError 10061] No connection could be made because the target machine actively refused it
+
+The above exception was the direct cause of the following exception:
+
+Traceback (most recent call last):
+  File "C:\Users\aviroop\Desktop\Sanctum\.sanctum\windows-workflow-venv\Lib\site-packages\openai\_base_client.py", line 1148, in request
+    response = self._send_request(
+               ^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\aviroop\Desktop\Sanctum\.sanctum\windows-workflow-venv\Lib\site-packages\openai\_client.py", line 609, in _send_request
+    response = self._send_with_auth_retry(request, stream=stream, **kwargs)
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\aviroop\Desktop\Sanctum\.sanctum\windows-workflow-venv\Lib\site-packages\openai\_client.py", line 588, in _send_with_auth_retry
+    response = super()._send_request(request, stream=stream, **kwargs)
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\aviroop\Desktop\Sanctum\.sanctum\windows-workflow-venv\Lib\site-packages\openai\_base_client.py", line 1069, in _send_request
+    return self._client.send(request, stream=stream, **kwargs)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\aviroop\Desktop\Sanctum\.sanctum\windows-workflow-venv\Lib\site-packages\httpx2\_client.py", line 980, in send
+    response = self._send_handling_auth(
+               ^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\aviroop\Desktop\Sanctum\.sanctum\windows-workflow-venv\Lib\site-packages\httpx2\_client.py", line 1008, in _send_handling_auth
+    response = self._send_handling_redirects(
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\aviroop\Desktop\Sanctum\.sanctum\windows-workflow-venv\Lib\site-packages\httpx2\_client.py", line 1043, in _send_handling_redirects
+    response = self._send_single_request(request)
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\aviroop\Desktop\Sanctum\.sanctum\windows-workflow-venv\Lib\site-packages\httpx2\_client.py", line 1076, in _send_single_request
+    response = transport.handle_request(request)
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\aviroop\Desktop\Sanctum\.sanctum\windows-workflow-venv\Lib\site-packages\httpx2\_transports\default.py", line 244, in handle_request
+    with map_httpcore_exceptions():
+         ^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\aviroop\AppData\Roaming\uv\python\cpython-3.12-windows-x86_64-none\Lib\contextlib.py", line 158, in __exit__
+    self.gen.throw(value)
+  File "C:\Users\aviroop\Desktop\Sanctum\.sanctum\windows-workflow-venv\Lib\site-packages\httpx2\_transports\default.py", line 115, in map_httpcore_exceptions
+    raise mapped_exc(message) from exc
+httpx2.ConnectError: [WinError 10061] No connection could be made because the target machine actively refused it
+
+The above exception was the direct cause of the following exception:
+
+Traceback (most recent call last):
+  File "C:\Users\aviroop\Desktop\Sanctum\evals\sdk_chat.py", line 149, in <module>
+    main()
+  File "C:\Users\aviroop\Desktop\Sanctum\evals\sdk_chat.py", line 41, in main
+    assert {m.id for m in client.models.list()} == {model, embed}
+                          ^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\aviroop\Desktop\Sanctum\.sanctum\windows-workflow-venv\Lib\site-packages\openai\resources\models.py", line 95, in list
+    return self._get_api_list(
+           ^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\aviroop\Desktop\Sanctum\.sanctum\windows-workflow-venv\Lib\site-packages\openai\_base_client.py", line 1526, in get_api_list
+    return self._request_api_list(model, page, opts)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\aviroop\Desktop\Sanctum\.sanctum\windows-workflow-venv\Lib\site-packages\openai\_base_client.py", line 1325, in _request_api_list
+    return self.request(page, options, stream=False)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\aviroop\Desktop\Sanctum\.sanctum\windows-workflow-venv\Lib\site-packages\openai\_base_client.py", line 1183, in request
+    raise APIConnectionError(request=request) from err
+openai.APIConnectionError: Connection error.

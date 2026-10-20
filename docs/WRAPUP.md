@@ -1,3 +1,8 @@
+> Pivot precedence (2026-10-20): the previous freeze, Hermes-first order and
+> conflicting delivery choices are SUPERSEDED (ADR-0084). Follow plan.md's pivot
+> amendment. Preserve applicable Phase 6 encryption/lock/backup requirements
+> and all honesty/verification rules. The original directive follows unchanged.
+
 FINAL WRAP-UP DIRECTIVE — SANCTUM
 
 Authority: docs/MISSION.md (including Amendment 1), plan.md, ADR 0027 (single-user scope) and every earlier rule remain in force. This directive sets the order, the freeze, and the exit conditions. Save it verbatim as docs/WRAPUP.md and commit it. After any context reset, re-read plan.md, docs/MISSION.md, docs/WRAPUP.md and docs/STATUS.md, check out the last green commit, run the baseline, and resume.

@@ -1,3 +1,93 @@
+# Pivot amendment — Sanctum Desktop (2026-10-20)
+
+[ADR-0084: pivot-to-jan-style-app](docs/adr/0084-pivot-to-jan-style-app.md)
+records the owner's replacement product direction. This amendment overrides
+conflicting original plan, MISSION, WRAPUP, website, design and Hermes directives.
+The old text below stays visible; its conflicting product/stack/roadmap choices
+are **SUPERSEDED (ADR-0084)**. Honesty, provenance, containment, regression,
+license verification and exact-head hosted-CI requirements remain binding.
+
+Build a small local-first native desktop app inspired by Jan's category and
+interaction patterns, without its marks. Left sidebar: new chat, search, threads,
+Chat/Models/Assistants/Tools/Settings; center chat; collapsible thread-settings
+drawer. No public website, docs site, marketing UI or Hermes reference port.
+Core: Rust shell/gateway, supervised llama.cpp workers and SQLite; no Electron
+or Python runtime in the core. Knowledge, speech and vision are optional packs.
+No telemetry, update pings or automatic local/cloud fallback.
+
+All network use must be explicit, feature-allowlisted through one egress broker,
+and recorded in the readable hash-chained ledger. All tool/computer actions must
+use the permission broker. Unsupported enforcement fails closed with an honest
+platform explanation. Settings cannot be changed by the acting agent.
+
+| ID | Required desktop scope; VERIFIED only by its passing journey |
+|---|---|
+| A | Search/pin/rename threads; delete with real undo; JSON/Markdown import/export; streaming Stop/regenerate/edit/branch; pack-gated attachments/citations; optional auto-title; per-thread overrides; real token/context numbers or unknown |
+| B | Assistants with prompt/model/parameters/tools/permissions/knowledge/starters; duplicate and JSON import/export |
+| C | GGUF import/list/delete/hash/metadata/license; explicit brokered HF/custom download with progress/cancel/resume/disk/hash checks; detected/manual CPU/Vulkan/CUDA/Metal backends, version rollback; full per-model load and request sampling/schema/grammar settings; keep-alive/unload; memory-budgeted multiple models; hardware/load/tokens-per-second/fit information and low-memory warnings |
+| D | Cloud providers disabled by default; explicit warning and verified policy; OS-keychain/env secrets; Cloud badge; no fallback; per-thread permission for restricted content, attachments/screenshots/computer traffic; metadata ledger, content opt-in; UI/CLI kill switch |
+| E | Runtime-toggle local OpenAI-compatible API with streaming/embeddings/tools; configurable port/auth/CORS/auto-load/logs; loopback default; explicit LAN requires TLS and key |
+| F | Parallel/streaming function calls; schema-constrained arguments when supported, otherwise one visible repair; time/step/token/loop limits; result cards; Deny/Ask/thread/Always permissions bound to exact arguments; tainted content needs fresh side-effect approval |
+| G | Individually controlled folder-granted read/write with traversal/symlink defenses, sandboxed code, brokered allowlisted web/search, pack-gated knowledge, notes/clock/calculator; sandbox shell default, host shell risk opt-in and approval every command |
+| H | MCP stdio/streamable HTTP manager, lifecycle/logs/schema/config import/export, server/tool permissions, keychain env secrets, hashed pinned manifests/change disable/reapproval and collision handling; separate extension processes, data-only themes/presets |
+| I | Local-VLM computer use: screenshots, window listing, pointer/keys/type/wait; disposable sandbox desktop default; host mode opt-in task/scope/step/time limits, preview/approval or time-boxed autopilot, persistent banner/global kill/user-input pause, local screenshot retention, secret-field blocking where detectable; screen taint and destructive-action approval, action ledger/thumbnails/replay, OS permissions/fail-closed; 20–30 real sandbox tasks and model-level success/steps/time/unsafe-attempt reports; experimental until justified |
+| J | One typed settings schema: key/type/default/scope/description/validation/risk/restart; generated searchable UI with modified/reset/live preview/import/export, human-editable disk config, config get/set/list CLI and env overrides; safe corrupt-config fallback; all requested General/Appearance/Models/Assistants/Tools/MCP/Computer Use/Providers/API/Hardware/Packs/Privacy/Data/Shortcuts/Advanced/About sections |
+| K | Optional on-demand or offline-imported Knowledge/speech/vision packs with verified reuse, lazy load/idle unload, individual size/RAM budgets and needs-X-MB prompt; pack UI only when installed |
+| L | User-chosen SQLite/plain-file data directory; later encryption/lock per WRAPUP Phase 6; typed-confirmation purge, backup/restore, no telemetry/pings; only user-chosen verified updates, opt-in checks through broker/ledger |
+
+Model controls include context/GPU layers/threads/batch/ubatch/flash attention,
+KV types/mmap/mlock/rope/template and temperature/top_p/top_k/min_p/penalties,
+mirostat/seed/stops/max tokens/schema/grammar. Appearance includes data-only tokens,
+light/dark/system, AA-guarded accent, bundled fonts/density/scale/layout/message/
+code style/motion. Shortcuts are rebindable with conflict detection; raw engine
+flags use a validated allowlist. Do not replace these with placeholder controls.
+
+Security acceptance retains Linux kernel containment and adds tested Windows
+helper egress rules and macOS sandbox enforcement; report only the assurance
+actually proven. Keep injection/exfiltration/MCP rug-pull/shadowing/escape/resource/
+approval replay/budget/ledger/secret/computer-abuse tests with zero critical bypasses.
+Publish per-model function-call and computer-use quality numbers, never estimates
+as results. Cloud CI fixtures use loopback fake providers and no real keys.
+
+UX acceptance: keyboard-first, command palette, under-five-minute first run,
+progress/cancel, real undo/errors, WCAG 2.2 AA/reduced motion/200% zoom/window sizes;
+wireframes and at least two screenshot critique iterations per major screen.
+Packaging: native Windows installer, Linux deb/AppImage only if tested, macOS
+UNVERIFIED without a Mac; portable mode, entries/tray/autostart, data-preserving
+uninstall choice, SHA256SUMS/detached signature/SBOM and verified updates. Produce
+dist and a workflow draft, no GitHub release. Clean-install/run every claimed
+artifact; unavailable evidence stays UNVERIFIED with owner commands.
+
+| Milestone | Order and acceptance |
+|---|---|
+| M0 | Baseline and measurements, archive tag, ADR/amendment, removal/salvage review, coverage/checklist/status archive |
+| M1 | Pinned Jan study, original principles-only research with source licenses; shell/MPL/pack/settings/permission/egress/assurance ADRs |
+| M2 | Rust desktop core, worker supervision/SQLite and enforced measured budgets |
+| M3 | New UI, threads/chat/models/engine settings and first run |
+| M4 | Typed settings and customization |
+| M5 | Assistants |
+| M6 | Local API |
+| M7 | Permission broker, function calls, built-ins and MCP |
+| M8 | Optional packs |
+| M9 | Optional providers, egress broker and ledger |
+| M10 | Experimental sandbox computer use, then host controls |
+| M11 | Per-OS assurance, security evaluation and packaging |
+| M12 | Fresh-machine journeys, performance/coverage audit, truthful handoff and exact-head hosted CI |
+
+Each slice: contracts/tests first, real run and journey, regression, evidence/docs,
+commit/push and poll hosted CI to completed on the exact SHA. No test deletion,
+threshold/scope change or timeout relaxation without ADR plus REVIEW_QUEUE entry.
+Preserve failed runs. Unproven features stay hidden and PENDING; old tests do not
+automatically verify rewritten components. Keep main green.
+
+Current checkpoint: baseline/decision work only. M0 removals and M1–M12 remain
+pending; [PERFORMANCE](docs/PERFORMANCE.md) distinguishes measured legacy numbers
+from unavailable desktop measurements. No whole-product completion is claimed.
+
+---
+
+# Historical plan — conflicting choices SUPERSEDED (ADR-0084)
+
 # Sanctum — Local Private AI Platform (working name)
 
 ## Scope amendment — single-user edition
@@ -83,7 +173,7 @@ Nobody ships **all of it as one coherent, verifiable-private, hardware-adaptive 
 
 ---
 
-## 5. Architecture
+## 5. Architecture — SUPERSEDED (ADR-0084)
 
 ```
                          ┌────────────────────────────────────────────┐
@@ -240,7 +330,7 @@ UX rule: show a **"will it fit / how fast"** estimate before downloading any mod
 
 ---
 
-## 9. Tech stack (opinionated defaults)
+## 9. Tech stack (opinionated defaults) — SUPERSEDED (ADR-0084)
 
 | Concern | Choice | Why / alternative |
 |---|---|---|
@@ -259,7 +349,7 @@ UX rule: show a **"will it fit / how fast"** estimate before downloading any mod
 
 ---
 
-## 10. Roadmap
+## 10. Roadmap — SUPERSEDED (ADR-0084)
 
 Time estimates assume one strong full-stack builder working steadily; compress by cutting scope, not quality gates.
 
@@ -399,7 +489,7 @@ sanctum/
 
 ---
 
-## 16. First 10 days (concrete start)
+## 16. First 10 days (concrete start) — SUPERSEDED (ADR-0084)
 
 1. Day 1-2: repo + CI; write `sanctum doctor` (hardware detection) and the model registry schema.
 2. Day 3-4: llama.cpp adapter + OpenAI-compatible `/v1/chat/completions` with streaming; test with the official OpenAI SDK.

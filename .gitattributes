@@ -80,3 +80,6 @@ docs/status-archive/2026-10-18-before-liquid-landing.md -text whitespace=cr-at-e
 evals/results/landing-*.log whitespace=-blank-at-eof,-blank-at-eol
 apps/web/public/licenses/fonts/instrument-serif-OFL.txt -text whitespace=cr-at-eol,-blank-at-eof,-blank-at-eol
 apps/web/public/fonts/instrument-serif/OFL.txt -text whitespace=cr-at-eol,-blank-at-eof,-blank-at-eol
+# ADR0042/0057: preserve exact status archive and raw pivot console evidence.
+docs/status-archive/2026-10-20-pre-pivot.md -text whitespace=cr-at-eol,-blank-at-eof
+evals/results/pivot-m0-*.log whitespace=-blank-at-eof,-blank-at-eol

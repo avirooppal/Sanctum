@@ -1,5 +1,34 @@
 # Plan coverage — current conservative audit
 
+## Pivot coverage amendment, 2026-10-20
+
+Current authority: plan.md pivot amendment and ADR0084. Historical rows below are
+not acceptance evidence for rewritten desktop behavior. Website/Hermes product,
+reference-fidelity and conflicting stack/roadmap requirements are
+**SUPERSEDED (ADR-0084)**; their working-tree removal is still pending.
+
+| Pivot scope | Status | Evidence / remaining work |
+|---|---|---|
+| M0 baseline, archive tag, ADR, amendment | Partial | 184 source/70 Rust/95 web, 38 denial probes, audit0, 19-stage smoke rerun; named pivot-m0-baseline evidence; archive tag pushed; decision/docs recorded |
+| M0 full desktop measurements | PENDING | Legacy JS101141B gzip/web2139977B measured; native install/no-model RSS/cold UI/CPU unavailable; PERFORMANCE.md |
+| M0 removals and reviewed salvage | PENDING | Website/docs/Hermes work still exists; ARCHIVE.md records tag, not removal |
+| M1 Jan study and architecture ADRs | PENDING | Pin, license/NOTICE, shell/MPL, packs/settings/permissions/egress/assurance decisions not verified |
+| A / M3 chat and threads | PENDING | Existing legacy chat/history tests are scoped reuse evidence only; new desktop journeys absent |
+| B / M5 assistants | PENDING | New contract and journey required |
+| C / M2–M3 models and engines | PENDING | Retained Rust supervision/inference checks do not verify full model manager or native core |
+| D / M9 optional providers | PENDING | Egress, keychain, per-thread data consent, policies, ledger and kill-switch journeys required |
+| E / M6 local API | PENDING | Existing SDK smoke is partial reuse evidence; configurable native server acceptance absent |
+| F–H / M7 tools, permissions, built-ins, MCP | PENDING | Full permission/taint/schema/budget/manifest/change-detection journeys absent |
+| I / M10 computer use | PENDING | Sandbox/host safety controls and local-model evaluation suite absent |
+| J / M4 settings | PENDING | Single typed schema and full UI/CLI/config round-trip journeys absent |
+| K / M8 packs | PENDING | Existing RAG/file speech checks do not verify optional pack lifecycle or full modalities |
+| L / M9–M11 data/privacy | PENDING | Ledger, consent, encryption/lock, purge and verified-update acceptance absent |
+| M11 assurance/security/packaging | PENDING | Native egress tests, red-team/task-quality tables, fresh installed artifacts and signatures absent |
+| M12 acceptance | PENDING | Fresh-machine journeys, enforced budgets and final coverage/handoff not established |
+
+No new desktop feature is promoted to VERIFIED by this checkpoint. The new UI
+must not expose unproven features. Existing historical UI is awaiting removal.
+
 Date:2026-10-17. Source base:c91cc58a249aa14db97d625116e8f4ca1a4b294d plus
 current UI slice. Old audit archived verbatim at
 [archive](status-archive/2026-10-17-coverage-before-ui-alignment.md),SHA256

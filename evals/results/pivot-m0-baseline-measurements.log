@@ -1,0 +1,66 @@
+{
+  "commit": "1bee37bc777318b1913aac0a95eb9315e29cfa05",
+  "platform": "Linux-6.6.87.2-microsoft-standard-WSL2-x86_64-with-glibc2.35",
+  "method": "gzip level 9, each file independently; initial app scripts and modulepreload from index.html; lazy notices excluded",
+  "initial_js_files": [
+    "assets/app-yH00uLv4.js",
+    "assets/client-BLFwLUGz.js"
+  ],
+  "initial_js_gzip_bytes": 101141,
+  "web_dist_bytes": 2139977,
+  "existing_distributions": {
+    "sanctum-linux-x86_64.tar.gz": {
+      "bytes": 11437890,
+      "sha256": "6a71eb3e997141b0797a21c49d2d2330b6ece03b35479343c531130877e6936e",
+      "status": "UNVERIFIED existing artifact, not installed this session"
+    },
+    "sanctum-windows-x64.zip": {
+      "bytes": 645275,
+      "sha256": "5b00d9b4d0aa3ec4fdd82191cfa7e55347801f34ac4abb756fbb70ede097f401",
+      "status": "UNVERIFIED existing artifact, not installed this session"
+    }
+  },
+  "desktop_install_size": {
+    "status": "UNVERIFIED",
+    "reason": "Existing archives are not session-built or clean-installed desktop artifacts"
+  },
+  "desktop_cold_start": {
+    "status": "UNVERIFIED",
+    "reason": "No native desktop app available"
+  },
+  "desktop_idle_rss_cpu": {
+    "status": "UNVERIFIED",
+    "reason": "No no-model desktop process tree available"
+  },
+  "no_model_gateway_diagnostic": {
+    "scope": "unconfigured debug gateway only; excludes browser/UI/SQLite/model workers; NOT desktop budget acceptance",
+    "ready_seconds": 0.01569866400001274,
+    "health": {
+      "checks": {
+        "host_fd_import": "denied",
+        "host_unix_socket": "denied",
+        "io_uring": "denied",
+        "ipv4_tcp": "denied",
+        "ipv4_udp": "denied",
+        "ipv6_tcp": "denied",
+        "ipv6_udp": "denied",
+        "namespace_change": "denied"
+      },
+      "cloud_connectors": "disabled",
+      "isolation": "linux-user-netns-seccomp",
+      "status": "ok"
+    },
+    "before": {
+      "cpu_ticks": 5,
+      "rss_bytes": 5898240,
+      "children": ""
+    },
+    "after": {
+      "cpu_ticks": 20,
+      "rss_bytes": 5898240,
+      "children": ""
+    },
+    "sample_seconds": 10.010498008000013,
+    "cpu_one_core_percent": 1.498426950188948
+  }
+}

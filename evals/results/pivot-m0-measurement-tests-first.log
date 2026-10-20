@@ -1,0 +1,20 @@
+E
+======================================================================
+ERROR: test_pivot_measurements (unittest.loader._FailedTest.test_pivot_measurements)
+----------------------------------------------------------------------
+ImportError: Failed to import test module: test_pivot_measurements
+Traceback (most recent call last):
+  File "C:\Users\aviroop\AppData\Roaming\uv\python\cpython-3.12-windows-x86_64-none\Lib\unittest\loader.py", line 396, in _find_test_path
+    module = self._get_module_from_name(name)
+             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\aviroop\AppData\Roaming\uv\python\cpython-3.12-windows-x86_64-none\Lib\unittest\loader.py", line 339, in _get_module_from_name
+    __import__(name)
+  File "C:\Users\aviroop\Desktop\Sanctum\tools\tests\test_pivot_measurements.py", line 10, in <module>
+    from measure_pivot_baseline import inventory
+ModuleNotFoundError: No module named 'measure_pivot_baseline'
+
+
+----------------------------------------------------------------------
+Ran 1 test in 0.001s
+
+FAILED (errors=1)

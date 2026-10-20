@@ -1,3 +1,8 @@
+> Pivot precedence (2026-10-20): conflicting website, Hermes UI, core packaging
+> and work-order requirements below are SUPERSEDED (ADR-0084). See the amendment
+> at the top of plan.md and adr/0084-pivot-to-jan-style-app.md. Historical text
+> remains intact; honesty, license and verification obligations still apply.
+
 FINAL MISSION — COMPLETE, CLEAN AND SHIP "SANCTUM"
 Product: a Local Private AI Platform that runs models, RAG, speech recognition, vision, and agents entirely on-device or inside the owner's private network. Single-user (ADR 0027). plan.md is the ground truth; the scope amendment and ADRs override it where they say so.
 

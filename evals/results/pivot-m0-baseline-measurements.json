@@ -1,0 +1,193 @@
+{
+  "commit": "1bee37bc777318b1913aac0a95eb9315e29cfa05",
+  "platform": "Linux-6.6.87.2-microsoft-standard-WSL2-x86_64-with-glibc2.35",
+  "method": "gzip level 9, each file independently; initial app scripts and modulepreload from index.html; lazy notices excluded",
+  "initial_js_files": [
+    "assets/app-yH00uLv4.js",
+    "assets/client-BLFwLUGz.js"
+  ],
+  "initial_js_gzip_bytes": 101141,
+  "web_dist_bytes": 2139977,
+  "assets": {
+    "assets/THIRD_PARTY_NOTICES-CwSaERlv.js": {
+      "bytes": 42987,
+      "gzip_bytes": 4720,
+      "sha256": "af463ae50c238aef96a0c9a3329e2fc7944577af92fe0d997be2ed7197f3abcf"
+    },
+    "assets/app-CXNLlWbs.css": {
+      "bytes": 44821,
+      "gzip_bytes": 9283,
+      "sha256": "75e91c4214a88e61516b389986ecc0847b60761cebc5e8bfd349d5dec9836fca"
+    },
+    "assets/app-yH00uLv4.js": {
+      "bytes": 156552,
+      "gzip_bytes": 42673,
+      "sha256": "3eec1dff455411981f2429711460f9a23625867a59358e894a66f298f4e274bd"
+    },
+    "assets/capture-worklet-Dbzkoc4Q.js": {
+      "bytes": 520,
+      "gzip_bytes": 320,
+      "sha256": "f513145cace3b839fd919700994bd9947aff188bfa5d03cfe004da07de5bdb34"
+    },
+    "assets/client-BLFwLUGz.js": {
+      "bytes": 186019,
+      "gzip_bytes": 58468,
+      "sha256": "ddcefcb2af5215fb503e1be4f8af726542f3b0122c635df5363f0568e8055971"
+    },
+    "assets/docs-el7s_W-U.css": {
+      "bytes": 8204,
+      "gzip_bytes": 2429,
+      "sha256": "72860f61dd8f6e84c8fd1f435801be4110e91914c6d40818d483ff274a726af1"
+    },
+    "assets/website-LXOOjizV.js": {
+      "bytes": 147689,
+      "gzip_bytes": 49383,
+      "sha256": "31258348c3a779401bdf25df2aaaf13cdef21972e10718946a5470e261abc2f3"
+    },
+    "assets/website-U2uhoKYo.css": {
+      "bytes": 37281,
+      "gzip_bytes": 8061,
+      "sha256": "534539ea578927c39215b9ea891fc28abdf021dc381b936d8f6de2748d417efe"
+    },
+    "docs.html": {
+      "bytes": 6890,
+      "gzip_bytes": 2586,
+      "sha256": "6dfa59f22c1d03bc72e90ad48a50935f1899e9ddc92a02cc6e6369179b79410a"
+    },
+    "fonts/archivo.ttf": {
+      "bytes": 658596,
+      "gzip_bytes": 253570,
+      "sha256": "0e094a7d3c7c4c25cf1310c4b30014f1dae9332220b1c2c88f4fa996f0b05053"
+    },
+    "fonts/instrument-serif/InstrumentSerif-Italic.ttf": {
+      "bytes": 71592,
+      "gzip_bytes": 35954,
+      "sha256": "08939b8bdf534afec24ae0ef5e03f948940cd9a8fe08e7fecbad040e62327385"
+    },
+    "fonts/instrument-serif/InstrumentSerif-Regular.ttf": {
+      "bytes": 70012,
+      "gzip_bytes": 35562,
+      "sha256": "498efd461f6ddfcb7a111bf9a565709d2085d48201d501ead960d93e84ffbb88"
+    },
+    "fonts/instrument-serif/OFL.txt": {
+      "bytes": 4405,
+      "gzip_bytes": 1961,
+      "sha256": "129ed7618959716959f2941fdd5b49e0ad6e6c1d78726761786a00253d865521"
+    },
+    "fonts/jetbrainsmono.ttf": {
+      "bytes": 187208,
+      "gzip_bytes": 90579,
+      "sha256": "48715a42ec242c21e9f02692891e147d022299a52e48d5e413e1a942193ffeda"
+    },
+    "fonts/leaguegothic.ttf": {
+      "bytes": 65972,
+      "gzip_bytes": 34351,
+      "sha256": "3b0e998c9a0034222394ffecdd383e6948259ad037b95555b139a217629ce1d0"
+    },
+    "fonts/spectral.ttf": {
+      "bytes": 261088,
+      "gzip_bytes": 111888,
+      "sha256": "c89021dc20720c8d0dcf40b0b2f6e00c13665fa8041717f581396f51b8c78f5d"
+    },
+    "fonts/vt323.ttf": {
+      "bytes": 153116,
+      "gzip_bytes": 43321,
+      "sha256": "cf4de751ada78ceac033dbe16a687742939995b77bc2a052ae17a4957958594d"
+    },
+    "index.html": {
+      "bytes": 436,
+      "gzip_bytes": 297,
+      "sha256": "7045522481cedd3a584af7f5f0febcd27b14313e46f9a1d35d5cc453c843e11b"
+    },
+    "licenses/fonts/archivo-OFL.txt": {
+      "bytes": 4388,
+      "gzip_bytes": 1960,
+      "sha256": "108b4e57c9c796d3d38d0428ca7ee39de47ad93187302718d9b2d8864b9b716b"
+    },
+    "licenses/fonts/instrument-serif-OFL.txt": {
+      "bytes": 4405,
+      "gzip_bytes": 1961,
+      "sha256": "129ed7618959716959f2941fdd5b49e0ad6e6c1d78726761786a00253d865521"
+    },
+    "licenses/fonts/jetbrainsmono-OFL.txt": {
+      "bytes": 4399,
+      "gzip_bytes": 1957,
+      "sha256": "b2fe5e8987594e9ffd1d2ca52a2f5d73eb8335243893c5d6254b5ad69269591d"
+    },
+    "licenses/fonts/leaguegothic-OFL.txt": {
+      "bytes": 4400,
+      "gzip_bytes": 1965,
+      "sha256": "44778c339892f79188c60b7471485dd5af92c59351c7f9629a00fc625c6cae5d"
+    },
+    "licenses/fonts/spectral-OFL.txt": {
+      "bytes": 4392,
+      "gzip_bytes": 1954,
+      "sha256": "501d6ceca8e552630fe3aa9442b9a818565680a1a2f79f3fb8c13d6f309a9e98"
+    },
+    "licenses/fonts/vt323-OFL.txt": {
+      "bytes": 4367,
+      "gzip_bytes": 1953,
+      "sha256": "27d9af34210253e7ca1251fbace86c6f65b40031d6ce1a75493a1b2093631298"
+    },
+    "website.html": {
+      "bytes": 10238,
+      "gzip_bytes": 3430,
+      "sha256": "b6cef934958bf9d22feae84e62614fca0e0456c0b07443e9a6730c5340d24ad6"
+    }
+  },
+  "existing_distributions": {
+    "sanctum-linux-x86_64.tar.gz": {
+      "bytes": 11437890,
+      "sha256": "6a71eb3e997141b0797a21c49d2d2330b6ece03b35479343c531130877e6936e",
+      "status": "UNVERIFIED existing artifact, not installed this session"
+    },
+    "sanctum-windows-x64.zip": {
+      "bytes": 645275,
+      "sha256": "5b00d9b4d0aa3ec4fdd82191cfa7e55347801f34ac4abb756fbb70ede097f401",
+      "status": "UNVERIFIED existing artifact, not installed this session"
+    }
+  },
+  "desktop_install_size": {
+    "status": "UNVERIFIED",
+    "reason": "Existing archives are not session-built or clean-installed desktop artifacts"
+  },
+  "desktop_cold_start": {
+    "status": "UNVERIFIED",
+    "reason": "No native desktop app available"
+  },
+  "desktop_idle_rss_cpu": {
+    "status": "UNVERIFIED",
+    "reason": "No no-model desktop process tree available"
+  },
+  "no_model_gateway_diagnostic": {
+    "scope": "unconfigured debug gateway only; excludes browser/UI/SQLite/model workers; NOT desktop budget acceptance",
+    "ready_seconds": 0.01569866400001274,
+    "health": {
+      "checks": {
+        "host_fd_import": "denied",
+        "host_unix_socket": "denied",
+        "io_uring": "denied",
+        "ipv4_tcp": "denied",
+        "ipv4_udp": "denied",
+        "ipv6_tcp": "denied",
+        "ipv6_udp": "denied",
+        "namespace_change": "denied"
+      },
+      "cloud_connectors": "disabled",
+      "isolation": "linux-user-netns-seccomp",
+      "status": "ok"
+    },
+    "before": {
+      "cpu_ticks": 5,
+      "rss_bytes": 5898240,
+      "children": ""
+    },
+    "after": {
+      "cpu_ticks": 20,
+      "rss_bytes": 5898240,
+      "children": ""
+    },
+    "sample_seconds": 10.010498008000013,
+    "cpu_one_core_percent": 1.498426950188948
+  }
+}

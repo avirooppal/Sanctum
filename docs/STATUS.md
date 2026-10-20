@@ -1,27 +1,27 @@
 # Current state
 
-- Step:liquid-glass public landing;ADR0083;codex/focused-unlock-redesign.
-- Last hosted green:ff2ce220d8ef11d4e7599b424d732c1087a5cc3f;all5 success.
-- Local:184 source,70 Rust,95 web/types/build,audit0,38 probes;19 smoke PASS.
-- Licenses:77 npm entries/7 OFL binaries admitted;0BSD reviewed,no waiver.
-- Public page:3 widths,normal/reduced motion,foreign HTTP/WS0,storage0.
-- Assets:108319B gzip JS,141604B fonts;chat delta1816JS/2105CSS gzip.
-- Blocker:reference clips lack rights input;not shipped;original SVG active.
-- Open:real video,broader accessibility/fidelity/performance and release roadmap.
-- Next3:push/exact-SHA CI;admit media only with rights;resume remaining UI gates.
-- No main merge,phase/release tag or whole-project completion claim.
+- Step: M0 baseline/decision checkpoint; `jan-style`; ADR0084 and plan amendment.
+- Archive tag pushed: `pre-pivot-2026-10-20` -> `1bee37bc777318b1913aac0a95eb9315e29cfa05`.
+- Baseline observed: 184 source, 70 Rust, 95 web/types/build, audit0, 38 denial probes.
+- Post-change checks: 187 source (3 new measurement tests), 70 Rust/38 probes, 95 web PASS.
+- Full implemented-feature smoke: 19 stages PASS on attempt4; earlier failures retained.
+- Initial chat JS101141B gzip; web build2139977B. Native desktop metrics UNVERIFIED.
+- Gateway-only diagnostic: RSS5898240B, CPU1.498427% one core; not desktop acceptance.
+- Starting head and remote main: hosted completed/success all5, receipts saved.
+- New pivot-head hosted CI: pending commit/push and exact-SHA observation.
+- M0 removals/salvage and M1–M12: PENDING; old website/Hermes work still present.
+- Next: removal/salvage review, then pinned Jan study and architecture decisions.
+- No merge, release, whole-product completion, or desktop performance claim.
 
 ## Evidence
 
-tools/run_source_gate.sh;tools/check_rust.sh;npm test/typecheck/build/audit;
-tools/smoke_all.sh19;evals/browser_website.mjs;evals/landing_budget.mjs.
-Raw landing-*;full truth/limits in landing-media.md and PLAN_COVERAGE supplement.
-Failures retained;numeric budgets unchanged. Public React entry intentionally
-replaces former zero-script gate with one same-origin module plus no inline
-code,unchanged CSP and egress/storage zero. Implementation ff2ce22 hosted39099696783 completed success(all5 jobs).
-Receipt:evals/results/landing-hosted-ci.json. Evidence-only follow-up requires
-its own hosted completion. Video behavior only clock-tested,not real-media proven.
+`evals/results/pivot-m0-baseline-*`; `docs/PERFORMANCE.md`; ADR0084.
+Failures: missing smoke environment, no gateway, history-search timeout.
+Isolated history diagnostic and unchanged full rerun passed; timeout cause
+unproven. Vite upstream directive warnings retained. Budget proposals do not
+change existing thresholds. New measurement-tool verification recorded separately.
 
 ## Preserved history
 
-[Previous STATUS](status-archive/2026-10-18-before-liquid-landing.md),SHA256 `994d1b0f70a149fa820763cd653d7c960b307bcd272962e6713d90de7aed7dfb`.
+[Previous STATUS](status-archive/2026-10-20-pre-pivot.md), SHA256
+`e384a214c5e23d03965e5e7d396121c4a126e17910e6e26686a7692350d74ba1`.

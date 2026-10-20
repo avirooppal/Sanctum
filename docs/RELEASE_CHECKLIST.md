@@ -1,5 +1,28 @@
 # Release checklist — blocked,not release approval
 
+## Desktop pivot amendment, 2026-10-20
+
+ADR0084 and plan.md's pivot amendment supersede conflicting public website,
+Hermes-fidelity and old packaging assumptions below. No desktop release is
+approved. Native Windows/Linux/macOS installer execution is UNVERIFIED.
+
+| Pivot gate | State | Required evidence / exact available command |
+|---|---|---|
+| Pre-pivot archive | Recorded | `git rev-parse 'pre-pivot-2026-10-20^{commit}'` must return 1bee37bc777318b1913aac0a95eb9315e29cfa05 |
+| Legacy baseline | PASS on rerun, not full product acceptance | `bash tools/run_source_gate.sh`; `bash tools/check_rust.sh`; `npm test --prefix apps/web`; provision README smoke environment then `bash tools/smoke_all.sh` |
+| Performance inventory | Partial | `python3 tools/measure_pivot_baseline.py --output evals/results/local-pivot-measurements.json`; build web first; output must not already exist |
+| Removal of website/docs/Hermes work | PENDING | Delete/update dependent routes, gates, references and results after recorded salvage review |
+| Native desktop performance/CI budgets | PENDING | Proposed ADR0084 budgets; native shell and full-process measurement scripts not implemented |
+| Jan LICENSE/NOTICE and dependency/MPL audit | PENDING | Source-pin/audit commands to be recorded in M1; no license exception currently granted |
+| Installers, signatures, SBOM, update verification | UNVERIFIED | No session-built clean-installed native artifacts; implement executable build/install runners in M11 before listing owner commands |
+| OS helper egress assurance | UNVERIFIED for native Windows/macOS | Platform implementations and outbound-probe runners absent; Linux denial evidence is separate |
+| A–L desktop journeys and evaluations | PENDING | PLAN_COVERAGE pivot rows; legacy smoke does not certify replacements |
+| Hosted CI on pivot head | PENDING until observed | Push jan-style and poll that exact commit to completed; starting-head/main receipts are historical for the new commit |
+
+Missing native runners are software blockers, not accepted hardware exceptions.
+Do not publish a GitHub release. Existing dist archives have measured byte sizes
+only; no clean-install or signature claim follows from their existence.
+
 Date:2026-10-17. Base:c91cc58a249aa14db97d625116e8f4ca1a4b294d.
 Old file preserved verbatim at [archive](status-archive/2026-10-17-release-before-ui-alignment.md),
 SHA256 `78b8b3ec3b8e3a83ef70a8e7a030561b7e45bd65a35042a6a6be423f7decf9fd`. No release/phase tags.

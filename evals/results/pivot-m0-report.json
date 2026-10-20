@@ -1,0 +1,88 @@
+{
+  "milestone": "M0 baseline/decision checkpoint; removal remains PENDING",
+  "base_commit": "1bee37bc777318b1913aac0a95eb9315e29cfa05",
+  "branch": "jan-style",
+  "archive_tag": "pre-pivot-2026-10-20",
+  "baseline": [
+    {
+      "command": "bash tools/run_source_gate.sh evals/results/pivot-m0-baseline-source.log",
+      "exit": 0,
+      "tests": 184
+    },
+    {
+      "command": "bash tools/check_rust.sh",
+      "exit": 0,
+      "tests": 70,
+      "denial_probes": 38
+    },
+    {
+      "command": "npm test (apps/web)",
+      "exit": 0,
+      "tests": 95
+    },
+    {
+      "command": "npm run typecheck && npm run build (apps/web)",
+      "exit": 0,
+      "warning": "upstream use client directives ignored by Vite"
+    },
+    {
+      "command": "npm audit --prefix apps/web --audit-level=low",
+      "exit": 0,
+      "vulnerabilities": 0
+    },
+    {
+      "command": "bash tools/smoke_all.sh (provisioned environment, attempt4)",
+      "exit": 0,
+      "stages": 19,
+      "full_journey_acceptance_verified": false
+    }
+  ],
+  "post_change": [
+    {
+      "command": "bash tools/run_source_gate.sh evals/results/pivot-m0-final-source.log",
+      "exit": 0,
+      "tests": 187
+    },
+    {
+      "command": "bash tools/check_rust.sh",
+      "exit": 0,
+      "tests": 70,
+      "denial_probes": 38
+    },
+    {
+      "command": "npm test (apps/web)",
+      "exit": 0,
+      "tests": 95
+    },
+    {
+      "command": "python3 tools/measure_pivot_baseline.py --output evals/results/pivot-m0-measurement-tool-verification.json",
+      "exit": 0
+    }
+  ],
+  "smoke_environment": {
+    "shell": "C:/Program Files/Git/bin/bash.exe",
+    "SANCTUM_PYTHON": ".sanctum/windows-workflow-venv/Scripts/python.exe",
+    "SANCTUM_CONFIG": ".sanctum/runtime-dispatch.json",
+    "SANCTUM_NODE": "C:/Users/aviroop/.cache/codex-runtimes/codex-primary-runtime/dependencies/node/bin/node.exe",
+    "SANCTUM_PLAYWRIGHT": "C:/Users/aviroop/.cache/codex-runtimes/codex-primary-runtime/dependencies/node/node_modules/playwright",
+    "SANCTUM_TTS_VOICE": "tts-flite-slt-reference",
+    "token": "Existing provisioned WSL token FILE only; no token content recorded",
+    "runtime_command": "target/debug/sanctum-runtime --config .sanctum/runtime-dispatch.json --port 8769",
+    "config_sha256": "6ada65048726cf3775925b112adfe9a0146139c4a7266e154b21919ade1470b3"
+  },
+  "failures": [
+    "pivot-m0-baseline-smoke-attempt1.log",
+    "pivot-m0-baseline-smoke-attempt2.log",
+    "pivot-m0-baseline-smoke-chat-attempt2.log",
+    "pivot-m0-baseline-smoke-attempt3.json",
+    "pivot-m0-baseline-sessions-attempt3.log",
+    "pivot-m0-measurement-tests-first.log"
+  ],
+  "unverified": [
+    "Native desktop installed size, no-model RSS, cold usable UI and CPU",
+    "M0 website/docs/Hermes removal and salvage review",
+    "M1 Jan source license/NOTICE verification and architecture choices",
+    "M2-M12 desktop implementation and acceptance"
+  ],
+  "status_archive_sha256": "e384a214c5e23d03965e5e7d396121c4a126e17910e6e26686a7692350d74ba1"
+}

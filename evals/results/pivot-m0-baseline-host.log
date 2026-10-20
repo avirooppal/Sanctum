@@ -1,0 +1,10 @@
+Linux 6.6.87.2-microsoft-standard-WSL2 x86_64 GNU/Linux
+CPU(s):                               12
+On-line CPU(s) list:                  0-11
+Model name:                           13th Gen Intel(R) Core(TM) i5-1334U
+Thread(s) per core:                   2
+Core(s) per socket:                   6
+NUMA node0 CPU(s):                    0-11
+               total        used        free      shared  buff/cache   available
+Mem:      8167567360  1497128960  3341234176     3702784  3329204224  6506704896
+Swap:     2147483648           0  2147483648
