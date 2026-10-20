@@ -8,7 +8,7 @@
 
 | ADR | Decision | Gate/scope effect | Review / remaining work |
 |---|---|---|---|
-| [0084](adr/0084-pivot-to-jan-style-app.md) | Owner-directed Jan-category desktop; retire public website/docs site/Hermes UI and fidelity; preserve runtime and optional engines | Explicit product/scope replacement, not a retroactive pass; removal must update dependent tests atomically | M0 baseline/decision checkpoint precedes pending removals and per-component salvage review |
+| [0084](adr/0084-pivot-to-jan-style-app.md) | Owner-directed Jan-category desktop; retire public website/docs site/Hermes UI and fidelity; preserve runtime and optional engines | Explicit product/scope replacement, not a retroactive pass; removal must update dependent tests atomically | Retirement and per-component salvage recorded in ADR0085; native architecture decisions remain pending |
 | [0084](adr/0084-pivot-to-jan-style-app.md) | Proposed 80MiB installer/200MiB full-tree idle RSS/2s cold UI/300000B gzip JS/1% one-core idle CPU | Proposal only; no existing bound relaxed or CI budget claimed | Confirm measurement contracts and per-pack budgets in M1/M2; no desktop acceptance data yet |
 | [0084](adr/0084-pivot-to-jan-style-app.md) | Native shell/MPL decision and OS-specific assurance | No dependency-license exception granted; Linux evidence cannot certify Windows/macOS | M1 source license/NOTICE checks and separate architecture ADRs required |
 

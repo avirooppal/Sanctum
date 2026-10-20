@@ -19,8 +19,10 @@
 - Old ignored upstream environment/dist and67 untracked UI result files quarantined
   locally under .sanctum/retired/2026-10-20; unrelated user files preserved.
 - Main remains a1342cdb3a8b06b74b61e79954740a39e36b3d7b (remote observed).
-  Hosted CI must be polled after this slice is pushed; earlier SHA receipts do not
-  certify this change. Consult the exact-SHA receipt and final slice report.
+  Main run39053995599 was re-observed completed/success, all5 jobs.
+- Retirement commit906a25335bff44f26e579f687a4228b01ec16f3c: hosted run39385330454
+  completed/success, all5 jobs. Raw pivot-removal-hosted-ci.json. A documentation
+  receipt commit requires its own final observation; see the final slice report.
 - M1 next: pin/study Jan, verify LICENSE/NOTICE, choose shell/MPL policy and record
   packs/settings/permissions/egress/assurance architecture. M2–M12 remain PENDING.
 - No replacement app UI, native installer, native performance acceptance or full

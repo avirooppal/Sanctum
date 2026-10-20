@@ -11,7 +11,7 @@ reference-fidelity and conflicting stack/roadmap requirements are
 |---|---|---|
 | M0 baseline, archive tag, ADR, amendment | Partial | 184 source/70 Rust/95 web, 38 denial probes, audit0, 19-stage smoke rerun; named pivot-m0-baseline evidence; archive tag pushed; decision/docs recorded |
 | M0 full desktop measurements | PENDING | Legacy JS101141B gzip/web2139977B measured; native install/no-model RSS/cold UI/CPU unavailable; PERFORMANCE.md |
-| M0 removals and reviewed salvage | Implemented; validation in STATUS | ADR0085; 1017 removed tracked paths in SHA256 inventory; 11 first-party modules retained; real-route/renderer checks; no app UI |
+| M0 removals and reviewed salvage | VERIFIED retirement only | ADR0085; 1017 removed tracked paths in SHA256 inventory; 11 first-party modules retained; real-route/renderer checks; no app UI |
 | M1 Jan study and architecture ADRs | PENDING | Pin, license/NOTICE, shell/MPL, packs/settings/permissions/egress/assurance decisions not verified |
 | A / M3 chat and threads | PENDING | Existing legacy chat/history tests are scoped reuse evidence only; new desktop journeys absent |
 | B / M5 assistants | PENDING | New contract and journey required |
@@ -420,3 +420,7 @@ global accessibility/INP/pixel-fidelity/full-roadmap/release pass is claimed.
 Landing CI receipt:ff2ce220d8ef11d4e7599b424d732c1087a5cc3f,run39099696783,
 completed success/all5 jobs observed this session. Raw landing-hosted-ci.json.
 No promotion of media,accessibility,fidelity or release gates.
+
+Retirement commit906a25335bff44f26e579f687a4228b01ec16f3c: source183, Rust70/38 probes,
+web45/types/build, audit0 and8 real smoke stages PASS. Hosted run39385330454
+completed/success all5. No desktop acceptance row is promoted.

@@ -16,7 +16,7 @@ archived with SHA256 in ARCHIVE.md. Main is not changed by this branch.
 | macOS artifacts | UNVERIFIED | No Mac session or installer runner |
 | Signatures, SHA256SUMS, SBOM, clean installs | UNVERIFIED | No current native artifacts; old ignored dist quarantined; legacy package_linux.sh refuses output |
 | Native OS egress assurance | UNVERIFIED | Linux kernel checks do not certify Windows/macOS helper enforcement |
-| Hosted CI exact head | Must be observed after each push | Raw receipt in evals/results/pivot-removal-hosted-ci.json when observed; an earlier SHA does not certify a later commit |
+| Hosted CI retirement commit | PASS on 906a25335bff44f26e579f687a4228b01ec16f3c | Run39385330454 completed/success all5; raw pivot-removal-hosted-ci.json; each later commit requires a fresh observation |
 | Full acceptance | PENDING | No full journey or native size/RSS/CPU/cold-start claim |
 
 ## Available development verification commands
