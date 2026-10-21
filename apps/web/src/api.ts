@@ -34,6 +34,42 @@ export type SettingEntry = {
   risk: string;
   description: string;
 };
+export type McpServer = {
+  id: string;
+  name: string;
+  command: string;
+  args: string[];
+  status: 'stopped' | 'running' | 'error';
+  tools?: string[];
+};
+export type CloudProvider = {
+  id: string;
+  name: string;
+  has_key: boolean;
+  description?: string;
+};
+export type LocalApiServerStatus = {
+  running: boolean;
+  port: number;
+  allowed_origins: string;
+};
+export type Skill = {
+  id: string;
+  name: string;
+  description: string;
+  content: string;
+  enabled: boolean;
+  created_at?: number;
+  updated_at?: number;
+};
+export type Memory = {
+  id: string;
+  assistant_id?: string | null;
+  fact: string;
+  category: string;
+  created_at?: number;
+  updated_at?: number;
+};
 type Socket = Pick<WebSocket,'close'|'addEventListener'>;
 type SocketFactory = (url:string, protocols:string[])=>Socket;
 
@@ -319,6 +355,150 @@ export class SanctumClient {
     const data: unknown = await res.json();
     if (!record(data) || typeof data.id !== 'string') throw Error('Invalid unload pack response');
     return data as PackInfo;
+  }
+
+  // --- MCP servers ---
+
+  async mcpServers(signal?: AbortSignal): Promise<McpServer[]> {
+    const res = await this.request('/api/mcp/servers', signal);
+    const data: unknown = await res.json();
+    if (!Array.isArray(data)) throw Error('Invalid MCP server list response');
+    return data as McpServer[];
+  }
+
+  async addMcpServer(server: { name: string; command: string; args: string[] }, signal?: AbortSignal): Promise<McpServer> {
+    const res = await this.request('/api/mcp/servers', signal, { operation: 'add', ...server }, 'POST');
+    const data: unknown = await res.json();
+    if (!record(data) || typeof data.id !== 'string') throw Error('Invalid add MCP server response');
+    return data as McpServer;
+  }
+
+  async removeMcpServer(id: string, signal?: AbortSignal): Promise<void> {
+    const res = await this.request('/api/mcp/servers', signal, { operation: 'remove', id }, 'POST');
+    const data: unknown = await res.json();
+    if (!record(data) || data.removed !== true) throw Error('Invalid remove MCP server response');
+  }
+
+  async respondMcpCall(callId: string, approved: boolean, signal?: AbortSignal): Promise<void> {
+    const res = await this.request('/api/mcp/calls', signal, { call_id: callId, approved }, 'POST');
+    const data: unknown = await res.json();
+    if (!record(data) || data.handled !== true) throw Error('Invalid MCP call response');
+  }
+
+  // --- Cloud providers ---
+
+  async cloudProviders(signal?: AbortSignal): Promise<CloudProvider[]> {
+    const res = await this.request('/api/providers', signal);
+    const data: unknown = await res.json();
+    if (!Array.isArray(data)) throw Error('Invalid cloud providers response');
+    return data as CloudProvider[];
+  }
+
+  async saveProviderKey(id: string, apiKey: string, signal?: AbortSignal): Promise<void> {
+    const res = await this.request('/api/providers/key', signal, { id, api_key: apiKey }, 'POST');
+    const data: unknown = await res.json();
+    if (!record(data) || data.saved !== true) throw Error('Invalid save provider key response');
+  }
+
+  async removeProviderKey(id: string, signal?: AbortSignal): Promise<void> {
+    const res = await this.request('/api/providers/key', signal, { id }, 'DELETE');
+    const data: unknown = await res.json();
+    if (!record(data) || data.removed !== true) throw Error('Invalid remove provider key response');
+  }
+
+  // --- Local API server ---
+
+  async localApiStatus(signal?: AbortSignal): Promise<LocalApiServerStatus> {
+    const res = await this.request('/api/local-api/status', signal);
+    const data: unknown = await res.json();
+    if (!record(data) || typeof data.running !== 'boolean' || typeof data.port !== 'number') throw Error('Invalid local API status response');
+    return data as LocalApiServerStatus;
+  }
+
+  async startLocalApi(port: number, allowedOrigins: string, signal?: AbortSignal): Promise<LocalApiServerStatus> {
+    const res = await this.request('/api/local-api/start', signal, { port, allowed_origins: allowedOrigins }, 'POST');
+    const data: unknown = await res.json();
+    if (!record(data) || data.started !== true) throw Error('Invalid start local API response');
+    return data as LocalApiServerStatus;
+  }
+
+  async stopLocalApi(signal?: AbortSignal): Promise<void> {
+    const res = await this.request('/api/local-api/stop', signal, {}, 'POST');
+    const data: unknown = await res.json();
+    if (!record(data) || data.stopped !== true) throw Error('Invalid stop local API response');
+  }
+
+  async updateLocalApiConfig(port: number, allowedOrigins: string, signal?: AbortSignal): Promise<void> {
+    const res = await this.request('/api/local-api/config', signal, { port, allowed_origins: allowedOrigins }, 'POST');
+    const data: unknown = await res.json();
+    if (!record(data) || data.saved !== true) throw Error('Invalid local API config response');
+  }
+
+  // --- Skills ---
+
+  async skills(signal?: AbortSignal): Promise<Skill[]> {
+    const res = await this.request('/api/skills', signal);
+    const data: unknown = await res.json();
+    if (!Array.isArray(data)) throw Error('Invalid skills response');
+    return data as Skill[];
+  }
+
+  async saveSkill(skill: { id?: string; name: string; description?: string; content: string; enabled?: boolean }, signal?: AbortSignal): Promise<{ id: string }> {
+    const res = await this.request('/api/skills', signal, skill, 'POST');
+    const data: unknown = await res.json();
+    if (!record(data) || typeof data.id !== 'string') throw Error('Invalid save skill response');
+    return { id: data.id as string };
+  }
+
+  async deleteSkill(id: string, signal?: AbortSignal): Promise<void> {
+    const res = await this.request('/api/skills', signal, { operation: 'delete', id }, 'POST');
+    const data: unknown = await res.json();
+    if (!record(data) || data.deleted !== true) throw Error('Invalid delete skill response');
+  }
+
+  // --- Memories ---
+
+  async memories(assistantId?: string, signal?: AbortSignal): Promise<Memory[]> {
+    const query = assistantId ? `?assistant_id=${encodeURIComponent(assistantId)}` : '';
+    const res = await this.request(`/api/memories${query}`, signal);
+    const data: unknown = await res.json();
+    if (!Array.isArray(data)) throw Error('Invalid memories response');
+    return data as Memory[];
+  }
+
+  async saveMemory(memory: { id?: string; assistant_id?: string | null; fact: string; category?: string }, signal?: AbortSignal): Promise<{ id: string }> {
+    const res = await this.request('/api/memories', signal, memory, 'POST');
+    const data: unknown = await res.json();
+    if (!record(data) || typeof data.id !== 'string') throw Error('Invalid save memory response');
+    return { id: data.id as string };
+  }
+
+  async deleteMemory(id: string, signal?: AbortSignal): Promise<void> {
+    const res = await this.request('/api/memories', signal, { operation: 'delete', id }, 'POST');
+    const data: unknown = await res.json();
+    if (!record(data) || data.deleted !== true) throw Error('Invalid delete memory response');
+  }
+
+  // --- GGUF import ---
+
+  async importGguf(file: File, signal?: AbortSignal): Promise<{ id: string }> {
+    signal?.throwIfAborted();
+    const formData = new FormData();
+    formData.append('file', file, file.name);
+    const headers: Record<string, string> = { Authorization: `Bearer ${this.token}` };
+    const response = await this.fetcher('/api/models/import-gguf', {
+      method: 'POST',
+      headers,
+      body: formData,
+      signal,
+      credentials: 'omit',
+      cache: 'no-store',
+      redirect: 'error',
+    });
+    if (!response.ok) throw new GatewayError(response.status, response.headers.get('Retry-After'));
+    const data: unknown = await response.json();
+    if (!record(data) || typeof data.id !== 'string') throw Error('Invalid GGUF import response');
+    return { id: data.id as string };
   }
 }
 

@@ -16,6 +16,7 @@ export interface SidebarProps {
   onDeleteSession?: (id: string) => void;
   onPinSession?: (id: string, pinned: boolean) => void;
   availableCapabilities: string[];
+  pendingMcpCalls?: number;
 }
 
 export const Sidebar: React.FC<SidebarProps> = ({
@@ -28,6 +29,7 @@ export const Sidebar: React.FC<SidebarProps> = ({
   onDeleteSession,
   onPinSession,
   availableCapabilities,
+  pendingMcpCalls = 0,
 }) => {
   const [search, setSearch] = useState('');
   const caps = new Set(availableCapabilities);
@@ -120,6 +122,24 @@ export const Sidebar: React.FC<SidebarProps> = ({
           💬 Chat
         </button>
 
+        <button
+          type="button"
+          onClick={() => onSelectView('assistants')}
+          style={{
+            padding: '8px 12px',
+            backgroundColor: activeView === 'assistants' ? '#1e293b' : 'transparent',
+            color: activeView === 'assistants' ? '#f8fafc' : '#94a3b8',
+            border: 'none',
+            borderRadius: '6px',
+            textAlign: 'left',
+            fontSize: '13px',
+            fontWeight: activeView === 'assistants' ? 600 : 400,
+            cursor: 'pointer',
+          }}
+        >
+          🤖 Assistants
+        </button>
+
         {caps.has('models') && (
           <button
             type="button"
@@ -139,6 +159,95 @@ export const Sidebar: React.FC<SidebarProps> = ({
             🧠 Models
           </button>
         )}
+
+        <button
+          type="button"
+          onClick={() => onSelectView('mcp')}
+          style={{
+            padding: '8px 12px',
+            backgroundColor: activeView === 'mcp' ? '#1e293b' : 'transparent',
+            color: activeView === 'mcp' ? '#f8fafc' : '#94a3b8',
+            border: 'none',
+            borderRadius: '6px',
+            textAlign: 'left',
+            fontSize: '13px',
+            fontWeight: activeView === 'mcp' ? 600 : 400,
+            cursor: 'pointer',
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'space-between',
+          }}
+        >
+          <span>🔌 MCP Servers</span>
+          {pendingMcpCalls > 0 && (
+            <span
+              style={{
+                fontSize: '10px',
+                fontWeight: 700,
+                backgroundColor: '#f59e0b',
+                color: '#000',
+                borderRadius: '10px',
+                padding: '1px 6px',
+              }}
+            >
+              {pendingMcpCalls}
+            </span>
+          )}
+        </button>
+
+        <button
+          type="button"
+          onClick={() => onSelectView('providers')}
+          style={{
+            padding: '8px 12px',
+            backgroundColor: activeView === 'providers' ? '#1e293b' : 'transparent',
+            color: activeView === 'providers' ? '#f8fafc' : '#94a3b8',
+            border: 'none',
+            borderRadius: '6px',
+            textAlign: 'left',
+            fontSize: '13px',
+            fontWeight: activeView === 'providers' ? 600 : 400,
+            cursor: 'pointer',
+          }}
+        >
+          ☁️ Providers
+        </button>
+
+        <button
+          type="button"
+          onClick={() => onSelectView('compare')}
+          style={{
+            padding: '8px 12px',
+            backgroundColor: activeView === 'compare' ? '#1e293b' : 'transparent',
+            color: activeView === 'compare' ? '#f8fafc' : '#94a3b8',
+            border: 'none',
+            borderRadius: '6px',
+            textAlign: 'left',
+            fontSize: '13px',
+            fontWeight: activeView === 'compare' ? 600 : 400,
+            cursor: 'pointer',
+          }}
+        >
+          ⚖️ Model Compare
+        </button>
+
+        <button
+          type="button"
+          onClick={() => onSelectView('skills')}
+          style={{
+            padding: '8px 12px',
+            backgroundColor: activeView === 'skills' ? '#1e293b' : 'transparent',
+            color: activeView === 'skills' ? '#f8fafc' : '#94a3b8',
+            border: 'none',
+            borderRadius: '6px',
+            textAlign: 'left',
+            fontSize: '13px',
+            fontWeight: activeView === 'skills' ? 600 : 400,
+            cursor: 'pointer',
+          }}
+        >
+          🧠 Skills & Memory
+        </button>
 
         {caps.has('packs') && (
           <button

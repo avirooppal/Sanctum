@@ -49,7 +49,16 @@ LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 SOFTWARE.
 
-## Jan development reference (ADR0089)
+## Jan UI Components and Design System (ADR 0096)
 
-Jan source at e7cbcf6d232f331313fd646b9131793ab2c5dc5c was studied; no source or assets were adapted into Sanctum. Copyright 2025 Menlo Research. Its exact Apache-2.0 declaration is preserved in docs/licenses/jan-e7cbcf6-LICENSE.txt; the full primary license is docs/licenses/Apache-2.0-primary.txt. No NOTICE file exists in the pinned tracked tree. See docs/design/JAN_STUDY.md for hashes and obligations. Jan names and logos are not Sanctum branding.
+Jan UI/UX source ported from https://github.com/janhq/jan at pinned commit e7cbcf6d232f331313fd646b9131793ab2c5dc5c.
+Copyright (c) 2025 Menlo Research Inc.
+Licensed under the Apache License, Version 2.0 (the "License"); you may not use this file except in compliance with the License.
+You may obtain a copy of the License at:
+    http://www.apache.org/licenses/LICENSE-2.0
+Full primary license text preserved at `docs/licenses/Apache-2.0-primary.txt` (SHA256 `cfc7749b96f63bd31c3c42b5c471bf756814053e847c10f3eb003417bc523d30`).
+Exact root license declaration preserved at `docs/licenses/jan-e7cbcf6-LICENSE.txt` (SHA256 `240e79d4976dbf1d4c76e0ac1da223df97935a75497eaf8dd045771c3e92de16`).
+No NOTICE file exists in the pinned upstream tracked tree.
+In accordance with Apache-2.0 Section 4(b), modified files are documented in `docs/ui-provenance.md`.
+In accordance with Apache-2.0 Section 6, the name "Jan", logos, Hamster mascot, and marks are not used or claimed as trademarks by Sanctum and have been replaced with Sanctum's name and neutral mark. All telemetry, analytics, and auto-updaters have been removed.
 

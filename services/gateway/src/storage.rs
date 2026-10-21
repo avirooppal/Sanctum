@@ -32,6 +32,9 @@ impl Store {
         connection.execute_batch(include_str!(
             "../migrations/0005-turn-conversation-index.sql"
         ))?;
+        connection.execute_batch(include_str!("../migrations/0006-mcp-servers.sql"))?;
+        connection.execute_batch(include_str!("../migrations/0007-skills-and-memory.sql"))?;
+        connection.execute_batch(include_str!("../migrations/0008-provider-keys.sql"))?;
         Ok(Self { connection })
     }
     pub fn save(
@@ -298,6 +301,233 @@ impl Store {
         Ok(count > 0)
     }
 
+    // --- MCP Servers ---
+
+    pub fn mcp_servers(&self, owner: &str) -> rusqlite::Result<Vec<Value>> {
+        let mut stmt = self.connection.prepare(
+            "SELECT id, name, command, args, status, created_at FROM mcp_servers_v1 WHERE owner=?1 ORDER BY created_at ASC",
+        )?;
+        let rows = stmt
+            .query_map([owner], |r| {
+                let args_str: String = r.get(3)?;
+                let args_json: Value = serde_json::from_str(&args_str).unwrap_or_else(|_| json!([]));
+                Ok(json!({
+                    "id": r.get::<_, String>(0)?,
+                    "name": r.get::<_, String>(1)?,
+                    "command": r.get::<_, String>(2)?,
+                    "args": args_json,
+                    "status": r.get::<_, String>(4)?,
+                    "created_at": r.get::<_, i64>(5)?
+                }))
+            })?
+            .collect::<Result<Vec<Value>, _>>()?;
+        Ok(rows)
+    }
+
+    pub fn save_mcp_server(
+        &self,
+        owner: &str,
+        id: &str,
+        name: &str,
+        command: &str,
+        args: &str,
+        status: &str,
+    ) -> rusqlite::Result<()> {
+        self.connection.execute(
+            "INSERT INTO mcp_servers_v1(id, owner, name, command, args, status, created_at) \
+             VALUES(?1, ?2, ?3, ?4, ?5, ?6, unixepoch()) \
+             ON CONFLICT(id) DO UPDATE SET \
+                name=excluded.name, \
+                command=excluded.command, \
+                args=excluded.args, \
+                status=excluded.status \
+             WHERE owner=excluded.owner",
+            params![id, owner, name, command, args, status],
+        )?;
+        Ok(())
+    }
+
+    pub fn delete_mcp_server(&self, owner: &str, id: &str) -> rusqlite::Result<bool> {
+        let count = self.connection.execute(
+            "DELETE FROM mcp_servers_v1 WHERE id=?1 AND owner=?2",
+            params![id, owner],
+        )?;
+        Ok(count > 0)
+    }
+
+    // --- Skills ---
+
+    pub fn skills(&self, owner: &str) -> rusqlite::Result<Vec<Value>> {
+        let mut stmt = self.connection.prepare(
+            "SELECT id, name, description, content, enabled, created_at, updated_at FROM skills_v1 WHERE owner=?1 ORDER BY name ASC",
+        )?;
+        let rows = stmt
+            .query_map([owner], |r| {
+                Ok(json!({
+                    "id": r.get::<_, String>(0)?,
+                    "name": r.get::<_, String>(1)?,
+                    "description": r.get::<_, String>(2)?,
+                    "content": r.get::<_, String>(3)?,
+                    "enabled": r.get::<_, i64>(4)? == 1,
+                    "created_at": r.get::<_, i64>(5)?,
+                    "updated_at": r.get::<_, i64>(6)?
+                }))
+            })?
+            .collect::<Result<Vec<Value>, _>>()?;
+        Ok(rows)
+    }
+
+    pub fn save_skill(
+        &self,
+        owner: &str,
+        id: &str,
+        name: &str,
+        description: &str,
+        content: &str,
+        enabled: bool,
+    ) -> rusqlite::Result<()> {
+        let en: i64 = if enabled { 1 } else { 0 };
+        self.connection.execute(
+            "INSERT INTO skills_v1(id, owner, name, description, content, enabled, created_at, updated_at) \
+             VALUES(?1, ?2, ?3, ?4, ?5, ?6, unixepoch(), unixepoch()) \
+             ON CONFLICT(id) DO UPDATE SET \
+                name=excluded.name, \
+                description=excluded.description, \
+                content=excluded.content, \
+                enabled=excluded.enabled, \
+                updated_at=excluded.updated_at \
+             WHERE owner=excluded.owner",
+            params![id, owner, name, description, content, en],
+        )?;
+        Ok(())
+    }
+
+    pub fn delete_skill(&self, owner: &str, id: &str) -> rusqlite::Result<bool> {
+        let count = self.connection.execute(
+            "DELETE FROM skills_v1 WHERE id=?1 AND owner=?2",
+            params![id, owner],
+        )?;
+        Ok(count > 0)
+    }
+
+    // --- Memories ---
+
+    pub fn memories(&self, owner: &str, assistant_id: Option<&str>) -> rusqlite::Result<Vec<Value>> {
+        let (query, has_asst) = match assistant_id {
+            Some(_) => (
+                "SELECT id, assistant_id, fact, category, created_at, updated_at FROM memories_v1 WHERE owner=?1 AND (assistant_id=?2 OR assistant_id IS NULL) ORDER BY updated_at DESC",
+                true,
+            ),
+            None => (
+                "SELECT id, assistant_id, fact, category, created_at, updated_at FROM memories_v1 WHERE owner=?1 ORDER BY updated_at DESC",
+                false,
+            ),
+        };
+        let mut stmt = self.connection.prepare(query)?;
+        let rows = if has_asst {
+            stmt.query_map(params![owner, assistant_id.unwrap()], |r| {
+                Ok(json!({
+                    "id": r.get::<_, String>(0)?,
+                    "assistant_id": r.get::<_, Option<String>>(1)?,
+                    "fact": r.get::<_, String>(2)?,
+                    "category": r.get::<_, String>(3)?,
+                    "created_at": r.get::<_, i64>(4)?,
+                    "updated_at": r.get::<_, i64>(5)?
+                }))
+            })?
+            .collect::<Result<Vec<Value>, _>>()?
+        } else {
+            stmt.query_map([owner], |r| {
+                Ok(json!({
+                    "id": r.get::<_, String>(0)?,
+                    "assistant_id": r.get::<_, Option<String>>(1)?,
+                    "fact": r.get::<_, String>(2)?,
+                    "category": r.get::<_, String>(3)?,
+                    "created_at": r.get::<_, i64>(4)?,
+                    "updated_at": r.get::<_, i64>(5)?
+                }))
+            })?
+            .collect::<Result<Vec<Value>, _>>()?
+        };
+        Ok(rows)
+    }
+
+    pub fn save_memory(
+        &self,
+        owner: &str,
+        id: &str,
+        assistant_id: Option<&str>,
+        fact: &str,
+        category: &str,
+    ) -> rusqlite::Result<()> {
+        self.connection.execute(
+            "INSERT INTO memories_v1(id, owner, assistant_id, fact, category, created_at, updated_at) \
+             VALUES(?1, ?2, ?3, ?4, ?5, unixepoch(), unixepoch()) \
+             ON CONFLICT(id) DO UPDATE SET \
+                fact=excluded.fact, \
+                category=excluded.category, \
+                updated_at=excluded.updated_at \
+             WHERE owner=excluded.owner",
+            params![id, owner, assistant_id, fact, category],
+        )?;
+        Ok(())
+    }
+
+    pub fn delete_memory(&self, owner: &str, id: &str) -> rusqlite::Result<bool> {
+        let count = self.connection.execute(
+            "DELETE FROM memories_v1 WHERE id=?1 AND owner=?2",
+            params![id, owner],
+        )?;
+        Ok(count > 0)
+    }
+
+    // --- Provider Keys ---
+
+    pub fn provider_keys(&self, owner: &str) -> rusqlite::Result<Vec<Value>> {
+        let mut stmt = self.connection.prepare(
+            "SELECT id, base_url, updated_at FROM provider_keys_v1 WHERE owner=?1 ORDER BY id ASC",
+        )?;
+        let rows = stmt
+            .query_map([owner], |r| {
+                Ok(json!({
+                    "id": r.get::<_, String>(0)?,
+                    "has_key": true,
+                    "base_url": r.get::<_, Option<String>>(1)?,
+                    "updated_at": r.get::<_, i64>(2)?
+                }))
+            })?
+            .collect::<Result<Vec<Value>, _>>()?;
+        Ok(rows)
+    }
+
+    pub fn save_provider_key(
+        &self,
+        owner: &str,
+        id: &str,
+        api_key: &str,
+        base_url: Option<&str>,
+    ) -> rusqlite::Result<()> {
+        self.connection.execute(
+            "INSERT INTO provider_keys_v1(id, owner, api_key, base_url, updated_at) \
+             VALUES(?1, ?2, ?3, ?4, unixepoch()) \
+             ON CONFLICT(id) DO UPDATE SET \
+                api_key=excluded.api_key, \
+                base_url=excluded.base_url, \
+                updated_at=excluded.updated_at \
+             WHERE owner=excluded.owner",
+            params![id, owner, api_key, base_url],
+        )?;
+        Ok(())
+    }
+
+    pub fn delete_provider_key(&self, owner: &str, id: &str) -> rusqlite::Result<bool> {
+        let count = self.connection.execute(
+            "DELETE FROM provider_keys_v1 WHERE id=?1 AND owner=?2",
+            params![id, owner],
+        )?;
+        Ok(count > 0)
+    }
+
     pub fn purge_all(&self, owner: &str) -> rusqlite::Result<()> {
         let tx = self.connection.unchecked_transaction()?;
         tx.execute(
@@ -322,6 +552,22 @@ impl Store {
         )?;
         tx.execute(
             "DELETE FROM assistant_profiles_v1 WHERE owner=?1",
+            params![owner],
+        )?;
+        tx.execute(
+            "DELETE FROM mcp_servers_v1 WHERE owner=?1",
+            params![owner],
+        )?;
+        tx.execute(
+            "DELETE FROM skills_v1 WHERE owner=?1",
+            params![owner],
+        )?;
+        tx.execute(
+            "DELETE FROM memories_v1 WHERE owner=?1",
+            params![owner],
+        )?;
+        tx.execute(
+            "DELETE FROM provider_keys_v1 WHERE owner=?1",
             params![owner],
         )?;
         tx.execute("DELETE FROM conversations WHERE owner=?1", params![owner])?;

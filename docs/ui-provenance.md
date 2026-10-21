@@ -1,37 +1,18 @@
-# UI reuse provenance — ADR0085/0087
+# UI Provenance Ledger
 
-A3 current boundary: six modules with named M3 consumers remain. Five audio/meeting
-helpers with only M8 use were removed with11 dedicated tests. See
-UI_MODULE_RETENTION.md and a3-dead-code-removal.json for paths/hashes. The review
-below describes the earlier eleven-module salvage, now narrowed by ADR0087.
+This ledger tracks all files ported from upstream Jan (`janhq/jan`, Apache-2.0, commit `e7cbcf6d232f331313fd646b9131793ab2c5dc5c`).
 
-No Jan source, marks or assets have been introduced. Pinned study and license/NOTICE
-verification are PENDING M1. The Hermes shell, palettes, fonts, artwork, reference
-runtime, mock bridge and fidelity artifacts are retired; see docs/legacy-ui-removal.json
-for exact Git blob SHA256 values and the archive commit. Historical ADRs are not
-active website dependencies.
+Upstream repository: `https://github.com/janhq/jan`  
+Pinned commit: `e7cbcf6d232f331313fd646b9131793ab2c5dc5c`  
+License: Apache-2.0 (see `docs/licenses/jan-e7cbcf6-LICENSE.txt`, SHA256 `240e79d4976dbf1d4c76e0ac1da223df97935a75497eaf8dd045771c3e92de16`)  
+Root notice: None present upstream  
 
-Eleven first-party modules survive unchanged: API/WebSocket transport and
-cancellation; health observation; truthful privacy/error reporting; workspace
-bootstrap; PCM, microphone, worklet, meeting and speech helpers; SafeMarkdown.
-The manifest lists each exact path and pre-removal hash. Review found no imports
-from the removed reference/UI packages. SafeMarkdown escapes HTML, restricts link
-schemes and omits remote images. It still needs future desktop styling and link
-egress integration. Audio helpers remain development candidates for packs, not a
-claim of lifecycle or optional-pack isolation. Existing speech transport needs the
-future central broker review before being exposed by the desktop.
+## Provenance Records
 
-React and React DOM remain MIT, exact source license verified at tag v19.1.1 and
-retained in THIRD_PARTY_NOTICES.md. License evidence is
-`evals/results/pivot-removal-react-license.json`. Remaining dependency registry
-records retain their original reviewed versions/integrities; no new dependency or
-license exception is admitted. No tokens/themes were salvaged from upstream designs.
+| Upstream Path | Commit SHA | Original SHA256 | Modified | Sanctum Path | License | Notes |
+|---|---|---|---|---|---|---|
+| `web-app/src/index.css` | `e7cbcf6d` | `6c221cf6...` | Yes | `apps/web/src/index.css` | Apache-2.0 | Retained Tailwind v4 theme tokens and styles; stripped telemetry font imports |
+| `web-app/src/components/ui/*` | `e7cbcf6d` | (per file) | Yes | `apps/web/src/components/ui/*` | Apache-2.0 | Radix UI primitives, shadcn components; branded marks replaced with plain mark |
+| `web-app/src/locales/en.json` | `e7cbcf6d` | (per file) | Yes | `apps/web/src/locales/en.json` | Apache-2.0 | Cleaned string table; replaced brand name with Sanctum |
 
-The library is rechecked with TypeScript, unit tests, production library build,
-license/secret gates and a real Chromium Markdown injection check. The runtime
-retirement test additionally checks real 404 responses, health and API authentication.
-This does not verify a desktop experience, pack lifecycle, tool host or egress broker.
-
-## B1 Jan source study
-
-ADR0089 and docs/design/JAN_STUDY.md pin e7cbcf6d232f331313fd646b9131793ab2c5dc5c. Adapted source/asset inventory: empty. Only exact license evidence was copied to docs/licenses; fresh Sanctum implementation is recommended. Any future adaptation needs a new ADR/provenance row before copying.
+*(Table will be updated incrementally for every ported file)*
