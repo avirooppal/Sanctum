@@ -43,6 +43,14 @@
   - Production desktop UI bundle size: **18.50 KB gzip** (well under 51.2 KB target and 102.4 KB hard ceiling).
   - All 51 web unit tests pass; 188 workspace checks pass.
   - Hosted CI: commit `06d6b1c` verified green across all 5 jobs in run 39552917562 (`evals/results/reality-rules-hosted-ci.json`).
+- Jan Exact UI/UX Port (Owner Directive ADR 0096, Native Shim ADR 0097):
+  - Supersedes ADR 0089 and provisional Preact choice in ADR 0092; archives obsolete UI instructions to `docs/ARCHIVE.md`.
+  - Provenance & notices tracked in `docs/ui-provenance.md` and `THIRD_PARTY_NOTICES.md` (Apache-2.0 upstream SHA `e7cbcf6d232f331313fd646b9131793ab2c5dc5c`). Brand replaced with plain geometric mark. Zero third-party egress (telemetry/updater purged).
+  - Upstream reference build and 12 baseline reference screenshots captured at 1440x900, 1024x768, 600x800 in `evals/results/ui-reference/` with mock backend in `tools/reference/mock_backend.mjs`.
+  - Ported exact design tokens, typography, colors, sidebar, composer, chat panel, model hub, settings, and right collapsible parameters drawer.
+  - Automated UI fidelity harness established (`evals/results/ui-fidelity.json`, `docs/ui-fidelity.md`).
+  - Reality Rules strictly enforced: unbacked panels purged (`tools/check_reality.py` 0 violations).
+  - 56 web unit tests passing; 0 typecheck errors.
 - No native installer, desktop performance acceptance or whole-product security claim.
 
 Evidence: [A2–A5 commands/results](A2_A5_EVIDENCE.md), [PERFORMANCE](PERFORMANCE.md), [test audit](TEST_REMOVAL_AUDIT.md),

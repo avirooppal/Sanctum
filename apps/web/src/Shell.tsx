@@ -11,7 +11,6 @@ import { PacksPanel } from './components/PacksPanel.js';
 import { SettingsPanel } from './components/SettingsPanel.js';
 import { CommandPalette, type CommandItem } from './components/CommandPalette.js';
 import { ThreadDrawer, type ThreadParameters } from './components/ThreadDrawer.js';
-import { ModelComparePanel } from './components/ModelComparePanel.js';
 import { SkillsMemoryPanel } from './components/SkillsMemoryPanel.js';
 import type {
   SanctumClient,
@@ -442,22 +441,6 @@ export const Shell: React.FC<ShellProps> = ({
     });
 
     reg.register({
-      id: 'compare',
-      title: 'Model Compare',
-      icon: '⚖️',
-      allowedSlots: ['center'],
-      requiredCapabilities: ['chat'],
-      defaultVisibility: false,
-      component: () => (
-        <ModelComparePanel
-          client={client}
-          models={models}
-          platformAssurance={platformAssurance}
-        />
-      ),
-    });
-
-    reg.register({
       id: 'skills',
       title: 'Skills & Memory',
       icon: '🧠',
@@ -580,12 +563,6 @@ export const Shell: React.FC<ShellProps> = ({
         title: 'Go to Model Providers',
         category: 'Navigation',
         onExecute: () => setActiveView('providers'),
-      },
-      {
-        id: 'view-compare',
-        title: 'Go to Model Compare Arena',
-        category: 'Navigation',
-        onExecute: () => setActiveView('compare'),
       },
       {
         id: 'view-skills',
