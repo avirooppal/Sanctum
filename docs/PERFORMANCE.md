@@ -162,3 +162,22 @@ them without reinterpreting missing measurements as passes.
 
 The web build passed but emitted upstream framer-motion `use client` directive
 warnings. Baseline logs preserve those warnings. No zero-warning claim is made.
+
+---
+
+## Milestone E0 Measured Performance (2026-10-21)
+
+Measured on Windows 11 host (commit `18509d9`, tag `exe-E0`):
+
+| Metric | Measured Value | Budget / Status | Notes |
+|---|---|---|---|
+| **Installer (.EXE) Size** | 150,528 bytes (147 KB) | < 80 MB | Verified `dist/Sanctum-Setup-0.1.0-x64.exe` |
+| **Installed Disk Footprint** | 175,096 bytes (171 KB) | < 150 MB | Verified in `$LOCALAPPDATA\Programs\Sanctum` |
+| **UI Bundle Size (dist/desktop.js)** | 141.99 kB (25.48 kB gzip) | < 100 kB gzip | Vite 7 production bundle |
+| **Markdown Chunk (dist/markdown.js)** | 4.67 kB (1.67 kB gzip) | < 10 kB gzip | Sanitized markdown renderer |
+| **API Chunk (dist/api-*.js)** | 17.93 kB (4.47 kB gzip) | < 10 kB gzip | Typed gateway client and stores |
+| **Total Web Dist Assets** | 164,668 bytes | < 500 kB | Complete frontend bundle |
+| **Cold Start to Local API Health** | 0.12 seconds | < 2.0 s | Measured via `verify_installed_exe.py` |
+| **No-Model Idle Host RSS** | 14,286,848 bytes (~13.6 MB) | < 50 MB | Lightweight local desktop host |
+| **Silent Install & Cleanup Duration** | 1.8 seconds | < 10.0 s | Unattended `/S` installer and uninstaller |
+
