@@ -8,6 +8,10 @@ import { PacksPanel } from './components/PacksPanel.js';
 import { SettingsPanel } from './components/SettingsPanel.js';
 import { StatusBar } from './components/StatusBar.js';
 import { CommandPalette, type CommandItem } from './components/CommandPalette.js';
+import { ThreadDrawer, type ThreadParameters } from './components/ThreadDrawer.js';
+import { ComparePanel } from './components/ComparePanel.js';
+import { CookbookPanel } from './components/CookbookPanel.js';
+import { ResearchPanel } from './components/ResearchPanel.js';
 import type { SanctumClient, CapabilityReport, Model, SettingEntry, PackInfo } from './api.js';
 
 export interface ShellProps {
@@ -33,6 +37,14 @@ export const Shell: React.FC<ShellProps> = ({
   const [messages, setMessages] = useState<ChatMessage[]>([]);
   const [isStreaming, setIsStreaming] = useState(false);
   const [isCommandPaletteOpen, setIsCommandPaletteOpen] = useState(false);
+  const [isDrawerOpen, setIsDrawerOpen] = useState(false);
+  const [threadParams, setThreadParams] = useState<ThreadParameters>({
+    systemPrompt: 'You are a helpful, thoughtful, local AI assistant.',
+    temperature: 0.7,
+    topP: 0.95,
+    maxTokens: 2048,
+    stream: true,
+  });
 
   // Initialize Panel Registry
   const registry = useMemo(() => {
@@ -51,6 +63,8 @@ export const Shell: React.FC<ShellProps> = ({
           onSendMessage={handleSendMessage}
           onStopStreaming={() => setIsStreaming(false)}
           activeModelName={activeModel}
+          isDrawerOpen={isDrawerOpen}
+          onToggleDrawer={() => setIsDrawerOpen((prev) => !prev)}
         />
       ),
     });
@@ -89,6 +103,41 @@ export const Shell: React.FC<ShellProps> = ({
     });
 
     reg.register({
+      id: 'compare',
+      title: 'Compare',
+      icon: '⚖️',
+      allowedSlots: ['center'],
+      requiredCapabilities: ['chat'],
+      defaultVisibility: false,
+      component: () => (
+        <ComparePanel
+          models={models}
+          activeModelId={activeModel}
+        />
+      ),
+    });
+
+    reg.register({
+      id: 'cookbook',
+      title: 'Cookbook',
+      icon: '🍳',
+      allowedSlots: ['center'],
+      requiredCapabilities: ['models'],
+      defaultVisibility: false,
+      component: () => <CookbookPanel />,
+    });
+
+    reg.register({
+      id: 'research',
+      title: 'Deep Research',
+      icon: '🔬',
+      allowedSlots: ['center'],
+      requiredCapabilities: ['chat'],
+      defaultVisibility: false,
+      component: () => <ResearchPanel />,
+    });
+
+    reg.register({
       id: 'settings',
       title: 'Settings',
       icon: '⚙️',
@@ -105,7 +154,7 @@ export const Shell: React.FC<ShellProps> = ({
     });
 
     return reg;
-  }, [messages, isStreaming, activeModel, models, packs, settings, platformAssurance]);
+  }, [messages, isStreaming, activeModel, models, packs, settings, platformAssurance, isDrawerOpen]);
 
   // Load gateway capabilities and metadata
   useEffect(() => {
@@ -258,6 +307,24 @@ export const Shell: React.FC<ShellProps> = ({
       onExecute: () => setActiveView('chat'),
     },
     {
+      id: 'open-compare',
+      title: 'Open Model Compare & Arena',
+      category: 'Navigation',
+      onExecute: () => setActiveView('compare'),
+    },
+    {
+      id: 'open-cookbook',
+      title: 'Open Model Cookbook',
+      category: 'Navigation',
+      onExecute: () => setActiveView('cookbook'),
+    },
+    {
+      id: 'open-research',
+      title: 'Open Deep Research',
+      category: 'Navigation',
+      onExecute: () => setActiveView('research'),
+    },
+    {
       id: 'open-models',
       title: 'Open Models Manager',
       category: 'Navigation',
@@ -318,6 +385,22 @@ export const Shell: React.FC<ShellProps> = ({
             )}
           </PanelErrorBoundary>
         </main>
+
+        {activeView === 'chat' && (
+          <ThreadDrawer
+            isOpen={isDrawerOpen}
+            onClose={() => setIsDrawerOpen(false)}
+            activeModel={activeModel}
+            models={models}
+            onSelectModel={setActiveModel}
+            params={threadParams}
+            onUpdateParams={(p) => setThreadParams((prev) => ({ ...prev, ...p }))}
+            onDeleteThread={() => {
+              setMessages([]);
+              setIsDrawerOpen(false);
+            }}
+          />
+        )}
       </div>
 
       <StatusBar
