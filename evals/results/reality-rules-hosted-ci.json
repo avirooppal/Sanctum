@@ -1,0 +1,16 @@
+{
+  "workflow_run_id": "39552917562",
+  "workflow_run_number": 172,
+  "branch": "jan-style",
+  "commit_sha": "06d6b1cb00a4d17945e456eaad21b583bb532478",
+  "commit_message": "fix(reality): enforce Reality Rules, purge unbacked simulations, add reality gates and audit",
+  "conclusion": "success",
+  "jobs": {
+    "source-gates (ubuntu-22.04)": "success",
+    "source-gates (windows-latest)": "success",
+    "source-gates (macos-latest)": "success",
+    "rust-foundation": "success",
+    "web": "success"
+  },
+  "verified_at": "2026-10-21T06:02:40Z"
+}
