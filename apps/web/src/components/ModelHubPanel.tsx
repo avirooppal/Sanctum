@@ -1,33 +1,20 @@
 import React, { useState, useRef } from 'react';
 import type { Model } from '../api.js';
 
-/** Hardware data comes from the capability report — never hardcoded. */
 export interface HardwareInfo {
   threads: number;
   context: number;
-  vram_mb?: number;       // Unknown on Windows without a probe; absent = not measured
+  vram_mb?: number;
   total_ram_mb?: number;
 }
 
 export interface ModelHubPanelProps {
   models: Model[];
   activeModelId: string;
-  hardware: HardwareInfo | null;   // null = API not yet contacted
+  hardware: HardwareInfo | null;
   onSelectModel: (id: string) => void;
   onImportGguf: (file: File) => Promise<void>;
   onDeleteModel?: (id: string) => Promise<void>;
-}
-
-/** Fit estimate thresholds (rule-of-thumb; labeled as estimate per ADR0095) */
-function fitLabel(model: Model, hw: HardwareInfo | null): { label: string; color: string } {
-  if (!hw) return { label: 'Unknown', color: '#64748b' };
-  const ctx = model.context_length ?? 4096;
-  const bytes = ctx * 2; // rough Q4 KV cache per token
-  const ramBytes = (hw.total_ram_mb ?? 0) * 1024 * 1024;
-  if (ramBytes === 0) return { label: 'Unknown', color: '#64748b' };
-  if (bytes < ramBytes * 0.5) return { label: '✓ Recommended', color: '#22c55e' };
-  if (bytes < ramBytes * 0.85) return { label: '△ Fits (tight)', color: '#f59e0b' };
-  return { label: '✗ May not fit', color: '#ef4444' };
 }
 
 export const ModelHubPanel: React.FC<ModelHubPanelProps> = ({
@@ -42,6 +29,7 @@ export const ModelHubPanel: React.FC<ModelHubPanelProps> = ({
   const [importErr, setImportErr] = useState<string | null>(null);
   const [importSuccess, setImportSuccess] = useState<string | null>(null);
   const [search, setSearch] = useState('');
+  const [activeTab, setActiveTab] = useState<'installed' | 'catalog'>('installed');
   const fileRef = useRef<HTMLInputElement>(null);
 
   const filtered = models.filter((m) => m.id.toLowerCase().includes(search.toLowerCase()));
@@ -58,9 +46,9 @@ export const ModelHubPanel: React.FC<ModelHubPanelProps> = ({
     setImportSuccess(null);
     try {
       await onImportGguf(file);
-      setImportSuccess(`Imported: ${file.name}`);
-    } catch (err) {
-      setImportErr(err instanceof Error ? err.message : 'Import failed.');
+      setImportSuccess(`Imported "${file.name}" successfully.`);
+    } catch (err: unknown) {
+      setImportErr(err instanceof Error ? err.message : 'Import failed');
     } finally {
       setImporting(false);
       if (fileRef.current) fileRef.current.value = '';
@@ -68,179 +56,151 @@ export const ModelHubPanel: React.FC<ModelHubPanelProps> = ({
   };
 
   return (
-    <div style={{ flex: 1, height: '100%', padding: '24px', overflowY: 'auto', backgroundColor: '#0b0f17', color: '#f8fafc' }}>
-      <div style={{ maxWidth: '900px', margin: '0 auto' }}>
-
+    <div className="flex-1 h-full flex flex-col bg-background text-foreground overflow-y-auto p-6 md:p-8">
+      <div className="max-w-4xl mx-auto w-full space-y-6">
         {/* Header */}
-        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '6px' }}>
-          <h2 style={{ fontSize: '20px', fontWeight: 600, margin: 0 }}>Model Hub</h2>
-          <button
-            type="button"
-            id="btn-import-gguf"
-            onClick={() => fileRef.current?.click()}
-            disabled={importing}
-            style={{
-              padding: '7px 16px',
-              backgroundColor: importing ? '#1e3a5f' : '#38bdf8',
-              color: importing ? '#7dd3fc' : '#0b0f17',
-              border: 'none',
-              borderRadius: '6px',
-              fontWeight: 700,
-              fontSize: '13px',
-              cursor: importing ? 'not-allowed' : 'pointer',
-            }}
-          >
-            {importing ? 'Importing…' : '↑ Import GGUF'}
-          </button>
-          <input
-            ref={fileRef}
-            id="input-gguf-file"
-            type="file"
-            accept=".gguf"
-            style={{ display: 'none' }}
-            onChange={handleFileChange}
-          />
+        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 border-b border-border/40 pb-5">
+          <div>
+            <h1 className="text-2xl font-bold font-studio tracking-tight text-foreground">Model Hub</h1>
+            <p className="text-xs text-muted-foreground mt-0.5">Manage local weights and import GGUF models</p>
+          </div>
+
+          <div className="flex items-center gap-2">
+            <input
+              type="file"
+              ref={fileRef}
+              accept=".gguf"
+              onChange={handleFileChange}
+              style={{ display: 'none' }}
+            />
+            <button
+              onClick={() => fileRef.current?.click()}
+              disabled={importing}
+              className="flex items-center gap-1.5 px-3.5 py-1.5 rounded-lg bg-primary text-primary-foreground text-xs font-medium hover:bg-primary/90 transition-colors shadow-xs disabled:opacity-50"
+            >
+              <svg className="size-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4M17 8l-5-5-5 5M12 3v12" />
+              </svg>
+              <span>{importing ? 'Importing...' : 'Import GGUF'}</span>
+            </button>
+          </div>
         </div>
 
-        <p style={{ fontSize: '13px', color: '#94a3b8', marginBottom: '20px' }}>
-          Local GGUF weights only. No model is downloaded automatically.
-          Fit estimates are rule-of-thumb (context window × Q4 KV ÷ available RAM) and are labeled as estimates.
-        </p>
-
-        {/* Hardware strip */}
-        <div style={{ padding: '12px 16px', backgroundColor: '#121824', borderRadius: '8px', border: '1px solid #1e293b', marginBottom: '20px', display: 'flex', gap: '24px', flexWrap: 'wrap' }}>
-          <HwStat label="CPU threads" value={hardware ? String(hardware.threads) : 'Unknown'} />
-          <HwStat label="Max context" value={hardware ? `${hardware.context.toLocaleString()} tok` : 'Unknown'} />
-          <HwStat label="System RAM" value={hardware?.total_ram_mb ? `${Math.round(hardware.total_ram_mb / 1024)} GB` : 'Unknown'} />
-          <HwStat label="GPU VRAM" value={hardware?.vram_mb ? `${Math.round(hardware.vram_mb / 1024)} GB` : 'Unknown'} />
-          {!hardware && (
-            <span style={{ fontSize: '11px', color: '#64748b', alignSelf: 'center' }}>
-              Hardware data unavailable — gateway offline or probe not run.
-            </span>
-          )}
-        </div>
-
-        {/* Feedback banners */}
+        {/* Status Banners */}
         {importErr && (
-          <div style={{ padding: '10px 14px', backgroundColor: '#7f1d1d', color: '#fca5a5', borderRadius: '6px', fontSize: '13px', marginBottom: '14px' }}>
+          <div className="p-3 rounded-lg border border-destructive/40 bg-destructive/10 text-destructive text-xs">
             {importErr}
           </div>
         )}
         {importSuccess && (
-          <div style={{ padding: '10px 14px', backgroundColor: '#064e3b', color: '#6ee7b7', borderRadius: '6px', fontSize: '13px', marginBottom: '14px' }}>
+          <div className="p-3 rounded-lg border border-emerald-500/40 bg-emerald-500/10 text-emerald-400 text-xs">
             {importSuccess}
           </div>
         )}
 
-        {/* Search */}
-        <input
-          type="text"
-          placeholder="Filter models…"
-          value={search}
-          onChange={(e) => setSearch(e.target.value)}
-          style={{
-            width: '100%',
-            padding: '8px 12px',
-            backgroundColor: '#121824',
-            border: '1px solid #1e293b',
-            borderRadius: '6px',
-            color: '#f8fafc',
-            fontSize: '13px',
-            boxSizing: 'border-box',
-            marginBottom: '16px',
-          }}
-        />
-
-        {/* Model cards */}
-        {filtered.length === 0 && (
-          <div style={{ padding: '48px', textAlign: 'center', color: '#475569', fontSize: '14px' }}>
-            {models.length === 0
-              ? 'No models detected. Import a GGUF file to get started.'
-              : 'No models match your search.'}
+        {/* Tabs & Search */}
+        <div className="flex items-center justify-between gap-3">
+          <div className="flex items-center gap-1 bg-secondary/50 p-0.5 rounded-lg border border-border/40">
+            <button
+              onClick={() => setActiveTab('installed')}
+              className={`px-3 py-1 rounded-md text-xs font-medium transition-colors ${
+                activeTab === 'installed'
+                  ? 'bg-card text-foreground shadow-xs'
+                  : 'text-muted-foreground hover:text-foreground'
+              }`}
+            >
+              Installed ({models.length})
+            </button>
           </div>
-        )}
 
-        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(300px, 1fr))', gap: '14px' }}>
-          {filtered.map((model) => {
-            const isActive = model.id === activeModelId;
-            const fit = fitLabel(model, hardware);
-            return (
-              <div
-                key={model.id}
-                style={{
-                  padding: '16px',
-                  borderRadius: '10px',
-                  backgroundColor: '#121824',
-                  border: `2px solid ${isActive ? '#38bdf8' : '#1e293b'}`,
-                  display: 'flex',
-                  flexDirection: 'column',
-                  gap: '10px',
-                  transition: 'border-color 0.15s',
-                }}
-              >
-                <div style={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', gap: '8px' }}>
-                  <span style={{ fontWeight: 700, fontSize: '14px', wordBreak: 'break-all' }}>{model.id}</span>
-                  {isActive && <span style={{ fontSize: '10px', color: '#38bdf8', fontWeight: 700, flexShrink: 0 }}>ACTIVE</span>}
-                </div>
+          <div className="relative">
+            <svg className="absolute left-2.5 top-2.5 size-3.5 text-muted-foreground pointer-events-none" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+              <circle cx="11" cy="11" r="8" /><path d="m21 21-4.3-4.3" />
+            </svg>
+            <input
+              type="text"
+              value={search}
+              onChange={(e) => setSearch(e.target.value)}
+              placeholder="Search models..."
+              className="w-56 bg-input/20 border border-input/40 rounded-lg pl-8 pr-3 py-1.5 text-xs text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-1 focus:ring-ring"
+            />
+          </div>
+        </div>
 
-                <div style={{ display: 'flex', gap: '6px', flexWrap: 'wrap' }}>
-                  {model.capabilities.map((c) => (
-                    <span key={c} style={{ fontSize: '10px', padding: '2px 6px', backgroundColor: '#1e293b', color: '#38bdf8', borderRadius: '4px', fontWeight: 600 }}>
-                      {c}
-                    </span>
-                  ))}
-                </div>
+        {/* Model List */}
+        {filtered.length === 0 ? (
+          <div className="p-12 text-center rounded-2xl border border-dashed border-border/60 bg-card/40 space-y-3">
+            <div className="size-10 rounded-full bg-secondary text-muted-foreground mx-auto flex items-center justify-center">
+              <svg className="size-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                <rect width="18" height="18" x="3" y="3" rx="2" />
+                <path d="M3 9h18M9 21V9" />
+              </svg>
+            </div>
+            <div>
+              <h3 className="text-sm font-semibold text-foreground">No models installed</h3>
+              <p className="text-xs text-muted-foreground mt-1 max-w-sm mx-auto">
+                Import a local .gguf weights file using the Import button above to begin.
+              </p>
+            </div>
+          </div>
+        ) : (
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            {filtered.map((m) => {
+              const isActive = m.id === activeModelId;
+              return (
+                <div
+                  key={m.id}
+                  className={`rounded-xl border p-4 transition-all flex flex-col justify-between gap-3 ${
+                    isActive
+                      ? 'border-primary/50 bg-card shadow-sm'
+                      : 'border-border bg-card/60 hover:border-border/80'
+                  }`}
+                >
+                  <div className="space-y-1.5">
+                    <div className="flex items-start justify-between gap-2">
+                      <h3 className="text-sm font-semibold text-foreground truncate" title={m.id}>
+                        {m.id}
+                      </h3>
+                      <span className="text-[10px] uppercase font-mono px-1.5 py-0.5 rounded bg-secondary text-secondary-foreground border border-border/40 shrink-0">
+                        GGUF
+                      </span>
+                    </div>
+                    <div className="flex items-center gap-3 text-xs text-muted-foreground">
+                      {m.context_length && <span>Context: {m.context_length}</span>}
+                      {m.license && <span>License: {m.license}</span>}
+                    </div>
+                  </div>
 
-                <div style={{ fontSize: '12px', color: '#94a3b8', display: 'flex', flexDirection: 'column', gap: '3px' }}>
-                  <div>Context: <span style={{ color: '#cbd5e1' }}>{(model.context_length ?? 0).toLocaleString() || 'Unknown'} tokens</span></div>
-                  <div>License: <span style={{ color: '#cbd5e1' }}>{model.license || 'Unknown'}</span></div>
-                  <div>
-                    Fit estimate:{' '}
-                    <span style={{ color: fit.color, fontWeight: 600 }}>{fit.label}</span>
-                    <span style={{ color: '#475569', fontSize: '10px', marginLeft: '4px' }}>(estimate)</span>
+                  <div className="flex items-center justify-between pt-2 border-t border-border/20">
+                    <button
+                      onClick={() => onSelectModel(m.id)}
+                      className={`px-3 py-1.5 rounded-lg text-xs font-medium transition-colors ${
+                        isActive
+                          ? 'bg-emerald-500/10 text-emerald-400 border border-emerald-500/30'
+                          : 'bg-primary text-primary-foreground hover:bg-primary/90'
+                      }`}
+                    >
+                      {isActive ? '✓ Active' : 'Load Model'}
+                    </button>
+
+                    {onDeleteModel && (
+                      <button
+                        onClick={() => onDeleteModel(m.id)}
+                        className="p-1.5 rounded-md text-muted-foreground hover:text-destructive hover:bg-destructive/10 transition-colors"
+                        title="Delete model"
+                      >
+                        <svg className="size-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                          <path d="M3 6h18M19 6v14c0 1-1 2-2 2H7c-1 0-2-1-2-2V6M8 6V4c0-1 1-2 2-2h4c1 0 2 1 2 2v2" />
+                        </svg>
+                      </button>
+                    )}
                   </div>
                 </div>
-
-                <div style={{ display: 'flex', gap: '8px' }}>
-                  <button
-                    type="button"
-                    onClick={() => onSelectModel(model.id)}
-                    style={{
-                      flex: 1,
-                      padding: '7px',
-                      backgroundColor: isActive ? '#0e4372' : '#1e293b',
-                      color: isActive ? '#38bdf8' : '#94a3b8',
-                      border: 'none',
-                      borderRadius: '6px',
-                      fontSize: '12px',
-                      fontWeight: 600,
-                      cursor: 'pointer',
-                    }}
-                  >
-                    {isActive ? '✓ Selected' : 'Use This Model'}
-                  </button>
-                  {onDeleteModel && (
-                    <button
-                      type="button"
-                      onClick={() => onDeleteModel(model.id)}
-                      style={{ padding: '7px 10px', backgroundColor: '#2d1b1b', color: '#f87171', border: 'none', borderRadius: '6px', fontSize: '12px', cursor: 'pointer' }}
-                    >
-                      ✕
-                    </button>
-                  )}
-                </div>
-              </div>
-            );
-          })}
-        </div>
+              );
+            })}
+          </div>
+        )}
       </div>
     </div>
   );
 };
-
-const HwStat: React.FC<{ label: string; value: string }> = ({ label, value }) => (
-  <div style={{ display: 'flex', flexDirection: 'column', gap: '2px' }}>
-    <div style={{ fontSize: '10px', color: '#64748b', textTransform: 'uppercase', letterSpacing: '0.04em' }}>{label}</div>
-    <div style={{ fontSize: '14px', fontWeight: 600, color: value === 'Unknown' ? '#475569' : '#f8fafc' }}>{value}</div>
-  </div>
-);

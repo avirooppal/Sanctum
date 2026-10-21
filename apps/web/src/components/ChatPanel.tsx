@@ -21,9 +21,11 @@ export interface ChatPanelProps {
   onSendMessage: (text: string) => void;
   onStopStreaming?: () => void;
   activeModelName?: string;
-  platformAssurance?: string;
+  availableModels?: { id: string; name?: string }[];
+  onSelectModel?: (id: string) => void;
   isDrawerOpen?: boolean;
   onToggleDrawer?: () => void;
+  onNewChat?: () => void;
 }
 
 export const ChatPanel: React.FC<ChatPanelProps> = ({
@@ -32,11 +34,14 @@ export const ChatPanel: React.FC<ChatPanelProps> = ({
   onSendMessage,
   onStopStreaming,
   activeModelName = '',
-  platformAssurance = 'not verified',
+  availableModels = [],
+  onSelectModel,
   isDrawerOpen = false,
   onToggleDrawer,
+  onNewChat,
 }) => {
   const scrollRef = useRef<HTMLDivElement>(null);
+  const [modelDropdownOpen, setModelDropdownOpen] = React.useState(false);
 
   useEffect(() => {
     if (scrollRef.current) {
@@ -50,270 +55,181 @@ export const ChatPanel: React.FC<ChatPanelProps> = ({
     }
   };
 
-  const isAssuranceVerified = platformAssurance === 'verified kernel containment';
-  const displayModel = activeModelName || 'No model loaded';
+  const displayModel = activeModelName || (availableModels.length > 0 ? availableModels[0].id : 'Select a model');
 
   return (
-    <div
-      style={{
-        flex: 1,
-        height: '100%',
-        display: 'flex',
-        flexDirection: 'column',
-        backgroundColor: '#0b0f17',
-        color: '#f8fafc',
-      }}
-    >
-      {/* Thread Header */}
-      <div
-        style={{
-          padding: '12px 20px',
-          borderBottom: '1px solid #1e293b',
-          display: 'flex',
-          alignItems: 'center',
-          justifyContent: 'space-between',
-          backgroundColor: '#121824',
-          gap: '12px',
-        }}
-      >
-        <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
-          <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
-            <span style={{ fontSize: '13px', color: '#94a3b8' }}>Model:</span>
-            <span
-              style={{
-                fontSize: '12px',
-                padding: '2px 8px',
-                backgroundColor: '#1e293b',
-                color: activeModelName ? '#38bdf8' : '#64748b',
-                borderRadius: '4px',
-                fontWeight: 500,
-              }}
-            >
-              {displayModel}
-            </span>
-          </div>
+    <div className="flex-1 h-full flex flex-col bg-background text-foreground overflow-hidden">
+      {/* Top Header: Model Combobox + Actions (No assurance claim in header per Deviation #6) */}
+      <div className="h-12 border-b border-border/40 px-4 flex items-center justify-between bg-background/80 backdrop-blur-xs shrink-0 z-10">
+        <div className="relative">
+          <button
+            onClick={() => setModelDropdownOpen(!modelDropdownOpen)}
+            className="flex items-center gap-2 px-3 py-1.5 rounded-full border border-border/60 bg-card hover:bg-accent text-xs font-medium text-foreground transition-colors shadow-xs"
+          >
+            <div className="size-2 rounded-full bg-emerald-500" />
+            <span className="font-semibold">{displayModel}</span>
+            <svg className="size-3.5 text-muted-foreground" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+              <path d="m6 9 6 6 6-6" />
+            </svg>
+          </button>
+
+          {modelDropdownOpen && availableModels.length > 0 && (
+            <div className="absolute top-full left-0 mt-1.5 w-64 rounded-xl border border-border bg-popover text-popover-foreground shadow-lg p-1 z-50">
+              <div className="px-2 py-1 text-[11px] font-semibold text-muted-foreground uppercase tracking-wider">
+                Installed Models
+              </div>
+              {availableModels.map((m) => (
+                <button
+                  key={m.id}
+                  onClick={() => {
+                    if (onSelectModel) onSelectModel(m.id);
+                    setModelDropdownOpen(false);
+                  }}
+                  className={`w-full flex items-center justify-between px-2.5 py-1.5 rounded-lg text-xs text-left transition-colors ${
+                    m.id === activeModelName ? 'bg-accent text-accent-foreground font-medium' : 'hover:bg-accent/60'
+                  }`}
+                >
+                  <span className="truncate">{m.name || m.id}</span>
+                  {m.id === activeModelName && (
+                    <span className="text-primary text-xs">✓</span>
+                  )}
+                </button>
+              ))}
+            </div>
+          )}
         </div>
 
-        {/* Right side controls */}
-        <div style={{ display: 'flex', alignItems: 'center', gap: '16px' }}>
-          <div style={{ fontSize: '11px', color: '#64748b', display: 'flex', alignItems: 'center', gap: '6px' }}>
-            <span>Assurance:</span>
-            <strong
-              style={{
-                color: isAssuranceVerified ? '#10b981' : '#f59e0b',
-                background: isAssuranceVerified ? 'rgba(16, 185, 129, 0.1)' : 'rgba(245, 158, 11, 0.1)',
-                padding: '2px 6px',
-                borderRadius: '3px',
-              }}
+        <div className="flex items-center gap-1.5">
+          {onNewChat && (
+            <button
+              onClick={onNewChat}
+              className="p-1.5 rounded-lg text-muted-foreground hover:bg-accent hover:text-foreground transition-colors"
+              title="New Chat (Ctrl+N)"
             >
-              {isAssuranceVerified ? 'CONTAINED' : 'UNVERIFIED'}
-            </strong>
-          </div>
+              <svg className="size-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                <path d="M12 5v14M5 12h14" />
+              </svg>
+            </button>
+          )}
           {onToggleDrawer && (
             <button
               onClick={onToggleDrawer}
-              style={{
-                padding: '5px 12px',
-                fontSize: '12px',
-                backgroundColor: isDrawerOpen ? '#38bdf8' : '#1e293b',
-                color: isDrawerOpen ? '#0b0f17' : '#f8fafc',
-                border: 'none',
-                borderRadius: '4px',
-                cursor: 'pointer',
-                display: 'flex',
-                alignItems: 'center',
-                gap: '6px',
-                fontWeight: 500,
-                transition: 'background-color 0.15s ease',
-              }}
-              title="Toggle Parameter Drawer"
+              className={`p-1.5 rounded-lg transition-colors ${
+                isDrawerOpen
+                  ? 'bg-accent text-foreground'
+                  : 'text-muted-foreground hover:bg-accent hover:text-foreground'
+              }`}
+              title="Model Parameters"
             >
-              <span>⚙️</span> Parameters
+              <svg className="size-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                <line x1="4" x2="20" y1="21" y2="21" />
+                <line x1="4" x2="20" y1="3" y2="3" />
+                <line x1="4" x2="20" y1="12" y2="12" />
+                <line x1="12" x2="12" y1="9" y2="15" />
+              </svg>
             </button>
           )}
         </div>
       </div>
 
-      {/* Message List */}
-      <div
-        ref={scrollRef}
-        style={{
-          flex: 1,
-          overflowY: 'auto',
-          padding: '20px',
-          display: 'flex',
-          flexDirection: 'column',
-          gap: '16px',
-        }}
-      >
-        {messages.length === 0 && (
-          <div
-            style={{
-              margin: 'auto',
-              textAlign: 'center',
-              color: '#64748b',
-              maxWidth: '480px',
-              display: 'flex',
-              flexDirection: 'column',
-              alignItems: 'center',
-              gap: '16px',
-            }}
-          >
-            <div style={{ fontSize: '36px' }}>💬</div>
-            <div>
-              <h2 style={{ fontSize: '18px', fontWeight: 600, color: '#f8fafc', margin: '0 0 6px 0' }}>
-                Local Intelligence
-              </h2>
-              <p style={{ fontSize: '13px', lineHeight: '1.5', margin: 0 }}>
-                Offline conversation workspace. Type a prompt below to begin.
-              </p>
+      {/* Main Conversation Scroll Area */}
+      {messages.length === 0 ? (
+        <div className="flex-1 overflow-y-auto flex flex-col px-4">
+          <div className="mx-auto w-full max-w-3xl my-auto">
+            <div className="text-center mb-6">
+              <h1 className="text-2xl font-studio font-medium text-foreground tracking-tight">
+                How can I help you today?
+              </h1>
             </div>
+            <Composer
+              onSend={onSendMessage}
+              onStop={onStopStreaming}
+              isStreaming={isStreaming}
+              activeModelName={displayModel}
+            />
           </div>
-        )}
-
-        {messages.map((msg) => (
-          <div
-            key={msg.id}
-            style={{
-              display: 'flex',
-              flexDirection: 'column',
-              alignItems: msg.role === 'user' ? 'flex-end' : 'flex-start',
-              width: '100%',
-            }}
-          >
-            <div
-              style={{
-                maxWidth: '85%',
-                padding: '12px 16px',
-                borderRadius: '8px',
-                backgroundColor: msg.role === 'user' ? '#1e293b' : '#121824',
-                border: '1px solid #1e293b',
-                color: '#f8fafc',
-                fontSize: '14px',
-                lineHeight: '1.5',
-              }}
-            >
-              <div
-                style={{
-                  display: 'flex',
-                  alignItems: 'center',
-                  justifyContent: 'space-between',
-                  marginBottom: '6px',
-                  gap: '12px',
-                }}
-              >
-                <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
-                  <span
-                    style={{
-                      fontSize: '11px',
-                      fontWeight: 700,
-                      textTransform: 'uppercase',
-                      color: msg.role === 'user' ? '#94a3b8' : '#38bdf8',
-                    }}
-                  >
-                    {msg.role === 'user' ? 'You' : 'Assistant'}
-                  </span>
-                  {msg.role === 'assistant' && msg.speed && (
-                    <span
-                      style={{
-                        fontSize: '10px',
-                        color: '#10b981',
-                        background: 'rgba(16, 185, 129, 0.1)',
-                        padding: '1px 5px',
-                        borderRadius: '3px',
-                      }}
-                    >
-                      ⚡ {msg.speed}
-                    </span>
-                  )}
-                </div>
-                <button
-                  type="button"
-                  onClick={() => handleCopy(msg.content)}
-                  style={{
-                    background: 'none',
-                    border: 'none',
-                    color: '#64748b',
-                    cursor: 'pointer',
-                    fontSize: '11px',
-                    padding: '2px',
-                  }}
-                  title="Copy message"
-                >
-                  📋 Copy
-                </button>
-              </div>
-
-              {/* Real Thinking Disclosure if present */}
-              {msg.role === 'assistant' && msg.thinking && (
-                <details
-                  style={{
-                    marginBottom: '10px',
-                    backgroundColor: '#0b0f17',
-                    border: '1px solid #1e293b',
-                    borderRadius: '4px',
-                    padding: '6px 10px',
-                    fontSize: '12px',
-                    color: '#94a3b8',
-                  }}
-                >
-                  <summary style={{ cursor: 'pointer', fontWeight: 500, color: '#38bdf8' }}>
-                    Thinking Process
-                  </summary>
+        </div>
+      ) : (
+        <>
+          <div ref={scrollRef} className="flex-1 overflow-y-auto p-4 md:p-6 space-y-4">
+            <div className="max-w-3xl mx-auto w-full flex flex-col gap-5">
+              {messages.map((m) => {
+                const isUser = m.role === 'user';
+                return (
                   <div
-                    style={{
-                      marginTop: '6px',
-                      paddingTop: '6px',
-                      borderTop: '1px solid #141d2b',
-                      whiteSpace: 'pre-wrap',
-                      fontSize: '12px',
-                    }}
+                    key={m.id}
+                    className={`flex ${isUser ? 'justify-end' : 'items-start gap-3'}`}
                   >
-                    {msg.thinking}
-                  </div>
-                </details>
-              )}
+                    {!isUser && (
+                      <div className="size-7 rounded-full bg-primary/15 text-primary border border-primary/25 flex items-center justify-center shrink-0 text-xs font-semibold shadow-xs">
+                        S
+                      </div>
+                    )}
 
-              {msg.role === 'assistant' ? (
-                <SafeMarkdown content={msg.content} />
-              ) : (
-                <div style={{ whiteSpace: 'pre-wrap' }}>{msg.content}</div>
-              )}
+                    <div className={`flex flex-col ${isUser ? 'items-end' : 'flex-1 min-w-0'}`}>
+                      <div
+                        className={`${
+                          isUser
+                            ? 'max-w-[85%] rounded-2xl bg-secondary text-secondary-foreground px-4 py-2.5 text-sm shadow-xs border border-border/40'
+                            : 'w-full text-foreground text-sm'
+                        }`}
+                      >
+                        {isUser ? (
+                          <p className="whitespace-pre-wrap leading-relaxed">{m.content}</p>
+                        ) : (
+                          <div>
+                            {m.thinking && (
+                              <details className="mb-2.5 rounded-lg border border-border/50 bg-card/60 p-2.5 text-xs text-muted-foreground">
+                                <summary className="cursor-pointer font-medium hover:text-foreground">
+                                  Thought process
+                                </summary>
+                                <p className="mt-1.5 whitespace-pre-wrap leading-relaxed">{m.thinking}</p>
+                              </details>
+                            )}
+                            <SafeMarkdown content={m.content} />
+                          </div>
+                        )}
+                      </div>
 
-              {/* Citations */}
-              {msg.citations && msg.citations.length > 0 && (
-                <div style={{ marginTop: '10px', paddingTop: '8px', borderTop: '1px solid #1e293b' }}>
-                  <div style={{ fontSize: '11px', fontWeight: 600, color: '#94a3b8', marginBottom: '4px' }}>
-                    Sources & Citations:
-                  </div>
-                  {msg.citations.map((cite, i) => (
-                    <div
-                      key={i}
-                      style={{
-                        fontSize: '11px',
-                        padding: '4px 8px',
-                        backgroundColor: '#0b0f17',
-                        borderRadius: '4px',
-                        marginBottom: '4px',
-                        color: '#cbd5e1',
-                      }}
-                    >
-                      <strong>{cite.source}</strong> {cite.page ? `(p. ${cite.page})` : ''}: &ldquo;{cite.quote}&rdquo;
+                      {!isUser && (
+                        <div className="flex items-center gap-2 pt-1.5 text-xs text-muted-foreground">
+                          {m.speed && (
+                            <span className="font-mono text-[10px] border border-border/50 rounded px-1.5 py-0.5">
+                              {m.speed}
+                            </span>
+                          )}
+                          <button
+                            type="button"
+                            onClick={() => handleCopy(m.content)}
+                            className="hover:text-foreground cursor-pointer text-[11px] transition-colors"
+                          >
+                            Copy
+                          </button>
+                        </div>
+                      )}
                     </div>
-                  ))}
+                  </div>
+                );
+              })}
+
+              {isStreaming && (
+                <div className="flex items-center gap-2 text-xs text-muted-foreground py-1">
+                  <span className="size-1.5 rounded-full bg-primary animate-pulse" />
+                  <span>Thinking...</span>
                 </div>
               )}
             </div>
           </div>
-        ))}
-      </div>
 
-      {/* Composer */}
-      <Composer
-        onSend={onSendMessage}
-        onStop={onStopStreaming}
-        isStreaming={isStreaming}
-      />
+          {/* Bottom Composer in Active Chat */}
+          <Composer
+            onSend={onSendMessage}
+            onStop={onStopStreaming}
+            isStreaming={isStreaming}
+            activeModelName={displayModel}
+          />
+        </>
+      )}
     </div>
   );
 };

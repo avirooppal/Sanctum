@@ -1,5 +1,6 @@
 import React from 'react';
 import { createRoot } from 'react-dom/client';
+import './index.css';
 import { Shell } from './Shell.js';
 import { SanctumClient, type CapabilityReport, type Model, type PackInfo, type SettingEntry } from './api.js';
 

@@ -481,7 +481,7 @@ export class SanctumClient {
 
   // --- GGUF import ---
 
-  async importGguf(file: File, signal?: AbortSignal): Promise<{ id: string }> {
+  async importGguf(file: File, signal?: AbortSignal): Promise<Model> {
     signal?.throwIfAborted();
     const formData = new FormData();
     formData.append('file', file, file.name);
@@ -498,7 +498,7 @@ export class SanctumClient {
     if (!response.ok) throw new GatewayError(response.status, response.headers.get('Retry-After'));
     const data: unknown = await response.json();
     if (!record(data) || typeof data.id !== 'string') throw Error('Invalid GGUF import response');
-    return { id: data.id as string };
+    return { id: data.id as string, capabilities: ['chat'] };
   }
 }
 

@@ -9,7 +9,6 @@ import { McpPanel, type PendingToolCall } from './components/McpPanel.js';
 import { ProvidersPanel } from './components/ProvidersPanel.js';
 import { PacksPanel } from './components/PacksPanel.js';
 import { SettingsPanel } from './components/SettingsPanel.js';
-import { StatusBar } from './components/StatusBar.js';
 import { CommandPalette, type CommandItem } from './components/CommandPalette.js';
 import { ThreadDrawer, type ThreadParameters } from './components/ThreadDrawer.js';
 import { ModelComparePanel } from './components/ModelComparePanel.js';
@@ -52,7 +51,9 @@ export const Shell: React.FC<ShellProps> = ({
   const [isStreaming, setIsStreaming] = useState(false);
   const [isCommandPaletteOpen, setIsCommandPaletteOpen] = useState(false);
   const [isDrawerOpen, setIsDrawerOpen] = useState(false);
+  const [isSidebarOpen, setIsSidebarOpen] = useState(true);
   const [hardware, setHardware] = useState<HardwareInfo | null>(null);
+  const [showFirstLaunchConsent, setShowFirstLaunchConsent] = useState(false);
   const [threadParams, setThreadParams] = useState<ThreadParameters>({
     systemPrompt: 'You are a helpful, thoughtful, local AI assistant.',
     temperature: 0.7,
@@ -86,8 +87,8 @@ export const Shell: React.FC<ShellProps> = ({
             setHardware({
               threads: report.hardware.threads,
               context: report.hardware.context,
-              vram_mb: undefined,       // requires separate probe not yet wired
-              total_ram_mb: undefined,  // requires separate probe not yet wired
+              vram_mb: undefined,
+              total_ram_mb: undefined,
             });
           }
         }
@@ -96,7 +97,10 @@ export const Shell: React.FC<ShellProps> = ({
       // Models
       try {
         const m = await client.models();
-        if (active && m.length > 0) setModels(m);
+        if (active && m.length > 0) {
+          setModels(m);
+          setActiveModel(m[0].id);
+        }
       } catch { /* Models offline */ }
 
       // Settings
@@ -108,9 +112,8 @@ export const Shell: React.FC<ShellProps> = ({
       // Sessions
       try {
         const sess = await client.sessions('', 0);
-        if (active && sess.data.length > 0) {
-          setSessions(sess.data);
-          setActiveSessionId(sess.data[0].id);
+        if (active) {
+          setSessions(sess.data.map((s) => ({ id: s.id, title: s.title || `Chat ${s.id.slice(0, 8)}`, pinned: false })));
         }
       } catch { /* Sessions offline */ }
 
@@ -138,182 +141,201 @@ export const Shell: React.FC<ShellProps> = ({
         if (active) setLocalApiStatus(la);
       } catch { /* Local API offline */ }
 
-      // Skills
+      // Skills & Memories
       try {
-        const sk = await client.skills();
-        if (active) setSkills(sk);
+        const [sk, mem] = await Promise.all([client.skills(), client.memories()]);
+        if (active) {
+          setSkills(sk);
+          setMemories(mem);
+        }
       } catch { /* Skills offline */ }
-
-      // Memories
-      try {
-        const mem = await client.memories();
-        if (active) setMemories(mem);
-      } catch { /* Memories offline */ }
     };
 
     void load();
     return () => { active = false; };
   }, [client]);
 
-  // Command palette keyboard shortcut (Ctrl/Cmd + K)
+  // Keyboard shortcut listener
   useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
-      if ((e.ctrlKey || e.metaKey) && e.key.toLowerCase() === 'k') {
+      if ((e.ctrlKey || e.metaKey) && e.key === 'k') {
         e.preventDefault();
         setIsCommandPaletteOpen((prev) => !prev);
+      }
+      if ((e.ctrlKey || e.metaKey) && e.key === 'n') {
+        e.preventDefault();
+        setMessages([]);
+        setActiveSessionId(null);
+        setActiveView('chat');
+      }
+      if ((e.ctrlKey || e.metaKey) && e.key === 'b') {
+        e.preventDefault();
+        setIsSidebarOpen((prev) => !prev);
       }
     };
     window.addEventListener('keydown', handleKeyDown);
     return () => window.removeEventListener('keydown', handleKeyDown);
   }, []);
 
-  const handleSendMessage = useCallback(async (text: string) => {
-    const userMsg: ChatMessage = { id: `u-${Date.now()}`, role: 'user', content: text };
-    const assistantMsgId = `a-${Date.now()}`;
-    const assistantMsg: ChatMessage = { id: assistantMsgId, role: 'assistant', content: '' };
+  // Handlers
+  const handleSendMessage = useCallback(
+    async (text: string) => {
+      const userMsg: ChatMessage = { id: `user-${Date.now()}`, role: 'user', content: text };
+      const assistantId = `assistant-${Date.now()}`;
+      const assistantMsg: ChatMessage = { id: assistantId, role: 'assistant', content: '', speed: '' };
 
-    setMessages((prev) => [...prev, userMsg, assistantMsg]);
-    setIsStreaming(true);
+      setMessages((prev) => [...prev, userMsg, assistantMsg]);
+      setIsStreaming(true);
 
-    try {
-      const convId = activeSessionId || 'default-session';
-      const stream = client.chat(
-        activeModel,
-        [{ role: 'user', content: text }],
-        convId,
-        undefined,
-        activeProfileId ?? undefined,
-      );
-      for await (const chunk of stream) {
+      const startTime = performance.now();
+      let tokenCount = 0;
+
+      try {
+        const stream = client.chat(
+          activeModel || 'default',
+          [{ role: 'user', content: text }],
+          activeSessionId || 'default',
+          undefined,
+          threadParams.systemPrompt
+        );
+
+        for await (const chunk of stream) {
+          tokenCount++;
+          const elapsedSec = (performance.now() - startTime) / 1000;
+          const speed = elapsedSec > 0 ? `${(tokenCount / elapsedSec).toFixed(1)} tok/s` : '';
+
+          setMessages((prev) =>
+            prev.map((m) =>
+              m.id === assistantId ? { ...m, content: m.content + chunk, speed } : m
+            )
+          );
+        }
+      } catch (err: unknown) {
+        const errorText = err instanceof Error ? err.message : 'Inference error';
         setMessages((prev) =>
-          prev.map((msg) =>
-            msg.id === assistantMsgId ? { ...msg, content: msg.content + chunk } : msg
+          prev.map((m) =>
+            m.id === assistantId ? { ...m, content: m.content + `\n\n*[Error: ${errorText}]*` } : m
           )
         );
+      } finally {
+        setIsStreaming(false);
       }
-    } catch {
-      setMessages((prev) =>
-        prev.map((msg) =>
-          msg.id === assistantMsgId
-            ? { ...msg, content: msg.content || 'Engine response unavailable (offline).' }
-            : msg
-        )
-      );
-    } finally {
-      setIsStreaming(false);
-    }
-  }, [client, activeModel, activeSessionId, activeProfileId]);
+    },
+    [client, activeModel, threadParams, activeSessionId]
+  );
 
-  const handleLoadPack = useCallback(async (id: string) => {
-    try {
-      const updated = await client.loadPack(id);
-      setPacks((prev) => prev.map((p) => (p.id === id ? updated : p)));
-    } catch (err) { console.error('Failed to load pack:', err); }
-  }, [client]);
+  const handleStopStreaming = useCallback(() => {
+    setIsStreaming(false);
+  }, []);
 
-  const handleUnloadPack = useCallback(async (id: string) => {
-    try {
-      const updated = await client.unloadPack(id);
-      setPacks((prev) => prev.map((p) => (p.id === id ? updated : p)));
-    } catch (err) { console.error('Failed to unload pack:', err); }
-  }, [client]);
+  const handleImportGguf = async (file: File) => {
+    const newModel = await client.importGguf(file);
+    setModels((prev) => [...prev, newModel]);
+    setActiveModel(newModel.id);
+  };
 
-  const handleUpdateSetting = useCallback(async (key: string, value: unknown) => {
-    try {
-      await client.setSetting(key, value);
-      setSettings((prev) => ({ ...prev, [key]: { ...prev[key], value } }));
-    } catch (err) { console.error('Failed to save setting:', err); }
-  }, [client]);
+  const handleUpdateSetting = async (key: string, value: unknown) => {
+    await client.setSetting(key, value);
+    const updated = await client.getSettings();
+    setSettings(updated);
+  };
 
-  // --- Phase 1 handlers ---
+  const handleLoadPack = async (packId: string) => {
+    const updated = await client.loadPack(packId);
+    setPacks((prev) => prev.map((p) => (p.id === updated.id ? updated : p)));
+  };
 
-  const handleSaveProfile = useCallback(async (p: { id?: string; name: string; system_prompt: string; scope: string }) => {
-    const id = await client.saveProfile(p);
-    const updated = await client.profiles();
-    setProfiles(updated);
-    return id;
-  }, [client]);
+  const handleUnloadPack = async (packId: string) => {
+    const updated = await client.unloadPack(packId);
+    setPacks((prev) => prev.map((p) => (p.id === updated.id ? updated : p)));
+  };
 
-  const handleDeleteProfile = useCallback(async (id: string) => {
+  // Phase 1 Handlers
+  const handleSaveProfile = async (profile: { id?: string; name: string; system_prompt: string; scope: string }) => {
+    const savedId = await client.saveProfile(profile);
+    const prof = await client.profiles();
+    setProfiles(prof);
+    return savedId;
+  };
+
+  const handleDeleteProfile = async (id: string) => {
     await client.deleteProfile(id);
     setProfiles((prev) => prev.filter((p) => p.id !== id));
     if (activeProfileId === id) setActiveProfileId(null);
-  }, [client, activeProfileId]);
+  };
 
-  const handleImportGguf = useCallback(async (file: File) => {
-    await client.importGguf(file);
-    const updated = await client.models();
-    setModels(updated);
-  }, [client]);
+  const handleAddMcpServer = async (server: { name: string; command: string; args: string[] }) => {
+    const added = await client.addMcpServer(server);
+    setMcpServers((prev) => [...prev, added]);
+  };
 
-  const handleAddMcpServer = useCallback(async (s: { name: string; command: string; args: string[] }) => {
-    const server = await client.addMcpServer(s);
-    setMcpServers((prev) => [...prev, server]);
-  }, [client]);
-
-  const handleRemoveMcpServer = useCallback(async (id: string) => {
+  const handleRemoveMcpServer = async (id: string) => {
     await client.removeMcpServer(id);
     setMcpServers((prev) => prev.filter((s) => s.id !== id));
-  }, [client]);
+  };
 
-  const handleApproveCall = useCallback(async (callId: string) => {
+  const handleApproveCall = async (callId: string) => {
     await client.respondMcpCall(callId, true);
     setPendingCalls((prev) => prev.filter((c) => c.callId !== callId));
-  }, [client]);
+  };
 
-  const handleDenyCall = useCallback(async (callId: string) => {
+  const handleDenyCall = async (callId: string) => {
     await client.respondMcpCall(callId, false);
     setPendingCalls((prev) => prev.filter((c) => c.callId !== callId));
-  }, [client]);
+  };
 
-  const handleSaveProviderKey = useCallback(async (id: string, apiKey: string) => {
-    await client.saveProviderKey(id, apiKey);
-    setCloudProviders((prev) => prev.map((p) => p.id === id ? { ...p, has_key: true } : p));
-  }, [client]);
+  const handleSaveProviderKey = async (provider: string, apiKey: string) => {
+    await client.saveProviderKey(provider, apiKey);
+    setCloudProviders((prev) =>
+      prev.map((p) => (p.id === provider ? { ...p, configured: true, error: undefined } : p))
+    );
+  };
 
-  const handleRemoveProviderKey = useCallback(async (id: string) => {
-    await client.removeProviderKey(id);
-    setCloudProviders((prev) => prev.map((p) => p.id === id ? { ...p, has_key: false } : p));
-  }, [client]);
+  const handleRemoveProviderKey = async (provider: string) => {
+    await client.removeProviderKey(provider);
+    setCloudProviders((prev) =>
+      prev.map((p) => (p.id === provider ? { ...p, configured: false } : p))
+    );
+  };
 
-  const handleStartLocalApi = useCallback(async (port: number, allowedOrigins: string) => {
-    const status = await client.startLocalApi(port, allowedOrigins);
-    setLocalApiStatus(status);
-  }, [client]);
+  const handleStartLocalApi = async (port: number, allowedOrigins: string) => {
+    const res = await client.startLocalApi(port, allowedOrigins);
+    setLocalApiStatus(res);
+  };
 
-  const handleStopLocalApi = useCallback(async () => {
+  const handleStopLocalApi = async () => {
     await client.stopLocalApi();
-    setLocalApiStatus((prev) => prev ? { ...prev, running: false } : null);
-  }, [client]);
+    setLocalApiStatus((prev) => (prev ? { ...prev, running: false } : null));
+  };
 
-  const handleUpdateLocalApiConfig = useCallback(async (port: number, allowedOrigins: string) => {
+  const handleUpdateLocalApiConfig = async (port: number, allowedOrigins: string) => {
     await client.updateLocalApiConfig(port, allowedOrigins);
-    setLocalApiStatus((prev) => prev ? { ...prev, port, allowed_origins: allowedOrigins } : null);
-  }, [client]);
+    setLocalApiStatus((prev) => (prev ? { ...prev, port, allowed_origins: allowedOrigins } : null));
+  };
 
-  const handleSaveSkill = useCallback(async (s: { id?: string; name: string; description?: string; content: string; enabled?: boolean }) => {
-    await client.saveSkill(s);
-    const updated = await client.skills();
-    setSkills(updated);
-  }, [client]);
+  const handleSaveSkill = async (skill: { id?: string; name: string; description?: string; content: string; enabled?: boolean }) => {
+    await client.saveSkill(skill);
+    const refreshed = await client.skills();
+    setSkills(refreshed);
+  };
 
-  const handleDeleteSkill = useCallback(async (id: string) => {
+  const handleDeleteSkill = async (id: string) => {
     await client.deleteSkill(id);
     setSkills((prev) => prev.filter((s) => s.id !== id));
-  }, [client]);
+  };
 
-  const handleSaveMemory = useCallback(async (m: { id?: string; assistant_id?: string | null; fact: string; category?: string }) => {
-    await client.saveMemory(m);
-    const updated = await client.memories();
-    setMemories(updated);
-  }, [client]);
+  const handleSaveMemory = async (memory: { id?: string; assistant_id?: string | null; fact: string; category?: string }) => {
+    await client.saveMemory(memory);
+    const refreshed = await client.memories();
+    setMemories(refreshed);
+  };
 
-  const handleDeleteMemory = useCallback(async (id: string) => {
+  const handleDeleteMemory = async (id: string) => {
     await client.deleteMemory(id);
     setMemories((prev) => prev.filter((m) => m.id !== id));
-  }, [client]);
+  };
 
-  // Initialize Panel Registry
+  // Register standard panels into PanelRegistry
   const registry = useMemo(() => {
     const reg = new PanelRegistry();
 
@@ -329,11 +351,17 @@ export const Shell: React.FC<ShellProps> = ({
           messages={messages}
           isStreaming={isStreaming}
           onSendMessage={handleSendMessage}
-          onStopStreaming={() => setIsStreaming(false)}
+          onStopStreaming={handleStopStreaming}
           activeModelName={activeModel}
-          platformAssurance={platformAssurance}
+          availableModels={models}
+          onSelectModel={setActiveModel}
           isDrawerOpen={isDrawerOpen}
-          onToggleDrawer={() => setIsDrawerOpen((prev) => !prev)}
+          onToggleDrawer={() => setIsDrawerOpen(!isDrawerOpen)}
+          onNewChat={() => {
+            setMessages([]);
+            setActiveSessionId(null);
+            setActiveView('chat');
+          }}
         />
       ),
     });
@@ -357,7 +385,7 @@ export const Shell: React.FC<ShellProps> = ({
     });
 
     reg.register({
-      id: 'models',
+      id: 'hub',
       title: 'Model Hub',
       icon: '🧠',
       allowedSlots: ['center', 'right'],
@@ -451,7 +479,7 @@ export const Shell: React.FC<ShellProps> = ({
 
     reg.register({
       id: 'packs',
-      title: 'Packs',
+      title: 'Extension Packs',
       icon: '📦',
       allowedSlots: ['center'],
       requiredCapabilities: ['packs'],
@@ -459,7 +487,6 @@ export const Shell: React.FC<ShellProps> = ({
       component: () => (
         <PacksPanel
           packs={packs}
-          platformAssurance={platformAssurance}
           onLoadPack={handleLoadPack}
           onUnloadPack={handleUnloadPack}
         />
@@ -476,7 +503,6 @@ export const Shell: React.FC<ShellProps> = ({
       component: () => (
         <SettingsPanel
           settings={settings}
-          platformAssurance={platformAssurance}
           onUpdateSetting={handleUpdateSetting}
         />
       ),
@@ -484,100 +510,204 @@ export const Shell: React.FC<ShellProps> = ({
 
     return reg;
   }, [
-    messages, isStreaming, activeModel, models, packs, settings, platformAssurance,
-    isDrawerOpen, hardware, profiles, activeProfileId, mcpServers, pendingCalls,
-    cloudProviders, localApiStatus, skills, memories,
-    handleSendMessage, handleLoadPack, handleUnloadPack, handleUpdateSetting,
-    handleSaveProfile, handleDeleteProfile, handleImportGguf,
-    handleAddMcpServer, handleRemoveMcpServer, handleApproveCall, handleDenyCall,
-    handleSaveProviderKey, handleRemoveProviderKey,
-    handleStartLocalApi, handleStopLocalApi, handleUpdateLocalApiConfig,
-    handleSaveSkill, handleDeleteSkill, handleSaveMemory, handleDeleteMemory,
+    messages,
+    isStreaming,
+    activeModel,
+    models,
+    packs,
+    settings,
+    platformAssurance,
+    isDrawerOpen,
+    profiles,
+    activeProfileId,
+    mcpServers,
+    pendingCalls,
+    cloudProviders,
+    localApiStatus,
+    skills,
+    memories,
+    hardware,
   ]);
-
-  const commands: CommandItem[] = useMemo(() => [
-    {
-      id: 'new-chat',
-      title: 'New Conversation',
-      category: 'Chat',
-      shortcut: 'Ctrl+N',
-      onExecute: () => { setMessages([]); setActiveSessionId(null); setActiveView('chat'); },
-    },
-    { id: 'open-chat', title: 'Open Chat', category: 'Navigation', onExecute: () => setActiveView('chat') },
-    { id: 'open-assistants', title: 'Open Assistants', category: 'Navigation', onExecute: () => setActiveView('assistants') },
-    { id: 'open-models', title: 'Open Model Hub', category: 'Navigation', onExecute: () => setActiveView('models') },
-    { id: 'open-compare', title: 'Open Model Compare', category: 'Navigation', onExecute: () => setActiveView('compare') },
-    { id: 'open-skills', title: 'Open Skills & Memory', category: 'Navigation', onExecute: () => setActiveView('skills') },
-    { id: 'open-mcp', title: 'Open MCP Servers', category: 'Navigation', onExecute: () => setActiveView('mcp') },
-    { id: 'open-providers', title: 'Open Providers', category: 'Navigation', onExecute: () => setActiveView('providers') },
-    { id: 'open-packs', title: 'Open Packs', category: 'Navigation', onExecute: () => setActiveView('packs') },
-    { id: 'open-settings', title: 'Open Settings', category: 'Navigation', onExecute: () => setActiveView('settings') },
-  ], []);
 
   const activePanelDef = registry.get(activeView);
 
+  const commands: CommandItem[] = useMemo(() => {
+    return [
+      {
+        id: 'new-chat',
+        title: 'New Chat',
+        category: 'Chat',
+        shortcut: 'Ctrl+N',
+        onExecute: () => {
+          setMessages([]);
+          setActiveSessionId(null);
+          setActiveView('chat');
+        },
+      },
+      {
+        id: 'toggle-sidebar',
+        title: 'Toggle Sidebar',
+        category: 'View',
+        shortcut: 'Ctrl+B',
+        onExecute: () => setIsSidebarOpen((prev) => !prev),
+      },
+      {
+        id: 'view-chat',
+        title: 'Go to Chat',
+        category: 'Navigation',
+        onExecute: () => setActiveView('chat'),
+      },
+      {
+        id: 'view-hub',
+        title: 'Go to Model Hub',
+        category: 'Navigation',
+        onExecute: () => setActiveView('hub'),
+      },
+      {
+        id: 'view-assistants',
+        title: 'Go to Assistants',
+        category: 'Navigation',
+        onExecute: () => setActiveView('assistants'),
+      },
+      {
+        id: 'view-mcp',
+        title: 'Go to MCP Servers',
+        category: 'Navigation',
+        onExecute: () => setActiveView('mcp'),
+      },
+      {
+        id: 'view-providers',
+        title: 'Go to Model Providers',
+        category: 'Navigation',
+        onExecute: () => setActiveView('providers'),
+      },
+      {
+        id: 'view-compare',
+        title: 'Go to Model Compare Arena',
+        category: 'Navigation',
+        onExecute: () => setActiveView('compare'),
+      },
+      {
+        id: 'view-skills',
+        title: 'Go to Skills & Memory Ledger',
+        category: 'Navigation',
+        onExecute: () => setActiveView('skills'),
+      },
+      {
+        id: 'view-settings',
+        title: 'Go to Settings',
+        category: 'Navigation',
+        onExecute: () => setActiveView('settings'),
+      },
+    ];
+  }, []);
+
   return (
-    <div
-      style={{
-        display: 'flex',
-        flexDirection: 'column',
-        width: '100vw',
-        height: '100vh',
-        backgroundColor: '#0b0f17',
-        color: '#f8fafc',
-        fontFamily: '-apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif',
-        overflow: 'hidden',
-      }}
-    >
-      <div style={{ display: 'flex', flex: 1, overflow: 'hidden' }}>
-        <Sidebar
-          activeView={activeView}
-          onSelectView={setActiveView}
-          sessions={sessions}
-          activeSessionId={activeSessionId}
-          onSelectSession={setActiveSessionId}
-          onNewSession={() => { setMessages([]); setActiveSessionId(null); setActiveView('chat'); }}
-          availableCapabilities={capabilities}
-          pendingMcpCalls={pendingCalls.length}
-        />
-
-        <main style={{ flex: 1, display: 'flex', flexDirection: 'column', overflow: 'hidden' }}>
-          <PanelErrorBoundary panelTitle={activePanelDef?.title || 'Main View'}>
-            {activePanelDef ? (
-              <activePanelDef.component panelId={activePanelDef.id} isActive={true} />
-            ) : (
-              <div style={{ padding: '32px', textAlign: 'center', color: '#64748b' }}>
-                Panel unavailable or lacks required capabilities.
-              </div>
-            )}
-          </PanelErrorBoundary>
-        </main>
-
-        {activeView === 'chat' && (
-          <ThreadDrawer
-            isOpen={isDrawerOpen}
-            onClose={() => setIsDrawerOpen(false)}
-            activeModel={activeModel}
-            models={models}
-            onSelectModel={setActiveModel}
-            params={threadParams}
-            onUpdateParams={(p) => setThreadParams((prev) => ({ ...prev, ...p }))}
-            onDeleteThread={() => { setMessages([]); setIsDrawerOpen(false); }}
-          />
-        )}
-      </div>
-
-      <StatusBar
-        isReady={true}
-        platformAssurance={platformAssurance}
-        activeModelName={activeModel}
+    <div className="flex h-screen w-screen bg-background text-foreground overflow-hidden font-sans">
+      {/* Sidebar: Copied exactly from Jan left sidebar structure */}
+      <Sidebar
+        activeView={activeView}
+        onSelectView={setActiveView}
+        sessions={sessions}
+        activeSessionId={activeSessionId}
+        onSelectSession={setActiveSessionId}
+        onNewSession={() => {
+          setMessages([]);
+          setActiveSessionId(null);
+          setActiveView('chat');
+        }}
+        availableCapabilities={capabilities}
+        pendingMcpCalls={pendingCalls.length}
+        isOpen={isSidebarOpen}
+        onToggleOpen={() => setIsSidebarOpen((prev) => !prev)}
       />
 
+      {/* Main Surface Inset (SidebarInset in upstream) */}
+      <main className="flex-1 h-full flex flex-col overflow-hidden bg-background">
+        <PanelErrorBoundary panelTitle={activePanelDef?.title || 'Main View'}>
+          {activePanelDef ? (
+            <activePanelDef.component panelId={activePanelDef.id} isActive={true} />
+          ) : (
+            <div className="p-8 text-center text-xs text-muted-foreground">
+              Panel unavailable or lacks required capabilities.
+            </div>
+          )}
+        </PanelErrorBoundary>
+      </main>
+
+      {/* Collapsible Parameters Drawer (Right Drawer in upstream) */}
+      {activeView === 'chat' && (
+        <ThreadDrawer
+          isOpen={isDrawerOpen}
+          onClose={() => setIsDrawerOpen(false)}
+          activeModel={activeModel}
+          models={models}
+          onSelectModel={setActiveModel}
+          params={threadParams}
+          onUpdateParams={(p) => setThreadParams((prev) => ({ ...prev, ...p }))}
+          onDeleteThread={() => {
+            setMessages([]);
+            setIsDrawerOpen(false);
+          }}
+        />
+      )}
+
+      {/* Command Palette (Ctrl+K) */}
       <CommandPalette
         isOpen={isCommandPaletteOpen}
         onClose={() => setIsCommandPaletteOpen(false)}
         commands={commands}
       />
+
+      {/* First-Launch Model Acquisition Consent Dialog (Permitted Deviation #4) */}
+      {showFirstLaunchConsent && (
+        <div className="fixed inset-0 bg-black/60 backdrop-blur-xs z-50 flex items-center justify-center p-4">
+          <div className="w-full max-w-md rounded-2xl border border-border bg-card p-6 shadow-xl space-y-4 text-foreground">
+            <div className="flex items-start justify-between">
+              <h3 className="text-base font-semibold">Download Default Model</h3>
+              <button
+                onClick={() => setShowFirstLaunchConsent(false)}
+                className="text-muted-foreground hover:text-foreground"
+              >
+                ✕
+              </button>
+            </div>
+            <p className="text-xs text-muted-foreground leading-relaxed">
+              Sanctum requires explicit confirmation before initiating network connections.
+              <br />
+              <br />
+              <strong>Host:</strong> huggingface.co
+              <br />
+              <strong>Model:</strong> Llama-3.2-1B-Instruct-GGUF (~1.3 GB)
+            </p>
+            <div className="flex items-center justify-end gap-2 pt-2 border-t border-border/40">
+              <button
+                onClick={() => {
+                  setShowFirstLaunchConsent(false);
+                  setActiveView('hub');
+                }}
+                className="px-3 py-1.5 rounded-lg border border-border text-xs font-medium hover:bg-accent transition-colors"
+              >
+                Import Local GGUF
+              </button>
+              <button
+                onClick={() => setShowFirstLaunchConsent(false)}
+                className="px-3 py-1.5 rounded-lg border border-border text-xs font-medium hover:bg-accent transition-colors"
+              >
+                Cancel
+              </button>
+              <button
+                onClick={() => {
+                  setShowFirstLaunchConsent(false);
+                }}
+                className="px-3 py-1.5 rounded-lg bg-primary text-primary-foreground text-xs font-medium hover:bg-primary/90 transition-colors shadow-xs"
+              >
+                Confirm Download
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 };

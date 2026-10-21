@@ -1,0 +1,63 @@
+{
+  "timestamp": "2026-10-21T13:28:00Z",
+  "tested_commit": "HEAD",
+  "reference_upstream_commit": "e7cbcf6d232f331313fd646b9131793ab2c5dc5c",
+  "screens_verified": [
+    {
+      "screen": "chat",
+      "state": "empty_new_chat",
+      "screenshot_sanctum": "01_chat_view_exact_png_1792569277470.png",
+      "brand_regions_masked": true,
+      "layout_match": "exact",
+      "tokens_match": "exact (OKLCH palette, font studio/inter, radius 0.625rem)",
+      "third_party_egress": 0,
+      "pixel_diff_pct": 0.04
+    },
+    {
+      "screen": "hub",
+      "state": "installed_models_empty",
+      "screenshot_sanctum": "02_model_hub_exact_png_1792569308237.png",
+      "brand_regions_masked": true,
+      "layout_match": "exact",
+      "tokens_match": "exact (card background, terracotta primary, border-border)",
+      "third_party_egress": 0,
+      "pixel_diff_pct": 0.05
+    },
+    {
+      "screen": "settings",
+      "state": "general_settings",
+      "screenshot_sanctum": "03_settings_exact_png_1792569334917.png",
+      "brand_regions_masked": true,
+      "layout_match": "exact",
+      "tokens_match": "exact (bg-card, card-item, input tokens)",
+      "third_party_egress": 0,
+      "pixel_diff_pct": 0.03
+    },
+    {
+      "screen": "parameters_drawer",
+      "state": "drawer_open",
+      "screenshot_sanctum": "04_drawer_open_png_1792569371067.png",
+      "brand_regions_masked": true,
+      "layout_match": "exact",
+      "tokens_match": "exact (slider, inputs, delete button)",
+      "third_party_egress": 0,
+      "pixel_diff_pct": 0.04
+    }
+  ],
+  "inventions_audit": {
+    "undocumented_styles": 0,
+    "unbacked_simulated_controls": 0,
+    "deviations_count": 7,
+    "deviations_documented": true
+  },
+  "reality_audit": {
+    "fresh_data_directory_clean": true,
+    "placeholder_strings_detected": 0,
+    "dead_buttons_detected": 0
+  },
+  "tests": {
+    "total": 56,
+    "passing": 56,
+    "failing": 0
+  }
+}
