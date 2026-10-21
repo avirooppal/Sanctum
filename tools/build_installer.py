@@ -6,6 +6,7 @@ import zipfile
 
 ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 
+
 def find_makensis():
     # Check PATH
     cmd = shutil.which("makensis")
@@ -22,10 +23,12 @@ def find_makensis():
             return c
     return None
 
+
 def build_installer():
     # Step 1: Prepare Payload
     print("=== Step 1: Preparing Installer Payload ===")
     from prepare_installer_payload import prepare
+
     prepare()
 
     dist_dir = os.path.join(ROOT, "dist")
@@ -37,7 +40,7 @@ def build_installer():
         print(f"=== Step 2: Compiling with NSIS ({makensis}) ===")
         nsi_path = os.path.join(ROOT, "deploy", "installer", "sanctum.nsi")
         cmd = [makensis, nsi_path]
-        res = subprocess.run(cmd, check=True)
+        subprocess.run(cmd, check=True)
         print("NSIS build finished successfully.")
     else:
         print("=== Step 2: makensis not found in current environment ===")
@@ -47,8 +50,10 @@ def build_installer():
     # Step 3: Distribution Packaging (SHA256, SBOM, Licenses)
     print("=== Step 3: Packaging Distribution Artifacts ===")
     from package_distribution import package
+
     package()
     print("=== Build Complete ===")
+
 
 def build_self_extracting_installer(out_path: str):
     payload_dir = os.path.join(ROOT, "deploy", "installer", "build_payload")
@@ -63,8 +68,6 @@ def build_self_extracting_installer(out_path: str):
                 zf.write(full_path, rel_path)
 
     # C# Setup wrapper code embedding payload.zip as byte array or base64
-    with open(zip_path, "rb") as f:
-        payload_bytes = f.read()
     payload_b64 = import_base64_payload(zip_path)
 
     cs_setup = r'''
@@ -273,10 +276,13 @@ Add-Type -TypeDefinition $source -Language CSharp -ReferencedAssemblies "System.
 
     print(f"Compiled self-extracting installer to {out_path} ({os.path.getsize(out_path)} bytes)")
 
+
 def import_base64_payload(zip_path: str) -> str:
     import base64
+
     with open(zip_path, "rb") as f:
         return base64.b64encode(f.read()).decode("ascii")
+
 
 if __name__ == "__main__":
     build_installer()

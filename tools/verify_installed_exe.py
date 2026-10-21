@@ -8,6 +8,7 @@ import urllib.request
 
 ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 
+
 def verify_installer():
     dist_exe = os.path.join(ROOT, "dist", "Sanctum-Setup-0.1.0-x64.exe")
     if not os.path.exists(dist_exe):
@@ -63,7 +64,7 @@ def verify_installer():
         # Check frontend index.html served
         with urllib.request.urlopen("http://127.0.0.1:1339/", timeout=5) as resp:
             html = resp.read().decode("utf-8")
-            if "Sanctum" not in html and "<div id=\"root\">" not in html:
+            if "Sanctum" not in html and '<div id="root">' not in html:
                 print("HTML frontend did not serve root container!")
                 sys.exit(1)
             print("HTTP Frontend index.html served cleanly.")
@@ -74,11 +75,14 @@ def verify_installer():
     print("=== 4. Testing Clean Uninstaller ===")
     uninst_exe = os.path.join(test_dir, "Uninstall.exe")
     if os.path.exists(uninst_exe):
-        u_res = subprocess.run([uninst_exe, "/S"], capture_output=True, text=True)
+        subprocess.run([uninst_exe, "/S"], capture_output=True, text=True)
         time.sleep(2)
         print("Uninstaller executed cleanly.")
 
-    print("\nALL INSTALLER VERIFICATIONS PASSED (Silent install, CLI flags, HTTP serving, uninstallation)")
+    print(
+        "\nALL INSTALLER VERIFICATIONS PASSED (Silent install, CLI flags, HTTP serving, uninstallation)"
+    )
+
 
 if __name__ == "__main__":
     verify_installer()

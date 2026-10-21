@@ -1,9 +1,9 @@
 import hashlib
 import json
 import os
-import sys
 
 ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+
 
 def hash_file(path: str) -> str:
     h = hashlib.sha256()
@@ -11,6 +11,7 @@ def hash_file(path: str) -> str:
         while chunk := f.read(65536):
             h.update(chunk)
     return h.hexdigest()
+
 
 def package():
     dist_dir = os.path.join(ROOT, "dist")
@@ -32,7 +33,9 @@ def package():
     bundle_file = os.path.join(dist_dir, "LICENSE_BUNDLE.txt")
     with open(bundle_file, "w", encoding="utf-8") as f:
         f.write("=== SANCTUM LICENSE BUNDLE ===\n\n")
-        f.write("Combined Distributed Work License: GNU Affero General Public License Version 3 or later\n")
+        f.write(
+            "Combined Distributed Work License: GNU Affero General Public License Version 3 or later\n"
+        )
         f.write("Upstream Jan Components: Apache License 2.0 (Menlo Research Inc.)\n")
         f.write("Upstream Odysseus Workspace: AGPL-3.0-or-later (Odysseus Contributors)\n\n")
         f.write("--- THIRD PARTY NOTICES ---\n")
@@ -62,7 +65,7 @@ def package():
         "documentNamespace": "https://github.com/avirooppal/Sanctum/spdxdocs/sanctum-0.1.0",
         "creationInfo": {
             "created": "2026-10-21T13:30:00Z",
-            "creators": ["Organization: Sanctum Contributors"]
+            "creators": ["Organization: Sanctum Contributors"],
         },
         "packages": [
             {
@@ -72,32 +75,28 @@ def package():
                 "packageFileName": "Sanctum-Setup-0.1.0-x64.exe",
                 "downloadLocation": "https://github.com/avirooppal/Sanctum/releases",
                 "licenseConcluded": "AGPL-3.0-or-later",
-                "checksums": [
-                    {
-                        "algorithm": "SHA256",
-                        "checksumValue": sha256
-                    }
-                ]
+                "checksums": [{"algorithm": "SHA256", "checksumValue": sha256}],
             },
             {
                 "name": "jan-web-app",
                 "SPDXID": "SPDXRef-Package-Jan-WebApp",
                 "versionInfo": "0.8.5-e7cbcf6d",
                 "downloadLocation": "https://github.com/janhq/jan",
-                "licenseConcluded": "Apache-2.0"
+                "licenseConcluded": "Apache-2.0",
             },
             {
                 "name": "odysseus-workspace",
                 "SPDXID": "SPDXRef-Package-Odysseus",
                 "versionInfo": "8877273e",
                 "downloadLocation": "https://github.com/odysseus-dev/odysseus",
-                "licenseConcluded": "AGPL-3.0-or-later"
-            }
-        ]
+                "licenseConcluded": "AGPL-3.0-or-later",
+            },
+        ],
     }
     with open(sbom_file, "w", encoding="utf-8") as f:
         json.dump(sbom_data, f, indent=2)
     print(f"Generated {sbom_file}")
+
 
 if __name__ == "__main__":
     package()

@@ -2,7 +2,7 @@ import subprocess
 import os
 import sys
 
-CSHARP_SOURCE = r'''
+CSHARP_SOURCE = r"""
 using System;
 using System.IO;
 using System.Net;
@@ -240,7 +240,8 @@ namespace Sanctum {
         }
     }
 }
-'''
+"""
+
 
 def compile_desktop_host(output_path: str):
     os.makedirs(os.path.dirname(os.path.abspath(output_path)), exist_ok=True)
@@ -267,6 +268,7 @@ Add-Type -TypeDefinition $source -Language CSharp -ReferencedAssemblies "System.
         sys.exit(1)
 
     print(f"Successfully compiled {output_path} ({os.path.getsize(output_path)} bytes)")
+
 
 if __name__ == "__main__":
     out = sys.argv[1] if len(sys.argv) > 1 else "deploy/installer/build_payload/Sanctum-Desktop.exe"

@@ -1,9 +1,9 @@
 import os
 import shutil
 import subprocess
-import sys
 
 ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+
 
 def prepare():
     payload_dir = os.path.join(ROOT, "deploy", "installer", "build_payload")
@@ -12,10 +12,11 @@ def prepare():
     # 1. Generate Sanctum Geometric Brand Icon
     print("Generating Sanctum brand icon...")
     from generate_icon import generate_sanctum_icon
+
     generate_sanctum_icon(os.path.join(ROOT, "deploy", "installer"))
     shutil.copy2(
         os.path.join(ROOT, "deploy", "installer", "app-icon.ico"),
-        os.path.join(payload_dir, "app-icon.ico")
+        os.path.join(payload_dir, "app-icon.ico"),
     )
 
     # 2. Build Web Frontend Assets
@@ -54,6 +55,7 @@ def prepare():
     # 3. Compile Desktop Host Executable
     exe_target = os.path.join(payload_dir, "Sanctum-Desktop.exe")
     from compile_desktop_host import compile_desktop_host
+
     compile_desktop_host(exe_target)
 
     # 4. Resources bin directory (engine worker / backend)
@@ -61,6 +63,7 @@ def prepare():
     os.makedirs(bin_target, exist_ok=True)
 
     print("Payload preparation complete.")
+
 
 if __name__ == "__main__":
     prepare()
