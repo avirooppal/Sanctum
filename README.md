@@ -155,31 +155,59 @@ Sanctum/
 │   │   ├── layout/
 │   │   │   ├── AppShell.tsx                  # Layout orchestrator & Ctrl+B shortcut
 │   │   │   ├── LeftRail.tsx                  # Global module navigation rail
-│   │   │   ├── ContextExplorer.tsx           # Dynamic context-aware sidebar
+│   │   │   ├── ContextExplorer.tsx           # Dynamic context-aware sidebar router
+│   │   │   ├── explorer/                     # Decomposed module explorers
+│   │   │   │   ├── HubExplorer.tsx           # Category filters & VRAM gauge
+│   │   │   │   ├── ChatExplorer.tsx          # Thread management & history
+│   │   │   │   ├── ArenaExplorer.tsx         # Split layout & benchmark presets
+│   │   │   │   ├── ResearchExplorer.tsx      # Deep inquiry launcher & archives
+│   │   │   │   ├── RagExplorer.tsx           # Vector collections manager
+│   │   │   │   └── SystemExplorer.tsx        # Compute topology & daemon health
 │   │   │   └── TelemetryDock.tsx             # Persistent bottom hardware status bar
 │   │   ├── hub/
 │   │   │   ├── ModelHubView.tsx              # Live Ollama model catalog & pull bar
+│   │   │   ├── ModelCard.tsx                 # Atomic model card with VRAM & layer indicators
 │   │   │   └── HardwareConfigModal.tsx       # GPU offload & context window tuning
 │   │   ├── chat/
-│   │   │   ├── ChatCanvas.tsx                # Streaming chat with CoT reasoning
+│   │   │   ├── ChatCanvas.tsx                # Streaming chat orchestrator
+│   │   │   ├── ChatHeader.tsx                # Session info, RAG toggle, tuning actions
+│   │   │   ├── ChatEmptyState.tsx            # Initial inference ready suggestions
+│   │   │   ├── ChatMessageItem.tsx           # Glassmorphic message bubble with <think> folding
+│   │   │   ├── ChatInputBar.tsx              # Multimodal input dock, voice & image upload
 │   │   │   ├── VoiceRecorder.tsx             # Live speech recognition & waveform canvas
 │   │   │   └── VisionInspector.tsx           # Multimodal image attachment inspector
 │   │   ├── arena/
-│   │   │   └── ArenaCanvas.tsx               # 2x/3x/4x synchronized model arena
+│   │   │   ├── ArenaCanvas.tsx               # Synchronized multi-model arena
+│   │   │   └── ArenaPane.tsx                 # Atomic arena viewport with TPS/latency benchmarks
 │   │   ├── research/
-│   │   │   └── DeepResearchWorkspace.tsx     # Autonomous agent multi-step research pipeline
+│   │   │   ├── DeepResearchWorkspace.tsx     # Autonomous agent multi-step research pipeline
+│   │   │   ├── ResearchStepCard.tsx          # Step progress card with expandable logs
+│   │   │   ├── ResearchCitationCard.tsx      # Verified source citation with relevance score
+│   │   │   └── ResearchDocumentViewer.tsx    # Dossier markdown reader with export
 │   │   ├── rag/
-│   │   │   └── KnowledgeBaseWorkspace.tsx    # Drag-and-drop vault & chunk inspector
+│   │   │   ├── KnowledgeBaseWorkspace.tsx    # Vector vault workspace orchestrator
+│   │   │   ├── VaultDropZone.tsx             # Real-time drag-and-drop file ingestion zone
+│   │   │   ├── DocumentListItem.tsx          # Document item with status & chunk metrics
+│   │   │   └── VectorChunkCard.tsx           # 1024d chunk card with cosine match scoring
 │   │   ├── settings/
 │   │   │   └── SettingsView.tsx              # Daemon health check & storage path config
 │   │   └── telemetry/
 │   │       └── HardwareDetailsModal.tsx      # System accelerator & compute diagnostics
 │   ├── lib/
+│   │   ├── constants.ts                      # Global endpoints, options & presets
 │   │   ├── engine.ts                         # Real Ollama & Wikipedia API client
 │   │   ├── vectorStore.ts                    # In-memory 1024d vector similarity engine
 │   │   └── utils.ts                          # Class merge & format utilities
 │   ├── store/
-│   │   └── useAppStore.ts                    # Zustand reactive state store & actions
+│   │   ├── useAppStore.ts                    # Combined reactive store
+│   │   └── slices/                           # Modular domain state slices
+│   │       ├── navigationSlice.ts            # Layout & collapse state
+│   │       ├── modelsSlice.ts                # Model catalog & Ollama pull state
+│   │       ├── chatSlice.ts                  # Inference threads & streaming
+│   │       ├── arenaSlice.ts                 # Parallel multi-model arena
+│   │       ├── researchSlice.ts              # Wikipedia search & agent pipeline
+│   │       ├── ragSlice.ts                   # Ingested vaults & vector search
+│   │       └── telemetrySlice.ts             # Host cores & VRAM telemetry
 │   └── types/
 │       └── index.ts                          # Strict TypeScript domain interfaces
 ├── tailwind.config.ts                        # Spacing tokens, colors, glassmorphism

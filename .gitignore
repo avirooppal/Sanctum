@@ -35,3 +35,4 @@ Thumbs.db
 .gemini/
 scratch/
 temp_skills/
+*.tsbuildinfo
