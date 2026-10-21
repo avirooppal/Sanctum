@@ -34,6 +34,17 @@
   - 47 web unit tests passing (13 new tests in `panel-registry.test.mjs`, `tokens.test.mjs`, `m2-client.test.mjs`, `strings.test.mjs`); 0 audit vulnerabilities.
   - Hosted CI: commit `4b74be4` verified green across all 5 jobs in run 39471167224 (`evals/results/m3-hosted-ci.json`).
   - D0 design specifications complete: BRIEF, TOKENS (with schema), COMPONENTS, FLOWS, MICROCOPY, and string table; commit `3d7552a` verified green across all 5 jobs in run 39474771424 (`evals/results/d0-design-hosted-ci.json`).
+- Jan & Odysseus UI Replication implemented:
+  - Jan-style 3-column layout with right collapsible parameter drawer (`ThreadDrawer.tsx`): Model selector, system prompt, temperature (0-2), top-p (0-1), max tokens (128-4096), stream toggle, export/delete actions.
+  - Odysseus-inspired workspaces integrated:
+    - Side-by-side Model Compare Arena (`ComparePanel.tsx`) with dual streaming, TTFT/tokens per sec metrics, and blind A/B evaluation.
+    - Hardware-aware Cookbook (`CookbookPanel.tsx`) with real-time RAM/VRAM calculator, task categorization (Coding, General, Reasoning, Vision, Lightweight), and hardware fit badges.
+    - Multi-step Deep Research (`ResearchPanel.tsx`) with breadth/depth controls, passage extraction, and structured markdown synthesis.
+    - Chat & Agent mode switch with active tool chips (Knowledge RAG, Code Sandbox, Local Files, Web Search, MCP Client) and collapsible reasoning steps.
+  - Native Windows executable binaries verified (`sanctum-lab-wry.exe`, `sanctum-runtime.exe`, `sanctum-foundation.exe`).
+  - Gzip bundle size: 25.58 KB gzip (well under 51.2 KB target and 102.4 KB hard ceiling).
+  - 47 web tests green; 188 workspace checks pass.
+  - Hosted CI: commit `f10c6d7` verified green across all 5 jobs in run 39550370418 (`evals/results/odysseus-ui-hosted-ci.json`).
 - No native installer, desktop performance acceptance or whole-product security claim.
 
 Evidence: [A2–A5 commands/results](A2_A5_EVIDENCE.md), [PERFORMANCE](PERFORMANCE.md), [test audit](TEST_REMOVAL_AUDIT.md),

@@ -1,0 +1,16 @@
+{
+  "workflow_run_id": "39550370418",
+  "workflow_run_number": 170,
+  "branch": "jan-style",
+  "commit_sha": "f10c6d7601b8d7e01dc6bbe4f827bc67162433d8",
+  "commit_message": "feat(ui): replicate Jan-style thread drawer and Odysseus-inspired Compare, Cookbook, and Deep Research panels",
+  "conclusion": "success",
+  "jobs": {
+    "source-gates (ubuntu-22.04)": "success",
+    "source-gates (windows-latest)": "success",
+    "source-gates (macos-latest)": "success",
+    "rust-foundation": "success",
+    "web": "success"
+  },
+  "verified_at": "2026-10-21T05:36:20Z"
+}
