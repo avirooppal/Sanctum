@@ -221,7 +221,7 @@ export const AssistantsPanel: React.FC<AssistantsPanelProps> = ({
               )}
               {p.updated_at && (
                 <div style={{ fontSize: '11px', color: '#475569' }}>
-                  Updated {new Date(p.updated_at * 1000).toLocaleString()}
+                  Updated {new Date(p.updated_at > 1e11 ? p.updated_at : p.updated_at * 1000).toLocaleString()}
                 </div>
               )}
               <div style={{ display: 'flex', gap: '8px', marginTop: '6px' }}>

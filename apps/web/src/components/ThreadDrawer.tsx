@@ -59,7 +59,7 @@ export const ThreadDrawer: React.FC<ThreadDrawerProps> = ({
             value={params.systemPrompt}
             onChange={(e) => onUpdateParams({ systemPrompt: e.target.value })}
             placeholder="Custom instructions for this conversation..."
-            className="w-full bg-input/20 border border-input/40 rounded-lg p-2.5 text-xs text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-1 focus:ring-ring leading-relaxed"
+            className="w-full bg-secondary/40 border border-border/50 rounded-lg p-2.5 text-xs text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-1 focus:ring-primary leading-relaxed"
           />
         </div>
 
@@ -114,7 +114,7 @@ export const ThreadDrawer: React.FC<ThreadDrawerProps> = ({
             step="128"
             value={params.maxTokens}
             onChange={(e) => onUpdateParams({ maxTokens: parseInt(e.target.value, 10) || 2048 })}
-            className="w-full bg-input/20 border border-input/40 rounded-lg px-2.5 py-1.5 text-xs text-foreground font-mono focus:outline-none focus:ring-1 focus:ring-ring"
+            className="w-full bg-secondary/40 border border-border/50 rounded-lg px-2.5 py-1.5 text-xs text-foreground font-mono focus:outline-none focus:ring-1 focus:ring-primary"
           />
         </div>
 

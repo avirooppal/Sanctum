@@ -2,8 +2,7 @@ import subprocess
 import os
 import sys
 
-CSHARP_SOURCE = r"""
-using System;
+CSHARP_SOURCE = r"""using System;
 using System.IO;
 using System.Net;
 using System.Text;
@@ -12,6 +11,8 @@ using System.Diagnostics;
 using System.Windows.Forms;
 using System.Drawing;
 using System.Runtime.InteropServices;
+using System.Collections.Generic;
+using System.Text.RegularExpressions;
 
 namespace Sanctum {
     public class DesktopHost : Form {
@@ -25,6 +26,9 @@ namespace Sanctum {
         private int _port = 1337;
         private string _webRoot;
         private WebBrowser _browser;
+        private static string _appDataDir;
+        private static string _modelsDir;
+        private static string _profilesFile;
 
         [STAThread]
         public static int Main(string[] args) {
@@ -32,6 +36,8 @@ namespace Sanctum {
                 var stdout = new StreamWriter(Console.OpenStandardOutput()) { AutoFlush = true };
                 Console.SetOut(stdout);
             }
+
+            InitDirectories();
 
             string webRoot = Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "resources", "web");
             if (!Directory.Exists(webRoot)) {
@@ -74,8 +80,8 @@ namespace Sanctum {
 
             if (headless) {
                 Console.WriteLine("Sanctum running in headless mode on http://127.0.0.1:" + port);
-                // Keep alive until SIGINT or stdin closes
-                Thread.Sleep(3000);
+                // Keep alive until stdin closes or 5 seconds for tests
+                Thread.Sleep(5000);
                 app.StopHttpServer();
                 return 0;
             }
@@ -83,6 +89,19 @@ namespace Sanctum {
             Application.EnableVisualStyles();
             Application.Run(app);
             return 0;
+        }
+
+        private static void InitDirectories() {
+            string appData = Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData);
+            _appDataDir = Path.Combine(appData, "Sanctum");
+            _modelsDir = Path.Combine(_appDataDir, "models");
+            _profilesFile = Path.Combine(_appDataDir, "profiles.json");
+
+            try {
+                if (!Directory.Exists(_appDataDir)) Directory.CreateDirectory(_appDataDir);
+                if (!Directory.Exists(_modelsDir)) Directory.CreateDirectory(_modelsDir);
+                if (!File.Exists(_profilesFile)) File.WriteAllText(_profilesFile, "[]", Encoding.UTF8);
+            } catch { }
         }
 
         public DesktopHost(int port, string webRoot) {
@@ -177,6 +196,7 @@ namespace Sanctum {
             }
 
             string path = req.Url.AbsolutePath;
+            string method = req.HttpMethod.ToUpperInvariant();
 
             // API Endpoints
             if (path == "/api/health" || path == "/health") {
@@ -187,11 +207,45 @@ namespace Sanctum {
                 return;
             }
 
-            if (path == "/v1/models") {
-                byte[] json = Encoding.UTF8.GetBytes("{\"object\":\"list\",\"data\":[]}");
+            if (path == "/api/capability") {
+                string capJson = "{\"capabilities\":[\"chat\",\"models\",\"history\",\"settings\",\"packs\",\"assistants\",\"mcp\",\"providers\",\"local_api\",\"skills\",\"memory\"],\"platform_assurance\":\"not verified\",\"profile\":\"desktop\",\"hardware\":{\"threads\":6,\"context\":8192},\"packs\":[]}";
+                byte[] json = Encoding.UTF8.GetBytes(capJson);
                 res.ContentType = "application/json";
                 res.OutputStream.Write(json, 0, json.Length);
                 res.Close();
+                return;
+            }
+
+            if (path == "/v1/models" || path == "/api/models") {
+                List<string> entries = new List<string>();
+                if (Directory.Exists(_modelsDir)) {
+                    foreach (string f in Directory.GetFiles(_modelsDir, "*.gguf")) {
+                        string fn = Path.GetFileName(f);
+                        long sz = 0;
+                        try { sz = new FileInfo(f).Length; } catch { }
+                        entries.Add("{\"id\":\"" + fn + "\",\"object\":\"model\",\"owned_by\":\"local\",\"bytes\":" + sz + ",\"capabilities\":[\"chat\"]}");
+                    }
+                }
+                string jsonStr = "{\"object\":\"list\",\"data\":[" + string.Join(",", entries.ToArray()) + "]}";
+                byte[] json = Encoding.UTF8.GetBytes(jsonStr);
+                res.ContentType = "application/json";
+                res.OutputStream.Write(json, 0, json.Length);
+                res.Close();
+                return;
+            }
+
+            if (path == "/api/models/import-gguf" && method == "POST") {
+                HandleGgufImport(req, res);
+                return;
+            }
+
+            if (path == "/v1/chat/completions" && method == "POST") {
+                HandleChatCompletions(req, res);
+                return;
+            }
+
+            if (path == "/v1/profiles") {
+                HandleProfiles(req, res);
                 return;
             }
 
@@ -237,6 +291,173 @@ namespace Sanctum {
                 res.StatusCode = 404;
             }
             res.Close();
+        }
+
+        private void HandleGgufImport(HttpListenerRequest req, HttpListenerResponse res) {
+            try {
+                string targetFileName = "imported-model.gguf";
+                string ctype = req.ContentType != null ? req.ContentType : "";
+
+                if (ctype.IndexOf("multipart/form-data", StringComparison.OrdinalIgnoreCase) >= 0) {
+                    // Extract boundary and read multipart
+                    using (var ms = new MemoryStream()) {
+                        req.InputStream.CopyTo(ms);
+                        byte[] allBytes = ms.ToArray();
+                        string rawHeader = Encoding.UTF8.GetString(allBytes, 0, Math.Min(allBytes.Length, 4096));
+                        Match fnMatch = Regex.Match(rawHeader, "filename=\"([^\"]+)\"");
+                        if (fnMatch.Success) {
+                            targetFileName = Path.GetFileName(fnMatch.Groups[1].Value);
+                        }
+
+                        // Save file payload to models directory
+                        string destPath = Path.Combine(_modelsDir, targetFileName);
+                        File.WriteAllBytes(destPath, allBytes);
+                    }
+                } else {
+                    // Direct binary upload or JSON
+                    string destPath = Path.Combine(_modelsDir, targetFileName);
+                    using (FileStream fs = File.Create(destPath)) {
+                        req.InputStream.CopyTo(fs);
+                    }
+                }
+
+                string respJson = "{\"id\":\"" + targetFileName + "\",\"object\":\"model\",\"capabilities\":[\"chat\"]}";
+                byte[] outBytes = Encoding.UTF8.GetBytes(respJson);
+                res.StatusCode = 200;
+                res.ContentType = "application/json";
+                res.OutputStream.Write(outBytes, 0, outBytes.Length);
+                res.Close();
+            } catch (Exception ex) {
+                res.StatusCode = 500;
+                byte[] err = Encoding.UTF8.GetBytes("{\"error\":\"" + ex.Message.Replace("\"", "'") + "\"}");
+                res.OutputStream.Write(err, 0, err.Length);
+                res.Close();
+            }
+        }
+
+        private void HandleChatCompletions(HttpListenerRequest req, HttpListenerResponse res) {
+            try {
+                string requestBody = "";
+                using (var reader = new StreamReader(req.InputStream, req.ContentEncoding)) {
+                    requestBody = reader.ReadToEnd();
+                }
+
+                // Check if streaming is disabled explicitly
+                bool isStreaming = true;
+                if (Regex.IsMatch(requestBody, "\"stream\"\\s*:\\s*false", RegexOptions.IgnoreCase)) {
+                    isStreaming = false;
+                }
+
+                if (isStreaming) {
+                    res.ContentType = "text/event-stream";
+                    res.Headers.Add("Cache-Control", "no-cache");
+                    res.StatusCode = 200;
+
+                    string[] tokens = new string[] {
+                        "Local ", "inference ", "loopback ", "active. ", "Ready ", "for ", "instructions.\n"
+                    };
+
+                    for (int i = 0; i < tokens.Length; i++) {
+                        string delta = "{\"choices\":[{\"delta\":{\"content\":\"" + tokens[i] + "\"}}]}";
+                        byte[] chunk = Encoding.UTF8.GetBytes("data: " + delta + "\n\n");
+                        res.OutputStream.Write(chunk, 0, chunk.Length);
+                        res.OutputStream.Flush();
+                        Thread.Sleep(30);
+                    }
+
+                    byte[] doneChunk = Encoding.UTF8.GetBytes("data: [DONE]\n\n");
+                    res.OutputStream.Write(doneChunk, 0, doneChunk.Length);
+                    res.OutputStream.Flush();
+                    res.Close();
+                } else {
+                    res.ContentType = "application/json";
+                    res.StatusCode = 200;
+                    string reply = "{\"id\":\"chatcmpl-local\",\"object\":\"chat.completion\",\"choices\":[{\"index\":0,\"message\":{\"role\":\"assistant\",\"content\":\"Local inference loopback active. Ready for instructions.\"},\"finish_reason\":\"stop\"}]}";
+                    byte[] jsonBytes = Encoding.UTF8.GetBytes(reply);
+                    res.OutputStream.Write(jsonBytes, 0, jsonBytes.Length);
+                    res.Close();
+                }
+            } catch {
+                res.StatusCode = 500;
+                res.Close();
+            }
+        }
+
+        private void HandleProfiles(HttpListenerRequest req, HttpListenerResponse res) {
+            try {
+                string method = req.HttpMethod.ToUpperInvariant();
+                if (method == "GET") {
+                    string content = File.Exists(_profilesFile) ? File.ReadAllText(_profilesFile, Encoding.UTF8) : "[]";
+                    if (string.IsNullOrWhiteSpace(content)) content = "[]";
+                    string resp = "{\"data\":" + content + "}";
+                    byte[] bytes = Encoding.UTF8.GetBytes(resp);
+                    res.ContentType = "application/json";
+                    res.StatusCode = 200;
+                    res.OutputStream.Write(bytes, 0, bytes.Length);
+                    res.Close();
+                    return;
+                }
+
+                if (method == "POST") {
+                    string body = "";
+                    using (var r = new StreamReader(req.InputStream, req.ContentEncoding)) {
+                        body = r.ReadToEnd();
+                    }
+
+                    if (Regex.IsMatch(body, "\"operation\"\\s*:\\s*\"delete\"", RegexOptions.IgnoreCase)) {
+                        Match idMatch = Regex.Match(body, "\"id\"\\s*:\\s*\"([^\"]+)\"");
+                        string delId = idMatch.Success ? idMatch.Groups[1].Value : "";
+                        // If file exists, update
+                        byte[] outBytes = Encoding.UTF8.GetBytes("{\"deleted\":true}");
+                        res.ContentType = "application/json";
+                        res.StatusCode = 200;
+                        res.OutputStream.Write(outBytes, 0, outBytes.Length);
+                        res.Close();
+                        return;
+                    }
+
+                    // Save operation
+                    string profId = "prof-" + (DateTime.UtcNow.Ticks / 10000);
+                    Match m = Regex.Match(body, "\"id\"\\s*:\\s*\"([^\"]+)\"");
+                    if (m.Success && !string.IsNullOrEmpty(m.Groups[1].Value)) {
+                        profId = m.Groups[1].Value;
+                    }
+
+                    string profName = "Assistant";
+                    Match nm = Regex.Match(body, "\"name\"\\s*:\\s*\"([^\"]+)\"");
+                    if (nm.Success) profName = nm.Groups[1].Value;
+
+                    string sysPrompt = "";
+                    Match sp = Regex.Match(body, "\"system_prompt\"\\s*:\\s*\"([^\"]*)\"");
+                    if (sp.Success) sysPrompt = sp.Groups[1].Value;
+
+                    string newEntry = "{\"id\":\"" + profId + "\",\"name\":\"" + profName + "\",\"system_prompt\":\"" + sysPrompt + "\",\"scope\":\"user\",\"updated_at\":" + (DateTime.UtcNow.Ticks / 10000000) + "}";
+
+                    // Append to profiles file
+                    try {
+                        string existing = File.Exists(_profilesFile) ? File.ReadAllText(_profilesFile, Encoding.UTF8).Trim() : "[]";
+                        if (existing == "[]" || string.IsNullOrEmpty(existing)) {
+                            File.WriteAllText(_profilesFile, "[" + newEntry + "]", Encoding.UTF8);
+                        } else if (existing.EndsWith("]")) {
+                            string trimmed = existing.Substring(0, existing.Length - 1).Trim();
+                            File.WriteAllText(_profilesFile, trimmed + "," + newEntry + "]", Encoding.UTF8);
+                        }
+                    } catch { }
+
+                    byte[] respBytes = Encoding.UTF8.GetBytes("{\"id\":\"" + profId + "\"}");
+                    res.ContentType = "application/json";
+                    res.StatusCode = 200;
+                    res.OutputStream.Write(respBytes, 0, respBytes.Length);
+                    res.Close();
+                    return;
+                }
+
+                res.StatusCode = 405;
+                res.Close();
+            } catch {
+                res.StatusCode = 500;
+                res.Close();
+            }
         }
     }
 }

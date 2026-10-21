@@ -122,7 +122,8 @@ export const ModelHubPanel: React.FC<ModelHubPanelProps> = ({
               value={search}
               onChange={(e) => setSearch(e.target.value)}
               placeholder="Search models..."
-              className="w-56 bg-input/20 border border-input/40 rounded-lg pl-8 pr-3 py-1.5 text-xs text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-1 focus:ring-ring"
+              style={{ backgroundColor: 'rgba(255, 255, 255, 0.05)' }}
+              className="w-56 border border-border/40 rounded-lg pl-8 pr-3 py-1.5 text-xs text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-1 focus:ring-primary"
             />
           </div>
         </div>

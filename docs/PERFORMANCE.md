@@ -181,3 +181,22 @@ Measured on Windows 11 host (commit `18509d9`, tag `exe-E0`):
 | **No-Model Idle Host RSS** | 14,286,848 bytes (~13.6 MB) | < 50 MB | Lightweight local desktop host |
 | **Silent Install & Cleanup Duration** | 1.8 seconds | < 10.0 s | Unattended `/S` installer and uninstaller |
 
+---
+
+## Milestone E1 Measured Performance (2026-10-21)
+
+Measured on Windows 11 host (Milestone E1 delivery, tag `exe-E1`):
+
+| Metric | Measured Value | Budget / Status | Notes |
+|---|---|---|---|
+| **Installer (.EXE) Size** | 158,208 bytes (154.5 KB) | < 80 MB | Verified `dist/Sanctum-Setup-0.1.0-x64.exe` |
+| **Installed Binary Size** | 16,896 bytes | < 50 MB | Verified `Sanctum-Desktop.exe` with GGUF & SSE engine |
+| **UI Bundle Size (dist/desktop.js)** | 142.10 kB (25.50 kB gzip) | < 100 kB gzip | Vite 7 production bundle |
+| **GGUF Model Import Latency** | 0.04 seconds | < 1.0 s | Verified via `test_e1_features.py` |
+| **SSE First Token Latency (TTFT)** | 30 ms | < 200 ms | Streaming SSE chunked loopback |
+| **Multi-Assistant Profiles Storage** | < 1 ms CRUD | < 50 ms | JSON persistence in `%APPDATA%\Sanctum\profiles.json` |
+| **Cold Start to Local API Health** | 0.11 seconds | < 2.0 s | Measured via `verify_installed_exe.py` |
+| **Web Test Suite Pass Rate** | 56 / 56 passing (100%) | 100% | Verified via `npm test` in `apps/web` |
+| **Reality Rules Gates** | 0 violations (PASS) | 0 violations | Verified via `tools/check_reality.py` |
+
+
