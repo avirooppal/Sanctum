@@ -1,0 +1,16 @@
+{
+  "pinned_sha": "e7cbcf6d232f331313fd646b9131793ab2c5dc5c",
+  "yarn_lock_sha256": "C3CB18BF6C8FC94474204F40715875A0E23AF1581E196C8F88496BE7CC17E777",
+  "license": "Apache-2.0",
+  "license_hash": "240e79d4976dbf1d4c76e0ac1da223df97935a75497eaf8dd045771c3e92de16",
+  "notice": "ABSENT",
+  "ui_stack": {
+    "framework": "React 19.0.0",
+    "css": "TailwindCSS 4.1.17 via @tailwindcss/vite 4.1.4",
+    "router": "@tanstack/react-router 1.121.34",
+    "state": "zustand 5.0.3",
+    "primitives": "Radix UI (^1.4.3 / @radix-ui/react-*)",
+    "icons": ["@tabler/icons-react 3.34.0", "lucide-react ^0.563.0"],
+    "markdown": ["streamdown ^2.1.1", "react-markdown 10.1.0", "katex 0.16.22", "shiki ^3.19.0"]
+  }
+}

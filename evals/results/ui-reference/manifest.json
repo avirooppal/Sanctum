@@ -1,0 +1,37 @@
+{
+  "reference_timestamp": "2026-10-21T12:33:00Z",
+  "pinned_upstream_commit": "e7cbcf6d232f331313fd646b9131793ab2c5dc5c",
+  "yarn_lock_sha256": "C3CB18BF6C8FC94474204F40715875A0E23AF1581E196C8F88496BE7CC17E777",
+  "viewports": [
+    {
+      "name": "desktop",
+      "resolution": "1440x900",
+      "screenshots": [
+        { "screen": "chat", "state": "empty_new_chat", "file": "chat_view_1440x900_1792566084291.png" },
+        { "screen": "assistants", "state": "assistants_list", "file": "assistants_view_1440x900_1792566095169.png" },
+        { "screen": "models", "state": "installed_models_and_import", "file": "models_view_1440x900_1792566101889.png" },
+        { "screen": "mcp_servers", "state": "mcp_management", "file": "mcp_servers_view_1440x900_1792566110601.png" },
+        { "screen": "providers", "state": "local_api_and_byok", "file": "providers_view_1440x900_1792566118830.png" },
+        { "screen": "model_compare", "state": "dual_split_eval", "file": "model_compare_view_1440x900_1792566126030.png" },
+        { "screen": "skills_and_memory", "state": "markdown_skills_tab", "file": "skills_and_memory_view_1440x900_1792566133803.png" },
+        { "screen": "settings", "state": "general_and_appearance", "file": "settings_view_1440x900_1792566142446.png" }
+      ]
+    },
+    {
+      "name": "tablet",
+      "resolution": "1024x768",
+      "screenshots": [
+        { "screen": "chat", "state": "compact_chat", "file": "chat_view_1024x768_1792566158864.png" },
+        { "screen": "models", "state": "compact_models", "file": "models_view_1024x768_1792566166298.png" },
+        { "screen": "settings", "state": "compact_settings", "file": "settings_view_1024x768_1792566174762.png" }
+      ]
+    },
+    {
+      "name": "mobile",
+      "resolution": "600x800",
+      "screenshots": [
+        { "screen": "chat", "state": "narrow_chat", "file": "chat_view_600x800_1792566191192.png" }
+      ]
+    }
+  ]
+}
