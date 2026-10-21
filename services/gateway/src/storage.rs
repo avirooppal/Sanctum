@@ -310,7 +310,8 @@ impl Store {
         let rows = stmt
             .query_map([owner], |r| {
                 let args_str: String = r.get(3)?;
-                let args_json: Value = serde_json::from_str(&args_str).unwrap_or_else(|_| json!([]));
+                let args_json: Value =
+                    serde_json::from_str(&args_str).unwrap_or_else(|_| json!([]));
                 Ok(json!({
                     "id": r.get::<_, String>(0)?,
                     "name": r.get::<_, String>(1)?,
@@ -412,7 +413,11 @@ impl Store {
 
     // --- Memories ---
 
-    pub fn memories(&self, owner: &str, assistant_id: Option<&str>) -> rusqlite::Result<Vec<Value>> {
+    pub fn memories(
+        &self,
+        owner: &str,
+        assistant_id: Option<&str>,
+    ) -> rusqlite::Result<Vec<Value>> {
         let (query, has_asst) = match assistant_id {
             Some(_) => (
                 "SELECT id, assistant_id, fact, category, created_at, updated_at FROM memories_v1 WHERE owner=?1 AND (assistant_id=?2 OR assistant_id IS NULL) ORDER BY updated_at DESC",
@@ -554,18 +559,9 @@ impl Store {
             "DELETE FROM assistant_profiles_v1 WHERE owner=?1",
             params![owner],
         )?;
-        tx.execute(
-            "DELETE FROM mcp_servers_v1 WHERE owner=?1",
-            params![owner],
-        )?;
-        tx.execute(
-            "DELETE FROM skills_v1 WHERE owner=?1",
-            params![owner],
-        )?;
-        tx.execute(
-            "DELETE FROM memories_v1 WHERE owner=?1",
-            params![owner],
-        )?;
+        tx.execute("DELETE FROM mcp_servers_v1 WHERE owner=?1", params![owner])?;
+        tx.execute("DELETE FROM skills_v1 WHERE owner=?1", params![owner])?;
+        tx.execute("DELETE FROM memories_v1 WHERE owner=?1", params![owner])?;
         tx.execute(
             "DELETE FROM provider_keys_v1 WHERE owner=?1",
             params![owner],
