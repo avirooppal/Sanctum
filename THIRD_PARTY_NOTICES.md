@@ -62,3 +62,13 @@ No NOTICE file exists in the pinned upstream tracked tree.
 In accordance with Apache-2.0 Section 4(b), modified files are documented in `docs/ui-provenance.md`.
 In accordance with Apache-2.0 Section 6, the name "Jan", logos, Hamster mascot, and marks are not used or claimed as trademarks by Sanctum and have been replaced with Sanctum's name and neutral mark. All telemetry, analytics, and auto-updaters have been removed.
 
+## Odysseus (ADR 0099, docs/LICENSE_DECISION.md)
+
+Odysseus backend and web application from https://github.com/odysseus-dev/odysseus at pinned commit 8877273e195a90d51bc6a37f3a1b60dc3414c431.
+Licensed under GNU Affero General Public License Version 3 or later (AGPL-3.0-or-later).
+Copyright (c) Odysseus Contributors.
+Full license text preserved at `docs/licenses/odysseus-AGPL-3.0.txt` (SHA256 `79735a75d0274d2a5dcc240d11a0f81e34cfc3533939b7fce8e84e35a150a238`).
+Owner permission note noted in `docs/licenses/ODYSSEUS_PERMISSION.txt`.
+In accordance with AGPLv3 Section 13, complete corresponding source is made available. All upstream brand marks, names, and logos are replaced with Sanctum Workspace and neutral marks.
+
+

@@ -59,15 +59,15 @@ export const ChatPanel: React.FC<ChatPanelProps> = ({
 
   return (
     <div className="flex-1 h-full flex flex-col bg-background text-foreground overflow-hidden">
-      {/* Top Header: Model Combobox + Actions (No assurance claim in header per Deviation #6) */}
-      <div className="h-12 border-b border-border/40 px-4 flex items-center justify-between bg-background/80 backdrop-blur-xs shrink-0 z-10">
+      {/* Top Header: Model Combobox + Actions */}
+      <div className="h-12 border-b border-border/40 px-4 flex items-center justify-between bg-background shrink-0 z-10">
         <div className="relative">
           <button
             onClick={() => setModelDropdownOpen(!modelDropdownOpen)}
-            className="flex items-center gap-2 px-3 py-1.5 rounded-full border border-border/60 bg-card hover:bg-accent text-xs font-medium text-foreground transition-colors shadow-xs"
+            className="flex items-center gap-2 px-3 py-1.5 rounded-lg border border-border/60 bg-secondary/80 hover:bg-secondary text-xs font-medium text-foreground transition-colors shadow-xs"
           >
             <div className="size-2 rounded-full bg-emerald-500" />
-            <span className="font-semibold">{displayModel}</span>
+            <span className="font-medium">{displayModel}</span>
             <svg className="size-3.5 text-muted-foreground" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
               <path d="m6 9 6 6 6-6" />
             </svg>
@@ -132,25 +132,25 @@ export const ChatPanel: React.FC<ChatPanelProps> = ({
         </div>
       </div>
 
-      {/* Main Conversation Scroll Area */}
+      {/* Main Conversation Area */}
       {messages.length === 0 ? (
-        <div className="flex-1 overflow-y-auto flex flex-col px-4">
-          <div className="mx-auto w-full max-w-3xl my-auto">
-            <div className="text-center mb-6">
-              <h1 className="text-2xl font-studio font-medium text-foreground tracking-tight">
-                How can I help you today?
-              </h1>
+        <div className="flex-1 h-full flex flex-col justify-center items-center px-4 overflow-y-auto">
+          <div className="w-full max-w-2xl flex flex-col items-center -mt-16">
+            <h1 className="text-2xl md:text-3xl font-studio font-medium text-foreground tracking-tight mb-6 text-center">
+              How can I help you today?
+            </h1>
+            <div className="w-full">
+              <Composer
+                onSend={onSendMessage}
+                onStop={onStopStreaming}
+                isStreaming={isStreaming}
+                activeModelName={displayModel}
+              />
             </div>
-            <Composer
-              onSend={onSendMessage}
-              onStop={onStopStreaming}
-              isStreaming={isStreaming}
-              activeModelName={displayModel}
-            />
           </div>
         </div>
       ) : (
-        <>
+        <div className="flex-1 h-full flex flex-col overflow-hidden">
           <div ref={scrollRef} className="flex-1 overflow-y-auto p-4 md:p-6 space-y-4">
             <div className="max-w-3xl mx-auto w-full flex flex-col gap-5">
               {messages.map((m) => {
@@ -221,14 +221,16 @@ export const ChatPanel: React.FC<ChatPanelProps> = ({
             </div>
           </div>
 
-          {/* Bottom Composer in Active Chat */}
-          <Composer
-            onSend={onSendMessage}
-            onStop={onStopStreaming}
-            isStreaming={isStreaming}
-            activeModelName={displayModel}
-          />
-        </>
+          {/* Pinned Bottom Composer */}
+          <div className="border-t border-border/40 bg-background/90 backdrop-blur-sm py-2 shrink-0">
+            <Composer
+              onSend={onSendMessage}
+              onStop={onStopStreaming}
+              isStreaming={isStreaming}
+              activeModelName={displayModel}
+            />
+          </div>
+        </div>
       )}
     </div>
   );
