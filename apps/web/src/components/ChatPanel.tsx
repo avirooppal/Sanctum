@@ -1,4 +1,4 @@
-import React, { useRef, useEffect, useState } from 'react';
+import React, { useRef, useEffect } from 'react';
 import { Composer } from './Composer.js';
 import { SafeMarkdown } from '../ui/SafeMarkdown.js';
 
@@ -21,6 +21,7 @@ export interface ChatPanelProps {
   onSendMessage: (text: string) => void;
   onStopStreaming?: () => void;
   activeModelName?: string;
+  platformAssurance?: string;
   isDrawerOpen?: boolean;
   onToggleDrawer?: () => void;
 }
@@ -30,27 +31,12 @@ export const ChatPanel: React.FC<ChatPanelProps> = ({
   isStreaming = false,
   onSendMessage,
   onStopStreaming,
-  activeModelName = 'qwen2.5-coder-7b',
+  activeModelName = '',
+  platformAssurance = 'not verified',
   isDrawerOpen = false,
   onToggleDrawer,
 }) => {
   const scrollRef = useRef<HTMLDivElement>(null);
-
-  // Odysseus & Jan inspired UI state
-  const [chatMode, setChatMode] = useState<'chat' | 'agent'>('chat');
-  const [tools, setTools] = useState({
-    web: false,
-    code: true,
-    files: true,
-    knowledge: true,
-    mcp: false,
-  });
-
-  const promptStarters = [
-    'Explain local process containment in Sanctum',
-    'Benchmark Rust gateway memory budgets vs Electron',
-    'How do GGUF GPU offloading layers work?',
-  ];
 
   useEffect(() => {
     if (scrollRef.current) {
@@ -64,9 +50,8 @@ export const ChatPanel: React.FC<ChatPanelProps> = ({
     }
   };
 
-  const toggleTool = (tool: keyof typeof tools) => {
-    setTools((prev) => ({ ...prev, [tool]: !prev[tool] }));
-  };
+  const isAssuranceVerified = platformAssurance === 'verified kernel containment';
+  const displayModel = activeModelName || 'No model loaded';
 
   return (
     <div
@@ -92,48 +77,6 @@ export const ChatPanel: React.FC<ChatPanelProps> = ({
         }}
       >
         <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
-          {/* Mode Switcher */}
-          <div
-            style={{
-              display: 'flex',
-              background: '#0b0f17',
-              border: '1px solid #1e293b',
-              borderRadius: '6px',
-              padding: '2px',
-            }}
-          >
-            <button
-              onClick={() => setChatMode('chat')}
-              style={{
-                padding: '4px 10px',
-                fontSize: '12px',
-                borderRadius: '4px',
-                border: 'none',
-                background: chatMode === 'chat' ? '#1e293b' : 'transparent',
-                color: chatMode === 'chat' ? '#38bdf8' : '#94a3b8',
-                cursor: 'pointer',
-                fontWeight: chatMode === 'chat' ? 600 : 400,
-              }}
-            >
-              💬 Chat
-            </button>
-            <button
-              onClick={() => setChatMode('agent')}
-              style={{
-                padding: '4px 10px',
-                fontSize: '12px',
-                borderRadius: '4px',
-                border: 'none',
-                background: chatMode === 'agent' ? '#1e293b' : 'transparent',
-                color: chatMode === 'agent' ? '#10b981' : '#94a3b8',
-                cursor: 'pointer',
-                fontWeight: chatMode === 'agent' ? 600 : 400,
-              }}
-            >
-              🤖 Agent
-            </button>
-          </div>
-
           <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
             <span style={{ fontSize: '13px', color: '#94a3b8' }}>Model:</span>
             <span
@@ -141,12 +84,12 @@ export const ChatPanel: React.FC<ChatPanelProps> = ({
                 fontSize: '12px',
                 padding: '2px 8px',
                 backgroundColor: '#1e293b',
-                color: '#38bdf8',
+                color: activeModelName ? '#38bdf8' : '#64748b',
                 borderRadius: '4px',
                 fontWeight: 500,
               }}
             >
-              {activeModelName}
+              {displayModel}
             </span>
           </div>
         </div>
@@ -154,9 +97,16 @@ export const ChatPanel: React.FC<ChatPanelProps> = ({
         {/* Right side controls */}
         <div style={{ display: 'flex', alignItems: 'center', gap: '16px' }}>
           <div style={{ fontSize: '11px', color: '#64748b', display: 'flex', alignItems: 'center', gap: '6px' }}>
-            <span>Egress:</span>
-            <strong style={{ color: '#10b981', background: 'rgba(16, 185, 129, 0.1)', padding: '2px 6px', borderRadius: '3px' }}>
-              BLOCKED
+            <span>Assurance:</span>
+            <strong
+              style={{
+                color: isAssuranceVerified ? '#10b981' : '#f59e0b',
+                background: isAssuranceVerified ? 'rgba(16, 185, 129, 0.1)' : 'rgba(245, 158, 11, 0.1)',
+                padding: '2px 6px',
+                borderRadius: '3px',
+              }}
+            >
+              {isAssuranceVerified ? 'CONTAINED' : 'UNVERIFIED'}
             </strong>
           </div>
           {onToggleDrawer && (
@@ -176,52 +126,12 @@ export const ChatPanel: React.FC<ChatPanelProps> = ({
                 fontWeight: 500,
                 transition: 'background-color 0.15s ease',
               }}
-              title="Toggle Jan-Style Parameter Drawer"
+              title="Toggle Parameter Drawer"
             >
               <span>⚙️</span> Parameters
             </button>
           )}
         </div>
-      </div>
-
-      {/* Odysseus Tools & Capability Bar */}
-      <div
-        style={{
-          padding: '6px 20px',
-          backgroundColor: '#0d131f',
-          borderBottom: '1px solid #141d2b',
-          display: 'flex',
-          alignItems: 'center',
-          gap: '8px',
-          overflowX: 'auto',
-          fontSize: '11px',
-        }}
-      >
-        <span style={{ color: '#64748b', marginRight: '4px' }}>Active Tools:</span>
-        {[
-          { key: 'knowledge' as const, label: '🧠 Knowledge RAG', active: tools.knowledge },
-          { key: 'code' as const, label: '💻 Code Sandbox', active: tools.code },
-          { key: 'files' as const, label: '📁 Local Files', active: tools.files },
-          { key: 'web' as const, label: '🌐 Web Search (Offline)', active: tools.web },
-          { key: 'mcp' as const, label: '🔌 MCP Client', active: tools.mcp },
-        ].map((t) => (
-          <button
-            key={t.key}
-            onClick={() => toggleTool(t.key)}
-            style={{
-              padding: '2px 8px',
-              borderRadius: '12px',
-              border: t.active ? '1px solid #38bdf8' : '1px solid #1e293b',
-              backgroundColor: t.active ? 'rgba(56, 189, 248, 0.12)' : '#121824',
-              color: t.active ? '#38bdf8' : '#64748b',
-              cursor: 'pointer',
-              fontSize: '11px',
-              whiteSpace: 'nowrap',
-            }}
-          >
-            {t.label}
-          </button>
-        ))}
       </div>
 
       {/* Message List */}
@@ -249,46 +159,14 @@ export const ChatPanel: React.FC<ChatPanelProps> = ({
               gap: '16px',
             }}
           >
-            <div style={{ fontSize: '36px' }}>🔒</div>
+            <div style={{ fontSize: '36px' }}>💬</div>
             <div>
               <h2 style={{ fontSize: '18px', fontWeight: 600, color: '#f8fafc', margin: '0 0 6px 0' }}>
-                Private Local Intelligence
+                Local Intelligence
               </h2>
               <p style={{ fontSize: '13px', lineHeight: '1.5', margin: 0 }}>
-                Uncompromising local-first workspace. Bring your own models, tools, and knowledge with zero WAN egress.
+                Offline conversation workspace. Type a prompt below to begin.
               </p>
-            </div>
-
-            {/* Quick Starters */}
-            <div style={{ display: 'flex', flexDirection: 'column', gap: '8px', width: '100%', marginTop: '8px' }}>
-              <span style={{ fontSize: '11px', color: '#64748b', textTransform: 'uppercase' }}>Suggested Prompts</span>
-              {promptStarters.map((starter, idx) => (
-                <button
-                  key={idx}
-                  onClick={() => onSendMessage(starter)}
-                  style={{
-                    padding: '8px 12px',
-                    borderRadius: '6px',
-                    border: '1px solid #1e293b',
-                    backgroundColor: '#121824',
-                    color: '#94a3b8',
-                    fontSize: '12px',
-                    cursor: 'pointer',
-                    textAlign: 'left',
-                    transition: 'border-color 0.15s, color 0.15s',
-                  }}
-                  onMouseEnter={(e) => {
-                    e.currentTarget.style.borderColor = '#38bdf8';
-                    e.currentTarget.style.color = '#f8fafc';
-                  }}
-                  onMouseLeave={(e) => {
-                    e.currentTarget.style.borderColor = '#1e293b';
-                    e.currentTarget.style.color = '#94a3b8';
-                  }}
-                >
-                  ⚡ {starter}
-                </button>
-              ))}
             </div>
           </div>
         )}
@@ -335,9 +213,17 @@ export const ChatPanel: React.FC<ChatPanelProps> = ({
                   >
                     {msg.role === 'user' ? 'You' : 'Assistant'}
                   </span>
-                  {msg.role === 'assistant' && (
-                    <span style={{ fontSize: '10px', color: '#10b981', background: 'rgba(16, 185, 129, 0.1)', padding: '1px 5px', borderRadius: '3px' }}>
-                      ⚡ 38.4 tok/s
+                  {msg.role === 'assistant' && msg.speed && (
+                    <span
+                      style={{
+                        fontSize: '10px',
+                        color: '#10b981',
+                        background: 'rgba(16, 185, 129, 0.1)',
+                        padding: '1px 5px',
+                        borderRadius: '3px',
+                      }}
+                    >
+                      ⚡ {msg.speed}
                     </span>
                   )}
                 </div>
@@ -358,8 +244,8 @@ export const ChatPanel: React.FC<ChatPanelProps> = ({
                 </button>
               </div>
 
-              {/* Reasoning / Thinking Collapsible Block */}
-              {msg.role === 'assistant' && (
+              {/* Real Thinking Disclosure if present */}
+              {msg.role === 'assistant' && msg.thinking && (
                 <details
                   style={{
                     marginBottom: '10px',
@@ -372,10 +258,18 @@ export const ChatPanel: React.FC<ChatPanelProps> = ({
                   }}
                 >
                   <summary style={{ cursor: 'pointer', fontWeight: 500, color: '#38bdf8' }}>
-                    🧠 Reasoning & Tool Execution (0.3s)
+                    Thinking Process
                   </summary>
-                  <div style={{ marginTop: '6px', paddingTop: '6px', borderTop: '1px solid #141d2b', fontStyle: 'italic', fontSize: '11px' }}>
-                    Context verified. Local inference pipeline admitted turn under zero WAN egress policy.
+                  <div
+                    style={{
+                      marginTop: '6px',
+                      paddingTop: '6px',
+                      borderTop: '1px solid #141d2b',
+                      whiteSpace: 'pre-wrap',
+                      fontSize: '12px',
+                    }}
+                  >
+                    {msg.thinking}
                   </div>
                 </details>
               )}

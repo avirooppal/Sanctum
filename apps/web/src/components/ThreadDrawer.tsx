@@ -89,7 +89,7 @@ export const ThreadDrawer: React.FC<ThreadDrawerProps> = ({
               </option>
             ))
           ) : (
-            <option value={activeModel}>{activeModel}</option>
+            <option value={activeModel}>{activeModel || 'No models detected'}</option>
           )}
         </select>
       </div>

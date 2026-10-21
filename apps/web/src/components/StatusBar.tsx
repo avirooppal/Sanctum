@@ -12,7 +12,7 @@ export interface StatusBarProps {
 export const StatusBar: React.FC<StatusBarProps> = ({
   isReady = true,
   platformAssurance = 'not verified',
-  activeModelName = 'qwen2.5-coder-7b',
+  activeModelName = '',
   threads = 6,
   contextWindow = 8192,
   lowMemoryWarning = false,

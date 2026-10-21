@@ -117,61 +117,7 @@ export const Sidebar: React.FC<SidebarProps> = ({
             cursor: 'pointer',
           }}
         >
-          💬 Chat & Agents
-        </button>
-
-        <button
-          type="button"
-          onClick={() => onSelectView('compare')}
-          style={{
-            padding: '8px 12px',
-            backgroundColor: activeView === 'compare' ? '#1e293b' : 'transparent',
-            color: activeView === 'compare' ? '#f8fafc' : '#94a3b8',
-            border: 'none',
-            borderRadius: '6px',
-            textAlign: 'left',
-            fontSize: '13px',
-            fontWeight: activeView === 'compare' ? 600 : 400,
-            cursor: 'pointer',
-          }}
-        >
-          ⚖️ Compare
-        </button>
-
-        <button
-          type="button"
-          onClick={() => onSelectView('cookbook')}
-          style={{
-            padding: '8px 12px',
-            backgroundColor: activeView === 'cookbook' ? '#1e293b' : 'transparent',
-            color: activeView === 'cookbook' ? '#f8fafc' : '#94a3b8',
-            border: 'none',
-            borderRadius: '6px',
-            textAlign: 'left',
-            fontSize: '13px',
-            fontWeight: activeView === 'cookbook' ? 600 : 400,
-            cursor: 'pointer',
-          }}
-        >
-          🍳 Cookbook
-        </button>
-
-        <button
-          type="button"
-          onClick={() => onSelectView('research')}
-          style={{
-            padding: '8px 12px',
-            backgroundColor: activeView === 'research' ? '#1e293b' : 'transparent',
-            color: activeView === 'research' ? '#f8fafc' : '#94a3b8',
-            border: 'none',
-            borderRadius: '6px',
-            textAlign: 'left',
-            fontSize: '13px',
-            fontWeight: activeView === 'research' ? 600 : 400,
-            cursor: 'pointer',
-          }}
-        >
-          🔬 Deep Research
+          💬 Chat
         </button>
 
         {caps.has('models') && (

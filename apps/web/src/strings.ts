@@ -41,7 +41,7 @@ export const STRINGS = {
   search_sessions_placeholder: 'Search sessions...',
   composer_placeholder: 'Send a message... (Shift+Enter for new line)',
   empty_chat_title: 'Sanctum Desktop',
-  empty_chat_subtitle: 'Private, local-first intelligence with zero external egress.',
+  empty_chat_subtitle: 'Offline local AI workspace. Select an installed model to begin.',
   empty_chat_hint: 'Type a message below or press Ctrl+K to navigate.',
   command_palette_placeholder: 'Type a command, session, or setting name...',
 

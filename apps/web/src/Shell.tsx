@@ -9,9 +9,6 @@ import { SettingsPanel } from './components/SettingsPanel.js';
 import { StatusBar } from './components/StatusBar.js';
 import { CommandPalette, type CommandItem } from './components/CommandPalette.js';
 import { ThreadDrawer, type ThreadParameters } from './components/ThreadDrawer.js';
-import { ComparePanel } from './components/ComparePanel.js';
-import { CookbookPanel } from './components/CookbookPanel.js';
-import { ResearchPanel } from './components/ResearchPanel.js';
 import type { SanctumClient, CapabilityReport, Model, SettingEntry, PackInfo } from './api.js';
 
 export interface ShellProps {
@@ -28,7 +25,7 @@ export const Shell: React.FC<ShellProps> = ({
   const [activeView, setActiveView] = useState('chat');
   const [capabilities, setCapabilities] = useState<string[]>(initialCapabilities);
   const [platformAssurance, setPlatformAssurance] = useState<string>(initialPlatformAssurance);
-  const [activeModel, setActiveModel] = useState('qwen2.5-coder-7b');
+  const [activeModel, setActiveModel] = useState<string>('');
   const [models, setModels] = useState<Model[]>([]);
   const [packs, setPacks] = useState<PackInfo[]>([]);
   const [settings, setSettings] = useState<Record<string, SettingEntry>>({});
@@ -63,6 +60,7 @@ export const Shell: React.FC<ShellProps> = ({
           onSendMessage={handleSendMessage}
           onStopStreaming={() => setIsStreaming(false)}
           activeModelName={activeModel}
+          platformAssurance={platformAssurance}
           isDrawerOpen={isDrawerOpen}
           onToggleDrawer={() => setIsDrawerOpen((prev) => !prev)}
         />
@@ -100,41 +98,6 @@ export const Shell: React.FC<ShellProps> = ({
           onUnloadPack={handleUnloadPack}
         />
       ),
-    });
-
-    reg.register({
-      id: 'compare',
-      title: 'Compare',
-      icon: '⚖️',
-      allowedSlots: ['center'],
-      requiredCapabilities: ['chat'],
-      defaultVisibility: false,
-      component: () => (
-        <ComparePanel
-          models={models}
-          activeModelId={activeModel}
-        />
-      ),
-    });
-
-    reg.register({
-      id: 'cookbook',
-      title: 'Cookbook',
-      icon: '🍳',
-      allowedSlots: ['center'],
-      requiredCapabilities: ['models'],
-      defaultVisibility: false,
-      component: () => <CookbookPanel />,
-    });
-
-    reg.register({
-      id: 'research',
-      title: 'Deep Research',
-      icon: '🔬',
-      allowedSlots: ['center'],
-      requiredCapabilities: ['chat'],
-      defaultVisibility: false,
-      component: () => <ResearchPanel />,
     });
 
     reg.register({
@@ -305,24 +268,6 @@ export const Shell: React.FC<ShellProps> = ({
       title: 'Open Chat View',
       category: 'Navigation',
       onExecute: () => setActiveView('chat'),
-    },
-    {
-      id: 'open-compare',
-      title: 'Open Model Compare & Arena',
-      category: 'Navigation',
-      onExecute: () => setActiveView('compare'),
-    },
-    {
-      id: 'open-cookbook',
-      title: 'Open Model Cookbook',
-      category: 'Navigation',
-      onExecute: () => setActiveView('cookbook'),
-    },
-    {
-      id: 'open-research',
-      title: 'Open Deep Research',
-      category: 'Navigation',
-      onExecute: () => setActiveView('research'),
     },
     {
       id: 'open-models',

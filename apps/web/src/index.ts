@@ -13,8 +13,5 @@ export * from './components/StatusBar.js';
 export * from './components/CommandPalette.js';
 export * from './Shell.js';
 export * from './components/ThreadDrawer.js';
-export * from './components/ComparePanel.js';
-export * from './components/CookbookPanel.js';
-export * from './components/ResearchPanel.js';
 export * from './strings.js';
 export { SafeMarkdown } from './ui/SafeMarkdown.js';

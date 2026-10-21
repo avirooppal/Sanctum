@@ -23,7 +23,7 @@ export const SettingsPanel: React.FC<SettingsPanelProps> = ({
   const themeVal = (settings['ui.theme']?.value as string) || 'dark';
   const scaleVal = (settings['ui.scale_factor']?.value as number) || 1.0;
   const motionVal = (settings['ui.reduced_motion']?.value as boolean) || false;
-  const defaultModel = (settings['models.default']?.value as string) || 'qwen2.5-coder-7b';
+  const defaultModel = (settings['models.default']?.value as string) || '';
   const egressEnabled = (settings['network.egress_enabled']?.value as boolean) || false;
 
   const handleImportSubmit = () => {
