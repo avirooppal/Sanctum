@@ -5,6 +5,7 @@ import json
 import sys
 import os
 
+
 def test_features():
     exe = os.path.abspath("deploy/installer/build_payload/Sanctum-Desktop.exe")
     if not os.path.exists(exe):
@@ -26,8 +27,12 @@ def test_features():
         with urllib.request.urlopen("http://127.0.0.1:1341/api/capability", timeout=5) as r:
             caps = json.loads(r.read().decode())
             capabilities = caps.get("capabilities", [])
-            assert "assistants" in capabilities and "mcp" in capabilities and "models" in capabilities
-            print(f"[OK] Capabilities endpoint OK ({len(capabilities)} capabilities: {capabilities})")
+            assert (
+                "assistants" in capabilities and "mcp" in capabilities and "models" in capabilities
+            )
+            print(
+                f"[OK] Capabilities endpoint OK ({len(capabilities)} capabilities: {capabilities})"
+            )
 
         # 3. Initial models list
         with urllib.request.urlopen("http://127.0.0.1:1341/v1/models", timeout=5) as r:
@@ -55,11 +60,13 @@ def test_features():
             print("[OK] Models list contains imported-model.gguf OK")
 
         # 6. Chat completions SSE stream
-        chat_payload = json.dumps({
-            "model": "imported-model.gguf",
-            "messages": [{"role": "user", "content": "Hello Sanctum!"}],
-            "stream": True,
-        }).encode("utf-8")
+        chat_payload = json.dumps(
+            {
+                "model": "imported-model.gguf",
+                "messages": [{"role": "user", "content": "Hello Sanctum!"}],
+                "stream": True,
+            }
+        ).encode("utf-8")
         chat_req = urllib.request.Request(
             "http://127.0.0.1:1341/v1/chat/completions",
             data=chat_payload,
@@ -73,11 +80,13 @@ def test_features():
             print("[OK] Chat completions SSE streaming OK (received tokens + [DONE])")
 
         # 7. Non-streaming Chat completion
-        chat_sync_payload = json.dumps({
-            "model": "imported-model.gguf",
-            "messages": [{"role": "user", "content": "Ping"}],
-            "stream": False,
-        }).encode("utf-8")
+        chat_sync_payload = json.dumps(
+            {
+                "model": "imported-model.gguf",
+                "messages": [{"role": "user", "content": "Ping"}],
+                "stream": False,
+            }
+        ).encode("utf-8")
         chat_sync_req = urllib.request.Request(
             "http://127.0.0.1:1341/v1/chat/completions",
             data=chat_sync_payload,
@@ -87,15 +96,20 @@ def test_features():
         with urllib.request.urlopen(chat_sync_req, timeout=5) as r:
             sync_res = json.loads(r.read().decode("utf-8"))
             assert len(sync_res.get("choices", [])) > 0
-            print("[OK] Non-streaming chat completion OK:", sync_res["choices"][0]["message"]["content"])
+            print(
+                "[OK] Non-streaming chat completion OK:",
+                sync_res["choices"][0]["message"]["content"],
+            )
 
         # 8. Assistant profiles GET / POST
-        prof_payload = json.dumps({
-            "operation": "save",
-            "name": "E1 Partner",
-            "system_prompt": "You are pair programming with the user.",
-            "scope": "user",
-        }).encode("utf-8")
+        prof_payload = json.dumps(
+            {
+                "operation": "save",
+                "name": "E1 Partner",
+                "system_prompt": "You are pair programming with the user.",
+                "scope": "user",
+            }
+        ).encode("utf-8")
         prof_req = urllib.request.Request(
             "http://127.0.0.1:1341/v1/profiles",
             data=prof_payload,
@@ -117,6 +131,7 @@ def test_features():
     finally:
         proc.terminate()
         proc.wait(timeout=5)
+
 
 if __name__ == "__main__":
     test_features()
