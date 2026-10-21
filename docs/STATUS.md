@@ -51,6 +51,7 @@
   - Automated UI fidelity harness established (`evals/results/ui-fidelity.json`, `docs/ui-fidelity.md`).
   - Reality Rules strictly enforced: unbacked panels purged (`tools/check_reality.py` 0 violations).
   - 56 web unit tests passing; 0 typecheck errors.
+  - Hosted CI: commit `c740e7d` verified green across all 5 jobs in run 39568514265 (`evals/results/jan-ui-port-hosted-ci.json`).
 - No native installer, desktop performance acceptance or whole-product security claim.
 
 Evidence: [A2–A5 commands/results](A2_A5_EVIDENCE.md), [PERFORMANCE](PERFORMANCE.md), [test audit](TEST_REMOVAL_AUDIT.md),

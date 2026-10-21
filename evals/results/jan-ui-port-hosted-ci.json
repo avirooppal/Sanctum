@@ -1,0 +1,16 @@
+{
+  "workflow_run_id": 39568514265,
+  "html_url": "https://github.com/avirooppal/Sanctum/actions/runs/39568514265",
+  "commit_sha": "c740e7df6a165fc7c223c3b0eb10ef9e8adadbc7",
+  "branch": "jan-style",
+  "conclusion": "success",
+  "total_duration": "1m 8s",
+  "jobs": {
+    "source-gates (ubuntu-22.04)": "success",
+    "source-gates (windows-latest)": "success",
+    "source-gates (macos-latest)": "success",
+    "rust-foundation": "success",
+    "web": "success"
+  },
+  "timestamp": "2026-10-21T08:23:00Z"
+}
