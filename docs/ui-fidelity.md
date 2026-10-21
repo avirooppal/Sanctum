@@ -25,8 +25,8 @@ Visual verification was conducted on live browser captures comparing Sanctum's r
 ## 2. Structure & Design System Parity
 
 Sanctum ported upstream Jan's exact CSS design system tokens:
-- **Color Space:** Native OKLCH design tokens (`--primary: oklch(0.7003 0.1611 35.09)`, `--background: oklch(0.18 0 0)`, `--sidebar: #194D24`, `--card: oklch(0.205 0 0)`).
-- **Sidebar Gradient:** `linear-gradient(to bottom, color-mix(in srgb, var(--sidebar) 70%, transparent), var(--background))` accurately matching upstream `bg-linear-to-b from-sidebar dark:from-sidebar/70 to-background`.
+- **Color Space:** Native OKLCH design tokens (`--primary: oklch(0.7003 0.1611 35.09)`, `--background: oklch(0.18 0 0)`, `--sidebar: #121214`, `--card: oklch(0.205 0 0)`).
+- **Sidebar Background:** Clean neutral dark `#121214` matching upstream Jan's default dark theme.
 - **Typography:** `StudioFeixenSans` and `Inter` via `@import './styles/font.css'`.
 - **Radii:** Base radius `0.625rem` (`rounded-lg`), with `rounded-sm`, `rounded-md`, `rounded-xl`, `rounded-2xl` scales.
 - **Scrollbars:** Custom webkit and Firefox scrollbar thumb styling matching upstream Jan.

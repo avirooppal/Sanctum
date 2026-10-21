@@ -15,3 +15,4 @@ evals/results/local-*.json
 # B2 shell experiment: builds go to ~/.cache/sanctum-shell-lab-target; if any
 # local override target/ appears under docs/design/experiments/ exclude it.
 docs/design/experiments/shells/target/
+deploy/installer/build_payload/

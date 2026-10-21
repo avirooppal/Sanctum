@@ -37,3 +37,29 @@ jobs:
       - run: npm run typecheck --prefix apps/web
       - run: npm test --prefix apps/web
       - run: npm run build --prefix apps/web
+  windows-installer:
+    runs-on: windows-latest
+    steps:
+      - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.10"
+      - name: Install Python dependencies
+        run: pip install pillow
+      - name: Install Web dependencies and build
+        run: |
+          npm ci --prefix apps/web
+          npm run build --prefix apps/web
+      - name: Build Windows Installer (.EXE)
+        run: python tools/build_installer.py
+      - name: Verify Installed Exe and Cleanup
+        run: python tools/verify_installed_exe.py
+      - name: Upload Installer Artifacts
+        uses: actions/upload-artifact@v4
+        with:
+          name: Sanctum-Windows-x64-Setup
+          path: dist/*
+
