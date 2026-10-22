@@ -1,0 +1,66 @@
+{
+  "version": "1.0.0",
+  "generatedAt": "2026-10-22",
+  "routes": [
+    {
+      "path": "/api/ollama/models",
+      "method": "GET",
+      "request": null,
+      "response": {
+        "online": "boolean",
+        "endpoint": "string",
+        "models": "array"
+      }
+    },
+    {
+      "path": "/api/ollama/pull",
+      "method": "POST",
+      "request": {
+        "contentType": "application/json",
+        "body": {
+          "name": "string"
+        }
+      },
+      "response": {
+        "contentType": "application/x-ndjson",
+        "stream": true
+      }
+    },
+    {
+      "path": "/api/audio/transcribe",
+      "method": "POST",
+      "request": {
+        "contentType": "multipart/form-data",
+        "fields": {
+          "file": "Blob (audio/webm | audio/wav)"
+        }
+      },
+      "response": {
+        "success": "boolean",
+        "provider": "string",
+        "endpoint": "string",
+        "text": "string",
+        "segments": "array",
+        "language": "string"
+      }
+    },
+    {
+      "path": "/api/audio/whisperx",
+      "method": "GET",
+      "request": null,
+      "response": {
+        "online": "boolean",
+        "endpoint": "string",
+        "whisperxVersion": "string"
+      }
+    }
+  ],
+  "configurationDefaults": {
+    "DEFAULT_OLLAMA_ENDPOINT": "http://127.0.0.1:11434",
+    "DEFAULT_LM_STUDIO_ENDPOINT": "http://127.0.0.1:1234/v1",
+    "DEFAULT_WHISPERX_ENDPOINT": "http://127.0.0.1:8000"
+  },
+  "localStorageKeys": [
+    "sanctum-platform-state"
+  ]
+}

@@ -7,7 +7,9 @@
     "dev": "next dev",
     "build": "next build",
     "start": "next start",
-    "lint": "next lint"
+    "lint": "next lint",
+    "test": "node --experimental-strip-types --test tests/vector_store_rag.test.ts tests/constants_catalogs.test.ts tests/api_contracts.test.ts",
+    "check-arch": "python tools/check_architecture.py --report-only"
   },
   "dependencies": {
     "autoprefixer": "^10.6.1",
