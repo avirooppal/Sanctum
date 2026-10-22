@@ -1,11 +1,14 @@
 export type NavModule =
-  | "hub"
   | "chat"
   | "arena"
+  | "vault"
+  | "agents"
   | "research"
+  | "settings"
+  | "hub"
   | "rag"
-  | "telemetry"
-  | "settings";
+  | "telemetry";
+
 
 export type QuantizationLevel =
   | "Q4_0"

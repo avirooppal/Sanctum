@@ -11,7 +11,7 @@ export interface NavigationSlice {
 }
 
 export const createNavigationSlice: StateCreator<any, [], [], NavigationSlice> = (set) => ({
-  activeModule: "hub",
+  activeModule: "chat",
   isExplorerCollapsed: false,
   isTelemetryExpanded: false,
   setActiveModule: (module) => set({ activeModule: module }),
