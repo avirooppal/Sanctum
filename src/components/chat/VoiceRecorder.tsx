@@ -1,7 +1,8 @@
 "use client";
 
 import React, { useState, useRef, useEffect } from "react";
-import { Mic, Square, Check, X, Sparkles, Volume2, AlertCircle } from "lucide-react";
+import { Mic, Square, Check, X, Sparkles, Volume2, AlertCircle, Copy, Cpu } from "lucide-react";
+import { Badge } from "@/components/ui/badge";
 
 interface VoiceRecorderProps {
   onTranscriptionComplete: (text: string) => void;
@@ -17,6 +18,8 @@ export const VoiceRecorder: React.FC<VoiceRecorderProps> = ({
   const [interimText, setInterimText] = useState("");
   const [elapsedSeconds, setElapsedSeconds] = useState(0);
   const [errorMsg, setErrorMsg] = useState<string | null>(null);
+  const [whisperxStatus, setWhisperxStatus] = useState<"checking" | "online" | "offline">("checking");
+  const [copiedCmd, setCopiedCmd] = useState(false);
 
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const audioContextRef = useRef<AudioContext | null>(null);
@@ -27,11 +30,26 @@ export const VoiceRecorder: React.FC<VoiceRecorderProps> = ({
   const timerRef = useRef<NodeJS.Timeout | null>(null);
 
   useEffect(() => {
+    checkWhisperXServer();
     startListening();
     return () => {
       stopListening();
     };
   }, []);
+
+  const checkWhisperXServer = async () => {
+    try {
+      const res = await fetch("/api/audio/whisperx");
+      const data = await res.json();
+      if (data.online) {
+        setWhisperxStatus("online");
+      } else {
+        setWhisperxStatus("offline");
+      }
+    } catch {
+      setWhisperxStatus("offline");
+    }
+  };
 
   const startListening = async () => {
     // 1. Initialize Real Speech Recognition (Browser Web Speech API)
@@ -186,6 +204,12 @@ export const VoiceRecorder: React.FC<VoiceRecorderProps> = ({
     onClose();
   };
 
+  const copyWhisperCmd = () => {
+    navigator.clipboard.writeText("python scripts/whisperx_server.py --port 8000 --model base");
+    setCopiedCmd(true);
+    setTimeout(() => setCopiedCmd(false), 2000);
+  };
+
   const currentDisplayText = `${transcribedText} ${interimText}`.trim();
 
   return (
@@ -193,15 +217,31 @@ export const VoiceRecorder: React.FC<VoiceRecorderProps> = ({
       <div className="flex items-center justify-between border-b border-white/5 pb-2">
         <div className="flex items-center gap-2 text-xs font-semibold text-indigo-400">
           <Volume2 className="w-4 h-4 animate-pulse text-indigo-400" />
-          <span>Real-time Speech Recognition</span>
-          <span className="text-[10px] font-mono px-1.5 py-0.5 rounded bg-zinc-800 text-zinc-400">
-            Native Audio Stream
+          <span>Real-time Voice Transcription</span>
+          <span className="text-[10px] font-mono px-2 py-0.5 rounded-full bg-indigo-500/10 text-indigo-400 border border-indigo-500/30">
+            {whisperxStatus === "online" ? "WhisperX Local GPU" : "Web Speech API"}
           </span>
         </div>
         <button onClick={onClose} className="text-zinc-500 hover:text-zinc-200 transition-colors">
           <X className="w-4 h-4" />
         </button>
       </div>
+
+      {whisperxStatus === "offline" && (
+        <div className="flex items-center justify-between p-2 rounded-lg bg-zinc-900 border border-white/5 text-[11px] text-zinc-400">
+          <div className="flex items-center gap-2">
+            <Cpu className="size-3.5 text-zinc-500" />
+            <span>WhisperX server offline on port 8000 (Web Speech active)</span>
+          </div>
+          <button
+            onClick={copyWhisperCmd}
+            className="flex items-center gap-1 text-[10px] font-mono text-indigo-400 hover:underline"
+          >
+            <Copy className="size-3" />
+            <span>{copiedCmd ? "Copied command!" : "Copy launch command"}</span>
+          </button>
+        </div>
+      )}
 
       {errorMsg && (
         <div className="flex items-center gap-2 p-2.5 rounded-lg bg-rose-500/10 border border-rose-500/20 text-rose-300 text-xs">

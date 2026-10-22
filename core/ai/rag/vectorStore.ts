@@ -12,6 +12,7 @@ export interface VectorChunk {
   tokenCount: number;
   vector: Float32Array;
   similarity?: number;
+  score?: number;
 }
 
 export class InMemoryVectorStore {

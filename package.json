@@ -8,7 +8,7 @@
     "build": "next build",
     "start": "next start",
     "lint": "next lint",
-    "test": "node --experimental-strip-types --test tests/vector_store_rag.test.ts tests/constants_catalogs.test.ts tests/api_contracts.test.ts tests/contracts_validation.test.ts tests/core_ai.test.ts tests/core_domain.test.ts tests/packs_manifests.test.ts tests/ui_strings.test.ts",
+    "test": "node --experimental-strip-types --test tests/vector_store_rag.test.ts tests/constants_catalogs.test.ts tests/api_contracts.test.ts tests/contracts_validation.test.ts tests/core_ai.test.ts tests/core_domain.test.ts tests/packs_manifests.test.ts tests/ui_strings.test.ts tests/agent_and_features.test.ts",
     "check-arch": "python tools/check_architecture.py"
   },
   "dependencies": {

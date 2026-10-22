@@ -1,6 +1,6 @@
-import { StateCreator } from "zustand";
-import { DocumentCollection, IngestedDocument } from "@/types";
-import { globalVectorStore, VectorChunk } from "@/lib/vectorStore";
+import type { StateCreator } from "zustand";
+import type { DocumentCollection, IngestedDocument } from "../../../contracts/types/index.ts";
+import { globalVectorStore, type VectorChunk } from "../../../core/ai/rag/vectorStore.ts";
 
 export interface RagSlice {
   collections: DocumentCollection[];
@@ -9,6 +9,8 @@ export interface RagSlice {
   selectedChunkDocumentId: string | null;
   ragSearchQuery: string;
   searchedChunks: VectorChunk[];
+  chunkSize: number;
+  overlap: number;
 
   setActiveCollectionId: (id: string) => void;
   createCollection: (name: string, description: string, embeddingModel: string) => void;
@@ -19,9 +21,11 @@ export interface RagSlice {
   deleteDocument: (docId: string) => void;
   setSelectedChunkDocumentId: (docId: string | null) => void;
   setRagSearchQuery: (q: string) => void;
+  setChunkSize: (size: number) => void;
+  setOverlap: (overlap: number) => void;
 }
 
-export const createRagSlice: StateCreator<RagSlice, [], [], RagSlice> = (set) => ({
+export const createRagSlice: StateCreator<any, [], [], RagSlice> = (set, get) => ({
   collections: [
     {
       id: "col-default",
@@ -39,8 +43,13 @@ export const createRagSlice: StateCreator<RagSlice, [], [], RagSlice> = (set) =>
   selectedChunkDocumentId: null,
   ragSearchQuery: "",
   searchedChunks: [],
+  chunkSize: 800,
+  overlap: 120,
 
   setActiveCollectionId: (id) => set({ activeCollectionId: id }),
+
+  setChunkSize: (size) => set({ chunkSize: size }),
+  setOverlap: (overlap) => set({ overlap }),
 
   createCollection: (name, description, embeddingModel) => {
     const newCol: DocumentCollection = {
@@ -53,7 +62,7 @@ export const createRagSlice: StateCreator<RagSlice, [], [], RagSlice> = (set) =>
       vectorDimensions: 1024,
       createdAt: "Just now",
     };
-    set((state) => ({
+    set((state: any) => ({
       collections: [...state.collections, newCol],
       activeCollectionId: newCol.id,
     }));
@@ -61,7 +70,16 @@ export const createRagSlice: StateCreator<RagSlice, [], [], RagSlice> = (set) =>
 
   uploadDocument: (collectionId, file) => {
     const newDocId = `doc-${Date.now()}`;
-    const vectorChunks = globalVectorStore.addDocument(newDocId, file.name, file.rawContent, 60, 15);
+    const configuredChunkSize = get().chunkSize || 800;
+    const configuredOverlap = get().overlap || 120;
+
+    const vectorChunks = globalVectorStore.addDocument(
+      newDocId,
+      file.name,
+      file.rawContent,
+      configuredChunkSize,
+      configuredOverlap
+    );
 
     const newDoc: IngestedDocument = {
       id: newDocId,
@@ -82,9 +100,9 @@ export const createRagSlice: StateCreator<RagSlice, [], [], RagSlice> = (set) =>
       })),
     };
 
-    set((state) => ({
+    set((state: any) => ({
       documents: [newDoc, ...state.documents],
-      collections: state.collections.map((c) =>
+      collections: state.collections.map((c: DocumentCollection) =>
         c.id === collectionId
           ? {
               ...c,
@@ -100,12 +118,12 @@ export const createRagSlice: StateCreator<RagSlice, [], [], RagSlice> = (set) =>
 
   deleteDocument: (docId) => {
     globalVectorStore.removeDocument(docId);
-    set((state) => {
-      const doc = state.documents.find((d) => d.id === docId);
+    set((state: any) => {
+      const doc = state.documents.find((d: IngestedDocument) => d.id === docId);
       if (!doc) return state;
       return {
-        documents: state.documents.filter((d) => d.id !== docId),
-        collections: state.collections.map((c) =>
+        documents: state.documents.filter((d: IngestedDocument) => d.id !== docId),
+        collections: state.collections.map((c: DocumentCollection) =>
           c.id === doc.collectionId
             ? {
                 ...c,

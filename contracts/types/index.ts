@@ -187,3 +187,37 @@ export interface HardwareTelemetry {
   totalLoadedModels: number;
   uptimeHours: number;
 }
+
+
+export type AgentActionStatus =
+  | "idle"
+  | "planning"
+  | "waiting_approval"
+  | "running"
+  | "paused"
+  | "completed"
+  | "failed";
+
+export interface AgentStep {
+  id: string;
+  title: string;
+  description?: string;
+  toolName?: string;
+  toolArgs?: Record<string, any>;
+  status: "pending" | "waiting_approval" | "running" | "completed" | "failed";
+  result?: string;
+  executionTimeMs?: number;
+  requiresApproval?: boolean;
+}
+
+export interface AgentRun {
+  id: string;
+  goal: string;
+  modelId: string;
+  status: AgentActionStatus;
+  currentStepIndex: number;
+  steps: AgentStep[];
+  createdAt: string;
+  updatedAt: string;
+  logs: string[];
+}

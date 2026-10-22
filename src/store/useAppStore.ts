@@ -7,6 +7,7 @@ import { ArenaSlice, createArenaSlice } from "./slices/arenaSlice";
 import { ResearchSlice, createResearchSlice } from "./slices/researchSlice";
 import { RagSlice, createRagSlice } from "./slices/ragSlice";
 import { TelemetrySlice, createTelemetrySlice } from "./slices/telemetrySlice";
+import { AgentSlice, createAgentSlice } from "./slices/agentSlice";
 import { globalVectorStore } from "@/lib/vectorStore";
 
 export type AppState = NavigationSlice &
@@ -15,7 +16,8 @@ export type AppState = NavigationSlice &
   ArenaSlice &
   ResearchSlice &
   RagSlice &
-  TelemetrySlice;
+  TelemetrySlice &
+  AgentSlice;
 
 export const useAppStore = create<AppState>()(
   persist(
@@ -27,6 +29,7 @@ export const useAppStore = create<AppState>()(
       ...createResearchSlice(...a),
       ...createRagSlice(...a),
       ...createTelemetrySlice(...a),
+      ...createAgentSlice(...a),
     }),
     {
       name: "sanctum-platform-state",
@@ -50,6 +53,11 @@ export const useAppStore = create<AppState>()(
         collections: state.collections,
         activeCollectionId: state.activeCollectionId,
         documents: state.documents,
+        chunkSize: state.chunkSize,
+        overlap: state.overlap,
+        agentRuns: state.agentRuns,
+        activeRunId: state.activeRunId,
+        agentPrompt: state.agentPrompt,
       }),
       onRehydrateStorage: () => (state) => {
         if (state && state.documents && state.documents.length > 0) {
@@ -82,3 +90,4 @@ export * from "./slices/arenaSlice";
 export * from "./slices/researchSlice";
 export * from "./slices/ragSlice";
 export * from "./slices/telemetrySlice";
+export * from "./slices/agentSlice";
