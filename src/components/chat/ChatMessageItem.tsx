@@ -4,6 +4,7 @@ import React from "react";
 import { Bot, User, Sparkles, BrainCircuit, ChevronRight, Gauge } from "lucide-react";
 import { ChatMessage } from "@/types";
 import { cn } from "@/lib/utils";
+import { splitThinking } from "@core/ai/index.ts";
 
 interface ChatMessageItemProps {
   message: ChatMessage;
@@ -13,12 +14,9 @@ export const ChatMessageItem: React.FC<ChatMessageItemProps> = ({ message }) => 
   const isAssistant = message.role === "assistant";
 
   const renderContent = (content: string) => {
-    const thinkMatch = content.match(/<think>([\s\S]*?)<\/think>/);
+    const { thinking: thinkText, answer: mainText } = splitThinking(content);
 
-    if (thinkMatch) {
-      const thinkText = thinkMatch[1].trim();
-      const mainText = content.replace(/<think>[\s\S]*?<\/think>/, "").trim();
-
+    if (thinkText) {
       return (
         <div className="space-y-3">
           <details

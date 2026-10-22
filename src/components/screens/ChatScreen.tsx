@@ -25,14 +25,7 @@ import {
 import { useAppStore } from "@/store/useAppStore";
 import { ChatMessage } from "@/types";
 import { cn } from "@/lib/utils";
-
-const splitThinking = (content: string) => {
-  const match = content.match(/<think>([\s\S]*?)(<\/think>|$)/);
-  return {
-    thinking: match ? match[1].trim() : "",
-    answer: content.replace(/<think>[\s\S]*?(<\/think>|$)/, "").trim(),
-  };
-};
+import { splitThinking, PromptTemplates } from "@core/ai/index.ts";
 
 const MessageRow: React.FC<{ msg: ChatMessage }> = ({ msg }) => {
   const [showThinking, setShowThinking] = useState(false);
@@ -167,7 +160,7 @@ export const ChatScreen: React.FC = () => {
     const trimmed = prompt.trim();
     if ((!trimmed && !attachedImage && attachedDocuments.length === 0) || !model || isStreaming) return;
 
-    const messageText = trimmed || (attachedImage ? "Please analyze this image." : "Please analyze the attached document.");
+    const messageText = trimmed || (attachedImage ? PromptTemplates.ANALYZE_IMAGE : PromptTemplates.ANALYZE_DOCUMENT);
     sendMessage(messageText);
     setPrompt("");
   };
