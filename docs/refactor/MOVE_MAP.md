@@ -11,6 +11,10 @@
 | `(new)` | `core/ai/inference/format.ts` | Reasoning & thinking tag parser | Completed (R3) |
 | `(new)` | `core/ai/prompts/index.ts` | Centralized prompt templates | Completed (R3) |
 | `(new)` | `core/ai/hardware/fit.ts` | VRAM & model fit heuristics | Completed (R3) |
+| `(new)` | `core/domain/threads.ts` | Domain entity logic for chat sessions | Completed (R4) |
+| `(new)` | `core/domain/models.ts` | Domain categorization for models | Completed (R4) |
+| `(new)` | `core/domain/documents.ts` | Domain types & MIME rules for documents | Completed (R4) |
+| `(new)` | `core/infra/storage/persistence.ts` | Storage interface & LocalStorage port | Completed (R4) |
 | `scripts/whisperx_server.py` | `core/ai/speech/whisperx_server.py` | Speech-to-text inference service | Planned (R5) |
-| `src/store/slices/*` | `core/domain/*` & `apps/ui/state/*` | Pure domain state & UI stores | Planned (R4) |
+| `src/store/slices/*` | `core/domain/*` & `apps/ui/state/*` | Pure domain state & UI stores | Planned (R5) |
 | `src/components/*` | `apps/ui/components/*` | Pure presentation UI components | Planned (R6) |

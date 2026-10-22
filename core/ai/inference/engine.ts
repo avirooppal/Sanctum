@@ -4,7 +4,7 @@
  * Zero synthetic, mock, or hardcoded strings.
  */
 
-import { LocalModel } from "@contracts/types/index.ts";
+import type { LocalModel } from "../../../contracts/types/index.ts";
 
 export interface DaemonStatus {
   endpoint: string;
