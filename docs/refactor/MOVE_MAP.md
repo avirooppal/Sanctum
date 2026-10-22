@@ -20,5 +20,11 @@
 | `(new)` | `packs/rag/pack.json` | Knowledge Vault RAG pack manifest | Completed (R5) |
 | `(new)` | `packs/research/pack.json` | Deep research pipeline manifest | Completed (R5) |
 | `(new)` | `packs/agents/pack.json` | Supervised computer use manifest | Completed (R5) |
-| `src/store/slices/*` | `core/domain/*` & `apps/ui/state/*` | Pure domain state & UI stores | Planned (R6) |
-| `src/components/*` | `apps/ui/components/*` | Pure presentation UI components | Planned (R6) |
+| `(new)` | `apps/ui/i18n/strings.ts` | Presentation localized string table | Completed (R6) |
+| `(new)` | `apps/ui/api-client/index.ts` | Typed frontend API client bridge | Completed (R6) |
+| `src/components/chat/ChatMessageItem.tsx` | Extracted `<think>` logic to `core/ai/inference/format.ts` | Pure presentation UI component | Completed (R6) |
+| `src/components/screens/ChatScreen.tsx` | Extracted prompts & fit calculations | Pure presentation UI screen | Completed (R6) |
+| `contracts/README.md` | `contracts/README.md` | Layer documentation & API contracts | Completed (R7) |
+| `core/README.md` | `core/README.md` | Layer documentation & domain/AI boundaries | Completed (R7) |
+| `packs/README.md` | `packs/README.md` | Layer documentation & pack manifest specs | Completed (R7) |
+| `apps/README.md` | `apps/README.md` | Layer documentation & presentation standards | Completed (R7) |
