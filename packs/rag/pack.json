@@ -1,0 +1,9 @@
+{
+  "id": "sanctum.rag.vault",
+  "name": "Knowledge Vault (RAG Pack)",
+  "version": "1.0.0",
+  "description": "On-device private in-memory 1024d vector retrieval and semantic text chunking.",
+  "embeddingModel": "Cosine-1024 (On-Device)",
+  "dimensions": 1024,
+  "supportedFormats": ["pdf", "md", "txt", "json", "csv", "code"]
+}

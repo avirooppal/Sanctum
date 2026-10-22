@@ -15,6 +15,10 @@
 | `(new)` | `core/domain/models.ts` | Domain categorization for models | Completed (R4) |
 | `(new)` | `core/domain/documents.ts` | Domain types & MIME rules for documents | Completed (R4) |
 | `(new)` | `core/infra/storage/persistence.ts` | Storage interface & LocalStorage port | Completed (R4) |
-| `scripts/whisperx_server.py` | `core/ai/speech/whisperx_server.py` | Speech-to-text inference service | Planned (R5) |
-| `src/store/slices/*` | `core/domain/*` & `apps/ui/state/*` | Pure domain state & UI stores | Planned (R5) |
+| `scripts/whisperx_server.py` | `core/ai/speech/whisperx_server.py` | Speech-to-text inference service | Completed (R5) |
+| `(new)` | `packs/speech/pack.json` | Speech pack manifest | Completed (R5) |
+| `(new)` | `packs/rag/pack.json` | Knowledge Vault RAG pack manifest | Completed (R5) |
+| `(new)` | `packs/research/pack.json` | Deep research pipeline manifest | Completed (R5) |
+| `(new)` | `packs/agents/pack.json` | Supervised computer use manifest | Completed (R5) |
+| `src/store/slices/*` | `core/domain/*` & `apps/ui/state/*` | Pure domain state & UI stores | Planned (R6) |
 | `src/components/*` | `apps/ui/components/*` | Pure presentation UI components | Planned (R6) |

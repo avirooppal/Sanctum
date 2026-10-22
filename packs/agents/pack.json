@@ -1,0 +1,7 @@
+{
+  "id": "sanctum.agents.computer-use",
+  "name": "Supervised Computer Use Agent Pack",
+  "version": "1.0.0",
+  "description": "Virtual browser sandbox execution with human-in-the-loop verification.",
+  "permissions": "consent-gated"
+}

@@ -1,0 +1,9 @@
+{
+  "id": "sanctum.speech.whisperx",
+  "name": "WhisperX Speech Pack",
+  "version": "1.0.0",
+  "description": "On-device speech-to-text with phoneme word-level alignment using faster-whisper.",
+  "endpoint": "http://127.0.0.1:8000",
+  "defaultModel": "base",
+  "serverScript": "core/ai/speech/whisperx_server.py"
+}

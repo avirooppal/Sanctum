@@ -1,0 +1,7 @@
+{
+  "id": "sanctum.research.deep",
+  "name": "Deep Research Pack",
+  "version": "1.0.0",
+  "description": "Multi-stage autonomous research pipeline with live web retrieval and citations.",
+  "stages": ["plan", "search", "extract", "synthesize", "verify"]
+}
