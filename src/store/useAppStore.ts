@@ -31,7 +31,10 @@ export const useAppStore = create<AppState>()(
     {
       name: "sanctum-platform-state",
       storage: createJSONStorage(() => (typeof window !== "undefined" ? localStorage : ({} as any))),
+      // Hydrate manually after mount so the first client render matches SSR (no hydration mismatch)
+      skipHydration: true,
       partialize: (state) => ({
+        hasCompletedOnboarding: state.hasCompletedOnboarding,
         activeModule: state.activeModule,
         isExplorerCollapsed: state.isExplorerCollapsed,
         chatSessions: state.chatSessions,

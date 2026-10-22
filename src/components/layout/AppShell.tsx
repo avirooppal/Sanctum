@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useEffect } from "react";
+import React, { useEffect, useState } from "react";
 import { SanctumShell } from "@/components/screens/SanctumShell";
 import { ChatScreen } from "@/components/screens/ChatScreen";
 import { ArenaScreen } from "@/components/screens/ArenaScreen";
@@ -9,13 +9,17 @@ import { AgentsScreen } from "@/components/screens/AgentsScreen";
 import { ResearchScreen } from "@/components/screens/ResearchScreen";
 import { ModelsScreen } from "@/components/screens/ModelsScreen";
 import { HardwareConfigModal } from "@/components/hub/HardwareConfigModal";
+import { WelcomeModal } from "@/components/onboarding/WelcomeModal";
 import { useAppStore } from "@/store/useAppStore";
 
 export const AppShell: React.FC = () => {
   const { activeModule, initModels, updateRealTelemetry } = useAppStore();
+  const [isMounted, setIsMounted] = useState(false);
 
-  // Initialize real local models from Ollama and real hardware telemetry on mount
+  // Rehydrate state and initialize real local models and telemetry on mount
   useEffect(() => {
+    setIsMounted(true);
+    useAppStore.persist.rehydrate();
     initModels();
     updateRealTelemetry();
   }, [initModels, updateRealTelemetry]);
@@ -30,6 +34,9 @@ export const AppShell: React.FC = () => {
       {(activeModule === "settings" || activeModule === "hub" || activeModule === "telemetry") && (
         <ModelsScreen />
       )}
+
+      {/* First-time onboarding walkthrough modal */}
+      {isMounted && <WelcomeModal />}
 
       {/* Hardware Configuration Modal */}
       <HardwareConfigModal />

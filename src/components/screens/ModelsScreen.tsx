@@ -1,7 +1,7 @@
 "use client";
 
 import React, { useState } from "react";
-import { Settings, ChevronDown, Check } from "lucide-react";
+import { Settings, ChevronDown, Check, Sparkles } from "lucide-react";
 import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -9,7 +9,7 @@ import { Switch } from "@/components/ui/switch";
 import { useAppStore } from "@/store/useAppStore";
 
 export const ModelsScreen: React.FC = () => {
-  const { models, openConfigModal, telemetry } = useAppStore();
+  const { models, openConfigModal, telemetry, resetOnboarding } = useAppStore();
   const [preferLocal, setPreferLocal] = useState(true);
   const [isAdvancedOpen, setIsAdvancedOpen] = useState(false);
   const [connectedProviders, setConnectedProviders] = useState<Record<string, boolean>>({
@@ -228,6 +228,29 @@ export const ModelsScreen: React.FC = () => {
             </div>
           )}
         </div>
+
+        {/* Walkthrough & Tour Reset */}
+        <Card className="bg-card border-border">
+          <CardContent className="flex p-5 justify-between items-center">
+            <div>
+              <h3 className="font-medium text-foreground text-sm">
+                First-time walkthrough & onboarding
+              </h3>
+              <p className="text-muted-foreground text-xs mt-0.5">
+                Revisit the engine setup guide, hardware diagnostics, and features tour
+              </p>
+            </div>
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={() => resetOnboarding()}
+              className="text-xs gap-1.5"
+            >
+              <Sparkles className="size-3.5 text-primary" />
+              <span>Restart Tour</span>
+            </Button>
+          </CardContent>
+        </Card>
 
         <footer className="text-muted-foreground text-sm border-t border-border pt-5">
           Local services healthy · No cloud spend this session

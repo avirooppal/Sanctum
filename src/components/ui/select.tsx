@@ -19,6 +19,7 @@ export interface SelectProps {
   value?: string;
   defaultValue?: string;
   onValueChange?: (value: string) => void;
+  className?: string;
   children: React.ReactNode;
 }
 
@@ -26,6 +27,7 @@ export function Select({
   value: controlledValue,
   defaultValue = "",
   onValueChange,
+  className,
   children,
 }: SelectProps) {
   const [internalValue, setInternalValue] = React.useState(defaultValue);
@@ -53,7 +55,7 @@ export function Select({
         setSelectedLabel,
       }}
     >
-      <div className="relative inline-block w-full">{children}</div>
+      <div className={cn("relative inline-block w-full", className)}>{children}</div>
     </SelectContext.Provider>
   );
 }
