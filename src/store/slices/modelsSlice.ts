@@ -3,6 +3,12 @@ import { LocalModel, ModelCategory } from "@/types";
 import { LocalEngineClient } from "@/lib/engine";
 import { DEFAULT_OLLAMA_ENDPOINT } from "@/lib/constants";
 
+export interface DownloadProgress {
+  percent: number;
+  status: string;
+  isDownloading: boolean;
+}
+
 export interface ModelsSlice {
   models: LocalModel[];
   selectedCategory: ModelCategory;
@@ -11,13 +17,14 @@ export interface ModelsSlice {
   isFetchingModels: boolean;
   isConfigModalOpen: boolean;
   selectedModelForConfig: LocalModel | null;
+  downloadProgressMap: Record<string, DownloadProgress>;
 
   initModels: () => Promise<void>;
   openConfigModal: (model: LocalModel) => void;
   closeConfigModal: () => void;
   updateModelConfig: (modelId: string, newConfig: Partial<LocalModel["config"]>) => void;
   toggleModelLoad: (modelId: string) => void;
-  startModelDownload: (modelName: string) => Promise<void>;
+  startModelDownload: (modelName: string) => Promise<boolean>;
   setSelectedCategory: (cat: ModelCategory) => void;
   setSearchModelQuery: (q: string) => void;
   setActiveModelId: (id: string) => void;
@@ -31,6 +38,7 @@ export const createModelsSlice: StateCreator<any, [], [], ModelsSlice> = (set, g
   isFetchingModels: false,
   isConfigModalOpen: false,
   selectedModelForConfig: null,
+  downloadProgressMap: {},
 
   initModels: async () => {
     set({ isFetchingModels: true });
@@ -89,50 +97,42 @@ export const createModelsSlice: StateCreator<any, [], [], ModelsSlice> = (set, g
 
   startModelDownload: async (modelName) => {
     set((state: any) => ({
-      models: [
-        ...state.models,
-        {
-          id: modelName,
-          name: modelName,
-          author: "Ollama Registry",
-          description: `Pulling ${modelName} from Ollama registry...`,
-          parameters: "Downloading...",
-          category: "general",
-          quantization: "Q4_K_M",
-          availableQuantizations: ["Q4_K_M"],
-          contextWindow: 32768,
-          ramRequiredGB: 4.0,
-          vramRequiredGB: 4.0,
-          fileSizeGB: 4.0,
-          downloaded: false,
-          downloadProgress: 1,
-          isLoaded: false,
-          architecture: "llama",
-          config: {
-            gpuLayers: 33,
-            maxGpuLayers: 64,
-            contextSize: 32768,
-            threads: 8,
-            temperature: 0.7,
-            topP: 0.9,
-            repeatPenalty: 1.05,
-            flashAttention: true,
-            mlock: true,
-            numa: false,
-          },
-        },
-      ],
+      downloadProgressMap: {
+        ...state.downloadProgressMap,
+        [modelName]: { percent: 1, status: "Starting download...", isDownloading: true },
+      },
     }));
 
-    await LocalEngineClient.pullOllamaModel(modelName, DEFAULT_OLLAMA_ENDPOINT, (pct) => {
-      set((state: any) => ({
-        models: state.models.map((m: LocalModel) =>
-          m.id === modelName ? { ...m, downloadProgress: pct, downloaded: pct >= 100 } : m
-        ),
-      }));
-    });
+    const success = await LocalEngineClient.pullOllamaModel(
+      modelName,
+      DEFAULT_OLLAMA_ENDPOINT,
+      (pct, status) => {
+        set((state: any) => ({
+          downloadProgressMap: {
+            ...state.downloadProgressMap,
+            [modelName]: {
+              percent: pct,
+              status: status || "Downloading layers...",
+              isDownloading: pct < 100,
+            },
+          },
+        }));
+      }
+    );
+
+    set((state: any) => ({
+      downloadProgressMap: {
+        ...state.downloadProgressMap,
+        [modelName]: {
+          percent: 100,
+          status: success ? "Installed successfully" : "Download failed",
+          isDownloading: false,
+        },
+      },
+    }));
 
     await get().initModels();
+    return success;
   },
 
   setSelectedCategory: (cat) => set({ selectedCategory: cat }),

@@ -10,14 +10,18 @@ import {
   ArrowLeft,
   Check,
   RefreshCw,
-  SlidersHorizontal,
   Bot,
   Swords,
   Database,
   Lock,
   X,
+  Download,
+  Mic,
+  Loader2,
+  HardDrive,
 } from "lucide-react";
 import { useAppStore } from "@/store/useAppStore";
+import { JAN_STYLE_DOWNLOAD_CATALOG, CuratedModel } from "@/lib/constants";
 import { cn } from "@/lib/utils";
 
 interface WelcomeModalProps {
@@ -32,11 +36,14 @@ export const WelcomeModal: React.FC<WelcomeModalProps> = ({ forceOpen = false, o
     models,
     telemetry,
     initModels,
+    downloadProgressMap,
+    startModelDownload,
   } = useAppStore();
 
   const [step, setStep] = useState<number>(1);
   const [isPinging, setIsPinging] = useState(false);
-  const totalSteps = 4;
+  const [downloadTab, setDownloadTab] = useState<"all" | "chat" | "embedding" | "audio">("all");
+  const totalSteps = 5;
 
   const isOpen = forceOpen || !hasCompletedOnboarding;
 
@@ -49,6 +56,16 @@ export const WelcomeModal: React.FC<WelcomeModalProps> = ({ forceOpen = false, o
     setIsPinging(true);
     await initModels();
     setTimeout(() => setIsPinging(false), 500);
+  };
+
+  const isModelInstalled = (modelId: string) => {
+    const cleanId = modelId.split(":")[0];
+    return models.some(
+      (m) =>
+        m.id.toLowerCase() === modelId.toLowerCase() ||
+        m.name.toLowerCase().includes(cleanId.toLowerCase()) ||
+        (m.name.includes("qwen") && modelId.includes("qwen"))
+    );
   };
 
   useEffect(() => {
@@ -64,9 +81,15 @@ export const WelcomeModal: React.FC<WelcomeModalProps> = ({ forceOpen = false, o
 
   if (!isOpen) return null;
 
+  const filteredCatalog = JAN_STYLE_DOWNLOAD_CATALOG.filter((m) => {
+    if (downloadTab === "all") return true;
+    if (downloadTab === "chat") return m.type === "chat" || m.type === "reasoning";
+    return m.type === downloadTab;
+  });
+
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-background/80 backdrop-blur-md animate-in fade-in duration-200">
-      <div className="relative w-full max-w-2xl bg-card border border-border rounded-2xl shadow-2xl overflow-hidden flex flex-col max-h-[90vh]">
+      <div className="relative w-full max-w-3xl bg-card border border-border rounded-2xl shadow-2xl overflow-hidden flex flex-col max-h-[92vh]">
         {/* Top Header Bar */}
         <div className="flex items-center justify-between px-6 py-4 border-b border-border bg-muted/20">
           <div className="flex items-center gap-2.5">
@@ -80,7 +103,7 @@ export const WelcomeModal: React.FC<WelcomeModalProps> = ({ forceOpen = false, o
               />
             </div>
             <span className="text-sm font-semibold tracking-tight text-foreground">
-              Sanctum Setup & Walkthrough
+              Sanctum Setup & Model Hub
             </span>
             <span className="text-xs px-2 py-0.5 rounded-full bg-primary/10 text-primary font-mono font-medium">
               Step {step} of {totalSteps}
@@ -99,6 +122,7 @@ export const WelcomeModal: React.FC<WelcomeModalProps> = ({ forceOpen = false, o
 
         {/* Wizard Body */}
         <div className="p-6 md:p-8 overflow-y-auto flex-1">
+          {/* STEP 1: Welcome & Zero Egress */}
           {step === 1 && (
             <div className="flex flex-col items-center text-center space-y-6 py-4">
               <div className="relative w-20 h-20 rounded-2xl overflow-hidden border-2 border-border/80 shadow-md">
@@ -154,6 +178,7 @@ export const WelcomeModal: React.FC<WelcomeModalProps> = ({ forceOpen = false, o
             </div>
           )}
 
+          {/* STEP 2: Engine Diagnostics */}
           {step === 2 && (
             <div className="space-y-6 py-2">
               <div className="space-y-1">
@@ -161,7 +186,7 @@ export const WelcomeModal: React.FC<WelcomeModalProps> = ({ forceOpen = false, o
                   Engine & Hardware Diagnostics
                 </h3>
                 <p className="text-xs text-muted-foreground">
-                  Sanctum automatically attaches to your active Ollama daemon at <code className="text-foreground bg-muted px-1.5 py-0.5 rounded">http://localhost:11434</code>.
+                  Sanctum automatically attaches to your active Ollama daemon at <code className="text-foreground bg-muted px-1.5 py-0.5 rounded">http://127.0.0.1:11434</code>.
                 </p>
               </div>
 
@@ -176,7 +201,7 @@ export const WelcomeModal: React.FC<WelcomeModalProps> = ({ forceOpen = false, o
                     <h4 className="text-sm font-medium text-foreground">
                       {models.length > 0
                         ? `Ollama Connected · ${models.length} model${models.length === 1 ? "" : "s"} detected`
-                        : "Checking Ollama on localhost:11434..."}
+                        : "Checking Ollama on 127.0.0.1:11434..."}
                     </h4>
                     <p className="text-xs text-muted-foreground">
                       Backend: {telemetry.computeBackend} · VRAM: {telemetry.vramUsedGB} GB / {telemetry.vramTotalGB} GB
@@ -223,7 +248,7 @@ export const WelcomeModal: React.FC<WelcomeModalProps> = ({ forceOpen = false, o
                       No models found or Ollama is starting up
                     </p>
                     <p className="text-[11px] text-muted-foreground">
-                      If Ollama isn't running yet, open a terminal and run <code className="text-foreground bg-muted px-1.5 py-0.5 rounded">ollama run llama3.2</code>. You can also configure cloud providers in Settings.
+                      Ollama is installed. You can download models right now in the next step!
                     </p>
                   </div>
                 )}
@@ -231,7 +256,140 @@ export const WelcomeModal: React.FC<WelcomeModalProps> = ({ forceOpen = false, o
             </div>
           )}
 
+          {/* STEP 3: JAN-STYLE MODEL & EMBEDDING DOWNLOAD */}
           {step === 3 && (
+            <div className="space-y-5 py-1">
+              <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2">
+                <div>
+                  <h3 className="text-lg font-semibold text-foreground">
+                    Download Models & Embeddings
+                  </h3>
+                  <p className="text-xs text-muted-foreground">
+                    Just like Jan, download local chat, embedding (for RAG), and speech models directly into Ollama.
+                  </p>
+                </div>
+
+                {/* Filter Tabs */}
+                <div className="flex items-center gap-1 bg-muted/60 p-1 rounded-lg border border-border shrink-0 self-start">
+                  {(["all", "chat", "embedding", "audio"] as const).map((tab) => (
+                    <button
+                      key={tab}
+                      type="button"
+                      onClick={() => setDownloadTab(tab)}
+                      className={cn(
+                        "text-[11px] font-medium px-2.5 py-1 rounded-md transition-all capitalize",
+                        downloadTab === tab
+                          ? "bg-card text-foreground shadow-xs"
+                          : "text-muted-foreground hover:text-foreground"
+                      )}
+                    >
+                      {tab === "audio" ? "WhisperX" : tab}
+                    </button>
+                  ))}
+                </div>
+              </div>
+
+              {/* Models Grid */}
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 max-h-[380px] overflow-y-auto pr-1">
+                {filteredCatalog.map((item) => {
+                  const installed = isModelInstalled(item.id);
+                  const progress = downloadProgressMap[item.id];
+                  const isDownloading = progress?.isDownloading;
+
+                  return (
+                    <div
+                      key={item.id}
+                      className={cn(
+                        "p-3.5 rounded-xl border bg-card flex flex-col justify-between gap-3 transition-colors",
+                        installed ? "border-emerald-500/30 bg-emerald-500/[0.02]" : "border-border hover:border-primary/40"
+                      )}
+                    >
+                      <div className="space-y-1.5">
+                        <div className="flex items-start justify-between gap-2">
+                          <div>
+                            <h4 className="text-xs font-semibold text-foreground flex items-center gap-1.5">
+                              {item.name}
+                              {item.recommended && (
+                                <span className="text-[9px] font-medium px-1.5 py-0.2 rounded bg-primary/10 text-primary">
+                                  Rec
+                                </span>
+                              )}
+                            </h4>
+                            <p className="text-[10px] text-muted-foreground font-mono">
+                              {item.parameters} · {item.sizeGB} GB
+                            </p>
+                          </div>
+
+                          <span className={cn(
+                            "text-[9px] font-medium px-1.5 py-0.5 rounded capitalize shrink-0",
+                            item.type === "embedding"
+                              ? "bg-purple-500/10 text-purple-600"
+                              : item.type === "audio"
+                              ? "bg-blue-500/10 text-blue-600"
+                              : "bg-muted text-muted-foreground"
+                          )}>
+                            {item.type === "embedding" ? "RAG Embed" : item.type === "audio" ? "WhisperX" : "LLM"}
+                          </span>
+                        </div>
+
+                        <p className="text-[11px] text-muted-foreground leading-relaxed line-clamp-2">
+                          {item.description}
+                        </p>
+                      </div>
+
+                      {/* Download Progress Bar / Button */}
+                      <div>
+                        {isDownloading ? (
+                          <div className="space-y-1.5">
+                            <div className="flex items-center justify-between text-[11px]">
+                              <span className="text-muted-foreground truncate max-w-[160px]">
+                                {progress.status}
+                              </span>
+                              <span className="font-mono font-medium text-primary">
+                                {progress.percent}%
+                              </span>
+                            </div>
+                            <div className="w-full h-1.5 rounded-full bg-muted overflow-hidden">
+                              <div
+                                className="h-full bg-primary transition-all duration-300"
+                                style={{ width: `${progress.percent}%` }}
+                              />
+                            </div>
+                          </div>
+                        ) : installed ? (
+                          <div className="flex items-center justify-between text-[11px] text-emerald-600 font-medium pt-1">
+                            <span className="flex items-center gap-1">
+                              <Check className="size-3.5" /> Installed
+                            </span>
+                            <span className="text-[10px] text-muted-foreground font-mono">Ready</span>
+                          </div>
+                        ) : (
+                          <button
+                            type="button"
+                            onClick={() => startModelDownload(item.id)}
+                            className="w-full flex items-center justify-center gap-1.5 text-xs font-medium py-1.5 rounded-lg border border-border bg-card hover:bg-muted transition-colors"
+                          >
+                            <Download className="size-3.5 text-primary" />
+                            <span>Download ({item.sizeGB} GB)</span>
+                          </button>
+                        )}
+                      </div>
+                    </div>
+                  );
+                })}
+              </div>
+
+              <div className="p-3 rounded-lg bg-muted/30 border border-border text-xs text-muted-foreground flex items-center gap-2">
+                <HardDrive className="size-4 shrink-0 text-primary" />
+                <span>
+                  Embedding models like <code className="text-foreground font-mono">nomic-embed-text</code> power fast local vector chunking for your Document Vault.
+                </span>
+              </div>
+            </div>
+          )}
+
+          {/* STEP 4: Feature Tour */}
+          {step === 4 && (
             <div className="space-y-5 py-2">
               <div className="space-y-1">
                 <h3 className="text-lg font-semibold text-foreground">
@@ -256,13 +414,13 @@ export const WelcomeModal: React.FC<WelcomeModalProps> = ({ forceOpen = false, o
                 </div>
 
                 <div className="p-3.5 rounded-xl border border-border bg-card flex items-start gap-3.5">
-                  <div className="size-8 rounded-lg bg-purple-500/10 text-purple-500 flex items-center justify-center shrink-0 mt-0.5">
-                    <Swords className="size-4" />
+                  <div className="size-8 rounded-lg bg-blue-500/10 text-blue-500 flex items-center justify-center shrink-0 mt-0.5">
+                    <Mic className="size-4" />
                   </div>
                   <div>
-                    <h4 className="text-xs font-semibold text-foreground">Side-by-Side Model Arena</h4>
+                    <h4 className="text-xs font-semibold text-foreground">Voice Input with WhisperX</h4>
                     <p className="text-[12px] text-muted-foreground leading-relaxed mt-0.5">
-                      Benchmark different models on identical prompts in real time. Compare tokens-per-second, time-to-first-token, and quality output.
+                      Fast local speech-to-text powered by WhisperX and Web Audio. Transcribe voice prompts directly into the composer with zero cloud egress.
                     </p>
                   </div>
                 </div>
@@ -274,7 +432,7 @@ export const WelcomeModal: React.FC<WelcomeModalProps> = ({ forceOpen = false, o
                   <div>
                     <h4 className="text-xs font-semibold text-foreground">Private Document Vault (RAG)</h4>
                     <p className="text-[12px] text-muted-foreground leading-relaxed mt-0.5">
-                      Index PDFs, text files, and code repositories directly in memory. Chat with instant citations and zero cloud chunk extraction.
+                      Index PDFs, text files, and code repositories directly in memory using local embedding models like <code className="font-mono text-foreground">nomic-embed-text</code>.
                     </p>
                   </div>
                 </div>
@@ -282,7 +440,8 @@ export const WelcomeModal: React.FC<WelcomeModalProps> = ({ forceOpen = false, o
             </div>
           )}
 
-          {step === 4 && (
+          {/* STEP 5: Ready */}
+          {step === 5 && (
             <div className="flex flex-col items-center text-center space-y-6 py-4">
               <div className="size-16 rounded-2xl bg-primary/10 text-primary flex items-center justify-center shadow-inner">
                 <Sparkles className="size-8" />
@@ -293,22 +452,22 @@ export const WelcomeModal: React.FC<WelcomeModalProps> = ({ forceOpen = false, o
                   You're Ready to Build
                 </h2>
                 <p className="text-xs text-muted-foreground leading-relaxed">
-                  All local threads, indexed documents, and configurations will be securely preserved across browser sessions.
+                  All local threads, indexed documents, and configurations are securely preserved on your machine.
                 </p>
               </div>
 
               <div className="w-full max-w-sm rounded-xl border border-border bg-muted/20 p-4 text-left space-y-2.5">
                 <div className="flex items-center gap-2 text-xs text-muted-foreground">
                   <Check className="size-4 text-emerald-500 shrink-0" />
-                  <span>Collapsed sidebars & cleaner distraction-free interface</span>
+                  <span>Working file upload & in-chat document indexing</span>
+                </div>
+                <div className="flex items-center gap-2 text-xs text-muted-foreground">
+                  <Check className="size-4 text-emerald-500 shrink-0" />
+                  <span>Voice input with WhisperX integration</span>
                 </div>
                 <div className="flex items-center gap-2 text-xs text-muted-foreground">
                   <Check className="size-4 text-emerald-500 shrink-0" />
                   <span>Real hardware telemetry & zero fake synthetic metrics</span>
-                </div>
-                <div className="flex items-center gap-2 text-xs text-muted-foreground">
-                  <Check className="size-4 text-emerald-500 shrink-0" />
-                  <span>Toggle model details drawer whenever you need deep stats</span>
                 </div>
               </div>
             </div>
@@ -318,7 +477,7 @@ export const WelcomeModal: React.FC<WelcomeModalProps> = ({ forceOpen = false, o
         {/* Wizard Footer Controls */}
         <div className="flex items-center justify-between px-6 py-4 border-t border-border bg-card">
           <div className="flex items-center gap-1.5">
-            {[1, 2, 3, 4].map((i) => (
+            {[1, 2, 3, 4, 5].map((i) => (
               <button
                 key={i}
                 type="button"

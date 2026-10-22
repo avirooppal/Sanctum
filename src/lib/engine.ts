@@ -80,15 +80,35 @@ export class LocalEngineClient {
   /**
    * Query real models installed on the local Ollama instance
    */
-  public static async fetchOllamaModels(endpoint: string = "http://localhost:11434"): Promise<LocalModel[]> {
+  public static async fetchOllamaModels(endpoint: string = "http://127.0.0.1:11434"): Promise<LocalModel[]> {
     try {
-      const res = await fetch(`${endpoint}/api/tags`);
-      if (!res.ok) return [];
-      const data = await res.json();
+      const candidateEndpoints = [
+        endpoint,
+        "http://127.0.0.1:11434",
+        "http://localhost:11434",
+        "/api/ollama/models",
+      ];
 
-      if (!Array.isArray(data.models)) return [];
+      let rawModels: any[] = [];
+      for (const ep of candidateEndpoints) {
+        try {
+          const url = ep.startsWith("/api") ? ep : `${ep}/api/tags`;
+          const res = await fetch(url, { signal: AbortSignal.timeout(2500) });
+          if (res.ok) {
+            const data = await res.json();
+            if (Array.isArray(data.models)) {
+              rawModels = data.models;
+              break;
+            }
+          }
+        } catch {
+          // try next
+        }
+      }
 
-      return data.models.map((m: any, idx: number) => {
+      if (rawModels.length === 0) return [];
+
+      return rawModels.map((m: any, idx: number) => {
         const name: string = m.name;
         const details = m.details || {};
         const paramSize: string = details.parameter_size || "Unknown";
@@ -150,19 +170,37 @@ export class LocalEngineClient {
    */
   public static async pullOllamaModel(
     modelName: string,
-    endpoint: string = "http://localhost:11434",
+    endpoint: string = "http://127.0.0.1:11434",
     onProgress: (percent: number, status: string) => void
   ): Promise<boolean> {
+    const candidateEndpoints = [
+      "/api/ollama/pull",
+      `${endpoint}/api/pull`,
+      "http://127.0.0.1:11434/api/pull",
+      "http://localhost:11434/api/pull",
+    ];
+
+    let response: Response | null = null;
+    for (const ep of candidateEndpoints) {
+      try {
+        const res = await fetch(ep, {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ name: modelName, stream: true }),
+        });
+        if (res.ok && res.body) {
+          response = res;
+          break;
+        }
+      } catch {
+        // try next
+      }
+    }
+
+    if (!response || !response.body) return false;
+
     try {
-      const res = await fetch(`${endpoint}/api/pull`, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ name: modelName, stream: true }),
-      });
-
-      if (!res.ok || !res.body) return false;
-
-      const reader = res.body.getReader();
+      const reader = response.body.getReader();
       const decoder = new TextDecoder();
       let buffer = "";
 

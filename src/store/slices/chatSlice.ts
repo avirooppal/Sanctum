@@ -4,17 +4,26 @@ import { globalVectorStore } from "@/lib/vectorStore";
 import { LocalEngineClient } from "@/lib/engine";
 import { DEFAULT_OLLAMA_ENDPOINT } from "@/lib/constants";
 
+export interface AttachedDoc {
+  name: string;
+  size: number;
+  content: string;
+}
+
 export interface ChatSlice {
   chatSessions: ChatSession[];
   activeSessionId: string;
   enableRagInChat: boolean;
   attachedImage: { src: string; name: string; width: number; height: number } | null;
+  attachedDocuments: AttachedDoc[];
 
   setActiveSessionId: (id: string) => void;
   createNewChatSession: () => void;
   deleteChatSession: (id: string) => void;
   setEnableRagInChat: (enabled: boolean) => void;
   setAttachedImage: (img: { src: string; name: string; width: number; height: number } | null) => void;
+  addAttachedDocument: (doc: AttachedDoc) => void;
+  removeAttachedDocument: (name: string) => void;
   sendMessage: (content: string) => Promise<void>;
   regenerateLastMessage: () => void;
 }
@@ -36,10 +45,19 @@ export const createChatSlice: StateCreator<any, [], [], ChatSlice> = (set, get) 
   activeSessionId: "chat-default",
   enableRagInChat: false,
   attachedImage: null,
+  attachedDocuments: [],
 
   setActiveSessionId: (id) => set({ activeSessionId: id }),
   setEnableRagInChat: (enabled) => set({ enableRagInChat: enabled }),
   setAttachedImage: (img) => set({ attachedImage: img }),
+  addAttachedDocument: (doc) =>
+    set((state: any) => ({
+      attachedDocuments: [...state.attachedDocuments.filter((d: AttachedDoc) => d.name !== doc.name), doc],
+    })),
+  removeAttachedDocument: (name) =>
+    set((state: any) => ({
+      attachedDocuments: state.attachedDocuments.filter((d: AttachedDoc) => d.name !== name),
+    })),
 
   createNewChatSession: () => {
     const newId = `chat-${Date.now()}`;
@@ -98,12 +116,20 @@ export const createChatSlice: StateCreator<any, [], [], ChatSlice> = (set, get) 
     }));
 
     let ragContextSnippet = "";
+    const attachedDocs = get().attachedDocuments || [];
+    if (attachedDocs.length > 0) {
+      ragContextSnippet += attachedDocs
+        .map((doc: AttachedDoc) => `[Attached Document: ${doc.name}]\n${doc.content}`)
+        .join("\n\n");
+    }
+
     if (get().enableRagInChat) {
       const retrieved = globalVectorStore.search(content, 3, 0.2);
       if (retrieved.length > 0) {
-        ragContextSnippet = retrieved
-          .map((r, i) => `[Source ${i + 1} (${r.docName})]:\n${r.content}`)
+        const vaultContext = retrieved
+          .map((r, i) => `[Vault Reference ${i + 1} (${r.docName})]:\n${r.content}`)
           .join("\n\n");
+        ragContextSnippet = ragContextSnippet ? `${ragContextSnippet}\n\n${vaultContext}` : vaultContext;
       }
     }
 
@@ -169,7 +195,7 @@ export const createChatSlice: StateCreator<any, [], [], ChatSlice> = (set, get) 
       }));
     }
 
-    set({ attachedImage: null });
+    set({ attachedImage: null, attachedDocuments: [] });
   },
 
   regenerateLastMessage: () => {
