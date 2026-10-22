@@ -1,7 +1,7 @@
 "use client";
 
 import React, { useRef, useState } from "react";
-import { Upload, FileText, CheckCircle2, ChevronDown } from "lucide-react";
+import { Upload, FileText, CheckCircle2, ChevronDown, Trash2 } from "lucide-react";
 import { Switch } from "@/components/ui/switch";
 import {
   Select,
@@ -19,6 +19,7 @@ export const VaultScreen: React.FC = () => {
     documents,
     activeCollectionId,
     uploadDocument,
+    deleteDocument,
   } = useAppStore();
 
   const [isAdvancedOpen, setIsAdvancedOpen] = useState(false);
@@ -45,12 +46,6 @@ export const VaultScreen: React.FC = () => {
 
     reader.readAsText(file);
   };
-
-  const defaultSampleDocs = [
-    { name: "Team Handbook.pdf", size: "2.4 MB", status: "Indexed" },
-    { name: "Product notes.md", size: "84 KB", status: "Indexed" },
-    { name: "Q3 planning.csv", size: "412 KB", status: "Indexed" },
-  ];
 
   return (
     <main className="flex p-8 flex-col flex-1 gap-8 overflow-y-auto">
@@ -92,47 +87,48 @@ export const VaultScreen: React.FC = () => {
           </div>
 
           <div className="grid gap-4 grid-cols-1 md:grid-cols-3">
-            {documents.length > 0
-              ? documents.map((doc) => (
-                  <div key={doc.id} className="rounded-lg bg-card border border-border p-4 shadow-xs">
-                    <div className="flex justify-between items-start gap-3">
-                      <div className="flex items-center gap-3">
-                        <div className="rounded-md bg-muted flex justify-center items-center size-9">
-                          <FileText className="text-muted-foreground size-4" />
-                        </div>
-                        <div>
-                          <p className="font-medium text-sm truncate max-w-[130px]">{doc.name}</p>
-                          <p className="text-muted-foreground text-xs mt-1">
-                            {formatBytes(doc.sizeBytes)}
-                          </p>
-                        </div>
+            {documents.length > 0 ? (
+              documents.map((doc) => (
+                <div key={doc.id} className="rounded-lg bg-card border border-border p-4 shadow-xs group flex flex-col justify-between">
+                  <div className="flex justify-between items-start gap-3">
+                    <div className="flex items-center gap-3">
+                      <div className="rounded-md bg-muted flex justify-center items-center size-9">
+                        <FileText className="text-muted-foreground size-4" />
                       </div>
-                      <CheckCircle2 className="text-chart-4 size-4" />
+                      <div>
+                        <p className="font-medium text-sm truncate max-w-[130px]" title={doc.name}>
+                          {doc.name}
+                        </p>
+                        <p className="text-muted-foreground text-xs mt-0.5">
+                          {formatBytes(doc.sizeBytes)}
+                        </p>
+                      </div>
                     </div>
-                    <div className="text-chart-4 text-xs flex mt-4 items-center gap-2 font-medium">
-                      <span>Indexed ({doc.chunkCount} chunks)</span>
-                    </div>
+                    <button
+                      type="button"
+                      onClick={() => deleteDocument(doc.id)}
+                      title="Delete document"
+                      className="opacity-0 group-hover:opacity-100 p-1 hover:text-destructive text-muted-foreground transition-opacity"
+                    >
+                      <Trash2 className="size-3.5" />
+                    </button>
                   </div>
-                ))
-              : defaultSampleDocs.map((sample, idx) => (
-                  <div key={idx} className="rounded-lg bg-card border border-border p-4 shadow-xs">
-                    <div className="flex justify-between items-start gap-3">
-                      <div className="flex items-center gap-3">
-                        <div className="rounded-md bg-muted flex justify-center items-center size-9">
-                          <FileText className="text-muted-foreground size-4" />
-                        </div>
-                        <div>
-                          <p className="font-medium text-sm">{sample.name}</p>
-                          <p className="text-muted-foreground text-xs mt-1">{sample.size}</p>
-                        </div>
-                      </div>
-                      <CheckCircle2 className="text-chart-4 size-4" />
-                    </div>
-                    <div className="text-chart-4 text-xs flex mt-4 items-center gap-2 font-medium">
+                  <div className="text-chart-4 text-xs flex mt-4 items-center justify-between font-medium">
+                    <span className="flex items-center gap-1.5">
+                      <CheckCircle2 className="size-3.5" />
                       <span>Indexed</span>
-                    </div>
+                    </span>
+                    <span className="text-muted-foreground font-mono text-[11px]">
+                      {doc.chunkCount} chunks
+                    </span>
                   </div>
-                ))}
+                </div>
+              ))
+            ) : (
+              <div className="col-span-full py-10 text-center rounded-lg border border-border/50 bg-muted/10 text-muted-foreground text-xs">
+                No documents in vault yet. Drop any .pdf, .txt, or .md file above to index it locally.
+              </div>
+            )}
           </div>
         </section>
 
@@ -196,7 +192,7 @@ export const VaultScreen: React.FC = () => {
       </div>
 
       <p className="text-muted-foreground text-sm">
-        {documents.length || 3} documents ready for chat
+        {documents.length} document{documents.length === 1 ? "" : "s"} ready for chat
       </p>
     </main>
   );

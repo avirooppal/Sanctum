@@ -1,7 +1,7 @@
 "use client";
 
 import React, { useState } from "react";
-import { Plus, Check } from "lucide-react";
+import { Plus, Check, Gauge, Sparkles } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Card } from "@/components/ui/card";
@@ -64,7 +64,7 @@ export const ArenaScreen: React.FC = () => {
               value={arenaPrompt}
               onChange={(e) => setArenaPrompt(e.target.value)}
               onKeyDown={handleKeyDown}
-              placeholder="Explain the tradeoffs of local versus cloud AI for a small team."
+              placeholder="Enter benchmark prompt to broadcast across models concurrently..."
               className="bg-card flex-1 h-11"
             />
             <Button
@@ -80,12 +80,12 @@ export const ArenaScreen: React.FC = () => {
 
         {/* Side-by-Side Model Comparison Cards */}
         <div className="grid gap-6 grid-cols-1 md:grid-cols-2">
-          {/* Card 1: Local Model */}
+          {/* Card 1 */}
           <Card className="shadow-xs rounded-lg bg-card border-border p-6 flex flex-col justify-between">
             <div>
               <div className="flex justify-between items-start gap-4">
                 <Select
-                  value={arenaPanes[0]?.modelId || models[0]?.id || "qwen"}
+                  value={arenaPanes[0]?.modelId || models[0]?.id || "local-1"}
                   onValueChange={(val) => setArenaPaneModel(0, val)}
                 >
                   <SelectTrigger className="font-medium shadow-none bg-transparent text-base border-0 px-0 w-60">
@@ -106,121 +106,107 @@ export const ArenaScreen: React.FC = () => {
 
               <div className="text-card-foreground text-sm leading-6 mt-6 min-h-28">
                 {arenaPanes[0]?.isGenerating ? (
-                  <div className="text-muted-foreground animate-pulse font-mono text-xs">
-                    Generating local response stream...
+                  <div className="text-muted-foreground animate-pulse font-mono text-xs flex items-center gap-2">
+                    <Sparkles className="size-3.5 text-primary" />
+                    <span>Streaming local tokens...</span>
                   </div>
                 ) : arenaPanes[0]?.currentResponse ? (
                   <p className="whitespace-pre-wrap">{arenaPanes[0].currentResponse}</p>
                 ) : (
-                  <p>
-                    Local models keep sensitive data on the team’s machines and
-                    offer fast, predictable responses without recurring API
-                    costs. They require capable hardware and run completely
-                    air-gapped.
+                  <p className="text-muted-foreground italic text-xs">
+                    Awaiting prompt execution. Click &quot;Run comparison&quot; above to start parallel inference.
                   </p>
                 )}
               </div>
             </div>
 
-            <div className="text-muted-foreground text-sm border-t border-border flex mt-6 pt-4 flex-wrap gap-x-6 gap-y-2">
+            <div className="text-muted-foreground text-sm border-t border-border flex mt-6 pt-4 flex-wrap gap-x-6 gap-y-2 font-mono text-xs">
               <span>
-                Quality{" "}
-                <strong className="font-medium text-foreground">4.5/5</strong>
-              </span>
-              <span>
-                Speed{" "}
+                Speed:{" "}
                 <strong className="font-medium text-foreground">
-                  {arenaPanes[0]?.metrics?.tps || 38} tok/s
+                  {arenaPanes[0]?.metrics?.tps ? `${arenaPanes[0].metrics.tps} tok/s` : "Standby"}
                 </strong>
               </span>
               <span>
-                Cost{" "}
+                TTFT:{" "}
+                <strong className="font-medium text-foreground">
+                  {arenaPanes[0]?.metrics?.ttftMs ? `${arenaPanes[0].metrics.ttftMs}ms` : "-"}
+                </strong>
+              </span>
+              <span>
+                Cost:{" "}
                 <strong className="font-medium text-foreground">$0.000</strong>
               </span>
             </div>
           </Card>
 
-          {/* Card 2: Cloud / Alternate Model */}
+          {/* Card 2 */}
           <Card className="shadow-xs rounded-lg bg-card border-border p-6 flex flex-col justify-between">
             <div>
               <div className="flex justify-between items-start gap-4">
                 <Select
-                  value={arenaPanes[1]?.modelId || models[1]?.id || "claude"}
+                  value={arenaPanes[1]?.modelId || models[1]?.id || models[0]?.id || "local-2"}
                   onValueChange={(val) => setArenaPaneModel(1, val)}
                 >
                   <SelectTrigger className="font-medium shadow-none bg-transparent text-base border-0 px-0 w-64">
                     <SelectValue />
                   </SelectTrigger>
                   <SelectContent>
-                    <SelectItem value="claude">Anthropic · Claude 3.5 Sonnet</SelectItem>
-                    <SelectItem value="gpt4o">OpenAI · GPT-4o</SelectItem>
                     {models.map((m) => (
                       <SelectItem key={`sec-${m.id}`} value={m.id}>
                         Local · {m.name}
                       </SelectItem>
                     ))}
+                    <SelectItem value="claude">Anthropic · Claude 3.5 Sonnet</SelectItem>
+                    <SelectItem value="gpt4o">OpenAI · GPT-4o</SelectItem>
                   </SelectContent>
                 </Select>
                 <Badge variant="secondary" className="shrink-0 bg-muted text-muted-foreground">
-                  Cloud API
+                  Parallel Candidate
                 </Badge>
               </div>
 
               <div className="text-card-foreground text-sm leading-6 mt-6 min-h-28">
                 {arenaPanes[1]?.isGenerating ? (
-                  <div className="text-muted-foreground animate-pulse font-mono text-xs">
-                    Generating cloud response stream...
+                  <div className="text-muted-foreground animate-pulse font-mono text-xs flex items-center gap-2">
+                    <Sparkles className="size-3.5 text-primary" />
+                    <span>Streaming candidate tokens...</span>
                   </div>
                 ) : arenaPanes[1]?.currentResponse ? (
                   <p className="whitespace-pre-wrap">{arenaPanes[1].currentResponse}</p>
                 ) : (
-                  <p>
-                    Cloud models generally deliver richer context, stronger
-                    reasoning, and easier scaling with no local hardware to
-                    maintain. They depend on external connectivity with usage-based
-                    API billing.
+                  <p className="text-muted-foreground italic text-xs">
+                    Awaiting prompt execution. Click &quot;Run comparison&quot; above to start parallel inference.
                   </p>
                 )}
               </div>
             </div>
 
-            <div className="text-muted-foreground text-sm border-t border-border flex mt-6 pt-4 flex-wrap gap-x-6 gap-y-2">
+            <div className="text-muted-foreground text-sm border-t border-border flex mt-6 pt-4 flex-wrap gap-x-6 gap-y-2 font-mono text-xs">
               <span>
-                Quality{" "}
-                <strong className="font-medium text-foreground">4.8/5</strong>
-              </span>
-              <span>
-                Speed{" "}
+                Speed:{" "}
                 <strong className="font-medium text-foreground">
-                  {arenaPanes[1]?.metrics?.tps || 42} tok/s
+                  {arenaPanes[1]?.metrics?.tps ? `${arenaPanes[1].metrics.tps} tok/s` : "Standby"}
                 </strong>
               </span>
               <span>
-                Cost{" "}
-                <strong className="font-medium text-foreground">$0.008</strong>
+                TTFT:{" "}
+                <strong className="font-medium text-foreground">
+                  {arenaPanes[1]?.metrics?.ttftMs ? `${arenaPanes[1].metrics.ttftMs}ms` : "-"}
+                </strong>
+              </span>
+              <span>
+                Cost:{" "}
+                <strong className="font-medium text-foreground">$0.000</strong>
               </span>
             </div>
           </Card>
         </div>
 
-        {/* Verdict Bar */}
-        <div className="border-y border-border flex py-4 justify-between items-center text-sm">
-          <p className="text-muted-foreground">
-            Claude is more nuanced · Qwen is faster and private
-          </p>
-          <button
-            type="button"
-            className="text-muted-foreground flex items-center gap-2 hover:text-foreground transition-colors"
-          >
-            <Plus className="size-4" />
-            <span>Add model</span>
-          </button>
-        </div>
-
         {/* Bottom Actions */}
-        <div className="flex justify-between items-center text-sm">
+        <div className="flex justify-between items-center text-sm border-t border-border pt-4">
           <span className="text-muted-foreground">
-            2 models ready · Parallel run complete
+            {models.length} model{models.length === 1 ? "" : "s"} detected on local daemon
           </span>
           <button
             type="button"

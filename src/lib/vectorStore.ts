@@ -204,6 +204,14 @@ export class InMemoryVectorStore {
       .slice(0, topK);
   }
 
+  public addRawChunk(chunk: VectorChunk): void {
+    this.chunks.set(chunk.id, chunk);
+  }
+
+  public clear(): void {
+    this.chunks.clear();
+  }
+
   public getChunkCount(): number {
     return this.chunks.size;
   }

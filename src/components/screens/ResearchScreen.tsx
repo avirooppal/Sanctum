@@ -1,49 +1,33 @@
 "use client";
 
 import React, { useState } from "react";
-import { Check, LoaderCircle, Download } from "lucide-react";
+import { Check, LoaderCircle, Download, ExternalLink } from "lucide-react";
 import { Card } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
-import { Checkbox } from "@/components/ui/checkbox";
 import { useAppStore } from "@/store/useAppStore";
 
 export const ResearchScreen: React.FC = () => {
-  const { startNewDeepResearch, isResearchRunning } = useAppStore();
-  const [query, setQuery] = useState("How are small teams adopting local AI in 2025?");
-  const [sources, setSources] = useState([
-    {
-      title: "The Verge",
-      snippet:
-        "Small teams are turning to local AI tools for faster iteration, lower costs, and more control over sensitive work.",
-      checked: true,
-    },
-    {
-      title: "Mozilla Foundation",
-      snippet:
-        "Open and locally run models can give smaller organizations practical ways to keep data close and workflows transparent.",
-      checked: true,
-    },
-    {
-      title: "Stanford HAI",
-      snippet:
-        "Research on AI adoption shows that focused teams benefit when implementation follows clear, narrow use cases.",
-      checked: true,
-    },
-  ]);
+  const { dossiers, activeDossierId, startNewDeepResearch, isResearchRunning } = useAppStore();
+  const [query, setQuery] = useState("");
+
+  const currentDossier = dossiers.find((d) => d.id === activeDossierId) || dossiers[0];
 
   const handleStart = () => {
     if (!query.trim()) return;
     startNewDeepResearch(query, "standard");
+    setQuery("");
   };
 
   const handleExport = () => {
-    const text = `# Local AI for small teams\n\nCross-checking sources on: "${query}"\n\n### A practical shift toward private, focused tools\n\nIn 2025, small teams are adopting local AI less as a wholesale replacement for cloud services and more as a dependable layer inside specific workflows...`;
-    const blob = new Blob([text], { type: "text/markdown;charset=utf-8" });
+    if (!currentDossier) return;
+    const blob = new Blob([currentDossier.generatedDocument || currentDossier.title], {
+      type: "text/markdown;charset=utf-8",
+    });
     const url = URL.createObjectURL(blob);
     const link = document.createElement("a");
     link.href = url;
-    link.download = `research_dossier.md`;
+    link.download = `${currentDossier.title.toLowerCase().replace(/[^a-z0-9]/g, "_")}.md`;
     link.click();
     URL.revokeObjectURL(url);
   };
@@ -65,12 +49,13 @@ export const ResearchScreen: React.FC = () => {
               value={query}
               onChange={(e) => setQuery(e.target.value)}
               onKeyDown={(e) => e.key === "Enter" && handleStart()}
+              placeholder="e.g. Distributed consensus algorithms, AVX-512 SIMD, Quantum error correction..."
               className="rounded-lg bg-background h-11"
             />
           </div>
           <Button
             type="button"
-            disabled={isResearchRunning}
+            disabled={isResearchRunning || !query.trim()}
             onClick={handleStart}
             className="rounded-lg px-5 h-11"
           >
@@ -85,7 +70,9 @@ export const ResearchScreen: React.FC = () => {
             <div className="text-foreground text-sm flex items-center gap-2">
               <Check className="text-primary size-4" />
               <span>Planning</span>
-              <span className="text-muted-foreground text-xs font-mono">complete</span>
+              <span className="text-muted-foreground text-xs font-mono">
+                {currentDossier ? "complete" : "ready"}
+              </span>
             </div>
           </div>
 
@@ -94,16 +81,24 @@ export const ResearchScreen: React.FC = () => {
             <div className="text-foreground text-sm flex items-center gap-2">
               <Check className="text-primary size-4" />
               <span>Searching sources</span>
-              <span className="text-muted-foreground text-xs font-mono">complete</span>
+              <span className="text-muted-foreground text-xs font-mono">
+                {currentDossier ? "complete" : "ready"}
+              </span>
             </div>
           </div>
 
           <div>
             <div className="rounded-full bg-primary mb-2 h-1.5" />
             <div className="font-medium text-foreground text-sm flex items-center gap-2">
-              <LoaderCircle className="text-primary size-4 animate-spin" />
+              {isResearchRunning ? (
+                <LoaderCircle className="text-primary size-4 animate-spin" />
+              ) : (
+                <Check className="text-primary size-4" />
+              )}
               <span>Reading extracts</span>
-              <span className="text-muted-foreground text-xs font-mono">active</span>
+              <span className="text-muted-foreground text-xs font-mono">
+                {isResearchRunning ? "active" : currentDossier ? "complete" : "standby"}
+              </span>
             </div>
           </div>
 
@@ -112,99 +107,92 @@ export const ResearchScreen: React.FC = () => {
             <div className="text-muted-foreground text-sm flex items-center gap-2">
               <span className="rounded-full border border-border size-4" />
               <span>Writing summary</span>
-              <span className="text-xs font-mono">upcoming</span>
+              <span className="text-xs font-mono">
+                {currentDossier?.status === "completed" ? "complete" : "upcoming"}
+              </span>
             </div>
           </div>
         </div>
       </Card>
 
-      {/* Split Section: Sources List (Left) and Dossier Artifact (Right) */}
-      <div className="grid flex-1 gap-6 grid-cols-1 lg:grid-cols-[minmax(0,0.85fr)_minmax(0,1.5fr)] min-h-0">
-        {/* Left Column: Verified Sources */}
-        <section className="space-y-4">
-          <div className="flex justify-between items-center">
-            <h2 className="font-semibold text-base">Sources</h2>
-            <span className="text-muted-foreground text-sm">
-              {sources.filter((s) => s.checked).length} reviewed
-            </span>
-          </div>
+      {/* Split Section: Real Sources (Left) and Real Dossier Artifact (Right) */}
+      {currentDossier ? (
+        <div className="grid flex-1 gap-6 grid-cols-1 lg:grid-cols-[minmax(0,0.85fr)_minmax(0,1.5fr)] min-h-0">
+          {/* Left Column: Verified Sources */}
+          <section className="space-y-4">
+            <div className="flex justify-between items-center">
+              <h2 className="font-semibold text-base">Sources</h2>
+              <span className="text-muted-foreground text-sm">
+                {currentDossier.citations.length} retrieved
+              </span>
+            </div>
 
-          {sources.map((src, idx) => (
-            <Card key={idx} className="shadow-sm rounded-xl bg-card border border-border p-5">
-              <div className="flex justify-between items-start gap-4">
-                <div>
-                  <h3 className="font-medium text-sm text-foreground">{src.title}</h3>
-                  <p className="text-muted-foreground text-sm leading-6 mt-2">
-                    {src.snippet}
-                  </p>
-                </div>
-                <Checkbox
-                  checked={src.checked}
-                  onCheckedChange={(checked) => {
-                    const next = [...sources];
-                    next[idx].checked = Boolean(checked);
-                    setSources(next);
-                  }}
-                  aria-label={`Mark ${src.title} as checked`}
-                />
+            {currentDossier.citations.length > 0 ? (
+              currentDossier.citations.map((src, idx) => (
+                <Card key={idx} className="shadow-sm rounded-xl bg-card border border-border p-5">
+                  <div className="flex justify-between items-start gap-4">
+                    <div>
+                      <a
+                        href={src.url}
+                        target="_blank"
+                        rel="noreferrer"
+                        className="font-medium text-sm text-foreground hover:underline flex items-center gap-1.5"
+                      >
+                        <span>{src.title}</span>
+                        <ExternalLink className="size-3 text-muted-foreground" />
+                      </a>
+                      <p className="text-muted-foreground text-xs leading-5 mt-2 line-clamp-3">
+                        {src.snippet}
+                      </p>
+                    </div>
+                  </div>
+                </Card>
+              ))
+            ) : (
+              <Card className="p-5 text-xs text-muted-foreground">
+                Retrieving encyclopedia sources...
+              </Card>
+            )}
+          </section>
+
+          {/* Right Column: Research Dossier Artifact */}
+          <Card className="shadow-sm rounded-xl bg-card border border-border flex flex-col min-h-0">
+            <div className="border-b border-border flex px-6 py-4 justify-between items-center">
+              <div>
+                <h2 className="font-semibold text-lg">{currentDossier.title}</h2>
+                <p className="text-muted-foreground text-sm mt-0.5">
+                  Synthesized via local model with verified citations
+                </p>
               </div>
-            </Card>
-          ))}
-        </section>
-
-        {/* Right Column: Research Dossier Artifact */}
-        <Card className="shadow-sm rounded-xl bg-card border border-border flex flex-col min-h-0">
-          <div className="border-b border-border flex px-6 py-4 justify-between items-center">
-            <div>
-              <h2 className="font-semibold text-lg">Local AI for small teams</h2>
-              <p className="text-muted-foreground text-sm mt-0.5">
-                Cross-checking 8 sources
-              </p>
+              <Button
+                type="button"
+                variant="outline"
+                onClick={handleExport}
+                className="rounded-lg gap-2 text-xs"
+              >
+                <Download className="size-3.5" />
+                <span>Export document</span>
+              </Button>
             </div>
-            <Button
-              type="button"
-              variant="outline"
-              onClick={handleExport}
-              className="rounded-lg gap-2 text-xs"
-            >
-              <Download className="size-3.5" />
-              <span>Export document</span>
-            </Button>
-          </div>
 
-          <article className="text-card-foreground text-sm leading-7 px-8 py-7 max-w-3xl overflow-y-auto space-y-5">
-            <h3 className="font-semibold text-xl leading-8">
-              A practical shift toward private, focused tools
-            </h3>
-            <p>
-              In 2025, small teams are adopting local AI less as a wholesale
-              replacement for cloud services and more as a dependable layer
-              inside specific workflows. Teams are using compact models for
-              drafting, retrieval, coding assistance, and internal knowledge work
-              where speed and privacy matter most.
-            </p>
-            <p>
-              The strongest adoption patterns combine a narrow purpose with
-              clear human review. Local deployment can reduce latency and
-              recurring costs, while giving teams more control over sensitive
-              material. The tradeoff is that teams must invest in evaluation,
-              maintenance, and choosing models that fit their hardware and task
-              requirements.
-              <sup className="text-primary font-bold ml-1">[1]</sup>
-              <sup className="text-primary font-bold ml-1">[2]</sup>
-            </p>
-            <div className="text-muted-foreground text-xs leading-5 border-t border-border pt-5 space-y-2">
-              <p>
-                [1] The Verge, research on small-team adoption of local AI tools.
-              </p>
-              <p>
-                [2] Mozilla Foundation and Stanford HAI, perspectives on open,
-                private, and responsible AI adoption.
-              </p>
-            </div>
-          </article>
-        </Card>
-      </div>
+            <article className="text-card-foreground text-sm leading-7 px-8 py-7 max-w-3xl overflow-y-auto space-y-4">
+              {currentDossier.generatedDocument ? (
+                <div className="whitespace-pre-wrap font-sans">
+                  {currentDossier.generatedDocument}
+                </div>
+              ) : (
+                <div className="text-muted-foreground italic text-xs animate-pulse">
+                  Synthesizing research dossier...
+                </div>
+              )}
+            </article>
+          </Card>
+        </div>
+      ) : (
+        <div className="py-16 text-center rounded-xl border border-border/50 bg-muted/10 text-muted-foreground text-sm">
+          No research dossiers yet. Enter a topic above to initiate a live multi-step inquiry.
+        </div>
+      )}
     </main>
   );
 };
