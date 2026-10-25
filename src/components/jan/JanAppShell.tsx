@@ -22,9 +22,56 @@ import { ChatScreen } from "@/components/screens/ChatScreen";
 import { useAppStore } from "@/store/useAppStore";
 
 export const JanAppShell: React.FC = () => {
-  const { hasCompletedOnboarding } = useAppStore();
+  const { hasCompletedOnboarding, createNewChatSession, toggleExplorer } = useAppStore();
   const [activeModule, setActiveModule] = useState<"chat" | "hub" | "settings">("chat");
   const [activeSettingsSection, setActiveSettingsSection] = useState<SettingsSection>("general");
+  const [isProjectDialogOpen, setIsProjectDialogOpen] = useState(false);
+  const [isSearchDialogOpen, setIsSearchDialogOpen] = useState(false);
+
+  React.useEffect(() => {
+    const handleKeyDown = (e: KeyboardEvent) => {
+      const hasModifier = e.ctrlKey || e.metaKey;
+
+      if (!hasModifier) {
+        if (e.key === "Escape") {
+          setIsSearchDialogOpen(false);
+          setIsProjectDialogOpen(false);
+        }
+        return;
+      }
+
+      const key = e.key.toLowerCase();
+
+      // Intercept and prevent native browser accelerators
+      if (key === "p") {
+        e.preventDefault();
+        e.stopPropagation();
+        setIsProjectDialogOpen(true);
+      } else if (key === "k") {
+        e.preventDefault();
+        e.stopPropagation();
+        setIsSearchDialogOpen(true);
+      } else if (key === "n") {
+        e.preventDefault();
+        e.stopPropagation();
+        createNewChatSession();
+        setActiveModule("chat");
+        setIsSearchDialogOpen(false);
+        setIsProjectDialogOpen(false);
+      } else if (key === "b") {
+        e.preventDefault();
+        e.stopPropagation();
+        toggleExplorer();
+      } else if (key === ",") {
+        e.preventDefault();
+        e.stopPropagation();
+        setActiveModule("settings");
+      }
+    };
+
+    window.addEventListener("keydown", handleKeyDown, true);
+    return () => window.removeEventListener("keydown", handleKeyDown, true);
+  }, [createNewChatSession, toggleExplorer]);
 
   if (!hasCompletedOnboarding) {
     return <SetupScreen onComplete={() => setActiveModule("chat")} />;
@@ -35,6 +82,10 @@ export const JanAppShell: React.FC = () => {
       <LeftSidebar
         activeModule={activeModule}
         onNavigate={(mod) => setActiveModule(mod)}
+        isProjectDialogOpen={isProjectDialogOpen}
+        onProjectDialogOpenChange={setIsProjectDialogOpen}
+        isSearchDialogOpen={isSearchDialogOpen}
+        onSearchDialogOpenChange={setIsSearchDialogOpen}
       />
 
       {/* Main Surface View */}

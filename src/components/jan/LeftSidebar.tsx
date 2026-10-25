@@ -22,11 +22,19 @@ import { cn } from "@/lib/utils";
 interface LeftSidebarProps {
   onNavigate: (module: "chat" | "hub" | "settings") => void;
   activeModule: string;
+  isProjectDialogOpen?: boolean;
+  onProjectDialogOpenChange?: (open: boolean) => void;
+  isSearchDialogOpen?: boolean;
+  onSearchDialogOpenChange?: (open: boolean) => void;
 }
 
 export const LeftSidebar: React.FC<LeftSidebarProps> = ({
   onNavigate,
   activeModule,
+  isProjectDialogOpen: controlledProjectOpen,
+  onProjectDialogOpenChange: controlledOnProjectOpenChange,
+  isSearchDialogOpen: controlledSearchOpen,
+  onSearchDialogOpenChange: controlledOnSearchOpenChange,
 }) => {
   const {
     chatSessions,
@@ -37,8 +45,14 @@ export const LeftSidebar: React.FC<LeftSidebarProps> = ({
     toggleExplorer,
   } = useAppStore();
 
-  const [isProjectDialogOpen, setIsProjectDialogOpen] = useState(false);
-  const [isSearchDialogOpen, setIsSearchDialogOpen] = useState(false);
+  const [internalProjectOpen, setInternalProjectOpen] = useState(false);
+  const [internalSearchOpen, setInternalSearchOpen] = useState(false);
+
+  const isProjectDialogOpen = controlledProjectOpen !== undefined ? controlledProjectOpen : internalProjectOpen;
+  const setIsProjectDialogOpen = controlledOnProjectOpenChange || setInternalProjectOpen;
+
+  const isSearchDialogOpen = controlledSearchOpen !== undefined ? controlledSearchOpen : internalSearchOpen;
+  const setIsSearchDialogOpen = controlledOnSearchOpenChange || setInternalSearchOpen;
 
   // Projects store state
   const [projects, setProjects] = useState<{ id: string; name: string }[]>([
