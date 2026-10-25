@@ -44,11 +44,7 @@ const MessageRow: React.FC<{ msg: ChatMessage }> = ({ msg }) => {
 
   return (
     <div className="flex gap-3">
-      <img
-        src="/mascot.jpg"
-        alt=""
-        className="size-7 rounded-full object-cover bg-white shrink-0 mt-0.5 border border-border"
-      />
+      <img src="/mascot.jpg" alt="" width={28} height={28} style={{ width: "28px", height: "28px", maxWidth: "28px", maxHeight: "28px" }} className="size-7 w-7 h-7 rounded-full object-cover bg-white shrink-0 mt-0.5 border border-border" />
       <div className="min-w-0 flex-1 space-y-2">
         {thinking && (
           <div>
@@ -386,11 +382,7 @@ export const ChatScreen: React.FC = () => {
           <div className="mx-auto w-full max-w-2xl px-6 py-6 space-y-8">
             {messages.length === 0 ? (
               <div className="flex flex-col items-center text-center pt-[10vh] gap-4">
-                <img
-                  src="/mascot.jpg"
-                  alt="Sanctum Mascot"
-                  className="size-16 rounded-full object-cover bg-white border border-border shadow-md"
-                />
+                <img src="/mascot.jpg" alt="Sanctum Mascot" width={64} height={64} style={{ width: "64px", height: "64px", maxWidth: "64px", maxHeight: "64px" }} className="size-16 w-16 h-16 rounded-full object-cover bg-white border border-border shadow-md" />
                 <div className="space-y-1">
                   <h2 className="text-xl font-semibold tracking-tight">What would you like to explore?</h2>
                   <p className="text-sm text-muted-foreground">

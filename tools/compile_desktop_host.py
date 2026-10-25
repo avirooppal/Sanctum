@@ -202,10 +202,11 @@ namespace Sanctum {
 
         private static string FindChromiumAppBrowser() {
             string[] candidates = new string[] {
-                @"C:\Program Files\BraveSoftware\Brave-Browser\Application\brave.exe",
-                Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData), @"BraveSoftware\Brave-Browser\Application\brave.exe"),
                 Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.ProgramFilesX86), @"Microsoft\Edge\Application\msedge.exe"),
                 Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.ProgramFiles), @"Microsoft\Edge\Application\msedge.exe"),
+                Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData), @"Microsoft\Edge\Application\msedge.exe"),
+                @"C:\Program Files\BraveSoftware\Brave-Browser\Application\brave.exe",
+                Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData), @"BraveSoftware\Brave-Browser\Application\brave.exe"),
                 @"C:\Program Files\Google\Chrome\Application\chrome.exe",
                 Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData), @"Google\Chrome\Application\chrome.exe")
             };
@@ -217,11 +218,12 @@ namespace Sanctum {
 
         private static void LaunchAppWindow(string url) {
             string browser = FindChromiumAppBrowser();
+            string profileDir = Path.Combine(_appDataDir, "webview_profile");
             if (!string.IsNullOrEmpty(browser)) {
                 try {
                     ProcessStartInfo psi = new ProcessStartInfo {
                         FileName = browser,
-                        Arguments = string.Format("--app=\"{0}\"", url),
+                        Arguments = string.Format("--app=\"{0}\" --user-data-dir=\"{1}\" --window-size=1280,840 --disable-features=TranslateUI --disable-extensions --no-first-run --no-default-browser-check", url, profileDir),
                         UseShellExecute = false
                     };
                     Process.Start(psi);
@@ -264,33 +266,6 @@ namespace Sanctum {
         public DesktopHost(int port, string webRoot) {
             _port = port;
             _webRoot = webRoot;
-
-            this.Text = "Sanctum | Sovereign Local Private AI Workspace";
-            this.Size = new Size(1280, 840);
-            this.MinimumSize = new Size(1024, 720);
-            this.StartPosition = FormStartPosition.CenterScreen;
-            this.BackColor = Color.FromArgb(18, 18, 20);
-
-            string iconPath = Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "app-icon.ico");
-            if (File.Exists(iconPath)) {
-                try {
-                    this.Icon = new Icon(iconPath);
-                } catch { }
-            }
-
-            _browser = new WebBrowser();
-            _browser.Dock = DockStyle.Fill;
-            _browser.IsWebBrowserContextMenuEnabled = false;
-            _browser.ScriptErrorsSuppressed = true;
-            this.Controls.Add(_browser);
-
-            this.FormClosing += (s, e) => {
-                StopHttpServer();
-            };
-
-            this.Load += (s, e) => {
-                _browser.Navigate("http://127.0.0.1:" + _port + "/?token=" + _authToken);
-            };
         }
 
         public void StartHttpServer() {

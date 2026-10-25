@@ -1,10 +1,10 @@
 {
   "installer_path": "C:\\Users\\aviroop\\Desktop\\Sru\\dist\\Sanctum-Setup-1.0.0-x64.exe",
-  "installer_size_bytes": 1140736,
-  "installer_size_mb": 1.09,
+  "installer_size_bytes": 1109504,
+  "installer_size_mb": 1.06,
   "installer_budget_mb": 25.0,
-  "installed_payload_bytes": 1205973,
-  "installed_payload_mb": 1.15,
+  "installed_payload_bytes": 1188852,
+  "installed_payload_mb": 1.13,
   "installed_budget_mb": 150.0,
   "status": "PASS"
 }
