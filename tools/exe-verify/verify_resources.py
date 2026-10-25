@@ -270,17 +270,19 @@ def scenario_thread_cycles(cycles: int = 50):
             writer.writerow(["cycle", "latency_ms"])
 
             for c in range(cycles):
-                t0 = time.time()
-                payload = json.dumps([{"id": f"th-{c}", "title": f"Thread {c}", "updated_at": time.time()}])
-                conn.request("POST", "/api/threads", body=payload, headers={"Content-Type": "application/json"})
+                payload = json.dumps([{"id": f"th-{c}", "title": f"Thread {c}", "updated_at": time.time()}]).encode("utf-8")
+                headers = {"Content-Type": "application/json", "Content-Length": str(len(payload))}
+                conn.request("POST", "/api/threads", body=payload, headers=headers)
                 resp1 = conn.getresponse()
                 resp1.read()
 
+                # Query latency check against ADR 0101 (< 25 ms)
+                t0 = time.time()
                 conn.request("GET", "/api/threads")
                 resp2 = conn.getresponse()
                 resp2.read()
-
                 lat_ms = (time.time() - t0) * 1000
+
                 latencies.append(lat_ms)
                 writer.writerow([c, f"{lat_ms:.2f}"])
     finally:

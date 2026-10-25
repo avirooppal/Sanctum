@@ -68,6 +68,7 @@ export interface ChatMessage {
     totalTokens: number;
     vramUsedGB: number;
   };
+  requestStatus?: RequestStatusEvent;
 }
 
 export interface ChatSession {
@@ -94,6 +95,7 @@ export interface ArenaPaneState {
     totalTokens: number;
     vramUsedGB: number;
   };
+  requestStatus?: RequestStatusEvent;
 }
 
 export type ResearchStage =
@@ -220,4 +222,62 @@ export interface AgentRun {
   createdAt: string;
   updatedAt: string;
   logs: string[];
+}
+
+export const REQUEST_PHASES = [
+  "sending",
+  "queued",
+  "loading_model",
+  "reading_message",
+  "searching_documents",
+  "thinking",
+  "using_tool",
+  "waiting_approval",
+  "writing_answer",
+  "finishing",
+  "done",
+  "stopped",
+  "cancelled",
+  "stalled",
+  "error",
+] as const;
+
+export type RequestPhase = (typeof REQUEST_PHASES)[number];
+
+export interface RequestStatusProgress {
+  current: number;
+  total: number;
+  unit?: "tokens" | "bytes" | "docs" | "steps" | "percent";
+  percentage?: number;
+}
+
+export interface RequestStatusEvent {
+  request_id: string;
+  thread_id: string;
+  message_id: string;
+  phase: RequestPhase;
+  timestamp: number;
+  elapsed_ms: number;
+  progress?: RequestStatusProgress;
+  detail?: string;
+  stats?: {
+    tokens_generated?: number;
+    tokens_per_second?: number;
+    prompt_tokens?: number;
+    context_total?: number;
+    time_to_first_token_ms?: number;
+    total_time_ms?: number;
+  };
+  tool_call?: {
+    id: string;
+    name: string;
+    args_summary: string;
+    risk_level: "low" | "medium" | "high";
+    gated: boolean;
+  };
+  error?: {
+    code: string;
+    message: string;
+    recovery_actions: ("retry" | "switch_model" | "free_memory" | "open_settings")[];
+  };
 }

@@ -26,8 +26,13 @@ import { useAppStore } from "@/store/useAppStore";
 import { ChatMessage } from "@/types";
 import { cn } from "@/lib/utils";
 import { splitThinking, PromptTemplates } from "@core/ai/index.ts";
+import { RequestStatusLine } from "@/components/chat/RequestStatusLine";
 
-const MessageRow: React.FC<{ msg: ChatMessage }> = ({ msg }) => {
+const MessageRow: React.FC<{
+  msg: ChatMessage;
+  onStop?: () => void;
+  onRetry?: () => void;
+}> = ({ msg, onStop, onRetry }) => {
   const [showThinking, setShowThinking] = useState(false);
 
   if (msg.role === "user") {
@@ -69,10 +74,21 @@ const MessageRow: React.FC<{ msg: ChatMessage }> = ({ msg }) => {
         {answer ? (
           <div className="text-sm leading-7 whitespace-pre-wrap">{answer}</div>
         ) : (
-          !thinking && <div className="text-sm text-muted-foreground animate-pulse">…</div>
+          !thinking && !msg.requestStatus && <div className="text-sm text-muted-foreground animate-pulse">…</div>
         )}
 
-        {msg.metrics && msg.metrics.totalTokens > 0 && (
+        {/* Live Request Status Indicator (AMENDMENT 1) */}
+        {msg.requestStatus && (
+          <div className="pt-1 pb-0.5">
+            <RequestStatusLine
+              status={msg.requestStatus}
+              onStop={onStop}
+              onRetry={onRetry}
+            />
+          </div>
+        )}
+
+        {msg.metrics && msg.metrics.totalTokens > 0 && !msg.requestStatus && (
           <div className="text-[11px] font-mono text-muted-foreground/70">
             {msg.metrics.tps} tok/s · {msg.metrics.totalTokens} tokens · {msg.metrics.ttftMs}ms to first token
           </div>
@@ -90,6 +106,8 @@ export const ChatScreen: React.FC = () => {
     activeModelId,
     setActiveModelId,
     sendMessage,
+    stopInference,
+    regenerateLastMessage,
     enableRagInChat,
     setEnableRagInChat,
     documents,
@@ -391,7 +409,14 @@ export const ChatScreen: React.FC = () => {
                 </div>
               </div>
             ) : (
-              messages.map((m) => <MessageRow key={m.id} msg={m} />)
+              messages.map((m) => (
+                <MessageRow
+                  key={m.id}
+                  msg={m}
+                  onStop={stopInference}
+                  onRetry={regenerateLastMessage}
+                />
+              ))
             )}
             <div ref={endRef} />
           </div>

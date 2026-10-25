@@ -689,20 +689,32 @@ namespace Sanctum {
                     return;
                 }
                 if (req.HttpMethod == "POST") {
-                    using (var r = new StreamReader(req.InputStream, req.ContentEncoding)) {
-                        string body = r.ReadToEnd();
-                        _cachedThreads = body;
-                        ThreadPool.QueueUserWorkItem((state) => {
-                            lock (_dataLock) {
-                                try {
-                                    string tempFile = _threadsFile + ".tmp";
-                                    File.WriteAllText(tempFile, (string)state, Encoding.UTF8);
-                                    if (File.Exists(_threadsFile)) File.Delete(_threadsFile);
-                                    File.Move(tempFile, _threadsFile);
-                                } catch { }
-                            }
-                        }, body);
+                    string body;
+                    if (req.ContentLength64 > 0) {
+                        byte[] buffer = new byte[req.ContentLength64];
+                        int totalRead = 0;
+                        while (totalRead < buffer.Length) {
+                            int read = req.InputStream.Read(buffer, totalRead, buffer.Length - totalRead);
+                            if (read <= 0) break;
+                            totalRead += read;
+                        }
+                        body = req.ContentEncoding.GetString(buffer, 0, totalRead);
+                    } else {
+                        using (var r = new StreamReader(req.InputStream, req.ContentEncoding)) {
+                            body = r.ReadToEnd();
+                        }
                     }
+                    _cachedThreads = body;
+                    ThreadPool.QueueUserWorkItem((state) => {
+                        lock (_dataLock) {
+                            try {
+                                string tempFile = _threadsFile + ".tmp";
+                                File.WriteAllText(tempFile, (string)state, Encoding.UTF8);
+                                if (File.Exists(_threadsFile)) File.Delete(_threadsFile);
+                                File.Move(tempFile, _threadsFile);
+                            } catch { }
+                        }
+                    }, body);
                     byte[] ok = Encoding.UTF8.GetBytes("{\"status\":\"saved\"}");
                     res.ContentType = "application/json";
                     res.StatusCode = 200;
