@@ -1,0 +1,25 @@
+# Settings Reality Gate Baseline Failure Log (Pre-Implementation)
+Timestamp: 2026-10-25T19:55:10+05:30
+Command: node --experimental-strip-types --test tests/settings_reality_gate.test.ts
+Exit Code: 1
+
+Captured Output:
+▶ Settings Reality Gate: Denylist and Real Interactive Controls
+  ✖ settings components must not contain meta/spec or prompt denylist tokens (30.7548ms)
+  ✔ every settings section must render interactive controls (0.5278ms)
+✖ Settings Reality Gate: Denylist and Real Interactive Controls (32.1498ms)
+
+✖ failing tests:
+test at tests\settings_reality_gate.test.ts:21:11
+✖ settings components must not contain meta/spec or prompt denylist tokens (30.7548ms)
+  AssertionError [ERR_ASSERTION]: Found 10 reality gate violation(s) in Settings components:
+   - [JanAppShell.tsx:25] matches "screenshot": {/* 1:1 Floating Sidebar matching v0.8.7 Screenshot 2026-10-25 190854.png */}
+   - [JanAppShell.tsx:25] matches ".png": {/* 1:1 Floating Sidebar matching v0.8.7 Screenshot 2026-10-25 190854.png */}
+   - [SettingsGeneral.tsx:22] matches "parity": const appVersion = "1.0.0 (v0.8.7 parity)";
+   - [SettingsGeneral.tsx:57] matches ".png": {/* App Version & Updates matching 9f7dba0d-ac1d-4936-a7a4-ac5c508c5d11.png */}
+   - [SettingsGeneral.tsx:57] matches "9f7dba0d": {/* App Version & Updates matching 9f7dba0d-ac1d-4936-a7a4-ac5c508c5d11.png */}
+   - [SettingsGeneral.tsx:143] matches "telemetry": <p className="text-[11px] text-muted-foreground">View real diagnostic telemetry and runtime event logs.</p>
+   - [SettingsGeneral.tsx:160] matches "screenshot": {/* Advanced / Factory Reset matching screenshot */}
+   - [SettingsMenu.tsx:127] matches ".png": {/* Model Providers Header matching 9f7dba0d-ac1d-4936-a7a4-ac5c508c5d11.png */}
+   - [SettingsMenu.tsx:127] matches "9f7dba0d": {/* Model Providers Header matching 9f7dba0d-ac1d-4936-a7a4-ac5c508c5d11.png */}
+   - [SettingsMenu.tsx:158] matches "screenshot": {/* Remote Providers matching screenshot */}

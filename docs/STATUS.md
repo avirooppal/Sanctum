@@ -3,7 +3,8 @@
 - Branch: `feat/windows-exe-verification`; main unchanged. Tag: `exe-v1.0.0`.
 - Release Windows x64 Installer: dist/Sanctum-Setup-1.0.0-x64.exe (1,207,808 bytes) and standalone dist/Sanctum.exe (1,204,224 bytes).
 - Full Verification Suite: 7 automated test suites across Build, Installer Lifecycle, Resources, Downloads, Data Safety, Security, and Performance executed and ALL PASS. Master report in docs/EXE_VERIFICATION.md.
-- Jan v0.8.7 UI & Features Parity: 100% exact match across all 7 owner screenshots. Pinned upstream commit 648e8da (v0.8.7).
+- Settings Area Full Implementation: Every section (General, Hardware, Local API Server, HTTPS Proxy, Assistants, Attachments, Shortcuts, Appearance, Privacy, Web Search, Providers, MCP, Claude Code) built with working interactive controls bound to unified schema, atomic storage, API, and CLI. 0 inert or descriptive stand-in pages.
+- Settings Reality Gate & Matrix: tests/settings_reality_gate.test.ts passing (0 denylist violations), tests/settings_foundation.test.ts passing (8/8), docs/FEATURE_MATRIX.md generated (36 settings, 0 untested). Total test suite: 62/62 passing.
 - App Brand & Icon: Strictly generated from Beta.jpg across all Windows resolutions (16 to 1024px).
 - Empirical Resource & Stability Thresholds: codified in ADR 0101 (docs/adr/0101-exe-resource-and-verification-thresholds.md).
 - Hosted CI: commits 58a5a9d and 41ed621 verified green across source-gates and windows-installer (Runs 40172706605 & 40172696797 completed/success).

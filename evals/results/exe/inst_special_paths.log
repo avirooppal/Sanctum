@@ -2,5 +2,5 @@
 Executing: C:\Users\aviroop\Desktop\Sru\dist\Sanctum-Setup-1.0.0-x64.exe /S /D=C:\Users\aviroop\Desktop\Sru\build\Sanctum 测试 路径 with spaces
 Return code: 0
 Installed exe exists in unicode path: True
-Launch from unicode path output: {"status":"ok","app":"Sanctum","version":"1.0.0","core":"active","commit":"1df96dc"}
+Launch from unicode path output: {"status":"ok","app":"Sanctum","version":"1.0.0","core":"active","commit":"aff9718"}
 Result: PASS

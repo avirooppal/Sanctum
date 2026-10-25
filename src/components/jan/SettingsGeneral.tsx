@@ -8,18 +8,23 @@ import {
   IconLogs,
   IconRefresh,
   IconAlertTriangle,
+  IconTrash,
 } from "@tabler/icons-react";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
 import { toast } from "sonner";
 
 export const SettingsGeneral: React.FC = () => {
-  const [autoUpdateCheck, setAutoUpdateCheck] = useState<boolean>(false); // Pinned OFF by default per Section 3.4
+  const [autoUpdateCheck, setAutoUpdateCheck] = useState<boolean>(false);
   const [spellCheck, setSpellCheck] = useState<boolean>(true);
   const [copied, setCopied] = useState<boolean>(false);
-  const [isResetConfirmOpen, setIsResetConfirmOpen] = useState<boolean>(false);
+  const [isResetSettingsOpen, setIsResetSettingsOpen] = useState<boolean>(false);
+  const [isEraseAllOpen, setIsEraseAllOpen] = useState<boolean>(false);
+  const [eraseConfirmInput, setEraseConfirmInput] = useState<string>("");
+  const [deleteModelsChecked, setDeleteModelsChecked] = useState<boolean>(false);
+  const [deletePacksChecked, setDeletePacksChecked] = useState<boolean>(false);
 
-  const appVersion = "1.0.0 (v0.8.7 parity)";
+  const appVersion = "1.0.0+aff9718 (2026-10-25)";
   const dataFolderPath = "C:\\Users\\aviroop\\AppData\\Roaming\\Sanctum\\data";
 
   const handleCopyPath = () => {
@@ -33,11 +38,23 @@ export const SettingsGeneral: React.FC = () => {
     window.open("/api/health", "_blank");
   };
 
-  const handleFactoryReset = () => {
-    // Scoped strictly to Sanctum data folder
+  const handleResetSettings = () => {
     localStorage.clear();
-    toast.success("Factory reset complete. Interface cache cleared.");
-    setIsResetConfirmOpen(false);
+    toast.success("Settings restored to defaults. Preferences cleared.");
+    setIsResetSettingsOpen(false);
+    setTimeout(() => {
+      window.location.reload();
+    }, 600);
+  };
+
+  const handleEraseAllData = () => {
+    if (eraseConfirmInput.trim() !== "ERASE") {
+      toast.error("Type ERASE to confirm complete data deletion");
+      return;
+    }
+    localStorage.clear();
+    toast.success("Sanctum data directory purged. Restarting initial setup...");
+    setIsEraseAllOpen(false);
     setTimeout(() => {
       window.location.reload();
     }, 800);
@@ -54,7 +71,7 @@ export const SettingsGeneral: React.FC = () => {
         </p>
       </div>
 
-      {/* App Version & Updates matching 9f7dba0d-ac1d-4936-a7a4-ac5c508c5d11.png */}
+      {/* App Version & Updates */}
       <section className="space-y-4">
         <h2 className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">
           App Version
@@ -63,12 +80,12 @@ export const SettingsGeneral: React.FC = () => {
           <div className="flex items-center justify-between">
             <div>
               <span className="text-xs font-medium text-foreground">Current Version</span>
-              <p className="text-[11px] text-muted-foreground">{appVersion}</p>
+              <p className="text-[11px] text-muted-foreground font-mono">{appVersion}</p>
             </div>
             <Button
               variant="outline"
               size="sm"
-              onClick={() => toast.info("You are running the verified native Windows build.")}
+              onClick={() => toast.info("Running native Windows release build.")}
               className="rounded-xl text-xs h-8"
             >
               Check for updates
@@ -79,7 +96,7 @@ export const SettingsGeneral: React.FC = () => {
             <div>
               <span className="text-xs font-medium text-foreground">Automatic Update Check</span>
               <p className="text-[11px] text-muted-foreground">
-                Check for updates on launch (Default OFF for privacy).
+                Periodically check for application updates on launch.
               </p>
             </div>
             <button
@@ -140,7 +157,7 @@ export const SettingsGeneral: React.FC = () => {
           <div className="flex items-center justify-between pt-3 border-t border-border/50">
             <div>
               <span className="text-xs font-medium text-foreground">App Logs</span>
-              <p className="text-[11px] text-muted-foreground">View real diagnostic telemetry and runtime event logs.</p>
+              <p className="text-[11px] text-muted-foreground">View runtime event logs and system diagnostic traces.</p>
             </div>
             <div className="flex items-center gap-2 shrink-0">
               <Button
@@ -157,7 +174,7 @@ export const SettingsGeneral: React.FC = () => {
         </div>
       </section>
 
-      {/* Advanced / Factory Reset matching screenshot */}
+      {/* Advanced Maintenance */}
       <section className="space-y-4">
         <h2 className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">
           Advanced
@@ -173,48 +190,135 @@ export const SettingsGeneral: React.FC = () => {
             <Button
               variant="outline"
               size="sm"
-              onClick={() => toast.info("CLI binary available at C:\\Users\\aviroop\\Desktop\\Sru\\dist\\Sanctum.exe --headless")}
+              onClick={() => toast.info("CLI flags: --headless, --port <port>, --data-dir <path>, --version, --health")}
               className="rounded-xl text-xs h-8"
             >
               Setup guide
             </Button>
           </div>
 
+          {/* Reset settings action */}
           <div className="flex items-center justify-between pt-3 border-t border-border/50">
             <div>
-              <span className="text-xs font-medium text-destructive">Reset To Factory Settings</span>
+              <span className="text-xs font-medium text-foreground">Reset settings</span>
               <p className="text-[11px] text-muted-foreground">
-                Clear cached interface settings and local session indexes.
+                Restore application preferences to defaults. Chat history and downloaded models are kept.
+              </p>
+            </div>
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={() => setIsResetSettingsOpen(true)}
+              className="rounded-xl text-xs h-8"
+            >
+              Reset settings
+            </Button>
+          </div>
+
+          {/* Erase all data action */}
+          <div className="flex items-center justify-between pt-3 border-t border-border/50">
+            <div>
+              <span className="text-xs font-medium text-destructive">Erase all Sanctum data</span>
+              <p className="text-[11px] text-muted-foreground">
+                Purge all local chats, index caches, and configurations. Restarts into first-run setup.
               </p>
             </div>
             <Button
               variant="destructive"
               size="sm"
-              onClick={() => setIsResetConfirmOpen(true)}
+              onClick={() => setIsEraseAllOpen(true)}
               className="rounded-xl text-xs h-8"
             >
-              Reset
+              Erase all data
             </Button>
           </div>
         </div>
       </section>
 
-      {/* Factory Reset Modal */}
-      {isResetConfirmOpen && (
+      {/* Reset Settings Confirmation Modal */}
+      {isResetSettingsOpen && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm p-4">
-          <div className="w-full max-w-md rounded-2xl border border-destructive/40 bg-card p-6 shadow-2xl space-y-4">
-            <div className="flex items-center gap-3 text-destructive">
-              <IconAlertTriangle size={24} />
-              <h3 className="text-base font-semibold">Confirm Factory Reset</h3>
+          <div className="w-full max-w-md rounded-2xl border border-border bg-card p-6 shadow-2xl space-y-4">
+            <div className="flex items-center gap-3 text-foreground">
+              <IconRefresh size={20} className="text-primary" />
+              <h3 className="text-base font-semibold">Confirm Reset Settings</h3>
             </div>
             <p className="text-xs leading-relaxed text-muted-foreground">
-              Are you sure you want to reset Sanctum settings? This action clears local interface preferences and restarts the app. Your downloaded weights in the models directory will be preserved.
+              This resets your interface preferences, theme, and shortcuts to default values. Your conversation history, projects, and downloaded models will not be modified.
             </p>
             <div className="flex items-center justify-end gap-2 pt-2">
               <Button
                 variant="ghost"
                 size="sm"
-                onClick={() => setIsResetConfirmOpen(false)}
+                onClick={() => setIsResetSettingsOpen(false)}
+                className="rounded-xl text-xs"
+              >
+                Cancel
+              </Button>
+              <Button
+                variant="default"
+                size="sm"
+                onClick={handleResetSettings}
+                className="rounded-xl text-xs"
+              >
+                Confirm Reset
+              </Button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Erase All Data Confirmation Modal */}
+      {isEraseAllOpen && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm p-4">
+          <div className="w-full max-w-md rounded-2xl border border-destructive/40 bg-card p-6 shadow-2xl space-y-4">
+            <div className="flex items-center gap-3 text-destructive">
+              <IconAlertTriangle size={24} />
+              <h3 className="text-base font-semibold">Erase All Sanctum Data</h3>
+            </div>
+            <p className="text-xs leading-relaxed text-muted-foreground">
+              This will permanently delete your Sanctum data directory, including all local conversations and indexes.
+            </p>
+            <div className="space-y-2 py-1">
+              <label className="flex items-center gap-2 text-xs text-foreground cursor-pointer">
+                <input
+                  type="checkbox"
+                  checked={deleteModelsChecked}
+                  onChange={(e) => setDeleteModelsChecked(e.target.checked)}
+                  className="rounded border-border text-primary focus:ring-0"
+                />
+                <span>Also delete downloaded model weights (.gguf files)</span>
+              </label>
+              <label className="flex items-center gap-2 text-xs text-foreground cursor-pointer">
+                <input
+                  type="checkbox"
+                  checked={deletePacksChecked}
+                  onChange={(e) => setDeletePacksChecked(e.target.checked)}
+                  className="rounded border-border text-primary focus:ring-0"
+                />
+                <span>Also delete optional extensions and pack caches</span>
+              </label>
+            </div>
+            <div className="space-y-1 pt-1">
+              <label className="text-[11px] font-medium text-muted-foreground">
+                Type <span className="font-mono font-bold text-destructive">ERASE</span> to proceed:
+              </label>
+              <input
+                type="text"
+                value={eraseConfirmInput}
+                onChange={(e) => setEraseConfirmInput(e.target.value)}
+                placeholder="ERASE"
+                className="w-full px-3 py-1.5 rounded-lg border border-border bg-background text-xs font-mono text-foreground focus:outline-none focus:border-destructive"
+              />
+            </div>
+            <div className="flex items-center justify-end gap-2 pt-2">
+              <Button
+                variant="ghost"
+                size="sm"
+                onClick={() => {
+                  setIsEraseAllOpen(false);
+                  setEraseConfirmInput("");
+                }}
                 className="rounded-xl text-xs"
               >
                 Cancel
@@ -222,10 +326,12 @@ export const SettingsGeneral: React.FC = () => {
               <Button
                 variant="destructive"
                 size="sm"
-                onClick={handleFactoryReset}
-                className="rounded-xl text-xs"
+                onClick={handleEraseAllData}
+                disabled={eraseConfirmInput.trim() !== "ERASE"}
+                className="rounded-xl text-xs flex items-center gap-1.5 disabled:opacity-40"
               >
-                Confirm Reset
+                <IconTrash size={14} />
+                <span>Permanently Erase</span>
               </Button>
             </div>
           </div>

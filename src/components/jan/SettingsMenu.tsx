@@ -124,7 +124,7 @@ export const SettingsMenu: React.FC<SettingsMenuProps> = ({
         </div>
       </div>
 
-      {/* Model Providers Header matching 9f7dba0d-ac1d-4936-a7a4-ac5c508c5d11.png */}
+      {/* Model Providers Header */}
       <div className="pt-2">
         <div className="flex items-center justify-between px-2 pb-1">
           <span className="text-[10px] font-semibold uppercase tracking-wider text-muted-foreground">
@@ -155,7 +155,7 @@ export const SettingsMenu: React.FC<SettingsMenuProps> = ({
           </button>
         </div>
 
-        {/* Remote Providers matching screenshot */}
+        {/* Remote Providers */}
         <div className="mt-2 space-y-0.5">
           <div className="px-3 py-1 text-[11px] font-medium text-muted-foreground/80">Remote</div>
           {["OpenAI", "Azure", "Anthropic", "OpenRouter", "Mistral", "Groq", "xAI", "Gemini", "MiniMax", "Hugging Face"].map((p) => (

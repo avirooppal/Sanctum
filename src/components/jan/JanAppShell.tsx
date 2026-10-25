@@ -6,23 +6,32 @@ import { SetupScreen } from "@/components/jan/SetupScreen";
 import { HubView } from "@/components/jan/HubView";
 import { SettingsMenu, SettingsSection } from "@/components/jan/SettingsMenu";
 import { SettingsGeneral } from "@/components/jan/SettingsGeneral";
+import { SettingsHardware } from "@/components/jan/sections/SettingsHardware";
+import { SettingsLocalApi } from "@/components/jan/sections/SettingsLocalApi";
+import { SettingsProxy } from "@/components/jan/sections/SettingsProxy";
+import { SettingsAssistants } from "@/components/jan/sections/SettingsAssistants";
+import { SettingsAttachments } from "@/components/jan/sections/SettingsAttachments";
+import { SettingsShortcuts } from "@/components/jan/sections/SettingsShortcuts";
+import { SettingsAppearance } from "@/components/jan/sections/SettingsAppearance";
+import { SettingsPrivacy } from "@/components/jan/sections/SettingsPrivacy";
+import { SettingsWebSearch } from "@/components/jan/sections/SettingsWebSearch";
+import { SettingsProviders } from "@/components/jan/sections/SettingsProviders";
+import { SettingsMcp } from "@/components/jan/sections/SettingsMcp";
+import { SettingsClaudeCode } from "@/components/jan/sections/SettingsClaudeCode";
 import { ChatScreen } from "@/components/screens/ChatScreen";
 import { useAppStore } from "@/store/useAppStore";
-import { cn } from "@/lib/utils";
 
 export const JanAppShell: React.FC = () => {
   const { hasCompletedOnboarding } = useAppStore();
   const [activeModule, setActiveModule] = useState<"chat" | "hub" | "settings">("chat");
   const [activeSettingsSection, setActiveSettingsSection] = useState<SettingsSection>("general");
 
-  // Onboarding gate matching Jan v0.8.7 SetupScreen
   if (!hasCompletedOnboarding) {
     return <SetupScreen onComplete={() => setActiveModule("chat")} />;
   }
 
   return (
     <div className="flex h-screen w-screen overflow-hidden bg-background text-foreground select-none font-sans">
-      {/* 1:1 Floating Sidebar matching v0.8.7 Screenshot 2026-10-25 190854.png */}
       <LeftSidebar
         activeModule={activeModule}
         onNavigate={(mod) => setActiveModule(mod)}
@@ -42,14 +51,18 @@ export const JanAppShell: React.FC = () => {
             />
             <div className="flex-1 overflow-y-auto">
               {activeSettingsSection === "general" && <SettingsGeneral />}
-              {activeSettingsSection !== "general" && (
-                <div className="p-8 text-xs text-muted-foreground">
-                  <h2 className="text-base font-semibold text-foreground capitalize mb-2">
-                    {activeSettingsSection.replace("-", " ")}
-                  </h2>
-                  <p>Configuration panel active. All modifications persist to `%APPDATA%\Sanctum\data`.</p>
-                </div>
-              )}
+              {activeSettingsSection === "appearance" && <SettingsAppearance />}
+              {activeSettingsSection === "assistants" && <SettingsAssistants />}
+              {activeSettingsSection === "attachments" && <SettingsAttachments />}
+              {activeSettingsSection === "local-api-server" && <SettingsLocalApi />}
+              {activeSettingsSection === "https-proxy" && <SettingsProxy />}
+              {activeSettingsSection === "web-search" && <SettingsWebSearch />}
+              {activeSettingsSection === "shortcuts" && <SettingsShortcuts />}
+              {activeSettingsSection === "hardware" && <SettingsHardware />}
+              {activeSettingsSection === "privacy" && <SettingsPrivacy />}
+              {activeSettingsSection === "mcp-servers" && <SettingsMcp />}
+              {activeSettingsSection === "claude-code" && <SettingsClaudeCode />}
+              {activeSettingsSection === "providers" && <SettingsProviders />}
             </div>
           </div>
         )}
