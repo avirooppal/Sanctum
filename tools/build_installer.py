@@ -2,6 +2,7 @@ import base64
 import os
 import shutil
 import subprocess
+import sys
 import zipfile
 
 ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
@@ -147,7 +148,9 @@ public class SetupProgram {
             CreateShortcuts(installDir);
 
             if (!silent) {
-                MessageBox.Show("Sanctum 1.0.0 installed successfully!", "Sanctum Setup", MessageBoxButtons.OK, MessageBoxIcon.Information);
+                try {
+                    Process.Start(Path.Combine(installDir, "Sanctum-Desktop.exe"));
+                } catch { }
             }
             return 0;
         } catch (Exception ex) {
@@ -240,6 +243,101 @@ Add-Type -TypeDefinition $source -Language CSharp -ReferencedAssemblies "System.
         sys.exit(1)
 
     print(f"Compiled self-extracting installer to {out_path} ({os.path.getsize(out_path)} bytes)")
+
+    out_direct = os.path.join(os.path.dirname(out_path), "Sanctum.exe")
+    build_direct_launcher(out_direct, payload_b64)
+
+
+def build_direct_launcher(out_path, payload_b64):
+    cs_launcher = """using System;
+using System.Diagnostics;
+using System.IO;
+using System.IO.Compression;
+
+public class SanctumLauncher {
+    public static int Main(string[] args) {
+        string localApp = Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData);
+        string appDir = Path.Combine(localApp, "Programs", "Sanctum");
+        string exe = Path.Combine(appDir, "Sanctum-Desktop.exe");
+
+        if (!File.Exists(exe)) {
+            try {
+                Directory.CreateDirectory(appDir);
+                string tempZip = Path.Combine(Path.GetTempPath(), "sanctum_unpack_" + Guid.NewGuid().ToString("N") + ".zip");
+                byte[] zipData = Convert.FromBase64String("__PAYLOAD_B64__");
+                File.WriteAllBytes(tempZip, zipData);
+                using (ZipArchive archive = ZipFile.OpenRead(tempZip)) {
+                    foreach (ZipArchiveEntry entry in archive.Entries) {
+                        string destPath = Path.Combine(appDir, entry.FullName);
+                        if (string.IsNullOrEmpty(entry.Name)) {
+                            Directory.CreateDirectory(destPath);
+                        } else {
+                            Directory.CreateDirectory(Path.GetDirectoryName(destPath));
+                            entry.ExtractToFile(destPath, true);
+                        }
+                    }
+                }
+                try { File.Delete(tempZip); } catch { }
+            } catch { }
+        }
+
+        if (!File.Exists(exe)) return 1;
+
+        ProcessStartInfo psi = new ProcessStartInfo {
+            FileName = exe,
+            Arguments = string.Join(" ", args),
+            UseShellExecute = false
+        };
+        try {
+            using (Process p = Process.Start(psi)) {
+                p.WaitForExit();
+                return p.ExitCode;
+            }
+        } catch {
+            return 1;
+        }
+    }
+}
+""".replace("__PAYLOAD_B64__", payload_b64)
+
+    temp_cs = os.path.join(ROOT, "deploy", "installer", "temp_launcher.cs")
+    with open(temp_cs, "w", encoding="utf-8") as f:
+        f.write(cs_launcher)
+
+    csc_path = r"C:\Windows\Microsoft.NET\Framework64\v4.0.30319\csc.exe"
+    icon_path = os.path.abspath("deploy/installer/app-icon.ico")
+
+    if os.path.exists(csc_path):
+        cmd = [
+            csc_path,
+            "/target:winexe",
+            f"/out:{out_path}",
+            "/optimize+",
+            "/platform:x64",
+            "/reference:System.dll,System.IO.Compression.dll,System.IO.Compression.FileSystem.dll",
+        ]
+        if os.path.exists(icon_path):
+            cmd.append(f"/win32icon:{icon_path}")
+        cmd.append(temp_cs)
+        print(f"Compiling direct Sanctum.exe with csc.exe to {out_path}...")
+        res = subprocess.run(cmd, capture_output=True, text=True)
+    else:
+        ps_compile = f'''
+$source = Get-Content -Raw -Path "{temp_cs}"
+Add-Type -TypeDefinition $source -Language CSharp -ReferencedAssemblies "System.IO.Compression.dll", "System.IO.Compression.FileSystem.dll" -OutputAssembly "{out_path}" -OutputType WindowsApplication
+'''
+        cmd = ["powershell", "-NoProfile", "-ExecutionPolicy", "Bypass", "-Command", ps_compile]
+        print(f"Compiling direct Sanctum.exe with PowerShell to {out_path}...")
+        res = subprocess.run(cmd, capture_output=True, text=True)
+
+    if os.path.exists(temp_cs):
+        os.remove(temp_cs)
+
+    if res.returncode != 0:
+        print(f"Launcher compilation error: {res.stderr}\n{res.stdout}")
+        sys.exit(1)
+
+    print(f"Compiled direct launcher to {out_path} ({os.path.getsize(out_path)} bytes)")
 
 
 if __name__ == "__main__":

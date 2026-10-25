@@ -164,10 +164,77 @@ namespace Sanctum {
                 return 0;
             }
 
-            Application.EnableVisualStyles();
-            Application.Run(app);
+            // Launch modern Chromium window (Brave / Edge / Chrome App Mode)
+            string appUrl = "http://127.0.0.1:" + app._port + "/?token=" + _authToken;
+            LaunchAppWindow(appUrl);
+
+            // System Tray Controller
+            NotifyIcon trayIcon = new NotifyIcon();
+            string iconPath = Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "app-icon.ico");
+            if (File.Exists(iconPath)) {
+                try { trayIcon.Icon = new Icon(iconPath); } catch { trayIcon.Icon = SystemIcons.Application; }
+            } else {
+                trayIcon.Icon = SystemIcons.Application;
+            }
+            trayIcon.Text = "Sanctum - Sovereign AI";
+            trayIcon.Visible = true;
+
+            ContextMenu menu = new ContextMenu();
+            menu.MenuItems.Add(new MenuItem("Open Sanctum", (s, e) => LaunchAppWindow(appUrl)));
+            menu.MenuItems.Add(new MenuItem("-"));
+            menu.MenuItems.Add(new MenuItem("Exit Sanctum", (s, e) => {
+                trayIcon.Visible = false;
+                app.StopHttpServer();
+                if (_singleInstanceMutex != null) {
+                    try { _singleInstanceMutex.ReleaseMutex(); } catch { }
+                }
+                Application.Exit();
+            }));
+            trayIcon.ContextMenu = menu;
+            trayIcon.DoubleClick += (s, e) => LaunchAppWindow(appUrl);
+
+            Application.Run();
+            trayIcon.Visible = false;
+            app.StopHttpServer();
             if (_singleInstanceMutex != null) _singleInstanceMutex.ReleaseMutex();
             return 0;
+        }
+
+        private static string FindChromiumAppBrowser() {
+            string[] candidates = new string[] {
+                @"C:\Program Files\BraveSoftware\Brave-Browser\Application\brave.exe",
+                Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData), @"BraveSoftware\Brave-Browser\Application\brave.exe"),
+                Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.ProgramFilesX86), @"Microsoft\Edge\Application\msedge.exe"),
+                Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.ProgramFiles), @"Microsoft\Edge\Application\msedge.exe"),
+                @"C:\Program Files\Google\Chrome\Application\chrome.exe",
+                Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData), @"Google\Chrome\Application\chrome.exe")
+            };
+            foreach (string c in candidates) {
+                if (File.Exists(c)) return c;
+            }
+            return null;
+        }
+
+        private static void LaunchAppWindow(string url) {
+            string browser = FindChromiumAppBrowser();
+            if (!string.IsNullOrEmpty(browser)) {
+                try {
+                    ProcessStartInfo psi = new ProcessStartInfo {
+                        FileName = browser,
+                        Arguments = string.Format("--app=\"{0}\"", url),
+                        UseShellExecute = false
+                    };
+                    Process.Start(psi);
+                    return;
+                } catch { }
+            }
+            try {
+                ProcessStartInfo psi = new ProcessStartInfo {
+                    FileName = url,
+                    UseShellExecute = true
+                };
+                Process.Start(psi);
+            } catch { }
         }
 
         private static void InitDirectories(string customDataDir) {

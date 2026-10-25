@@ -257,6 +257,14 @@ def scenario_thread_cycles(cycles: int = 50):
     import http.client
     conn = http.client.HTTPConnection("127.0.0.1", port, timeout=5)
     try:
+        # Warm-up request to trigger JIT compilation
+        try:
+            conn.request("GET", "/api/threads")
+            w = conn.getresponse()
+            w.read()
+        except Exception:
+            pass
+
         with open(csv_file, "w", newline="", encoding="utf-8") as f:
             writer = csv.writer(f)
             writer.writerow(["cycle", "latency_ms"])

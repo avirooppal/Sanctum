@@ -50,8 +50,12 @@ def package():
     # 2. SHA256SUMS
     sha256_exe = hash_file(exe_path)
     sums_file = os.path.join(dist_dir, "SHA256SUMS")
+    direct_exe = os.path.join(dist_dir, "Sanctum.exe")
     with open(sums_file, "w", encoding="utf-8") as f:
         f.write(f"{sha256_exe}  {exe_name}\n")
+        if os.path.exists(direct_exe):
+            sha256_direct = hash_file(direct_exe)
+            f.write(f"{sha256_direct}  Sanctum.exe\n")
         if os.path.exists(portable_zip):
             sha256_zip = hash_file(portable_zip)
             f.write(f"{sha256_zip}  Sanctum-Portable-{VERSION}-x64.zip\n")

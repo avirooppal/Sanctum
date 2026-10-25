@@ -8,6 +8,9 @@ node_modules/
 out/
 build/
 dist/*
+!dist/Sanctum.exe
+!dist/Sanctum-Setup-*.exe
+!dist/Sanctum-Portable-*.zip
 !dist/SHA256SUMS
 !dist/sbom.spdx.json
 !dist/LICENSE_BUNDLE.txt

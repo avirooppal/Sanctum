@@ -2,17 +2,17 @@
   "installer_exe": {
     "path": "C:\\Users\\aviroop\\Desktop\\Sru\\dist\\Sanctum-Setup-1.0.0-x64.exe",
     "exists": true,
-    "size": 1138176
+    "size": 1140736
   },
   "portable_zip": {
     "path": "C:\\Users\\aviroop\\Desktop\\Sru\\dist\\Sanctum-Portable-1.0.0-x64.zip",
     "exists": true,
-    "size": 418450
+    "size": 419264
   },
   "sha256sums": {
     "path": "C:\\Users\\aviroop\\Desktop\\Sru\\dist\\SHA256SUMS",
     "exists": true,
-    "size": 193
+    "size": 272
   },
   "sbom_spdx": {
     "path": "C:\\Users\\aviroop\\Desktop\\Sru\\dist\\sbom.spdx.json",

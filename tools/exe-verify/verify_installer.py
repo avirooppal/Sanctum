@@ -230,6 +230,7 @@ if __name__ == "__main__":
     args = parser.parse_args()
 
     success = True
+    subprocess.run(["powershell", "-Command", "Get-Process -Name '*Sanctum*' -ErrorAction SilentlyContinue | Stop-Process -Force"], capture_output=True)
     if args.scenario in ["silent", "all"]:
         success = test_silent() and success
     if args.scenario in ["per_user", "all"]:

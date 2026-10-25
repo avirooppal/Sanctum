@@ -1,6 +1,6 @@
 {
   "executable": "C:\\Users\\aviroop\\Desktop\\Sru\\deploy\\installer\\build_payload\\Sanctum-Desktop.exe",
-  "size_bytes": 43008,
+  "size_bytes": 45056,
   "referenced_dlls": [
     "kernel32.dll",
     "user32.dll"
