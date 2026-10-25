@@ -10,6 +10,7 @@ Breakdown: {
 }
 
 Direct Production Dependencies Verified:
+  - @tabler/icons-react: MIT / Apache-2.0 / ISC (Permissive)
   - autoprefixer: MIT / Apache-2.0 / ISC (Permissive)
   - class-variance-authority: MIT / Apache-2.0 / ISC (Permissive)
   - clsx: MIT / Apache-2.0 / ISC (Permissive)
@@ -17,6 +18,7 @@ Direct Production Dependencies Verified:
   - next: MIT / Apache-2.0 / ISC (Permissive)
   - react: MIT / Apache-2.0 / ISC (Permissive)
   - react-dom: MIT / Apache-2.0 / ISC (Permissive)
+  - sonner: MIT / Apache-2.0 / ISC (Permissive)
   - tailwind-merge: MIT / Apache-2.0 / ISC (Permissive)
   - zustand: MIT / Apache-2.0 / ISC (Permissive)
 

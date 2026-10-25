@@ -5,6 +5,7 @@ NPM toolchain: 11.9.0
 package-lock.json present: True
 Package: sanctum v1.0.0
 Dependencies: {
+  "@tabler/icons-react": "^3.49.0",
   "autoprefixer": "^10.6.1",
   "class-variance-authority": "^0.7.1",
   "clsx": "^2.1.1",
@@ -12,8 +13,9 @@ Dependencies: {
   "next": "15.1.7",
   "react": "^19.0.0",
   "react-dom": "^19.0.0",
+  "sonner": "^2.0.8",
   "tailwind-merge": "^3.0.1",
   "zustand": "^5.0.3"
 }
-Embedded Git Commit SHA: 289c888d582cc62294a5bb710b380059e01faa49
+Embedded Git Commit SHA: 1df96dc3462279f78aa859e4c534f633b0923536
 Version verified: 1.0.0 == 1.0.0

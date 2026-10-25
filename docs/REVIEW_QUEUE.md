@@ -323,3 +323,14 @@ observed focus=false and its bottom above0(landing-skip-diagnostic.log). No
 global accessibility/INP/pixel-fidelity/full-roadmap/release pass is claimed.
 
 - ADR0088: retained history search exceeded the unchanged metadata deadline on populated history; add conversation index and a 4,000-session regression. Preserve the failed A2 run. Corrective scope, no threshold relaxation.
+
+## RQ-0103: Pinned Jan v0.8.7 Exact UI & Features Parity Verification
+
+- **Status**: READY FOR REVIEW
+- **Decision Record**: ADR 0103 (docs/adr/0103-pinned-jan-v087-ui-architecture.md)
+- **Reference Screenshots**: 7 owner screenshots verified in docs/design/reference/owner/
+- **Application Icon**: Replaced across all dimensions (16x16 to 1024x1024) derived directly from Beta.jpg
+- **Verification**: 	ests/jan_parity_flow.test.ts (4/4 PASS), full test suite (50/50 PASS), full 7-suite verification script 
+un_all_verification.py (ALL PASS)
+- **Zero Dead Controls**: Every dialog, switch, input, and button wired to typed handlers and state stores
+- **Artifacts**: dist/Sanctum-Setup-1.0.0-x64.exe (1.2 MB), dist/Sanctum.exe (1.2 MB)

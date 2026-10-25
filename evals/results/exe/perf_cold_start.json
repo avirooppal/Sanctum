@@ -1,22 +1,22 @@
 {
   "runs": 10,
   "successful_runs": 10,
-  "median_seconds": 0.5609,
-  "min_seconds": 0.5407,
-  "max_seconds": 0.6125,
-  "spread_seconds": 0.0718,
+  "median_seconds": 0.5553,
+  "min_seconds": 0.5219,
+  "max_seconds": 0.5675,
+  "spread_seconds": 0.0456,
   "budget_seconds": 2.5,
   "status": "PASS",
   "raw_samples": [
-    0.5407,
-    0.5535,
-    0.5538,
-    0.5562,
-    0.5572,
-    0.5609,
-    0.5678,
-    0.5699,
-    0.5863,
-    0.6125
+    0.5219,
+    0.5399,
+    0.5517,
+    0.5526,
+    0.5544,
+    0.5553,
+    0.5615,
+    0.5635,
+    0.5671,
+    0.5675
   ]
 }

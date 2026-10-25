@@ -8,10 +8,11 @@
     "build": "next build",
     "start": "next start",
     "lint": "next lint",
-    "test": "node --experimental-strip-types --test tests/vector_store_rag.test.ts tests/constants_catalogs.test.ts tests/api_contracts.test.ts tests/contracts_validation.test.ts tests/core_ai.test.ts tests/core_domain.test.ts tests/packs_manifests.test.ts tests/ui_strings.test.ts tests/agent_and_features.test.ts tests/request_status_contract.test.ts tests/request_status_tracker.test.ts",
+    "test": "node --experimental-strip-types --test tests/vector_store_rag.test.ts tests/constants_catalogs.test.ts tests/api_contracts.test.ts tests/contracts_validation.test.ts tests/core_ai.test.ts tests/core_domain.test.ts tests/packs_manifests.test.ts tests/ui_strings.test.ts tests/agent_and_features.test.ts tests/request_status_contract.test.ts tests/request_status_tracker.test.ts tests/jan_parity_flow.test.ts",
     "check-arch": "python tools/check_architecture.py"
   },
   "dependencies": {
+    "@tabler/icons-react": "^3.49.0",
     "autoprefixer": "^10.6.1",
     "class-variance-authority": "^0.7.1",
     "clsx": "^2.1.1",
@@ -19,6 +20,7 @@
     "next": "15.1.7",
     "react": "^19.0.0",
     "react-dom": "^19.0.0",
+    "sonner": "^2.0.8",
     "tailwind-merge": "^3.0.1",
     "zustand": "^5.0.3"
   },

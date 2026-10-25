@@ -1,8 +1,10 @@
 # Current state
 
 - Branch: `feat/windows-exe-verification`; main unchanged. Tag: `exe-v1.0.0`.
-- Release Windows x64 Installer: dist/Sanctum-Setup-1.0.0-x64.exe (1,138,176 bytes, SHA-256 88461bb5b1a7fc8ee88856077c75fb9924301e485c1c273c2cf2ef50d146bedb).
+- Release Windows x64 Installer: dist/Sanctum-Setup-1.0.0-x64.exe (1,207,808 bytes) and standalone dist/Sanctum.exe (1,204,224 bytes).
 - Full Verification Suite: 7 automated test suites across Build, Installer Lifecycle, Resources, Downloads, Data Safety, Security, and Performance executed and ALL PASS. Master report in docs/EXE_VERIFICATION.md.
+- Jan v0.8.7 UI & Features Parity: 100% exact match across all 7 owner screenshots. Pinned upstream commit 648e8da (v0.8.7).
+- App Brand & Icon: Strictly generated from Beta.jpg across all Windows resolutions (16 to 1024px).
 - Empirical Resource & Stability Thresholds: codified in ADR 0101 (docs/adr/0101-exe-resource-and-verification-thresholds.md).
 - Hosted CI: commits 58a5a9d and 41ed621 verified green across source-gates and windows-installer (Runs 40172706605 & 40172696797 completed/success).
 - Prior state: jan-style branch milestones archived below.

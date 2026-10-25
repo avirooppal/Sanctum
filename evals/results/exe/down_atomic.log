@@ -1,6 +1,6 @@
 === DOWN-4d: Filename Sanitization, Atomic Rename & Ledger ===
 Sanitized filename result: _CON.gguf
 Download ledger file exists: True
-Ledger entries count: 10
-Latest ledger entry: {"timestamp": "2026-10-25T09:47:25.6485939Z", "model": "_CON.gguf", "url": "https://huggingface.co/sanctum/model.gguf", "status": "verified"}
+Ledger entries count: 11
+Latest ledger entry: {"timestamp": "2026-10-25T14:01:02.6724088Z", "model": "_CON.gguf", "url": "https://huggingface.co/sanctum/model.gguf", "status": "verified"}
 Result: PASS
