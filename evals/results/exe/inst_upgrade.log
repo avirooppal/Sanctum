@@ -1,0 +1,4 @@
+=== INST-2e: In-Place Upgrade & Data Preservation ===
+Installer upgrade return code: 0
+User data file content verified: SANCTUM_PERSISTED_USER_HISTORY_DATA_VERIFIED
+User data preserved across upgrade: True

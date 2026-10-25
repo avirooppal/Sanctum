@@ -1,0 +1,11 @@
+{
+  "executable": "C:\\Users\\aviroop\\Desktop\\Sru\\deploy\\installer\\build_payload\\Sanctum-Desktop.exe",
+  "size_bytes": 43008,
+  "referenced_dlls": [
+    "kernel32.dll",
+    "user32.dll"
+  ],
+  "foreign_runtime_dlls": [],
+  "self_contained": true,
+  "required_runtimes_on_target": "None (built-in Windows .NET 4.0/4.8 Framework)"
+}

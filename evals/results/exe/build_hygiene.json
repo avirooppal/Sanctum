@@ -1,0 +1,10 @@
+{
+  "aslr_enabled": true,
+  "dep_enabled": true,
+  "manifest_as_invoker": true,
+  "manifest_dpi_aware": true,
+  "manifest_long_paths": true,
+  "manifest_utf8_code_page": true,
+  "leaked_secrets_count": 0,
+  "status": "PASS"
+}

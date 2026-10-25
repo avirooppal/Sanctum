@@ -1,0 +1,5 @@
+=== INST-2d: Running Instance Detection ===
+Installer exit code while instance running: 1
+Installer stderr: Error: Sanctum-Desktop is currently running.
+
+Running instance blocked: True

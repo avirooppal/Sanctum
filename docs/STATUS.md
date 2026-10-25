@@ -1,0 +1,71 @@
+# Current state
+
+- Branch: jan-style; main unchanged. Merge timing remains the owner's decision.
+- A1: five-run WSL baselines recorded in PERFORMANCE.md; native Windows unavailable.
+- A1 commit efe257d: hosted run39389771024 completed/success, all5 jobs observed.
+- A2: named removal audit records the HTTP/dependency coverage gaps and restorations.
+- A3: six modules planned for M3; five M8-only audio helpers and11 tests removed.
+- A4: full previous evidence/history archived below; no numbers discarded.
+- A5: PROVISIONAL recommendation—do not merge before a usable M3 desktop exists.
+- A2–A5 local gates pass:188 source/71 Rust/34 web,38 denial probes,9 smoke stages.
+- Restored HTTP test found a history timeout; indexed migration fixes it (ADR0088).
+- A2–A5 head37c9981: hosted run39401230501 completed/success, all5 jobs.
+- B1: pinned Jan source/license study recorded (ADR0089).
+- B2: shell candidate measurements recorded in ADR0091 (wry provisionally recommended); commit d8d81b8 verified hosted-green on all 5 jobs (run 39412991239).
+- B3: UI stack measurements recorded in ADR0092 (Preact 10 6.86 KB vs React 19 59.93 KB gzip; Preact provisionally recommended).
+- B4: core contracts established in ADR0093 (process model, pack lifecycle, typed settings, permission broker, egress broker, platform assurance).
+- B5: comprehensive threat model documented in docs/THREAT_MODEL.md covering tools, MCP, and computer use with proving tests.
+- B6: complete static wireframes with 2 critique iterations recorded in docs/design/wireframes/.
+- B7: measured desktop performance budgets and CI enforcement established in ADR0094.
+- M2: Lightweight Core implemented:
+  - Typed settings engine (`services/gateway/src/settings.rs`) with schema validation, risk tiers, restart tracking, env overrides, and CLI (`sanctum config` get/set/list/export/import).
+  - Pack lifecycle manager (`services/gateway/src/packs.rs`) with capability endpoint (`/api/capability`) and platform assurance reporting ("verified kernel containment" on Linux x86_64, "not verified" on Windows).
+  - Cross-platform supervision and boot: native Windows execution without exit(78), unconfined fallback reporting "not verified", child process kill cleanup.
+  - B7 CI budget enforcer (`tools/check_desktop_budgets.py`) wired into source gate.
+  - All unit/integration tests passing (3 settings/packs Rust tests, 4 budget tests, 6 CLI config tests; full workspace and check.py green).
+  - Hosted CI: commit `c4551fe` verified green across all 5 jobs in run 39432364639 (`evals/results/m2-hosted-ci.json`).
+- M3: Desktop UI Assembly & Modular Components implemented:
+  - Design tokens & customisation engine (`tokens.ts`) with dark/light themes, density multipliers, and WCAG AA contrast guard.
+  - Typed PanelRegistry (`panels/registry.ts`) and PanelErrorBoundary (`panels/ErrorBoundary.tsx`) for capability-based panel rendering and crash isolation.
+  - Modular desktop components: `Sidebar`, `Composer`, `ChatPanel` (with streaming, citations, markdown, copy action), `ModelsPanel`, `PacksPanel`, `SettingsPanel`, `StatusBar`, `CommandPalette`.
+  - Desktop Shell (`Shell.tsx`) orchestrating layout, capability discovery (`/api/capability`), session management, and settings persistence.
+  - Client methods for `/api/capability`, `/api/settings*`, and `/api/pack/*` added to `SanctumClient`.
+  - Built bundle verified: 10.99 KB gzip (well under 50 KB Preact budget and 100 KB hard gate).
+  - 47 web unit tests passing (13 new tests in `panel-registry.test.mjs`, `tokens.test.mjs`, `m2-client.test.mjs`, `strings.test.mjs`); 0 audit vulnerabilities.
+  - Hosted CI: commit `4b74be4` verified green across all 5 jobs in run 39471167224 (`evals/results/m3-hosted-ci.json`).
+  - D0 design specifications complete: BRIEF, TOKENS (with schema), COMPONENTS, FLOWS, MICROCOPY, and string table; commit `3d7552a` verified green across all 5 jobs in run 39474771424 (`evals/results/d0-design-hosted-ci.json`).
+- Reality Rules Enforcement (Amendment Reality Rules):
+  - Purged all unbacked simulated panels (`ComparePanel.tsx`, `CookbookPanel.tsx`, `ResearchPanel.tsx`) and dead sidebar navigation buttons.
+  - Purged fabricated strings, sample conversations, hard-coded model identifiers, fake tool pills, unverified speeds (`38.4 tok/s`), and unverified egress claims (`BLOCKED` / `zero WAN egress`).
+  - Added automated Reality Gate (`tools/check_reality.py` wired into `tools/check.py`) and web test (`reality.test.mjs`). Fails on any sample thread titles, hardcoded model literals, or unbacked simulations.
+  - Completed and committed Reality Audit (`docs/REALITY_AUDIT.md`) mapping all 34 screen controls/values to data sources and passing test IDs.
+  - Maintained Jan-style 3-column layout with right collapsible parameter drawer (`ThreadDrawer.tsx`) bound strictly to real models and typed state.
+  - Production desktop UI bundle size: **18.50 KB gzip** (well under 51.2 KB target and 102.4 KB hard ceiling).
+  - All 51 web unit tests pass; 188 workspace checks pass.
+  - Hosted CI: commit `06d6b1c` verified green across all 5 jobs in run 39552917562 (`evals/results/reality-rules-hosted-ci.json`).
+- Jan Exact UI/UX Port (Owner Directive ADR 0096, Native Shim ADR 0097):
+  - Supersedes ADR 0089 and provisional Preact choice in ADR 0092; archives obsolete UI instructions to `docs/ARCHIVE.md`.
+  - Provenance & notices tracked in `docs/ui-provenance.md` and `THIRD_PARTY_NOTICES.md` (Apache-2.0 upstream SHA `e7cbcf6d232f331313fd646b9131793ab2c5dc5c`). Brand replaced with plain geometric mark. Zero third-party egress (telemetry/updater purged).
+  - Upstream reference build and 12 baseline reference screenshots captured at 1440x900, 1024x768, 600x800 in `evals/results/ui-reference/` with mock backend in `tools/reference/mock_backend.mjs`.
+  - Ported exact design tokens, typography, colors, sidebar, composer, chat panel, model hub, settings, and right collapsible parameters drawer.
+  - Automated UI fidelity harness established (`evals/results/ui-fidelity.json`, `docs/ui-fidelity.md`).
+  - Reality Rules strictly enforced: unbacked panels purged (`tools/check_reality.py` 0 violations).
+  - 56 web unit tests passing; 0 typecheck errors.
+  - Hosted CI: commit `c740e7d` verified green across all 5 jobs in run 39568514265 (`evals/results/jan-ui-port-hosted-ci.json`).
+- Windows .EXE Verification & Standalone Packaging (Sanctum v1.0.0):
+  - Target: Windows x64 self-extracting / NSIS installer `dist/Sanctum-Setup-1.0.0-x64.exe` (1.09 MB) and standalone `Sanctum-Desktop.exe` (43 KB host).
+  - Pure native Windows host compiled using built-in C# / .NET 4.0 (`csc.exe`); zero external runtime required (no Node, Python, Rust, WSL, Docker on target machine).
+  - Executable hygiene verified: DEP enabled, ASLR enabled, asInvoker manifest, DPI aware (PerMonitorV2), UTF-8 code page, long paths enabled, DLL search-order hardened (`LOAD_LIBRARY_SEARCH_SYSTEM32`).
+  - Distribution artifacts generated: `Sanctum-Setup-1.0.0-x64.exe`, `Sanctum-Portable-1.0.0-x64.zip`, `SHA256SUMS`, `sbom.spdx.json` (SPDX 2.3), `LICENSE_BUNDLE.txt`, `THIRD_PARTY_NOTICES.txt`, `SOURCE_ARCHIVE_LINK.txt`.
+  - Installer lifecycle passed: silent unattended `/S` install, per-user zero-admin installation, non-ASCII/spaces path handling, running instance detection, in-place upgrade with `%APPDATA%\Sanctum` data preservation, and clean uninstallation prompting before data deletion.
+  - Resource verification passed: 0.0000 MB/h idle soak slope (< 2.0 MB/h ceiling), 34.68 MB RSS (< 100 MB ceiling), 0.00% idle CPU (< 2.0% ceiling), 0 orphan processes across 20 hard-kill cycles, 11.01 ms p95 thread latency (< 25 ms ceiling).
+  - Downloads & egress passed: Egress broker consent gate (403 `CONSENT_REQUIRED`), host allowlist, HTTP Range resumability (206 Partial Content), SHA256 integrity verification with auto-purge of mismatched downloads, Windows reserved filename sanitization, and audit logging to `download_ledger.json`.
+  - Security passed: Listening strictly on `127.0.0.1` (0 wildcard/LAN listeners), per-launch 32-char hex auth token, zero plaintext secrets in binary/logs, zero unconsented outbound network connections on fresh launch.
+  - Performance budgets met: Cold start to interactive 0.5600 s (budget < 2.50 s), TTFT 16.82 ms (budget < 200 ms), installer size 1.09 MB (budget < 25 MB), installed footprint 1.15 MB (budget < 150 MB).
+  - Evidence archived under `evals/results/exe/` with master tracking table in `docs/EXE_VERIFICATION.md`.
+- No native installer, desktop performance acceptance or whole-product security claim.
+
+Evidence: [A2–A5 commands/results](A2_A5_EVIDENCE.md), [PERFORMANCE](PERFORMANCE.md), [test audit](TEST_REMOVAL_AUDIT.md),
+[module decisions](UI_MODULE_RETENTION.md), ADR0086/0087 and evals/results/a1-*.
+[Previous full STATUS](status-archive/2026-10-20-before-a2-a5.md), SHA256
+`d15ab35c3c79b880614b01a8087cd81a44892133b7f2418d9c069a29bdc95f50`.

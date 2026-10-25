@@ -1,0 +1,74 @@
+name: Sanctum Verification and Release Build
+on: [push, pull_request]
+
+permissions:
+  contents: read
+
+jobs:
+  source-gates:
+    runs-on: windows-latest
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: "20"
+          cache: "npm"
+
+      - name: Setup Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.10"
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Check Layer Architecture
+        run: npm run check-arch
+
+      - name: Run Test Suite
+        run: npm test
+
+      - name: Build Next.js Web Frontend
+        run: npm run build
+
+  windows-installer:
+    needs: source-gates
+    runs-on: windows-latest
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: "20"
+          cache: "npm"
+
+      - name: Setup Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.10"
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Build Windows .EXE Installer
+        run: python tools/build_installer.py
+
+      - name: Run Complete Verification Suite (Lifecycle, Resources, Security, Performance)
+        run: python tools/exe-verify/run_all_verification.py
+
+      - name: Upload Installer Artifacts
+        uses: actions/upload-artifact@v4
+        with:
+          name: Sanctum-Windows-x64-Setup
+          path: dist/*
+
+      - name: Upload Verification Evidence
+        uses: actions/upload-artifact@v4
+        with:
+          name: Sanctum-Verification-Evidence
+          path: evals/results/exe/*

@@ -1,0 +1,16 @@
+iteration,endpoint,private_bytes_mb
+0,all_endpoints,23.65
+1,all_endpoints,23.79
+2,all_endpoints,23.99
+3,all_endpoints,24.18
+4,all_endpoints,24.37
+5,all_endpoints,24.56
+6,all_endpoints,24.68
+7,all_endpoints,24.87
+8,all_endpoints,25.06
+9,all_endpoints,25.27
+10,all_endpoints,25.46
+11,all_endpoints,25.59
+12,all_endpoints,25.78
+13,all_endpoints,25.98
+14,all_endpoints,26.17
