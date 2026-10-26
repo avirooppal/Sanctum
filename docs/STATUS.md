@@ -1,8 +1,9 @@
 # Current state
 
 - Branch: `feat/windows-exe-verification`; main unchanged. Tag: `exe-v1.0.0`.
-- Release Windows x64 Installer: dist/Sanctum-Setup-1.0.0-x64.exe (1,207,808 bytes) and standalone dist/Sanctum.exe (1,204,224 bytes).
-- Full Verification Suite: 7 automated test suites across Build, Installer Lifecycle, Resources, Downloads, Data Safety, Security, and Performance executed and ALL PASS. Master report in docs/EXE_VERIFICATION.md.
+- Standalone Desktop Application (Embedded WebView2, ADR 0104): Replaced msedge.exe --app browser wrapper with a real standalone Win32 host (Sanctum-Desktop.exe & dist/Sanctum.exe) embedding CoreWebView2Controller in-window (AppUserModelID Sanctum.Desktop.App.1, Win32 Job Object JOB_OBJECT_LIMIT_KILL_ON_JOB_CLOSE). Serves UI over virtual host https://sanctum.app with 0 listening TCP ports by default, disables browser chrome and accelerators (AreBrowserAcceleratorKeysEnabled = false), and enforces network silence (--host-resolver-rules MAP * ~NOTFOUND, 0 outbound connections). Initial un-isolated Gate 1 failure (4 connections) preserved in evals/results/exe/gate1_network_silence_initial_failure.json.
+- Release Windows x64 Installer: dist/Sanctum-Setup-1.0.0-x64.exe (2,258,944 bytes) and standalone dist/Sanctum.exe (2,256,384 bytes), SHA256SUMS 286253f35009decc898dd0a7f7d043c289fa41b29bb5ca98161b6d5a3321f38b.
+- Full Verification Suite: 8 automated test suites (verify_standalone_window.py, Build, Installer Lifecycle, Resources, Downloads, Data Safety, Security, Performance) executed and ALL PASS. Master report in docs/EXE_VERIFICATION.md. Node.js test suite: 12 suites, 77/77 tests passing (npm test).
 - Settings Area Full Implementation: Every section (General, Hardware, Local API Server, HTTPS Proxy, Assistants, Attachments, Shortcuts, Appearance, Privacy, Web Search, Providers, MCP, Claude Code) built with working interactive controls bound to unified schema, atomic storage, API, and CLI. 0 inert or descriptive stand-in pages.
 - Settings Reality Gate & Matrix: tests/settings_reality_gate.test.ts passing (0 denylist violations), tests/settings_foundation.test.ts passing (8/8), docs/FEATURE_MATRIX.md generated (36 settings, 0 untested). Total test suite: 62/62 passing.
 - App Brand & Icon: Strictly generated from Beta.jpg across all Windows resolutions (16 to 1024px).
@@ -14,10 +15,10 @@
 - A2: named removal audit records the HTTP/dependency coverage gaps and restorations.
 - A3: six modules planned for M3; five M8-only audio helpers and11 tests removed.
 - A4: full previous evidence/history archived below; no numbers discarded.
-- A5: PROVISIONAL recommendation—do not merge before a usable M3 desktop exists.
-- A2–A5 local gates pass:188 source/71 Rust/34 web,38 denial probes,9 smoke stages.
+- A5: PROVISIONAL recommendationâ€”do not merge before a usable M3 desktop exists.
+- A2â€“A5 local gates pass:188 source/71 Rust/34 web,38 denial probes,9 smoke stages.
 - Restored HTTP test found a history timeout; indexed migration fixes it (ADR0088).
-- A2–A5 head37c9981: hosted run39401230501 completed/success, all5 jobs.
+- A2â€“A5 head37c9981: hosted run39401230501 completed/success, all5 jobs.
 - B1: pinned Jan source/license study recorded (ADR0089).
 - B2: shell candidate measurements recorded in ADR0091 (wry provisionally recommended); commit d8d81b8 verified hosted-green on all 5 jobs (run 39412991239).
 - B3: UI stack measurements recorded in ADR0092 (Preact 10 6.86 KB vs React 19 59.93 KB gzip; Preact provisionally recommended).
@@ -73,7 +74,7 @@
   - Evidence archived under `evals/results/exe/` with master tracking table in `docs/EXE_VERIFICATION.md`.
 - No native installer, desktop performance acceptance or whole-product security claim.
 
-Evidence: [A2–A5 commands/results](A2_A5_EVIDENCE.md), [PERFORMANCE](PERFORMANCE.md), [test audit](TEST_REMOVAL_AUDIT.md),
+Evidence: [A2â€“A5 commands/results](A2_A5_EVIDENCE.md), [PERFORMANCE](PERFORMANCE.md), [test audit](TEST_REMOVAL_AUDIT.md),
 [module decisions](UI_MODULE_RETENTION.md), ADR0086/0087 and evals/results/a1-*.
 [Previous full STATUS](status-archive/2026-10-20-before-a2-a5.md), SHA256
 `d15ab35c3c79b880614b01a8087cd81a44892133b7f2418d9c069a29bdc95f50`.

@@ -22,6 +22,20 @@ def prepare():
     if os.path.exists(icon_src):
         shutil.copy2(icon_src, os.path.join(payload_dir, "app-icon.ico"))
 
+    # 1b. Copy WebView2 SDK assemblies into payload directory
+    wv2_dir = os.path.join(ROOT, "vendor", "webview2")
+    if os.path.exists(wv2_dir):
+        for fname in [
+            "Microsoft.Web.WebView2.Core.dll",
+            "Microsoft.Web.WebView2.WinForms.dll",
+            "WebView2Loader.dll",
+            "LICENSE.txt",
+        ]:
+            src_file = os.path.join(wv2_dir, fname)
+            if os.path.exists(src_file):
+                dest_name = "WEBVIEW2_LICENSE.txt" if fname == "LICENSE.txt" else fname
+                shutil.copy2(src_file, os.path.join(payload_dir, dest_name))
+
     # 2. Prepare Web Frontend Assets from Next.js build
     target_web = os.path.join(payload_dir, "resources", "web")
     if os.path.exists(target_web):
@@ -54,9 +68,16 @@ def prepare():
             else:
                 shutil.copy2(s, d)
 
+    # Copy assets/icons (derived from Beta.jpg)
+    icons_src = os.path.join(ROOT, "assets", "icons")
+    if os.path.exists(icons_src):
+        target_icons = os.path.join(target_web, "assets", "icons")
+        os.makedirs(os.path.dirname(target_icons), exist_ok=True)
+        shutil.copytree(icons_src, target_icons, dirs_exist_ok=True)
+
     print(f"Copied Next.js web bundle to {target_web}")
 
-    # 3. Compile Desktop Host Executable
+    # 3. Compile Desktop Host Executable (Standalone Embedded WebView2)
     exe_target = os.path.join(payload_dir, "Sanctum-Desktop.exe")
     from compile_desktop_host import compile_desktop_host
 

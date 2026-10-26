@@ -3,6 +3,7 @@
 OS: Windows 11 x64
 Overall Result: PASS
 
+  - STANDALONE EMBEDDED WINDOW (Section 0): PASS
   - BUILD & HYGIENE (Section 1): PASS
   - INSTALLER LIFECYCLE (Section 2): PASS
   - RUNTIME RESOURCES (Section 3): PASS

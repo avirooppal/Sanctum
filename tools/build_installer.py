@@ -34,16 +34,8 @@ def build_installer():
     os.makedirs(dist_dir, exist_ok=True)
     out_installer = os.path.join(dist_dir, f"Sanctum-Setup-{VERSION}-x64.exe")
 
-    makensis = find_makensis()
-    if makensis:
-        print(f"=== Step 2: Compiling with NSIS ({makensis}) ===")
-        nsi_path = os.path.join(ROOT, "deploy", "installer", "sanctum.nsi")
-        cmd = [makensis, nsi_path]
-        subprocess.run(cmd, check=True)
-        print("NSIS build finished successfully.")
-    else:
-        print("=== Step 2: Compiling self-extracting NSIS-compatible installer wrapper ===")
-        build_self_extracting_installer(out_installer)
+    print("=== Step 2: Compiling self-extracting NSIS-compatible installer wrapper ===")
+    build_self_extracting_installer(out_installer)
 
     print("=== Step 3: Packaging Distribution Artifacts ===")
     from package_distribution import package
@@ -249,19 +241,51 @@ Add-Type -TypeDefinition $source -Language CSharp -ReferencedAssemblies "System.
 
 
 def build_direct_launcher(out_path, payload_b64):
+    git_commit = "1d382e3"
+    try:
+        rev = subprocess.run(["git", "rev-parse", "--short", "HEAD"], capture_output=True, text=True)
+        if rev.returncode == 0 and rev.stdout.strip():
+            git_commit = rev.stdout.strip()
+    except Exception:
+        pass
+
     cs_launcher = """using System;
 using System.Diagnostics;
 using System.IO;
 using System.IO.Compression;
+using System.Reflection;
+
+[assembly: AssemblyTitle("Sanctum")]
+[assembly: AssemblyDescription("Sanctum Standalone Desktop Application")]
+[assembly: AssemblyCompany("Sanctum Contributors")]
+[assembly: AssemblyProduct("Sanctum")]
+[assembly: AssemblyVersion("1.0.0.0")]
+[assembly: AssemblyFileVersion("1.0.0.0")]
 
 public class SanctumLauncher {
     public static int Main(string[] args) {
         string localApp = Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData);
         string appDir = Path.Combine(localApp, "Programs", "Sanctum");
         string exe = Path.Combine(appDir, "Sanctum-Desktop.exe");
+        string wvLoader = Path.Combine(appDir, "WebView2Loader.dll");
+        string stampFile = Path.Combine(appDir, "build_stamp.txt");
+        string expectedStamp = "__BUILD_STAMP__";
 
-        if (!File.Exists(exe)) {
+        bool needsUnpack = !File.Exists(exe) || !File.Exists(wvLoader) || !File.Exists(stampFile);
+        if (!needsUnpack) {
             try {
+                string actualStamp = File.ReadAllText(stampFile).Trim();
+                if (actualStamp != expectedStamp) needsUnpack = true;
+            } catch {
+                needsUnpack = true;
+            }
+        }
+
+        if (needsUnpack) {
+            try {
+                foreach (Process oldProc in Process.GetProcessesByName("Sanctum-Desktop")) {
+                    try { oldProc.Kill(); oldProc.WaitForExit(3000); } catch { }
+                }
                 Directory.CreateDirectory(appDir);
                 string tempZip = Path.Combine(Path.GetTempPath(), "sanctum_unpack_" + Guid.NewGuid().ToString("N") + ".zip");
                 byte[] zipData = Convert.FromBase64String("__PAYLOAD_B64__");
@@ -277,6 +301,7 @@ public class SanctumLauncher {
                         }
                     }
                 }
+                File.WriteAllText(stampFile, expectedStamp);
                 try { File.Delete(tempZip); } catch { }
             } catch { }
         }
@@ -285,6 +310,7 @@ public class SanctumLauncher {
 
         ProcessStartInfo psi = new ProcessStartInfo {
             FileName = exe,
+            WorkingDirectory = appDir,
             Arguments = string.Join(" ", args),
             UseShellExecute = false
         };
@@ -298,7 +324,7 @@ public class SanctumLauncher {
         }
     }
 }
-""".replace("__PAYLOAD_B64__", payload_b64)
+""".replace("__PAYLOAD_B64__", payload_b64).replace("__BUILD_STAMP__", git_commit)
 
     temp_cs = os.path.join(ROOT, "deploy", "installer", "temp_launcher.cs")
     with open(temp_cs, "w", encoding="utf-8") as f:

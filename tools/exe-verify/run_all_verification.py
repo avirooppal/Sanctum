@@ -23,6 +23,7 @@ def run_suite(name: str, script_name: str, *args):
 def main():
     print("STARTING SANCTUM WINDOWS .EXE COMPLETE VERIFICATION RUN")
     suites = [
+        ("STANDALONE EMBEDDED WINDOW (Section 0)", "verify_standalone_window.py", "--test=all"),
         ("BUILD & HYGIENE (Section 1)", "verify_build.py", "--step=all"),
         ("INSTALLER LIFECYCLE (Section 2)", "verify_installer.py", "--scenario=all"),
         ("RUNTIME RESOURCES (Section 3)", "verify_resources.py", "--scenario=all", "--duration=10", "--cycles=15"),

@@ -24,8 +24,48 @@ export const SettingsGeneral: React.FC = () => {
   const [deleteModelsChecked, setDeleteModelsChecked] = useState<boolean>(false);
   const [deletePacksChecked, setDeletePacksChecked] = useState<boolean>(false);
 
+  const [dataFolderPath, setDataFolderPath] = useState<string>("C:\\Users\\aviroop\\AppData\\Roaming\\Sanctum\\data");
   const appVersion = "1.0.0+aff9718 (2026-10-25)";
-  const dataFolderPath = "C:\\Users\\aviroop\\AppData\\Roaming\\Sanctum\\data";
+
+  React.useEffect(() => {
+    const wv = (window as unknown as { chrome?: { webview?: { addEventListener?: (type: string, fn: (e: { data: unknown }) => void) => void } } }).chrome?.webview;
+    if (!wv?.addEventListener) return;
+    const handler = (event: { data: unknown }) => {
+      try {
+        const msg = typeof event.data === "string" ? JSON.parse(event.data) : (event.data as Record<string, unknown>);
+        if (msg && msg.type === "folderSelected" && typeof msg.path === "string" && msg.path.length > 0) {
+          setDataFolderPath(msg.path);
+          fetch("/api/settings", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ key: "general.dataFolder", value: msg.path }),
+          }).catch(() => {});
+          toast.success(`Data folder updated to ${msg.path}`);
+        }
+      } catch {
+        // ignore malformed bridge message
+      }
+    };
+    wv.addEventListener("message", handler);
+  }, []);
+
+  const handleSelectDataFolder = () => {
+    const wv = (window as unknown as { chrome?: { webview?: { postMessage?: (msg: string) => void } } }).chrome?.webview;
+    if (wv?.postMessage) {
+      wv.postMessage(JSON.stringify({ type: "selectFolder", currentPath: dataFolderPath }));
+    } else {
+      toast.info("Use the standalone Sanctum.exe window to open the OS folder dialog.");
+    }
+  };
+
+  const handleOpenInExplorer = () => {
+    const wv = (window as unknown as { chrome?: { webview?: { postMessage?: (msg: string) => void } } }).chrome?.webview;
+    if (wv?.postMessage) {
+      wv.postMessage(JSON.stringify({ type: "openExplorer", path: dataFolderPath }));
+    } else {
+      handleCopyPath();
+    }
+  };
 
   const handleCopyPath = () => {
     navigator.clipboard.writeText(dataFolderPath);
@@ -81,11 +121,14 @@ export const SettingsGeneral: React.FC = () => {
             <div>
               <span className="text-xs font-medium text-foreground">Current Version</span>
               <p className="text-[11px] text-muted-foreground font-mono">{appVersion}</p>
+              <p className="text-[11px] text-muted-foreground mt-0.5">
+                Architecture: Standalone desktop app (embedded WebView2 engine, same class as Jan and VS Code)
+              </p>
             </div>
             <Button
               variant="outline"
               size="sm"
-              onClick={() => toast.info("Running native Windows release build.")}
+              onClick={() => toast.info("Running standalone desktop release build (1.0.0).")}
               className="rounded-xl text-xs h-8"
             >
               Check for updates
@@ -146,7 +189,7 @@ export const SettingsGeneral: React.FC = () => {
               <Button
                 variant="outline"
                 size="sm"
-                onClick={() => toast.info("To relocate your data directory, update settings.json")}
+                onClick={handleSelectDataFolder}
                 className="rounded-xl text-xs h-8"
               >
                 Change Location
@@ -160,6 +203,15 @@ export const SettingsGeneral: React.FC = () => {
               <p className="text-[11px] text-muted-foreground">View runtime event logs and system diagnostic traces.</p>
             </div>
             <div className="flex items-center gap-2 shrink-0">
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={handleOpenInExplorer}
+                className="rounded-xl text-xs h-8 flex items-center gap-1.5"
+              >
+                <IconFolder size={14} />
+                <span>Show in File Explorer</span>
+              </Button>
               <Button
                 variant="outline"
                 size="sm"

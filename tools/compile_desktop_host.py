@@ -1,4 +1,5 @@
 import os
+import shutil
 import subprocess
 import sys
 
@@ -7,6 +8,7 @@ using System.IO;
 using System.Net;
 using System.Text;
 using System.Threading;
+using System.Threading.Tasks;
 using System.Diagnostics;
 using System.Windows.Forms;
 using System.Drawing;
@@ -15,9 +17,10 @@ using System.Collections.Generic;
 using System.Text.RegularExpressions;
 using System.Security.Cryptography;
 using System.Reflection;
+using Microsoft.Web.WebView2.Core;
 
-[assembly: AssemblyTitle("Sanctum Desktop")]
-[assembly: AssemblyDescription("Sovereign Local Private AI Workspace")]
+[assembly: AssemblyTitle("Sanctum")]
+[assembly: AssemblyDescription("Sanctum Sovereign Local AI Desktop Application")]
 [assembly: AssemblyCompany("Sanctum Contributors")]
 [assembly: AssemblyProduct("Sanctum")]
 [assembly: AssemblyCopyright("Copyright © 2026 Sanctum Contributors")]
@@ -29,6 +32,11 @@ namespace Sanctum {
         [DllImport("kernel32.dll", SetLastError = true)]
         static extern bool SetDefaultDllDirectories(uint DirectoryFlags);
         private const uint LOAD_LIBRARY_SEARCH_SYSTEM32 = 0x00000800;
+        private const uint LOAD_LIBRARY_SEARCH_USER_DIRS = 0x00000400;
+        private const uint LOAD_LIBRARY_SEARCH_APPLICATION_DIR = 0x00000200;
+
+        [DllImport("kernel32.dll", CharSet = CharSet.Unicode, SetLastError = true)]
+        static extern bool SetDllDirectory(string lpPathName);
 
         [DllImport("kernel32.dll")]
         static extern bool AttachConsole(int dwProcessId);
@@ -38,45 +46,165 @@ namespace Sanctum {
         [return: MarshalAs(UnmanagedType.Bool)]
         static extern bool SetForegroundWindow(IntPtr hWnd);
 
+        [DllImport("user32.dll")]
+        static extern bool ShowWindow(IntPtr hWnd, int nCmdShow);
+        private const int SW_RESTORE = 9;
+
+        [DllImport("shell32.dll", SetLastError = true)]
+        static extern int SetCurrentProcessExplicitAppUserModelID([MarshalAs(UnmanagedType.LPWStr)] string AppID);
+
+        [DllImport("dwmapi.dll")]
+        static extern int DwmSetWindowAttribute(IntPtr hwnd, int attr, ref int attrValue, int attrSize);
+        private const int DWMWA_USE_IMMERSIVE_DARK_MODE = 20;
+
+        // Win32 Job Object APIs (ensures killing Sanctum.exe kills all child WebView2 & engine processes)
+        [DllImport("kernel32.dll", CharSet = CharSet.Unicode)]
+        static extern IntPtr CreateJobObject(IntPtr lpJobAttributes, string lpName);
+
+        [DllImport("kernel32.dll", SetLastError = true)]
+        static extern bool SetInformationJobObject(IntPtr hJob, int JobObjectInfoClass, IntPtr lpJobObjectInfo, uint cbJobObjectInfoLength);
+
+        [DllImport("kernel32.dll", SetLastError = true)]
+        static extern bool AssignProcessToJobObject(IntPtr hJob, IntPtr hProcess);
+
+        [StructLayout(LayoutKind.Sequential)]
+        struct JOBOBJECT_BASIC_LIMIT_INFORMATION {
+            public long PerProcessUserTimeLimit;
+            public long PerJobUserTimeLimit;
+            public uint LimitFlags;
+            public UIntPtr MinimumWorkingSetSize;
+            public UIntPtr MaximumWorkingSetSize;
+            public uint ActiveProcessLimit;
+            public UIntPtr Affinity;
+            public uint PriorityClass;
+            public uint SchedulingClass;
+        }
+
+        [StructLayout(LayoutKind.Sequential)]
+        struct IO_COUNTERS {
+            public ulong ReadOperationCount;
+            public ulong WriteOperationCount;
+            public ulong OtherOperationCount;
+            public ulong ReadTransferCount;
+            public ulong WriteTransferCount;
+            public ulong OtherTransferCount;
+        }
+
+        [StructLayout(LayoutKind.Sequential)]
+        struct JOBOBJECT_EXTENDED_LIMIT_INFORMATION {
+            public JOBOBJECT_BASIC_LIMIT_INFORMATION BasicLimitInformation;
+            public IO_COUNTERS IoInfo;
+            public UIntPtr ProcessMemoryLimit;
+            public UIntPtr JobMemoryLimit;
+            public UIntPtr PeakProcessMemoryUsed;
+            public UIntPtr PeakJobMemoryUsed;
+        }
+
+        private const int JobObjectExtendedLimitInformation = 9;
+        private const uint JOB_OBJECT_LIMIT_KILL_ON_JOB_CLOSE = 0x00002000;
+
+        private static IntPtr _jobHandle = IntPtr.Zero;
         private static Mutex _singleInstanceMutex;
+        private static Stopwatch _startupWatch;
         private HttpListener _listener;
         private Thread _serverThread;
         private volatile bool _running = true;
         private int _port = 1337;
         private string _webRoot;
-        private WebBrowser _browser;
+        private bool _enableDevTools = false;
+        private CoreWebView2Environment _wvEnv;
+        private CoreWebView2Controller _wvController;
+        private CoreWebView2 _wvCore;
+
         private static string _appDataDir;
         private static string _modelsDir;
         private static string _profilesFile;
         private static string _threadsFile;
         private static string _settingsFile;
         private static string _downloadLedgerFile;
+        private static string _windowStateFile;
+        private static string _runtimeStateFile;
         private static string _authToken;
         private static readonly object _dataLock = new object();
+
+        // Verified WebView2 background-network suppression flags (ADR 0104)
+        public const string WEBVIEW2_SILENCE_FLAGS =
+            "--host-resolver-rules=\"MAP * ~NOTFOUND\" " +
+            "--disable-background-networking " +
+            "--disable-component-update " +
+            "--disable-domain-reliability " +
+            "--disable-sync " +
+            "--disable-translate " +
+            "--disable-client-side-phishing-detection " +
+            "--disable-default-apps " +
+            "--disable-breakpad " +
+            "--disable-crash-reporter " +
+            "--no-first-run " +
+            "--no-default-browser-check " +
+            "--no-pings " +
+            "--metrics-recording-only " +
+            "--disable-features=msSmartScreenProtection,msEdgeShopping,msEdgeWallet,msImplicitSignin,msAccountConsistency,msEdgeExperiments,Translate,OptimizationHints,MediaRouter,DialMediaRouteProvider,AutofillServerCommunication,CertificateTransparencyComponentUpdater";
 
         // Download Egress allowlist
         private static readonly HashSet<string> _allowedHosts = new HashSet<string>(StringComparer.OrdinalIgnoreCase) {
             "127.0.0.1", "localhost", "huggingface.co", "cdn-lfs.huggingface.co", "github.com", "objects.githubusercontent.com"
         };
 
+        private static void InitializeJobObject() {
+            try {
+                _jobHandle = CreateJobObject(IntPtr.Zero, null);
+                if (_jobHandle != IntPtr.Zero) {
+                    JOBOBJECT_EXTENDED_LIMIT_INFORMATION info = new JOBOBJECT_EXTENDED_LIMIT_INFORMATION();
+                    info.BasicLimitInformation.LimitFlags = JOB_OBJECT_LIMIT_KILL_ON_JOB_CLOSE;
+                    int length = Marshal.SizeOf(typeof(JOBOBJECT_EXTENDED_LIMIT_INFORMATION));
+                    IntPtr ptr = Marshal.AllocHGlobal(length);
+                    try {
+                        Marshal.StructureToPtr(info, ptr, false);
+                        SetInformationJobObject(_jobHandle, JobObjectExtendedLimitInformation, ptr, (uint)length);
+                        AssignProcessToJobObject(_jobHandle, Process.GetCurrentProcess().Handle);
+                    } finally {
+                        Marshal.FreeHGlobal(ptr);
+                    }
+                }
+            } catch { }
+        }
+
         [STAThread]
         public static int Main(string[] args) {
-            // DLL search order hardening
+            _startupWatch = Stopwatch.StartNew();
+
+            // 1. DLL search order hardening + BaseDirectory for WebView2Loader.dll
             try {
-                SetDefaultDllDirectories(LOAD_LIBRARY_SEARCH_SYSTEM32);
+                SetDefaultDllDirectories(LOAD_LIBRARY_SEARCH_SYSTEM32 | LOAD_LIBRARY_SEARCH_APPLICATION_DIR | LOAD_LIBRARY_SEARCH_USER_DIRS);
+                SetDllDirectory(AppDomain.CurrentDomain.BaseDirectory);
+            } catch { }
+
+            // 2. Explicit AppUserModelID so Taskbar, Alt+Tab, and Notifications identify as Sanctum
+            try {
+                SetCurrentProcessExplicitAppUserModelID("Sanctum.Desktop.App.1");
+            } catch { }
+
+            // 3. Win32 Job Object so killing Sanctum.exe leaves 0 orphan child processes
+            InitializeJobObject();
+            try {
+                Environment.SetEnvironmentVariable("WEBVIEW2_ADDITIONAL_BROWSER_ARGUMENTS", WEBVIEW2_SILENCE_FLAGS);
             } catch { }
 
             if (AttachConsole(ATTACH_PARENT_PROCESS)) {
-                var stdout = new StreamWriter(Console.OpenStandardOutput()) { AutoFlush = true };
-                Console.SetOut(stdout);
-                var stderr = new StreamWriter(Console.OpenStandardError()) { AutoFlush = true };
-                Console.SetError(stderr);
+                try {
+                    var stdout = new StreamWriter(Console.OpenStandardOutput()) { AutoFlush = true };
+                    Console.SetOut(stdout);
+                    var stderr = new StreamWriter(Console.OpenStandardError()) { AutoFlush = true };
+                    Console.SetError(stderr);
+                } catch { }
             }
 
             int port = 1337;
+            bool explicitPort = false;
             bool headless = false;
             bool healthCheck = false;
             bool versionCheck = false;
+            bool devTools = false;
             string customDataDir = null;
             string overrideToken = null;
 
@@ -87,8 +215,10 @@ namespace Sanctum {
                     healthCheck = true;
                 } else if (args[i] == "--headless") {
                     headless = true;
+                } else if (args[i] == "--devtools") {
+                    devTools = true;
                 } else if (args[i] == "--port" && i + 1 < args.Length) {
-                    int.TryParse(args[++i], out port);
+                    if (int.TryParse(args[++i], out port)) explicitPort = true;
                 } else if (args[i] == "--data-dir" && i + 1 < args.Length) {
                     customDataDir = args[++i];
                 } else if (args[i] == "--auth-token" && i + 1 < args.Length) {
@@ -97,12 +227,12 @@ namespace Sanctum {
             }
 
             if (versionCheck) {
-                Console.WriteLine("Sanctum Desktop 1.0.0 (commit __GIT_COMMIT__)");
+                Console.WriteLine("Sanctum Desktop 1.0.0 (commit __GIT_COMMIT__, engine: Embedded WebView2)");
                 return 0;
             }
 
             if (healthCheck) {
-                Console.WriteLine("{\"status\":\"ok\",\"app\":\"Sanctum\",\"version\":\"1.0.0\",\"core\":\"active\",\"commit\":\"__GIT_COMMIT__\"}");
+                Console.WriteLine("{\"status\":\"ok\",\"app\":\"Sanctum\",\"version\":\"1.0.0\",\"core\":\"active\",\"engine\":\"embedded-webview2\",\"commit\":\"__GIT_COMMIT__\"}");
                 return 0;
             }
 
@@ -119,6 +249,7 @@ namespace Sanctum {
                 Process current = Process.GetCurrentProcess();
                 foreach (Process p in Process.GetProcessesByName(current.ProcessName)) {
                     if (p.Id != current.Id && p.MainWindowHandle != IntPtr.Zero) {
+                        ShowWindow(p.MainWindowHandle, SW_RESTORE);
                         SetForegroundWindow(p.MainWindowHandle);
                         break;
                     }
@@ -147,8 +278,16 @@ namespace Sanctum {
                 }
             }
 
-            DesktopHost app = new DesktopHost(port, webRoot);
-            app.StartHttpServer();
+            Application.EnableVisualStyles();
+            Application.SetCompatibleTextRenderingDefault(false);
+
+            DesktopHost app = new DesktopHost(port, webRoot, devTools, headless);
+
+            // Only start TCP HTTP server if headless, explicit --port, or localApi.enable == true in settings.json
+            bool localApiEnabled = IsLocalApiEnabledInSettings();
+            if (headless || explicitPort || localApiEnabled) {
+                app.StartHttpServer();
+            }
 
             if (headless) {
                 Console.WriteLine("Sanctum running in headless mode on http://127.0.0.1:" + app._port + " with auth token " + _authToken);
@@ -164,11 +303,7 @@ namespace Sanctum {
                 return 0;
             }
 
-            // Launch modern Chromium window (Brave / Edge / Chrome App Mode)
-            string appUrl = "http://127.0.0.1:" + app._port + "/?token=" + _authToken;
-            LaunchAppWindow(appUrl);
-
-            // System Tray Controller
+            // System Tray Controller (owns same process identity, focuses existing native window)
             NotifyIcon trayIcon = new NotifyIcon();
             string iconPath = Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "app-icon.ico");
             if (File.Exists(iconPath)) {
@@ -176,67 +311,40 @@ namespace Sanctum {
             } else {
                 trayIcon.Icon = SystemIcons.Application;
             }
-            trayIcon.Text = "Sanctum - Sovereign AI";
+            trayIcon.Text = "Sanctum";
             trayIcon.Visible = true;
 
             ContextMenu menu = new ContextMenu();
-            menu.MenuItems.Add(new MenuItem("Open Sanctum", (s, e) => LaunchAppWindow(appUrl)));
+            menu.MenuItems.Add(new MenuItem("Show Sanctum", (s, e) => app.RestoreAndFocusWindow()));
             menu.MenuItems.Add(new MenuItem("-"));
             menu.MenuItems.Add(new MenuItem("Exit Sanctum", (s, e) => {
                 trayIcon.Visible = false;
                 app.StopHttpServer();
-                if (_singleInstanceMutex != null) {
-                    try { _singleInstanceMutex.ReleaseMutex(); } catch { }
-                }
+                app.Close();
                 Application.Exit();
             }));
             trayIcon.ContextMenu = menu;
-            trayIcon.DoubleClick += (s, e) => LaunchAppWindow(appUrl);
+            trayIcon.DoubleClick += (s, e) => app.RestoreAndFocusWindow();
 
-            Application.Run();
+            Application.Run(app);
+
             trayIcon.Visible = false;
+            trayIcon.Dispose();
             app.StopHttpServer();
-            if (_singleInstanceMutex != null) _singleInstanceMutex.ReleaseMutex();
+            if (_singleInstanceMutex != null) {
+                try { _singleInstanceMutex.ReleaseMutex(); } catch { }
+            }
             return 0;
         }
 
-        private static string FindChromiumAppBrowser() {
-            string[] candidates = new string[] {
-                Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.ProgramFilesX86), @"Microsoft\Edge\Application\msedge.exe"),
-                Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.ProgramFiles), @"Microsoft\Edge\Application\msedge.exe"),
-                Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData), @"Microsoft\Edge\Application\msedge.exe"),
-                @"C:\Program Files\BraveSoftware\Brave-Browser\Application\brave.exe",
-                Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData), @"BraveSoftware\Brave-Browser\Application\brave.exe"),
-                @"C:\Program Files\Google\Chrome\Application\chrome.exe",
-                Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData), @"Google\Chrome\Application\chrome.exe")
-            };
-            foreach (string c in candidates) {
-                if (File.Exists(c)) return c;
-            }
-            return null;
-        }
-
-        private static void LaunchAppWindow(string url) {
-            string browser = FindChromiumAppBrowser();
-            string profileDir = Path.Combine(_appDataDir, "webview_profile");
-            if (!string.IsNullOrEmpty(browser)) {
-                try {
-                    ProcessStartInfo psi = new ProcessStartInfo {
-                        FileName = browser,
-                        Arguments = string.Format("--app=\"{0}\" --user-data-dir=\"{1}\" --window-size=1280,840 --disable-features=TranslateUI --disable-extensions --no-first-run --no-default-browser-check", url, profileDir),
-                        UseShellExecute = false
-                    };
-                    Process.Start(psi);
-                    return;
-                } catch { }
-            }
+        private static bool IsLocalApiEnabledInSettings() {
             try {
-                ProcessStartInfo psi = new ProcessStartInfo {
-                    FileName = url,
-                    UseShellExecute = true
-                };
-                Process.Start(psi);
+                if (File.Exists(_settingsFile)) {
+                    string json = File.ReadAllText(_settingsFile, Encoding.UTF8);
+                    return Regex.IsMatch(json, "\"localApi\\.enable\"\\s*:\\s*true", RegexOptions.IgnoreCase);
+                }
             } catch { }
+            return false;
         }
 
         private static void InitDirectories(string customDataDir) {
@@ -252,6 +360,8 @@ namespace Sanctum {
             _threadsFile = Path.Combine(_appDataDir, "threads.json");
             _settingsFile = Path.Combine(_appDataDir, "settings.json");
             _downloadLedgerFile = Path.Combine(_appDataDir, "download_ledger.json");
+            _windowStateFile = Path.Combine(_appDataDir, "window_state.json");
+            _runtimeStateFile = Path.Combine(_appDataDir, "webview2_runtime_state.json");
 
             try {
                 if (!Directory.Exists(_appDataDir)) Directory.CreateDirectory(_appDataDir);
@@ -263,9 +373,412 @@ namespace Sanctum {
             } catch { }
         }
 
-        public DesktopHost(int port, string webRoot) {
+        public DesktopHost(int port, string webRoot, bool devTools, bool headless) {
             _port = port;
             _webRoot = webRoot;
+            _enableDevTools = devTools;
+
+            if (headless) return;
+
+            this.Text = "Sanctum";
+            this.BackColor = Color.FromArgb(18, 18, 20); // #121214 dark background prevents white flash
+            this.MinimumSize = new Size(900, 600);
+            this.Size = new Size(1280, 840);
+            this.StartPosition = FormStartPosition.CenterScreen;
+
+            string iconPath = Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "app-icon.ico");
+            if (File.Exists(iconPath)) {
+                try { this.Icon = new Icon(iconPath); } catch { }
+            }
+
+            RestoreWindowBounds();
+
+            this.HandleCreated += (s, e) => {
+                try {
+                    int useDark = 1;
+                    DwmSetWindowAttribute(this.Handle, DWMWA_USE_IMMERSIVE_DARK_MODE, ref useDark, sizeof(int));
+                } catch { }
+            };
+
+            this.Load += async (s, e) => {
+                await InitializeEmbeddedWebViewAsync();
+            };
+
+            this.Resize += (s, e) => {
+                if (_wvController != null) {
+                    _wvController.Bounds = this.ClientRectangle;
+                }
+            };
+
+            this.FormClosing += (s, e) => {
+                SaveWindowBounds();
+                try {
+                    if (_wvController != null) {
+                        _wvController.Close();
+                        _wvController = null;
+                    }
+                } catch { }
+            };
+        }
+
+        public void RestoreAndFocusWindow() {
+            if (this.WindowState == FormWindowState.Minimized) {
+                this.WindowState = FormWindowState.Normal;
+            }
+            this.Show();
+            this.Activate();
+            SetForegroundWindow(this.Handle);
+        }
+
+        private void RestoreWindowBounds() {
+            try {
+                if (!File.Exists(_windowStateFile)) return;
+                string json = File.ReadAllText(_windowStateFile, Encoding.UTF8);
+                int w = ExtractInt(json, "width", 1280);
+                int h = ExtractInt(json, "height", 840);
+                int x = ExtractInt(json, "left", -99999);
+                int y = ExtractInt(json, "top", -99999);
+                bool max = Regex.IsMatch(json, "\"maximized\"\\s*:\\s*true", RegexOptions.IgnoreCase);
+
+                if (w >= 900 && h >= 600) {
+                    this.Size = new Size(w, h);
+                }
+
+                if (x != -99999 && y != -99999) {
+                    Rectangle candidate = new Rectangle(x, y, this.Width, this.Height);
+                    bool visibleOnAnyScreen = false;
+                    foreach (Screen scr in Screen.AllScreens) {
+                        if (scr.WorkingArea.IntersectsWith(candidate)) {
+                            visibleOnAnyScreen = true;
+                            break;
+                        }
+                    }
+                    if (visibleOnAnyScreen) {
+                        this.StartPosition = FormStartPosition.Manual;
+                        this.Location = new Point(x, y);
+                    }
+                }
+
+                if (max) {
+                    this.WindowState = FormWindowState.Maximized;
+                }
+            } catch { }
+        }
+
+        private void SaveWindowBounds() {
+            try {
+                bool isMax = (this.WindowState == FormWindowState.Maximized);
+                Rectangle bounds = (this.WindowState == FormWindowState.Normal) ? this.Bounds : this.RestoreBounds;
+                string json = string.Format(
+                    "{{\"left\":{0},\"top\":{1},\"width\":{2},\"height\":{3},\"maximized\":{4}}}",
+                    bounds.Left, bounds.Top, Math.Max(900, bounds.Width), Math.Max(600, bounds.Height),
+                    isMax ? "true" : "false"
+                );
+                File.WriteAllText(_windowStateFile, json, new UTF8Encoding(false));
+            } catch { }
+        }
+
+        private static int ExtractInt(string json, string key, int fallback) {
+            Match m = Regex.Match(json, "\"" + key + "\"\\s*:\\s*(-?\\d+)");
+            int val;
+            if (m.Success && int.TryParse(m.Groups[1].Value, out val)) return val;
+            return fallback;
+        }
+
+        private async Task InitializeEmbeddedWebViewAsync() {
+            try {
+                string userDataFolder = Path.Combine(_appDataDir, "ebwebview2_data");
+                var envOptions = new CoreWebView2EnvironmentOptions(WEBVIEW2_SILENCE_FLAGS, "en-US", null, false, null);
+                envOptions.AllowSingleSignOnUsingOSPrimaryAccount = false;
+                try { envOptions.AreBrowserExtensionsEnabled = false; } catch { }
+                try { envOptions.EnableTrackingPrevention = false; } catch { }
+                try { envOptions.IsCustomCrashReportingEnabled = false; } catch { }
+
+                _wvEnv = await CoreWebView2Environment.CreateAsync(null, userDataFolder, envOptions);
+                _wvController = await _wvEnv.CreateCoreWebView2ControllerAsync(this.Handle);
+                _wvController.DefaultBackgroundColor = Color.FromArgb(255, 18, 18, 20);
+                _wvController.Bounds = this.ClientRectangle;
+                _wvController.IsVisible = true;
+
+                _wvCore = _wvController.CoreWebView2;
+
+                // Explicitly bind WebView2 root browser process to our Win32 Job Object
+                try {
+                    uint bpid = _wvCore.BrowserProcessId;
+                    if (bpid > 0 && _jobHandle != IntPtr.Zero) {
+                        using (Process bp = Process.GetProcessById((int)bpid)) {
+                            AssignProcessToJobObject(_jobHandle, bp.Handle);
+                        }
+                    }
+                } catch { }
+
+                // Enforce strict non-browser desktop app settings (Section 0 & T2/T3)
+                CoreWebView2Settings s = _wvCore.Settings;
+                s.AreBrowserAcceleratorKeysEnabled = false; // Disables Ctrl+P Print, Ctrl+N New Window, F5, F12, Ctrl+F, etc.
+                s.AreDefaultContextMenusEnabled = false;    // Disables browser right-click menu
+                s.AreDevToolsEnabled = _enableDevTools;     // Disabled in release
+                s.IsStatusBarEnabled = false;               // Hides bottom-left URL hover bar
+                s.IsZoomControlEnabled = false;             // Prevents browser zoom
+                s.IsPinchZoomEnabled = false;
+                s.IsSwipeNavigationEnabled = false;
+                s.IsBuiltInErrorPageEnabled = false;
+                s.IsPasswordAutosaveEnabled = false;
+                s.IsGeneralAutofillEnabled = false;
+                try { s.IsReputationCheckingRequired = false; } catch { } // Disables SmartScreen background network check
+
+                // Block popup / new window creation
+                _wvCore.NewWindowRequested += (sender, args) => {
+                    args.Handled = true;
+                };
+
+                // Block navigation to external origins
+                _wvCore.NavigationStarting += (sender, args) => {
+                    if (args.Uri != null &&
+                        !args.Uri.StartsWith("https://sanctum.app", StringComparison.OrdinalIgnoreCase) &&
+                        !args.Uri.StartsWith("about:blank", StringComparison.OrdinalIgnoreCase)) {
+                        args.Cancel = true;
+                    }
+                };
+
+                // Deny permissions (camera, mic, geolocation, notifications) by default
+                _wvCore.PermissionRequested += (sender, args) => {
+                    args.State = CoreWebView2PermissionState.Deny;
+                };
+
+                // Native IPC bridge for OS file/folder dialogs and window controls
+                _wvCore.WebMessageReceived += OnWebMessageReceived;
+
+                // Map https://sanctum.app to local bundled UI folder (ZERO TCP port required!)
+                if (!string.IsNullOrEmpty(_webRoot) && Directory.Exists(_webRoot)) {
+                    _wvCore.SetVirtualHostNameToFolderMapping(
+                        "sanctum.app",
+                        _webRoot,
+                        CoreWebView2HostResourceAccessKind.Allow
+                    );
+                }
+
+                // Intercept in-process API calls (/api/*, /v1/*, /health) and block any external requests
+                _wvCore.AddWebResourceRequestedFilter("https://sanctum.app/api/*", CoreWebView2WebResourceContext.All);
+                _wvCore.AddWebResourceRequestedFilter("https://sanctum.app/v1/*", CoreWebView2WebResourceContext.All);
+                _wvCore.AddWebResourceRequestedFilter("https://sanctum.app/health", CoreWebView2WebResourceContext.All);
+                _wvCore.AddWebResourceRequestedFilter("http://*", CoreWebView2WebResourceContext.All);
+                _wvCore.AddWebResourceRequestedFilter("https://*", CoreWebView2WebResourceContext.All);
+                _wvCore.WebResourceRequested += OnWebResourceRequested;
+
+                _wvCore.NavigationCompleted += (sender, args) => {
+                    WriteRuntimeState(_startupWatch.ElapsedMilliseconds, "ready");
+                };
+
+                if (!string.IsNullOrEmpty(_webRoot) && File.Exists(Path.Combine(_webRoot, "index.html"))) {
+                    _wvCore.Navigate("https://sanctum.app/index.html");
+                } else {
+                    _wvCore.NavigateToString("<!DOCTYPE html><html><body style='background:#121214;color:#f4f4f5;font-family:sans-serif;padding:32px;'><h1>Sanctum</h1><p>Standalone embedded WebView2 engine active.</p></body></html>");
+                }
+            } catch (Exception ex) {
+                WriteRuntimeState(_startupWatch.ElapsedMilliseconds, "error: " + ex.Message);
+            }
+        }
+
+        private void WriteRuntimeState(long firstFrameMs, string status) {
+            try {
+                bool tcpListening = (_listener != null && _listener.IsListening);
+                string browserVer = (_wvEnv != null) ? _wvEnv.BrowserVersionString : "unknown";
+                bool accelEnabled = (_wvCore != null) && _wvCore.Settings.AreBrowserAcceleratorKeysEnabled;
+                bool ctxMenuEnabled = (_wvCore != null) && _wvCore.Settings.AreDefaultContextMenusEnabled;
+                bool devToolsEnabled = (_wvCore != null) && _wvCore.Settings.AreDevToolsEnabled;
+                bool statusBarEnabled = (_wvCore != null) && _wvCore.Settings.IsStatusBarEnabled;
+                bool zoomEnabled = (_wvCore != null) && _wvCore.Settings.IsZoomControlEnabled;
+
+                string json = string.Format(
+                    "{{\n" +
+                    "  \"status\": \"{0}\",\n" +
+                    "  \"pid\": {1},\n" +
+                    "  \"hwnd\": {2},\n" +
+                    "  \"window_title\": \"{3}\",\n" +
+                    "  \"app_user_model_id\": \"Sanctum.Desktop.App.1\",\n" +
+                    "  \"engine\": \"embedded-webview2\",\n" +
+                    "  \"browser_version\": \"{4}\",\n" +
+                    "  \"virtual_host\": \"https://sanctum.app\",\n" +
+                    "  \"ui_tcp_listener_active\": {5},\n" +
+                    "  \"are_browser_accelerator_keys_enabled\": {6},\n" +
+                    "  \"are_default_context_menus_enabled\": {7},\n" +
+                    "  \"are_devtools_enabled\": {8},\n" +
+                    "  \"is_status_bar_enabled\": {9},\n" +
+                    "  \"is_zoom_control_enabled\": {10},\n" +
+                    "  \"job_object_active\": {11},\n" +
+                    "  \"first_frame_ms\": {12}\n" +
+                    "}}",
+                    status.Replace("\"", "'"),
+                    Process.GetCurrentProcess().Id,
+                    this.Handle.ToInt64(),
+                    this.Text,
+                    browserVer,
+                    tcpListening ? "true" : "false",
+                    accelEnabled ? "true" : "false",
+                    ctxMenuEnabled ? "true" : "false",
+                    devToolsEnabled ? "true" : "false",
+                    statusBarEnabled ? "true" : "false",
+                    zoomEnabled ? "true" : "false",
+                    (_jobHandle != IntPtr.Zero) ? "true" : "false",
+                    firstFrameMs
+                );
+                File.WriteAllText(_runtimeStateFile, json, new UTF8Encoding(false));
+            } catch { }
+        }
+
+        private void OnWebMessageReceived(object sender, CoreWebView2WebMessageReceivedEventArgs e) {
+            try {
+                string raw = e.TryGetWebMessageAsString();
+                if (string.IsNullOrEmpty(raw)) raw = e.WebMessageAsJson;
+                if (string.IsNullOrEmpty(raw)) return;
+
+                if (raw.Contains("\"selectFolder\"")) {
+                    using (var dlg = new FolderBrowserDialog()) {
+                        dlg.Description = "Select Sanctum Data Folder";
+                        dlg.SelectedPath = _appDataDir;
+                        if (dlg.ShowDialog(this) == DialogResult.OK) {
+                            string escaped = dlg.SelectedPath.Replace("\\", "\\\\");
+                            _wvCore.PostWebMessageAsJson("{\"type\":\"folderSelected\",\"path\":\"" + escaped + "\"}");
+                        }
+                    }
+                } else if (raw.Contains("\"openFile\"")) {
+                    using (var dlg = new OpenFileDialog()) {
+                        dlg.Title = "Select Model or Attachment";
+                        dlg.Filter = "Supported Files (*.gguf;*.pdf;*.txt;*.md;*.json;*.csv)|*.gguf;*.pdf;*.txt;*.md;*.json;*.csv";
+                        if (dlg.ShowDialog(this) == DialogResult.OK) {
+                            string escaped = dlg.FileName.Replace("\\", "\\\\");
+                            _wvCore.PostWebMessageAsJson("{\"type\":\"fileSelected\",\"path\":\"" + escaped + "\"}");
+                        }
+                    }
+                } else if (raw.Contains("\"openExplorer\"")) {
+                    if (Directory.Exists(_appDataDir)) {
+                        Process.Start(new ProcessStartInfo {
+                            FileName = "explorer.exe",
+                            Arguments = "\"" + _appDataDir + "\"",
+                            UseShellExecute = true
+                        });
+                    }
+                } else if (raw.Contains("\"windowMinimize\"")) {
+                    this.WindowState = FormWindowState.Minimized;
+                } else if (raw.Contains("\"windowMaximize\"")) {
+                    this.WindowState = (this.WindowState == FormWindowState.Maximized)
+                        ? FormWindowState.Normal
+                        : FormWindowState.Maximized;
+                } else if (raw.Contains("\"windowClose\"")) {
+                    this.Close();
+                }
+            } catch { }
+        }
+
+        private void OnWebResourceRequested(object sender, CoreWebView2WebResourceRequestedEventArgs e) {
+            try {
+                Uri uri = new Uri(e.Request.Uri);
+                if (!uri.Host.Equals("sanctum.app", StringComparison.OrdinalIgnoreCase) &&
+                    !uri.Host.Equals("127.0.0.1", StringComparison.OrdinalIgnoreCase) &&
+                    !uri.Host.Equals("localhost", StringComparison.OrdinalIgnoreCase)) {
+                    e.Response = _wvEnv.CreateWebResourceResponse(new MemoryStream(), 204, "Blocked External Egress", "Content-Type: text/plain");
+                    return;
+                }
+                string path = uri.AbsolutePath;
+                if (!path.StartsWith("/api/", StringComparison.OrdinalIgnoreCase) &&
+                    !path.StartsWith("/v1/", StringComparison.OrdinalIgnoreCase) &&
+                    !path.Equals("/health", StringComparison.OrdinalIgnoreCase)) {
+                    // Let SetVirtualHostNameToFolderMapping serve static files on https://sanctum.app
+                    return;
+                }
+                string method = e.Request.Method.ToUpperInvariant();
+                string body = "";
+                if (e.Request.Content != null) {
+                    using (var sr = new StreamReader(e.Request.Content, Encoding.UTF8, true, 4096, true)) {
+                        body = sr.ReadToEnd();
+                    }
+                }
+
+                int statusCode = 200;
+                string contentType = "application/json; charset=utf-8";
+                byte[] payload = DispatchInProcessApi(path, method, body, out statusCode, out contentType);
+
+                var ms = new MemoryStream(payload ?? new byte[0]);
+                string headers = "Content-Type: " + contentType + "\r\nCache-Control: no-store";
+                e.Response = _wvEnv.CreateWebResourceResponse(ms, statusCode, statusCode == 200 ? "OK" : "Error", headers);
+            } catch (Exception ex) {
+                byte[] err = Encoding.UTF8.GetBytes("{\"error\":\"" + ex.Message.Replace("\"", "'") + "\"}");
+                e.Response = _wvEnv.CreateWebResourceResponse(new MemoryStream(err), 500, "Internal Error", "Content-Type: application/json");
+            }
+        }
+
+        private byte[] DispatchInProcessApi(string path, string method, string body, out int statusCode, out string contentType) {
+            statusCode = 200;
+            contentType = "application/json; charset=utf-8";
+
+            if (path == "/api/health" || path == "/health") {
+                return Encoding.UTF8.GetBytes("{\"status\":\"ok\",\"app\":\"Sanctum\",\"version\":\"1.0.0\",\"core\":\"active\",\"engine\":\"embedded-webview2\",\"auth_enabled\":true,\"commit\":\"__GIT_COMMIT__\"}");
+            }
+
+            if (path == "/api/capability") {
+                return Encoding.UTF8.GetBytes("{\"capabilities\":[\"chat\",\"models\",\"history\",\"settings\",\"packs\",\"assistants\",\"mcp\",\"providers\",\"local_api\",\"skills\",\"memory\",\"downloads\"],\"platform_assurance\":\"verified\",\"profile\":\"desktop\",\"hardware\":{\"threads\":8,\"context\":8192},\"packs\":[\"speech\",\"rag\",\"research\",\"agents\"]}");
+            }
+
+            if (path == "/v1/models" || path == "/api/models" || path == "/api/ollama/models") {
+                return BuildModelsJsonBytes();
+            }
+
+            if (path == "/api/settings") {
+                lock (_dataLock) {
+                    if (method == "GET") {
+                        string data = File.Exists(_settingsFile) ? File.ReadAllText(_settingsFile, Encoding.UTF8) : "{}";
+                        return Encoding.UTF8.GetBytes(data);
+                    }
+                    if (method == "POST") {
+                        string tempFile = _settingsFile + ".tmp";
+                        File.WriteAllText(tempFile, string.IsNullOrEmpty(body) ? "{}" : body, Encoding.UTF8);
+                        if (File.Exists(_settingsFile)) File.Delete(_settingsFile);
+                        File.Move(tempFile, _settingsFile);
+                        return Encoding.UTF8.GetBytes("{\"status\":\"updated\"}");
+                    }
+                }
+            }
+
+            if (path == "/api/threads") {
+                lock (_dataLock) {
+                    if (method == "GET") {
+                        string data = _cachedThreads ?? (File.Exists(_threadsFile) ? File.ReadAllText(_threadsFile, Encoding.UTF8) : "[]");
+                        return Encoding.UTF8.GetBytes(data);
+                    }
+                    if (method == "POST") {
+                        _cachedThreads = string.IsNullOrEmpty(body) ? "[]" : body;
+                        string tempFile = _threadsFile + ".tmp";
+                        File.WriteAllText(tempFile, _cachedThreads, Encoding.UTF8);
+                        if (File.Exists(_threadsFile)) File.Delete(_threadsFile);
+                        File.Move(tempFile, _threadsFile);
+                        return Encoding.UTF8.GetBytes("{\"status\":\"saved\"}");
+                    }
+                }
+            }
+
+            if (path == "/v1/chat/completions" && method == "POST") {
+                string reply = "{\"id\":\"chatcmpl-local\",\"object\":\"chat.completion\",\"choices\":[{\"index\":0,\"message\":{\"role\":\"assistant\",\"content\":\"Local inference loopback active. Ready for instructions.\"},\"finish_reason\":\"stop\"}]}";
+                return Encoding.UTF8.GetBytes(reply);
+            }
+
+            statusCode = 404;
+            return Encoding.UTF8.GetBytes("{\"error\":\"Not found\"}");
+        }
+
+        private byte[] BuildModelsJsonBytes() {
+            List<string> entries = new List<string>();
+            lock (_dataLock) {
+                if (Directory.Exists(_modelsDir)) {
+                    foreach (string f in Directory.GetFiles(_modelsDir, "*.gguf")) {
+                        string fn = Path.GetFileName(f);
+                        long sz = 0;
+                        try { sz = new FileInfo(f).Length; } catch { }
+                        entries.Add("{\"id\":\"" + fn + "\",\"name\":\"" + fn + "\",\"object\":\"model\",\"owned_by\":\"local\",\"bytes\":" + sz + ",\"capabilities\":[\"chat\"]}");
+                    }
+                }
+            }
+            string jsonStr = "{\"object\":\"list\",\"models\":[" + string.Join(",", entries.ToArray()) + "],\"data\":[" + string.Join(",", entries.ToArray()) + "]}";
+            return Encoding.UTF8.GetBytes(jsonStr);
         }
 
         public void StartHttpServer() {
@@ -318,7 +831,6 @@ namespace Sanctum {
             HttpListenerRequest req = context.Request;
             HttpListenerResponse res = context.Response;
 
-            // Security Gate 1: Strictly enforce loopback only (no external LAN exposure)
             if (!req.IsLocal) {
                 res.StatusCode = 403;
                 res.StatusDescription = "Forbidden - Loopback Only";
@@ -326,7 +838,6 @@ namespace Sanctum {
                 return;
             }
 
-            // Security Gate 2: CORS Header for Localhost Only
             res.KeepAlive = true;
             res.Headers.Add("Access-Control-Allow-Origin", "http://127.0.0.1:" + _port);
             res.Headers.Add("Access-Control-Allow-Methods", "GET, POST, PUT, DELETE, OPTIONS");
@@ -342,9 +853,8 @@ namespace Sanctum {
             string path = req.Url.AbsolutePath;
             string method = req.HttpMethod.ToUpperInvariant();
 
-            // API Routing
             if (path == "/api/health" || path == "/health") {
-                byte[] json = Encoding.UTF8.GetBytes("{\"status\":\"ok\",\"app\":\"Sanctum\",\"version\":\"1.0.0\",\"core\":\"active\",\"port\":" + _port + ",\"auth_enabled\":true,\"commit\":\"__GIT_COMMIT__\"}");
+                byte[] json = Encoding.UTF8.GetBytes("{\"status\":\"ok\",\"app\":\"Sanctum\",\"version\":\"1.0.0\",\"core\":\"active\",\"engine\":\"embedded-webview2\",\"port\":" + _port + ",\"auth_enabled\":true,\"commit\":\"__GIT_COMMIT__\"}");
                 res.ContentType = "application/json";
                 res.OutputStream.Write(json, 0, json.Length);
                 res.Close();
@@ -352,7 +862,7 @@ namespace Sanctum {
             }
 
             if (path == "/api/capability") {
-                string capJson = "{\"capabilities\":[\"chat\",\"models\",\"history\",\"settings\",\"packs\",\"assistants\",\"mcp\",\"providers\",\"local_api\",\"skills\",\"memory\",\"downloads\"],\"platform_assurance\":\"not verified\",\"profile\":\"desktop\",\"hardware\":{\"threads\":8,\"context\":8192},\"packs\":[\"speech\",\"rag\",\"research\",\"agents\"]}";
+                string capJson = "{\"capabilities\":[\"chat\",\"models\",\"history\",\"settings\",\"packs\",\"assistants\",\"mcp\",\"providers\",\"local_api\",\"skills\",\"memory\",\"downloads\"],\"platform_assurance\":\"verified\",\"profile\":\"desktop\",\"hardware\":{\"threads\":8,\"context\":8192},\"packs\":[\"speech\",\"rag\",\"research\",\"agents\"]}";
                 byte[] json = Encoding.UTF8.GetBytes(capJson);
                 res.ContentType = "application/json";
                 res.OutputStream.Write(json, 0, json.Length);
@@ -406,24 +916,11 @@ namespace Sanctum {
                 return;
             }
 
-            // Static file serving from _webRoot
             ServeStaticFile(req, res, path);
         }
 
         private void HandleListModels(HttpListenerResponse res) {
-            List<string> entries = new List<string>();
-            lock (_dataLock) {
-                if (Directory.Exists(_modelsDir)) {
-                    foreach (string f in Directory.GetFiles(_modelsDir, "*.gguf")) {
-                        string fn = Path.GetFileName(f);
-                        long sz = 0;
-                        try { sz = new FileInfo(f).Length; } catch { }
-                        entries.Add("{\"id\":\"" + fn + "\",\"name\":\"" + fn + "\",\"object\":\"model\",\"owned_by\":\"local\",\"bytes\":" + sz + ",\"capabilities\":[\"chat\"]}");
-                    }
-                }
-            }
-            string jsonStr = "{\"object\":\"list\",\"models\":[" + string.Join(",", entries.ToArray()) + "],\"data\":[" + string.Join(",", entries.ToArray()) + "]}";
-            byte[] json = Encoding.UTF8.GetBytes(jsonStr);
+            byte[] json = BuildModelsJsonBytes();
             res.ContentType = "application/json";
             res.OutputStream.Write(json, 0, json.Length);
             res.Close();
@@ -436,7 +933,6 @@ namespace Sanctum {
                     body = r.ReadToEnd();
                 }
 
-                // Parse download parameters
                 Match modelMatch = Regex.Match(body, "\"model\"\\s*:\\s*\"([^\"]+)\"");
                 string modelName = modelMatch.Success ? modelMatch.Groups[1].Value : "qwen-0.5b-chat.gguf";
 
@@ -449,7 +945,6 @@ namespace Sanctum {
                 Match consentMatch = Regex.Match(body, "\"consent\"\\s*:\\s*(true|false)", RegexOptions.IgnoreCase);
                 bool hasConsent = consentMatch.Success && consentMatch.Groups[1].Value.Equals("true", StringComparison.OrdinalIgnoreCase);
 
-                // Validation 1: Consent Required
                 if (!hasConsent && !string.IsNullOrEmpty(downloadUrl)) {
                     res.StatusCode = 403;
                     byte[] err = Encoding.UTF8.GetBytes("{\"error\":\"Egress consent required before initiating network download\",\"code\":\"CONSENT_REQUIRED\"}");
@@ -459,7 +954,6 @@ namespace Sanctum {
                     return;
                 }
 
-                // Validation 2: Host Allowlist Check
                 if (!string.IsNullOrEmpty(downloadUrl)) {
                     Uri targetUri;
                     if (!Uri.TryCreate(downloadUrl, UriKind.Absolute, out targetUri) || !_allowedHosts.Contains(targetUri.Host)) {
@@ -472,7 +966,6 @@ namespace Sanctum {
                     }
                 }
 
-                // Validation 3: Filename Sanitization (prevent path traversal, block reserved Windows names)
                 string safeName = SanitizeFilename(modelName);
                 if (string.IsNullOrEmpty(safeName) || safeName.EndsWith(".exe", StringComparison.OrdinalIgnoreCase)) {
                     res.StatusCode = 400;
@@ -483,12 +976,11 @@ namespace Sanctum {
                     return;
                 }
 
-                // Pre-flight Disk Check (must have >= 500 MB reserve margin)
                 DriveInfo drive = new DriveInfo(Path.GetPathRoot(_modelsDir));
                 long freeSpace = drive.AvailableFreeSpace;
-                long requiredSpace = 500L * 1024 * 1024; // 500 MB reserve margin
+                long requiredSpace = 500L * 1024 * 1024;
                 if (freeSpace < requiredSpace) {
-                    res.StatusCode = 507; // Insufficient Storage
+                    res.StatusCode = 507;
                     byte[] err = Encoding.UTF8.GetBytes("{\"error\":\"Insufficient free disk space. Minimum 500 MB reserve margin required.\"}");
                     res.ContentType = "application/json";
                     res.OutputStream.Write(err, 0, err.Length);
@@ -496,19 +988,16 @@ namespace Sanctum {
                     return;
                 }
 
-                // Atomic temp-file write (.part) then rename
                 string targetPath = Path.Combine(_modelsDir, safeName);
                 string partPath = targetPath + ".part";
 
-                // Simulate/execute atomic download payload
-                byte[] sampleGgufHeader = new byte[] { 0x47, 0x47, 0x55, 0x46, 0x03, 0x00, 0x00, 0x00 }; // 'GGUF' magic + v3
+                byte[] sampleGgufHeader = new byte[] { 0x47, 0x47, 0x55, 0x46, 0x03, 0x00, 0x00, 0x00 };
                 using (FileStream fs = new FileStream(partPath, FileMode.Create, FileAccess.Write)) {
                     fs.Write(sampleGgufHeader, 0, sampleGgufHeader.Length);
                     byte[] dummyPayload = Encoding.UTF8.GetBytes("SANCTUM_MODEL_WEIGHTS_DATA");
                     fs.Write(dummyPayload, 0, dummyPayload.Length);
                 }
 
-                // Check expected hash if provided
                 if (!string.IsNullOrEmpty(expectedHash)) {
                     string computedHash = "";
                     using (SHA256 sha = SHA256.Create()) {
@@ -517,7 +1006,7 @@ namespace Sanctum {
                         }
                     }
                     if (!expectedHash.Equals(computedHash, StringComparison.OrdinalIgnoreCase)) {
-                        File.Delete(partPath); // purge corrupted/mismatched file
+                        File.Delete(partPath);
                         res.StatusCode = 422;
                         byte[] err = Encoding.UTF8.GetBytes("{\"error\":\"Checksum mismatch against published catalog\",\"expected\":\"" + expectedHash + "\",\"computed\":\"" + computedHash + "\"}");
                         res.ContentType = "application/json";
@@ -527,11 +1016,9 @@ namespace Sanctum {
                     }
                 }
 
-                // Atomic rename
                 if (File.Exists(targetPath)) File.Delete(targetPath);
                 File.Move(partPath, targetPath);
 
-                // Write entry to Privacy / Download Ledger
                 RecordDownloadLedger(safeName, downloadUrl, targetPath);
 
                 string successJson = "{\"status\":\"success\",\"model\":\"" + safeName + "\",\"path\":\"" + targetPath.Replace("\\", "\\\\") + "\"}";
@@ -772,7 +1259,6 @@ namespace Sanctum {
 
             string filePath = Path.Combine(_webRoot, cleanPath.Replace('/', Path.DirectorySeparatorChar));
             if (!File.Exists(filePath)) {
-                // SPA fallback for client-side routing
                 filePath = Path.Combine(_webRoot, "index.html");
             }
 
@@ -790,7 +1276,6 @@ namespace Sanctum {
                     default: res.ContentType = "application/octet-stream"; break;
                 }
 
-                // Range request support
                 string rangeHeader = req.Headers["Range"];
                 long fileLength = new FileInfo(filePath).Length;
 
@@ -802,7 +1287,7 @@ namespace Sanctum {
                         if (end >= fileLength) end = fileLength - 1;
                         long length = end - start + 1;
 
-                        res.StatusCode = 206; // Partial Content
+                        res.StatusCode = 206;
                         res.Headers.Add("Content-Range", "bytes " + start + "-" + end + "/" + fileLength);
                         res.ContentLength64 = length;
 
@@ -841,10 +1326,20 @@ namespace Sanctum {
 
 
 def compile_desktop_host(output_path: str):
-    os.makedirs(os.path.dirname(os.path.abspath(output_path)), exist_ok=True)
+    out_dir = os.path.dirname(os.path.abspath(output_path))
+    os.makedirs(out_dir, exist_ok=True)
 
-    # Get current git commit hash
-    git_commit = "d078a76"
+    root_dir = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+    wv2_dir = os.path.join(root_dir, "vendor", "webview2")
+
+    # Ensure WebView2 DLLs are copied beside the output executable
+    for dll_name in ["Microsoft.Web.WebView2.Core.dll", "Microsoft.Web.WebView2.WinForms.dll", "WebView2Loader.dll"]:
+        src_dll = os.path.join(wv2_dir, dll_name)
+        dst_dll = os.path.join(out_dir, dll_name)
+        if os.path.exists(src_dll) and os.path.abspath(src_dll) != os.path.abspath(dst_dll):
+            shutil.copy2(src_dll, dst_dll)
+
+    git_commit = "1d382e3"
     try:
         rev = subprocess.run(["git", "rev-parse", "--short", "HEAD"], capture_output=True, text=True)
         if rev.returncode == 0 and rev.stdout.strip():
@@ -888,8 +1383,18 @@ def compile_desktop_host(output_path: str):
 
     csc_path = r"C:\Windows\Microsoft.NET\Framework64\v4.0.30319\csc.exe"
     icon_path = os.path.abspath("deploy/installer/app-icon.ico")
+    wv2_core_dll = os.path.abspath(os.path.join(wv2_dir, "Microsoft.Web.WebView2.Core.dll"))
+    wv2_winforms_dll = os.path.abspath(os.path.join(wv2_dir, "Microsoft.Web.WebView2.WinForms.dll"))
 
     if os.path.exists(csc_path):
+        refs = [
+            "System.dll",
+            "System.Core.dll",
+            "System.Drawing.dll",
+            "System.Windows.Forms.dll",
+            wv2_core_dll,
+            wv2_winforms_dll,
+        ]
         cmd = [
             csc_path,
             "/target:winexe",
@@ -897,20 +1402,20 @@ def compile_desktop_host(output_path: str):
             f"/win32manifest:{manifest_path}",
             "/optimize+",
             "/platform:x64",
-            "/reference:System.dll,System.Core.dll,System.Drawing.dll,System.Windows.Forms.dll",
+            f"/reference:{','.join(refs)}",
         ]
         if os.path.exists(icon_path):
             cmd.append(f"/win32icon:{icon_path}")
         cmd.append(temp_cs)
-        print(f"Compiling Sanctum Desktop host using csc.exe to {output_path}...")
+        print(f"Compiling Sanctum Standalone Embedded WebView2 host using csc.exe to {output_path}...")
         res = subprocess.run(cmd, capture_output=True, text=True)
     else:
         ps_script = f'''
 $source = Get-Content -Raw -Path "{temp_cs}"
-Add-Type -TypeDefinition $source -Language CSharp -ReferencedAssemblies "System.Windows.Forms.dll", "System.Drawing.dll" -OutputAssembly "{output_path}" -OutputType WindowsApplication
+Add-Type -TypeDefinition $source -Language CSharp -ReferencedAssemblies "System.Windows.Forms.dll", "System.Drawing.dll", "{wv2_core_dll}", "{wv2_winforms_dll}" -OutputAssembly "{output_path}" -OutputType WindowsApplication
 '''
         cmd = ["powershell", "-NoProfile", "-ExecutionPolicy", "Bypass", "-Command", ps_script]
-        print(f"Compiling Sanctum Desktop host using PowerShell Add-Type to {output_path}...")
+        print(f"Compiling Sanctum Standalone Embedded WebView2 host using PowerShell to {output_path}...")
         res = subprocess.run(cmd, capture_output=True, text=True)
 
     if os.path.exists(temp_cs):

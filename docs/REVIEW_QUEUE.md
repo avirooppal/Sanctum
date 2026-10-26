@@ -1,6 +1,7 @@
 # Decision review queue
 
 | ADR | Decision | Scope effect | Owner review |
+| [0104](adr/0104-standalone-embedded-webview2-and-tauri-decision.md) | Standalone Embedded WebView2 & Tauri 2 Engine Cutover (E0 Gates 1-4): replaces msedge.exe --app wrapper with native Sanctum-Desktop.exe hosting CoreWebView2Controller in-window; virtual host https://sanctum.app (0 UI TCP ports); AreBrowserAcceleratorKeysEnabled = false; --host-resolver-rules MAP * ~NOTFOUND (0 outbound connections); Win32 Job Object (JOB_OBJECT_LIMIT_KILL_ON_JOB_CLOSE); Evergreen WebView2 Runtime default vs optional Fixed-Version offline bundle | Eliminates external browser dependency, browser print/new-tab accelerators, and UI TCP listener; tree RSS 388.75 MB (< 500 MB), first frame 483 ms (< 2500 ms) | VERIFIED: verify_standalone_window.py 7/7 PASS; Evergreen vs Fixed-Version runtime choice queued for owner confirmation |
 | [0102](adr/0102-request-lifecycle-and-smoothness-thresholds.md) | Request lifecycle status & interaction thresholds: send ack p95 <= 100ms, stall timeout 5.0s, RAF token batching (max 60fps), CLS <= 0.01 | AMENDMENT 1 UX additions: live phase tracking (sending, queued, loading, reading, RAG, thinking, tool, writing, done, error) | PROPOSED: implementation active |
 | [0101](adr/0101-exe-resource-and-verification-thresholds.md) | Windows EXE verification & measured stability thresholds: idle soak slope < 2.0 MB/h, return to baseline +-15 MB, thread p95 < 25 ms, TTFT < 200 ms, cold start < 2.50 s, installer < 25 MB | Strict empirical performance & resource ceilings enforced across 7 automated verification suites | VERIFIED: tools/exe-verify/run_all_verification.py ALL PASS; evals/results/exe/* evidence |
 | [E1 Delivery](PERFORMANCE.md#milestone-e1-measured-performance-2026-10-21) | Milestone E1 Local GGUF Engine: verified Windows installer `.exe` in `dist/`, local GGUF weights scanner & importer, SSE streaming tokens, multi-assistant profiles, tag `exe-E1` | Full local Jan feature parity for Model Hub, Chat SSE, and Assistants; installer size 154.5 KB; verified headless & installed | VERIFIED: tools/test_e1_features.py pass, 56/56 web tests, tag `exe-E1` |
@@ -20,12 +21,14 @@
 | [0090](adr/0090-file-level-mpl-policy.md) | Permit individually reviewed MPL files with exact source archives and notices | Explicit amendment of blanket MPL exclusion; no blanket SPDX admission; product gate/source bundle checks still required | PROVISIONAL recommendation; all three B2 candidates include MPL; no dependencies admitted yet |
 
 | ADR | Decision | Scope effect | Owner review |
+| [0104](adr/0104-standalone-embedded-webview2-and-tauri-decision.md) | Standalone Embedded WebView2 & Tauri 2 Engine Cutover (E0 Gates 1-4): replaces msedge.exe --app wrapper with native Sanctum-Desktop.exe hosting CoreWebView2Controller in-window; virtual host https://sanctum.app (0 UI TCP ports); AreBrowserAcceleratorKeysEnabled = false; --host-resolver-rules MAP * ~NOTFOUND (0 outbound connections); Win32 Job Object (JOB_OBJECT_LIMIT_KILL_ON_JOB_CLOSE); Evergreen WebView2 Runtime default vs optional Fixed-Version offline bundle | Eliminates external browser dependency, browser print/new-tab accelerators, and UI TCP listener; tree RSS 388.75 MB (< 500 MB), first frame 483 ms (< 2500 ms) | VERIFIED: verify_standalone_window.py 7/7 PASS; Evergreen vs Fixed-Version runtime choice queued for owner confirmation |
 |---|---|---|---|
 | [0089](adr/0089-jan-study-and-fresh-implementation.md) | Jan source study, pinned Apache declaration/full text and NOTICE absence; original Sanctum components | No code/assets adapted; retain verified Sanctum runtime; B2/B3 experiments still required | PROVISIONAL: proceed fresh; no Jan source copying approved |
 
 | ADR | Decision | Scope effect | Owner review |
+| [0104](adr/0104-standalone-embedded-webview2-and-tauri-decision.md) | Standalone Embedded WebView2 & Tauri 2 Engine Cutover (E0 Gates 1-4): replaces msedge.exe --app wrapper with native Sanctum-Desktop.exe hosting CoreWebView2Controller in-window; virtual host https://sanctum.app (0 UI TCP ports); AreBrowserAcceleratorKeysEnabled = false; --host-resolver-rules MAP * ~NOTFOUND (0 outbound connections); Win32 Job Object (JOB_OBJECT_LIMIT_KILL_ON_JOB_CLOSE); Evergreen WebView2 Runtime default vs optional Fixed-Version offline bundle | Eliminates external browser dependency, browser print/new-tab accelerators, and UI TCP listener; tree RSS 388.75 MB (< 500 MB), first frame 483 ms (< 2500 ms) | VERIFIED: verify_standalone_window.py 7/7 PASS; Evergreen vs Fixed-Version runtime choice queued for owner confirmation |
 |---|---|---|---|
-| [0087](adr/0087-retirement-test-audit-and-dead-code.md) | Restore retained HTTP and dependency-boundary assertions; remove5 frontend audio helpers used only by M8 | Web45→34 (11 dead-helper tests removed), smoke8→9 (real HTTP restoration); backend gates unchanged | Adopted under explicit A2/A3 direction; no numeric relaxation |
+| [0087](adr/0087-retirement-test-audit-and-dead-code.md) | Restore retained HTTP and dependency-boundary assertions; remove5 frontend audio helpers used only by M8 | Web45â†’34 (11 dead-helper tests removed), smoke8â†’9 (real HTTP restoration); backend gates unchanged | Adopted under explicit A2/A3 direction; no numeric relaxation |
 | [0087](adr/0087-retirement-test-audit-and-dead-code.md) | When jan-style merges to main | PROVISIONAL recommendation: keep main as pre-pivot snapshot until a usable M3 desktop app exists | Owner decides; do not merge main in this work |
 
 | ADR | Decision | Effect | Review |
@@ -51,7 +54,7 @@ Owner review pending. This is an index of existing decisions, not retrospective
 approval or a replacement for their original text. Historical failures and numbers
 remain in the ADRs, status archives and named results. Add new entries when a
 timeout, threshold, tolerance or scope changes; supersede explicitly, never silently.
-“Relaxes gate” includes methodology/scope exceptions, even when numeric bounds stay.
+â€œRelaxes gateâ€ includes methodology/scope exceptions, even when numeric bounds stay.
 
 | [0072](adr/0072-workflow-checks-and-readiness.md) | Bidirectional IDs,public status projection,secret scan and12 real readiness checks | New test-client10s/1MiB guards only;no server/SLO relaxation | Readiness is not full journey acceptance;budgets,chaos,ledger and hosted runtime journey suite stay OPEN |
 
@@ -64,7 +67,7 @@ timeout, threshold, tolerance or scope changes; supersede explicitly, never sile
 | [0007](adr/0007-reference-models-and-provisioning.md) | Tiny verified CPU models, explicit online provisioning | Scope qualification: install timing excludes provisioning; not full clean online install evidence | Reference quality and hardware claims limited |
 | [0009](adr/0009-knowledge-parser-license-boundary.md) | Docling transitive MPL license; pypdf/Markdown substitute; >=5pp recall lift, >=95% citation support | Scope exception for layout parsing; numeric quality gates newly established | Complex tables/figures/regions still partial |
 | [0010](adr/0010-permissive-vector-adapter.md) | LanceDB dependency license blocked; sqlite-vec replacement | Stack/scope exception, no ACL/quality relaxation | Exact scans; LanceDB remains absent |
-| [0011](adr/0011-polling-folder-ingestion.md) | Poll 5–3600s, one root, .md/.pdf <=10MiB; deletion unspecified | Scope restriction; no existing measured gate changed | Delayed updates; no automatic deletion propagation |
+| [0011](adr/0011-polling-folder-ingestion.md) | Poll 5â€“3600s, one root, .md/.pdf <=10MiB; deletion unspecified | Scope restriction; no existing measured gate changed | Delayed updates; no automatic deletion propagation |
 | [0012](adr/0012-exact-identifier-grounded-answers.md) | Initial replay cited 28/30 expected passages; unique identifier quote path | No numerical relaxation; narrower answer methodology | Synthetic exact-key task does not prove semantic QA |
 | [0013](adr/0013-exact-entity-faithfulness-judge.md) | Judge accepted 30/30 decoy answers; exact entity precheck | No: strengthens judge; preserves original run | Narrow identifier calibration; broader semantic judge remains weak |
 | [0014](adr/0014-user-directed-review-substitution.md) | Codex source review substitutes unavailable human spot-check | Yes: reviewer independence criterion replaced | Synthetic dataset, no independent human audit |
@@ -104,10 +107,10 @@ Small-corpus evidence only; cache-cost/KV-reuse measurement remains pending.
 | New decision | Evidence / proposed change | Relaxes gate? | Cost |
 |---|---|---|---|
 | [0044](adr/0044-bounded-slot-prefix-reuse.md), proposed | Current prefix reuse disabled; H3 off/on median2.512/0.357s; short-warm RSS+19072/+60704KiB. Propose RAM0 with chat slot reuse only | No; existing complete warmed storm, cancel, shutdown and mixed-load gates must pass before adoption | No snapshot reuse across unrelated conversations; production adoption/resource gate PENDING |
-| [0045](adr/0045-voice-deferral-accounting.md), proposed | Mixed ASR6.598s failed5s; idle2.347–2.619s. Count actual voice-blocked time, not earlier engine waiting, against2500ms deferral | No numeric gate change; timing-accounting semantics change is explicit | Queued chat may wait longer overall; unchanged chat/ASR5s and full real gates must pass |
+| [0045](adr/0045-voice-deferral-accounting.md), proposed | Mixed ASR6.598s failed5s; idle2.347â€“2.619s. Count actual voice-blocked time, not earlier engine waiting, against2500ms deferral | No numeric gate change; timing-accounting semantics change is explicit | Queued chat may wait longer overall; unchanged chat/ASR5s and full real gates must pass |
 | [0046](adr/0046-cpu-inference-thread-experiment.md), experiment | Corrected timer mixed ASR8.550s still failed5s. Test existing inference threads2 instead of4, ASR6 unchanged | No gate/timeout/tolerance change; original profile retained while testing | Slower embedding/rerank possible; measure all gates/throughput before adoption |
 
-2026-10-11 adoption supplement (original proposal rows above retained):0044–0046
+2026-10-11 adoption supplement (original proposal rows above retained):0044â€“0046
 combined configuration passed the final500 cancellations/floods,180s mixed gate,
 active and three repeated shutdowns. Retained RSS7376/14116KiB, bounds unchanged.
 One-input ingestion throughput+22.905242% against original four-thread profile on

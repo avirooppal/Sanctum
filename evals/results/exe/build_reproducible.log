@@ -17,5 +17,5 @@ Dependencies: {
   "tailwind-merge": "^3.0.1",
   "zustand": "^5.0.3"
 }
-Embedded Git Commit SHA: aff97186620203240b0be989f04cfe5dce6a4c05
+Embedded Git Commit SHA: 1d382e31b835fdcb006bd18a81c5ec4ad63e08fd
 Version verified: 1.0.0 == 1.0.0
