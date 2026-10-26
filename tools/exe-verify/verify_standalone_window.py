@@ -40,7 +40,8 @@ def get_rss_mb(pid: int) -> float:
         counters = PROCESS_MEMORY_COUNTERS_EX()
         counters.cb = ctypes.sizeof(PROCESS_MEMORY_COUNTERS_EX)
         ctypes.windll.psapi.GetProcessMemoryInfo(handle, ctypes.byref(counters), counters.cb)
-        return counters.WorkingSetSize / (1024.0 * 1024.0)
+        # Use PrivateUsage (private committed bytes) so shared read-only OS/WebView2 DLLs are not multiplied N times across sub-processes
+        return counters.PrivateUsage / (1024.0 * 1024.0)
     finally:
         ctypes.windll.kernel32.CloseHandle(handle)
 

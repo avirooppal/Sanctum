@@ -130,6 +130,7 @@ namespace Sanctum {
         // Verified WebView2 background-network suppression flags (ADR 0104)
         public const string WEBVIEW2_SILENCE_FLAGS =
             "--host-resolver-rules=\"MAP * ~NOTFOUND\" " +
+            "--renderer-process-limit=1 " +
             "--disable-background-networking " +
             "--disable-component-update " +
             "--disable-domain-reliability " +
@@ -579,18 +580,6 @@ namespace Sanctum {
                 if (_wvCore != null && _wvCore.BrowserProcessId > 0) {
                     using (Process bp = Process.GetProcessById((int)_wvCore.BrowserProcessId)) {
                         AssignProcessToJobObject(_jobHandle, bp.Handle);
-                    }
-                }
-            } catch { }
-            try {
-                int currentSession = Process.GetCurrentProcess().SessionId;
-                foreach (Process p in Process.GetProcessesByName("msedgewebview2")) {
-                    using (p) {
-                        try {
-                            if (p.SessionId == currentSession) {
-                                AssignProcessToJobObject(_jobHandle, p.Handle);
-                            }
-                        } catch { }
                     }
                 }
             } catch { }
