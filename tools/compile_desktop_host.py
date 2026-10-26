@@ -580,6 +580,7 @@ namespace Sanctum {
         }
 
         private void WriteRuntimeState(long firstFrameMs, string status) {
+            SaveWindowBounds();
             try {
                 bool tcpListening = (_listener != null && _listener.IsListening);
                 string browserVer = (_wvEnv != null) ? _wvEnv.BrowserVersionString : "unknown";

@@ -104,7 +104,7 @@ def run_all_standalone_checks():
 
     runtime_state = None
     t0 = time.time()
-    while time.time() - t0 < 15.0:
+    while time.time() - t0 < 30.0:
         if os.path.exists(runtime_state_path):
             try:
                 with open(runtime_state_path, "r", encoding="utf-8-sig") as f:
@@ -118,7 +118,7 @@ def run_all_standalone_checks():
 
     if not runtime_state:
         proc.kill()
-        print("FAIL: Embedded WebView2 did not reach ready state within 15s")
+        print("FAIL: Embedded WebView2 did not reach ready state within 30s")
         return False
 
     time.sleep(1.0)

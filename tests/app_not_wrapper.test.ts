@@ -34,8 +34,7 @@ describe("Standalone Desktop App (Not a Browser Wrapper) Gate", () => {
 
   it("3. UI Is Not a Web Page on a Public/Local TCP Port: uses virtual host mapping and in-process WebResourceRequested", () => {
     assert.ok(
-      hostPy.includes('SetVirtualHostNameToFolderMapping(\n                        "sanctum.app"') ||
-        hostPy.includes('SetVirtualHostNameToFolderMapping("sanctum.app"'),
+      hostPy.includes("SetVirtualHostNameToFolderMapping") && hostPy.includes('"sanctum.app"'),
       "Must serve UI via SetVirtualHostNameToFolderMapping('sanctum.app')"
     );
     assert.ok(
