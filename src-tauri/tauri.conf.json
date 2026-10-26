@@ -12,7 +12,8 @@
     "windows": [
       {
         "label": "main",
-        "title": "Sanctum",
+        "title": "",
+        "decorations": false,
         "width": 1280,
         "height": 840,
         "minWidth": 900,

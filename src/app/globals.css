@@ -4,31 +4,31 @@
 
 @layer base {
   :root {
-    --background: 240 10% 3.9%;
-    --foreground: 0 0% 98%;
-    --card: 240 10% 4.9%;
-    --card-foreground: 0 0% 98%;
-    --popover: 240 10% 4.9%;
-    --popover-foreground: 0 0% 98%;
-    --primary: 239 84% 67%;
+    --background: 240 8% 6.5%;
+    --foreground: 0 0% 96%;
+    --card: 240 6% 9.5%;
+    --card-foreground: 0 0% 96%;
+    --popover: 240 6% 9.5%;
+    --popover-foreground: 0 0% 96%;
+    --primary: 14 71% 60%;
     --primary-foreground: 0 0% 100%;
-    --secondary: 240 3.7% 15.9%;
-    --secondary-foreground: 0 0% 98%;
-    --muted: 240 3.7% 15.9%;
-    --muted-foreground: 240 5% 64.9%;
-    --accent: 240 3.7% 15.9%;
+    --secondary: 240 4% 14%;
+    --secondary-foreground: 0 0% 96%;
+    --muted: 240 4% 14%;
+    --muted-foreground: 240 5% 62%;
+    --accent: 240 4% 15.5%;
     --accent-foreground: 0 0% 98%;
-    --destructive: 0 62.8% 30.6%;
+    --destructive: 0 68% 48%;
     --destructive-foreground: 0 0% 98%;
-    --border: 240 3.7% 15.9%;
-    --input: 240 3.7% 15.9%;
-    --ring: 240 4.9% 83.9%;
-    --radius: 0.5rem;
-    --sidebar: 240 5.9% 10%;
+    --border: 240 4% 15.5%;
+    --input: 240 4% 15.5%;
+    --ring: 14 71% 60%;
+    --radius: 0.625rem;
+    --sidebar: 240 7% 7.5%;
     --sidebar-foreground: 240 4.8% 95.9%;
-    --sidebar-border: 240 3.7% 15.9%;
-    --sidebar-accent: 240 3.7% 15.9%;
-    --chart-1: 220 70% 50%;
+    --sidebar-border: 240 4% 14.5%;
+    --sidebar-accent: 240 4% 15.5%;
+    --chart-1: 14 71% 60%;
     --chart-2: 160 60% 45%;
     --chart-3: 30 80% 55%;
     --chart-4: 142 71% 45%;
@@ -42,7 +42,7 @@
 }
 
 body {
-  background-color: #09090b;
+  background-color: #0f0f12;
   color: #f4f4f5;
   font-feature-settings: "rlig" 1, "calt" 1;
   overflow: hidden;
@@ -93,7 +93,7 @@ body {
 
 /* Range input power-user styling */
 input[type="range"] {
-  accent-color: #6366f1;
+  accent-color: #e06d53;
 }
 
 /* Codeblock typography */

@@ -2,13 +2,13 @@
   "overall_pass": true,
   "runtime_state": {
     "status": "ready",
-    "pid": 5844,
-    "hwnd": 4591076,
+    "pid": 15728,
+    "hwnd": 5311826,
     "window_title": "Sanctum",
     "app_user_model_id": "Sanctum.Desktop.App.1",
     "engine": "embedded-webview2",
     "browser_version": "155.0.4283.62",
-    "browser_process_id": 17384,
+    "browser_process_id": 3228,
     "virtual_host": "https://sanctum.app",
     "ui_tcp_listener_active": false,
     "are_browser_accelerator_keys_enabled": false,
@@ -17,12 +17,12 @@
     "is_status_bar_enabled": false,
     "is_zoom_control_enabled": false,
     "job_object_active": true,
-    "first_frame_ms": 983
+    "first_frame_ms": 499
   },
   "checks": {
     "1_process_identity": {
       "pass": true,
-      "window_title": "Sanctum",
+      "window_title": "",
       "window_visible": true,
       "external_browsers_spawned": [],
       "embedded_webview2_child_count": 7,
@@ -50,10 +50,10 @@
     },
     "5_budgets_gate3": {
       "pass": true,
-      "first_frame_ms": 983,
+      "first_frame_ms": 499,
       "first_frame_budget_ms": 2500,
-      "host_rss_mb": 26.25,
-      "total_process_tree_rss_mb": 226.57,
+      "host_rss_mb": 26.97,
+      "total_process_tree_rss_mb": 242.25,
       "process_tree_rss_budget_mb": 500.0
     },
     "6_window_lifecycle": {

@@ -1,10 +1,35 @@
 "use client";
 
 import React, { useState, useEffect } from "react";
-import { IconPalette, IconDeviceFloppy } from "@tabler/icons-react";
+import { IconDeviceFloppy } from "@tabler/icons-react";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
 import { toast } from "sonner";
+
+export function applyAppearanceToDocument(settings: {
+  theme?: string;
+  fontSize?: string;
+}) {
+  if (typeof document === "undefined") return;
+  const html = document.documentElement;
+  if (settings.theme) {
+    const resolvedDark =
+      settings.theme === "system"
+        ? window.matchMedia("(prefers-color-scheme: dark)").matches
+        : settings.theme !== "light";
+    html.classList.toggle("dark", resolvedDark);
+    html.classList.toggle("light", !resolvedDark);
+  }
+  if (settings.fontSize) {
+    const px =
+      settings.fontSize === "small"
+        ? "13px"
+        : settings.fontSize === "large"
+        ? "16px"
+        : "14px";
+    html.style.fontSize = px;
+  }
+}
 
 export const SettingsAppearance: React.FC = () => {
   const [theme, setTheme] = useState<string>("dark");
@@ -17,40 +42,52 @@ export const SettingsAppearance: React.FC = () => {
     fetch("/api/settings")
       .then((r) => r.json())
       .then((data) => {
-        if (data.settings) {
+        if (data?.settings) {
           if (data.settings["appearance.theme"]) setTheme(data.settings["appearance.theme"]);
           if (data.settings["appearance.fontSize"]) setFontSize(data.settings["appearance.fontSize"]);
-          if (data.settings["appearance.showTokenSpeed"] !== undefined) setShowTokenSpeed(data.settings["appearance.showTokenSpeed"]);
-          if (data.settings["appearance.coloredUserBubble"] !== undefined) setColoredUserBubble(data.settings["appearance.coloredUserBubble"]);
+          if (data.settings["appearance.showTokenSpeed"] !== undefined) {
+            setShowTokenSpeed(Boolean(data.settings["appearance.showTokenSpeed"]));
+          }
+          if (data.settings["appearance.coloredUserBubble"] !== undefined) {
+            setColoredUserBubble(Boolean(data.settings["appearance.coloredUserBubble"]));
+          }
         }
       })
       .catch(() => {});
   }, []);
 
-  const handleSave = async () => {
-    setIsSaving(true);
+  const persistPatch = async (patch: Record<string, any>, toastMsg?: string) => {
+    applyAppearanceToDocument({
+      theme: patch["appearance.theme"] ?? theme,
+      fontSize: patch["appearance.fontSize"] ?? fontSize,
+    });
+    window.dispatchEvent(new CustomEvent("sanctum-settings-updated", { detail: patch }));
     try {
       const res = await fetch("/api/settings", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          "appearance.theme": theme,
-          "appearance.fontSize": fontSize,
-          "appearance.showTokenSpeed": showTokenSpeed,
-          "appearance.coloredUserBubble": coloredUserBubble,
-        }),
+        body: JSON.stringify(patch),
       });
-      if (res.ok) {
-        toast.success("Appearance settings updated");
-      } else {
-        const err = await res.json();
-        toast.error(err.error || "Failed to save settings");
+      if (res.ok && toastMsg) {
+        toast.success(toastMsg);
       }
     } catch {
-      toast.error("Network error while saving settings");
-    } finally {
-      setIsSaving(false);
+      // ignore
     }
+  };
+
+  const handleSave = async () => {
+    setIsSaving(true);
+    await persistPatch(
+      {
+        "appearance.theme": theme,
+        "appearance.fontSize": fontSize,
+        "appearance.showTokenSpeed": showTokenSpeed,
+        "appearance.coloredUserBubble": coloredUserBubble,
+      },
+      "Appearance settings saved"
+    );
+    setIsSaving(false);
   };
 
   return (
@@ -87,7 +124,11 @@ export const SettingsAppearance: React.FC = () => {
             </div>
             <select
               value={theme}
-              onChange={(e) => setTheme(e.target.value)}
+              onChange={(e) => {
+                const next = e.target.value;
+                setTheme(next);
+                persistPatch({ "appearance.theme": next }, `Theme switched to ${next}`);
+              }}
               className="px-3 py-1.5 rounded-xl border border-border bg-background text-xs text-foreground"
             >
               <option value="dark">Dark Theme</option>
@@ -103,7 +144,11 @@ export const SettingsAppearance: React.FC = () => {
             </div>
             <select
               value={fontSize}
-              onChange={(e) => setFontSize(e.target.value)}
+              onChange={(e) => {
+                const next = e.target.value;
+                setFontSize(next);
+                persistPatch({ "appearance.fontSize": next }, `Font size set to ${next}`);
+              }}
               className="px-3 py-1.5 rounded-xl border border-border bg-background text-xs text-foreground"
             >
               <option value="small">Compact (13px)</option>
@@ -123,7 +168,14 @@ export const SettingsAppearance: React.FC = () => {
               type="button"
               role="switch"
               aria-checked={showTokenSpeed}
-              onClick={() => setShowTokenSpeed(!showTokenSpeed)}
+              onClick={() => {
+                const next = !showTokenSpeed;
+                setShowTokenSpeed(next);
+                persistPatch(
+                  { "appearance.showTokenSpeed": next },
+                  `Token speed display ${next ? "enabled" : "disabled"}`
+                );
+              }}
               className={cn(
                 "relative inline-flex h-5 w-9 shrink-0 cursor-pointer rounded-full border-2 border-transparent transition-colors duration-200 focus:outline-none",
                 showTokenSpeed ? "bg-primary" : "bg-muted"
@@ -149,7 +201,14 @@ export const SettingsAppearance: React.FC = () => {
               type="button"
               role="switch"
               aria-checked={coloredUserBubble}
-              onClick={() => setColoredUserBubble(!coloredUserBubble)}
+              onClick={() => {
+                const next = !coloredUserBubble;
+                setColoredUserBubble(next);
+                persistPatch(
+                  { "appearance.coloredUserBubble": next },
+                  `Colored user bubble ${next ? "enabled" : "disabled"}`
+                );
+              }}
               className={cn(
                 "relative inline-flex h-5 w-9 shrink-0 cursor-pointer rounded-full border-2 border-transparent transition-colors duration-200 focus:outline-none",
                 coloredUserBubble ? "bg-primary" : "bg-muted"

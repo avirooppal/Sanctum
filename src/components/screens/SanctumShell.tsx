@@ -115,7 +115,7 @@ export const SanctumShell: React.FC<{ children: React.ReactNode }> = ({ children
                   <div className="ml-4 pl-3 border-l border-border my-1 space-y-0.5">
                     <button
                       type="button"
-                      onClick={createNewChatSession}
+                      onClick={() => createNewChatSession()}
                       className="w-full flex items-center gap-2 px-2 h-8 text-xs text-muted-foreground hover:text-foreground hover:bg-accent/60 rounded-md transition-colors"
                     >
                       <Plus className="size-3.5" />

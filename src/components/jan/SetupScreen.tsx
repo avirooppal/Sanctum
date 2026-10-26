@@ -43,7 +43,7 @@ export const SetupScreen: React.FC<SetupScreenProps> = ({ onComplete }) => {
   };
 
   return (
-    <div className="relative flex h-screen w-screen items-center justify-center bg-background text-foreground select-none p-4 overflow-hidden">
+    <div className="relative flex flex-1 h-full w-full items-center justify-center bg-background text-foreground select-none p-4 overflow-hidden">
       {/* Background radial gradient glow */}
       <div className="absolute inset-0 bg-radial from-sidebar/20 via-background to-background pointer-events-none" />
 

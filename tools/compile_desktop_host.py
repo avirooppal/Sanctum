@@ -56,6 +56,16 @@ namespace Sanctum {
         [DllImport("dwmapi.dll")]
         static extern int DwmSetWindowAttribute(IntPtr hwnd, int attr, ref int attrValue, int attrSize);
         private const int DWMWA_USE_IMMERSIVE_DARK_MODE = 20;
+        private const int DWMWA_WINDOW_CORNER_PREFERENCE = 33;
+        private const int DWMWCP_ROUND = 2;
+
+        [DllImport("user32.dll")]
+        static extern bool ReleaseCapture();
+
+        [DllImport("user32.dll")]
+        static extern IntPtr SendMessage(IntPtr hWnd, int Msg, int wParam, int lParam);
+        private const int WM_NCLBUTTONDOWN = 0xA1;
+        private const int HT_CAPTION = 0x2;
 
         // Win32 Job Object APIs (ensures killing Sanctum.exe kills all child WebView2 & engine processes)
         [DllImport("kernel32.dll", CharSet = CharSet.Unicode)]
@@ -381,7 +391,8 @@ namespace Sanctum {
 
             if (headless) return;
 
-            this.Text = "Sanctum";
+            this.Text = "";
+            this.FormBorderStyle = FormBorderStyle.None;
             this.BackColor = Color.FromArgb(18, 18, 20); // #121214 dark background prevents white flash
             this.MinimumSize = new Size(900, 600);
             this.Size = new Size(1280, 840);
@@ -398,6 +409,8 @@ namespace Sanctum {
                 try {
                     int useDark = 1;
                     DwmSetWindowAttribute(this.Handle, DWMWA_USE_IMMERSIVE_DARK_MODE, ref useDark, sizeof(int));
+                    int roundCorner = DWMWCP_ROUND;
+                    DwmSetWindowAttribute(this.Handle, DWMWA_WINDOW_CORNER_PREFERENCE, ref roundCorner, sizeof(int));
                 } catch { }
             };
 
@@ -409,6 +422,7 @@ namespace Sanctum {
                 if (_wvController != null) {
                     _wvController.Bounds = this.ClientRectangle;
                 }
+                NotifyWindowState();
             };
 
             this.FormClosing += (s, e) => {
@@ -562,6 +576,7 @@ namespace Sanctum {
                 _wvCore.NavigationCompleted += (sender, args) => {
                     BindWebViewProcessesToJob();
                     WriteRuntimeState(_startupWatch.ElapsedMilliseconds, "ready");
+                    NotifyWindowState();
                 };
 
                 if (!string.IsNullOrEmpty(_webRoot) && File.Exists(Path.Combine(_webRoot, "index.html"))) {
@@ -620,7 +635,7 @@ namespace Sanctum {
                     status.Replace("\"", "'"),
                     Process.GetCurrentProcess().Id,
                     this.Handle.ToInt64(),
-                    this.Text,
+                    string.IsNullOrEmpty(this.Text) ? "Sanctum" : this.Text,
                     browserVer,
                     tcpListening ? "true" : "false",
                     accelEnabled ? "true" : "false",
@@ -633,6 +648,15 @@ namespace Sanctum {
                     browserPid
                 );
                 File.WriteAllText(_runtimeStateFile, json, new UTF8Encoding(false));
+            } catch { }
+        }
+
+        private void NotifyWindowState() {
+            try {
+                if (_wvCore != null) {
+                    bool isMax = (this.WindowState == FormWindowState.Maximized);
+                    _wvCore.PostWebMessageAsJson("{\"type\":\"windowStateChanged\",\"isMaximized\":" + (isMax ? "true" : "false") + "}");
+                }
             } catch { }
         }
 
@@ -668,12 +692,25 @@ namespace Sanctum {
                             UseShellExecute = true
                         });
                     }
+                } else if (raw.Contains("\"windowDrag\"")) {
+                    ReleaseCapture();
+                    SendMessage(this.Handle, WM_NCLBUTTONDOWN, HT_CAPTION, 0);
                 } else if (raw.Contains("\"windowMinimize\"")) {
                     this.WindowState = FormWindowState.Minimized;
+                    NotifyWindowState();
+                } else if (raw.Contains("\"windowRestore\"")) {
+                    this.WindowState = FormWindowState.Normal;
+                    NotifyWindowState();
                 } else if (raw.Contains("\"windowMaximize\"")) {
-                    this.WindowState = (this.WindowState == FormWindowState.Maximized)
-                        ? FormWindowState.Normal
-                        : FormWindowState.Maximized;
+                    if (this.WindowState == FormWindowState.Maximized) {
+                        this.WindowState = FormWindowState.Normal;
+                    } else {
+                        try {
+                            this.MaximizedBounds = Screen.FromHandle(this.Handle).WorkingArea;
+                        } catch { }
+                        this.WindowState = FormWindowState.Maximized;
+                    }
+                    NotifyWindowState();
                 } else if (raw.Contains("\"windowClose\"")) {
                     this.Close();
                 }
@@ -766,8 +803,29 @@ namespace Sanctum {
                 }
             }
 
-            if (path == "/v1/chat/completions" && method == "POST") {
-                string reply = "{\"id\":\"chatcmpl-local\",\"object\":\"chat.completion\",\"choices\":[{\"index\":0,\"message\":{\"role\":\"assistant\",\"content\":\"Local inference loopback active. Ready for instructions.\"},\"finish_reason\":\"stop\"}]}";
+            if ((path == "/v1/chat/completions" || path == "/api/chat") && method == "POST") {
+                try {
+                    Match mModel = Regex.Match(body ?? "", "\"model\"\\s*:\\s*\"([^\"]+)\"");
+                    string reqModel = mModel.Success ? mModel.Groups[1].Value : "";
+                    if (!string.IsNullOrEmpty(reqModel) && reqModel != "local") {
+                        HttpWebRequest wreq = (HttpWebRequest)WebRequest.Create("http://127.0.0.1:11434/api/chat");
+                        wreq.Method = "POST";
+                        wreq.ContentType = "application/json";
+                        wreq.Timeout = 30000;
+                        string nonStreamBody = Regex.Replace(body, "\"stream\"\\s*:\\s*true", "\"stream\":false");
+                        byte[] reqBytes = Encoding.UTF8.GetBytes(nonStreamBody);
+                        wreq.ContentLength = reqBytes.Length;
+                        using (Stream s = wreq.GetRequestStream()) {
+                            s.Write(reqBytes, 0, reqBytes.Length);
+                        }
+                        using (HttpWebResponse wresp = (HttpWebResponse)wreq.GetResponse())
+                        using (StreamReader sr = new StreamReader(wresp.GetResponseStream(), Encoding.UTF8)) {
+                            string respJson = sr.ReadToEnd();
+                            return Encoding.UTF8.GetBytes(respJson + "\n");
+                        }
+                    }
+                } catch { }
+                string reply = "{\"id\":\"chatcmpl-local\",\"object\":\"chat.completion\",\"done\":true,\"message\":{\"role\":\"assistant\",\"content\":\"Local inference loopback active. Ready for instructions.\"},\"choices\":[{\"index\":0,\"message\":{\"role\":\"assistant\",\"content\":\"Local inference loopback active. Ready for instructions.\"},\"finish_reason\":\"stop\"}]}";
                 return Encoding.UTF8.GetBytes(reply);
             }
 
@@ -775,15 +833,139 @@ namespace Sanctum {
             return Encoding.UTF8.GetBytes("{\"error\":\"Not found\"}");
         }
 
+        private static string EscapeJson(string s) {
+            if (string.IsNullOrEmpty(s)) return "";
+            return s.Replace("\\", "\\\\").Replace("\"", "\\\"").Replace("\r", "").Replace("\n", "");
+        }
+
         private byte[] BuildModelsJsonBytes() {
             List<string> entries = new List<string>();
+            HashSet<string> seen = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
+
             lock (_dataLock) {
+                // 1. Scan local Ollama manifests on disk (%USERPROFILE%\.ollama\models\manifests\registry.ollama.ai)
+                try {
+                    string userProfile = Environment.GetFolderPath(Environment.SpecialFolder.UserProfile);
+                    string ollamaRoot = Path.Combine(userProfile, ".ollama", "models");
+                    string manifestsRoot = Path.Combine(ollamaRoot, "manifests", "registry.ollama.ai");
+                    string blobsRoot = Path.Combine(ollamaRoot, "blobs");
+
+                    if (Directory.Exists(manifestsRoot)) {
+                        foreach (string nsDir in Directory.GetDirectories(manifestsRoot)) {
+                            string nsName = Path.GetFileName(nsDir);
+                            foreach (string mDir in Directory.GetDirectories(nsDir)) {
+                                string mName = Path.GetFileName(mDir);
+                                foreach (string tagFile in Directory.GetFiles(mDir)) {
+                                    string tagName = Path.GetFileName(tagFile);
+                                    string fullModelName = (nsName.Equals("library", StringComparison.OrdinalIgnoreCase))
+                                        ? (mName + ":" + tagName)
+                                        : (nsName + "/" + mName + ":" + tagName);
+                                    if (seen.Contains(fullModelName)) continue;
+
+                                    long sz = 2147483648L;
+                                    string family = mName;
+                                    string paramSize = "4B";
+                                    string quant = "Q4_K_M";
+
+                                    try {
+                                        string mfJson = File.ReadAllText(tagFile, Encoding.UTF8);
+                                        Match mLayer = Regex.Match(mfJson, "\"application/vnd\\.ollama\\.image\\.model\"[^\\}]*\"size\"\\s*:\\s*(\\d+)");
+                                        if (!mLayer.Success) {
+                                            mLayer = Regex.Match(mfJson, "\"size\"\\s*:\\s*(\\d+)[^\\}]*\"application/vnd\\.ollama\\.image\\.model\"");
+                                        }
+                                        if (mLayer.Success) long.TryParse(mLayer.Groups[1].Value, out sz);
+
+                                        Match mCfg = Regex.Match(mfJson, "\"config\"\\s*:\\s*\\{[^\\}]*\"digest\"\\s*:\\s*\"([^\"]+)\"");
+                                        if (mCfg.Success) {
+                                            string blobPath = Path.Combine(blobsRoot, mCfg.Groups[1].Value.Replace(":", "-"));
+                                            if (File.Exists(blobPath)) {
+                                                string cfgJson = File.ReadAllText(blobPath, Encoding.UTF8);
+                                                Match mfFam = Regex.Match(cfgJson, "\"model_family\"\\s*:\\s*\"([^\"]+)\"");
+                                                if (mfFam.Success) family = mfFam.Groups[1].Value;
+                                                Match mfType = Regex.Match(cfgJson, "\"model_type\"\\s*:\\s*\"([^\"]+)\"");
+                                                if (mfType.Success) paramSize = mfType.Groups[1].Value;
+                                                Match mfQuant = Regex.Match(cfgJson, "\"file_type\"\\s*:\\s*\"([^\"]+)\"");
+                                                if (mfQuant.Success) quant = mfQuant.Groups[1].Value;
+                                            }
+                                        }
+                                    } catch { }
+
+                                    seen.Add(fullModelName);
+                                    entries.Add(
+                                        "{\"id\":\"" + EscapeJson(fullModelName) + "\"," +
+                                        "\"name\":\"" + EscapeJson(fullModelName) + "\"," +
+                                        "\"model\":\"" + EscapeJson(fullModelName) + "\"," +
+                                        "\"object\":\"model\",\"owned_by\":\"ollama\"," +
+                                        "\"size\":" + sz + ",\"bytes\":" + sz + "," +
+                                        "\"details\":{\"family\":\"" + EscapeJson(family) + "\",\"parameter_size\":\"" + EscapeJson(paramSize) + "\",\"quantization_level\":\"" + EscapeJson(quant) + "\",\"context_length\":32768}," +
+                                        "\"capabilities\":[\"chat\"]}"
+                                    );
+                                }
+                            }
+                        }
+                    }
+                } catch { }
+
+                // 2. Scan Jan & LM Studio local GGUF directories
+                try {
+                    string appData = Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData);
+                    string userProfile = Environment.GetFolderPath(Environment.SpecialFolder.UserProfile);
+                    string[] extraDirs = new string[] {
+                        Path.Combine(appData, "Jan", "data", "llamacpp", "models"),
+                        Path.Combine(userProfile, "jan", "models"),
+                        Path.Combine(userProfile, ".lmstudio", "models"),
+                        Path.Combine(userProfile, ".cache", "lm-studio", "models")
+                    };
+                    foreach (string baseDir in extraDirs) {
+                        if (!Directory.Exists(baseDir)) continue;
+                        foreach (string f in Directory.GetFiles(baseDir, "*.gguf", SearchOption.AllDirectories)) {
+                            long sz = 0;
+                            try { sz = new FileInfo(f).Length; } catch { }
+                            if (sz < 1024 * 1024) continue;
+                            string fn = Path.GetFileName(f);
+                            string parentDir = Path.GetFileName(Path.GetDirectoryName(f));
+                            string display = (fn.Equals("model.gguf", StringComparison.OrdinalIgnoreCase) && !string.IsNullOrEmpty(parentDir))
+                                ? parentDir
+                                : Path.GetFileNameWithoutExtension(fn);
+                            if (seen.Contains(display)) continue;
+                            seen.Add(display);
+
+                            Match mp = Regex.Match(display, "(\\d+(?:\\.\\d+)?[bBmM])");
+                            string pSize = mp.Success ? mp.Groups[1].Value.ToUpperInvariant() : "4B";
+                            Match mq = Regex.Match(display, "(Q\\d_[A-Z0-9_]+|F16|FP16|BF16)", RegexOptions.IgnoreCase);
+                            string qLvl = mq.Success ? mq.Groups[1].Value.ToUpperInvariant() : "Q4_K_M";
+
+                            entries.Add(
+                                "{\"id\":\"" + EscapeJson(display) + "\"," +
+                                "\"name\":\"" + EscapeJson(display) + "\"," +
+                                "\"model\":\"" + EscapeJson(display) + "\"," +
+                                "\"object\":\"model\",\"owned_by\":\"local\"," +
+                                "\"size\":" + sz + ",\"bytes\":" + sz + "," +
+                                "\"details\":{\"family\":\"Local GGUF\",\"parameter_size\":\"" + EscapeJson(pSize) + "\",\"quantization_level\":\"" + EscapeJson(qLvl) + "\",\"context_length\":32768}," +
+                                "\"capabilities\":[\"chat\"]}"
+                            );
+                        }
+                    }
+                } catch { }
+
+                // 3. Scan Sanctum _modelsDir
                 if (Directory.Exists(_modelsDir)) {
                     foreach (string f in Directory.GetFiles(_modelsDir, "*.gguf")) {
                         string fn = Path.GetFileName(f);
+                        if (seen.Contains(fn)) continue;
                         long sz = 0;
                         try { sz = new FileInfo(f).Length; } catch { }
-                        entries.Add("{\"id\":\"" + fn + "\",\"name\":\"" + fn + "\",\"object\":\"model\",\"owned_by\":\"local\",\"bytes\":" + sz + ",\"capabilities\":[\"chat\"]}");
+                        if (sz < 1024 && entries.Count > 0) continue;
+                        seen.Add(fn);
+                        entries.Add(
+                            "{\"id\":\"" + EscapeJson(fn) + "\"," +
+                            "\"name\":\"" + EscapeJson(fn) + "\"," +
+                            "\"model\":\"" + EscapeJson(fn) + "\"," +
+                            "\"object\":\"model\",\"owned_by\":\"local\"," +
+                            "\"size\":" + sz + ",\"bytes\":" + sz + "," +
+                            "\"details\":{\"family\":\"Sanctum Local\",\"parameter_size\":\"4B\",\"quantization_level\":\"Q4_K_M\",\"context_length\":32768}," +
+                            "\"capabilities\":[\"chat\"]}"
+                        );
                     }
                 }
             }

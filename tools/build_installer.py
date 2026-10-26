@@ -36,11 +36,6 @@ def build_installer():
 
     print("=== Step 2: Compiling self-extracting NSIS-compatible installer wrapper ===")
     build_self_extracting_installer(out_installer)
-
-    print("=== Step 3: Packaging Distribution Artifacts ===")
-    from package_distribution import package
-
-    package()
     print("=== Build Complete ===")
 
 
@@ -241,13 +236,8 @@ Add-Type -TypeDefinition $source -Language CSharp -ReferencedAssemblies "System.
 
 
 def build_direct_launcher(out_path, payload_b64):
-    git_commit = "1d382e3"
-    try:
-        rev = subprocess.run(["git", "rev-parse", "--short", "HEAD"], capture_output=True, text=True)
-        if rev.returncode == 0 and rev.stdout.strip():
-            git_commit = rev.stdout.strip()
-    except Exception:
-        pass
+    import time
+    git_commit = f"1d382e3-{int(time.time())}"
 
     cs_launcher = """using System;
 using System.Diagnostics;

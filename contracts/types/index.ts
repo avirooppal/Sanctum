@@ -71,6 +71,13 @@ export interface ChatMessage {
   requestStatus?: RequestStatusEvent;
 }
 
+export interface ChatProject {
+  id: string;
+  name: string;
+  assistantId?: string;
+  createdAt: string;
+}
+
 export interface ChatSession {
   id: string;
   title: string;
@@ -81,6 +88,8 @@ export interface ChatSession {
   systemPrompt: string;
   temperature: number;
   topP: number;
+  projectId?: string;
+  pinned?: boolean;
 }
 
 export interface ArenaPaneState {

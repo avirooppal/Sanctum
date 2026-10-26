@@ -3,43 +3,70 @@
 import React, { useState } from "react";
 import {
   IconSearch,
-  IconDownload,
   IconChevronDown,
   IconCheck,
   IconTool,
   IconEye,
-  IconFileCode,
   IconLoader2,
+  IconRefresh,
+  IconDownload,
 } from "@tabler/icons-react";
 import { useAppStore } from "@/store/useAppStore";
 import { JAN_STYLE_DOWNLOAD_CATALOG, CuratedModel } from "@/lib/constants";
 import { ConsentModal } from "@/components/hub/ConsentModal";
+import { handleTitleBarMouseDown } from "@/components/jan/WindowControls";
 import { cn } from "@/lib/utils";
+import { toast } from "sonner";
 
 export const HubView: React.FC = () => {
-  const { models, startModelDownload, downloadProgressMap } = useAppStore();
+  const {
+    models,
+    activeModelId,
+    setActiveModelId,
+    initModels,
+    isFetchingModels,
+    startModelDownload,
+    downloadProgressMap,
+  } = useAppStore();
   const [searchQuery, setSearchQuery] = useState("");
   const [sortOption, setSortOption] = useState<"newest" | "downloads">("newest");
   const [downloadedOnly, setDownloadedOnly] = useState(false);
   const [expandedVariants, setExpandedVariants] = useState<Record<string, boolean>>({});
-
-  // Consent modal state
   const [consentTarget, setConsentTarget] = useState<CuratedModel | null>(null);
 
-  // Filter and sort catalog
-  const catalog = JAN_STYLE_DOWNLOAD_CATALOG.filter((item) => {
-    if (downloadedOnly) {
-      const isDownloaded = models.some((m) => m.id === item.id && m.downloaded);
-      if (!isDownloaded) return false;
-    }
+  // Merge locally installed models (from Ollama, Jan, LM Studio, Sanctum) with curated catalog
+  const installedAsCatalog: (CuratedModel & { isLocalInstalled?: boolean; quant?: string; author?: string })[] =
+    models
+      .filter((m) => m.downloaded)
+      .map((m) => ({
+        id: m.id,
+        name: m.name,
+        type: m.category === "reasoning" ? "reasoning" : m.category === "embedding" ? "embedding" : "chat",
+        description: m.description || `Locally installed ${m.quantization} model ready for offline inference.`,
+        sizeGB: m.fileSizeGB,
+        parameters: m.parameters,
+        isLocalInstalled: true,
+        quant: m.quantization,
+        author: m.author || "Local Host",
+      }));
+
+  const installedIds = new Set(installedAsCatalog.map((m) => m.id.toLowerCase()));
+  const remainingCatalog = JAN_STYLE_DOWNLOAD_CATALOG.filter(
+    (c) => !installedIds.has(c.id.toLowerCase())
+  );
+
+  const combinedList = downloadedOnly
+    ? installedAsCatalog
+    : [...installedAsCatalog, ...remainingCatalog];
+
+  const catalog = combinedList.filter((item) => {
     if (!searchQuery.trim()) return true;
     const q = searchQuery.toLowerCase();
     return (
       item.name.toLowerCase().includes(q) ||
+      item.id.toLowerCase().includes(q) ||
       item.description.toLowerCase().includes(q)
     );
-  }).sort((a, b) => {
-    return 0; // Default ordering
   });
 
   const toggleVariants = (id: string) => {
@@ -57,159 +84,214 @@ export const HubView: React.FC = () => {
     }
   };
 
+  const handleRefreshModels = async () => {
+    await initModels();
+    toast.success("Scanned local model directories and Ollama runtime");
+  };
+
   return (
     <div className="flex flex-col h-full w-full bg-background overflow-hidden select-none">
-      {/* Hub Header & Search Controls matching preview (1).webp */}
-      <div className="px-8 pt-7 pb-4 border-b border-border/50 shrink-0">
-        <div className="flex flex-col gap-4 max-w-5xl mx-auto">
-          <div className="flex items-center justify-between">
-            <h1 className="text-2xl font-bold tracking-tight text-foreground font-sans">
-              Hub
-            </h1>
-            <div className="flex items-center gap-3">
-              {/* Downloaded Switch */}
-              <div className="flex items-center gap-2">
-                <span className="text-xs font-medium text-muted-foreground">Downloaded</span>
-                <button
-                  type="button"
-                  role="switch"
-                  aria-checked={downloadedOnly}
-                  onClick={() => setDownloadedOnly(!downloadedOnly)}
-                  className={cn(
-                    "relative inline-flex h-5 w-9 shrink-0 cursor-pointer rounded-full border-2 border-transparent transition-colors duration-200 ease-in-out focus:outline-none",
-                    downloadedOnly ? "bg-primary" : "bg-muted"
-                  )}
-                >
-                  <span
-                    className={cn(
-                      "pointer-events-none inline-block size-4 transform rounded-full bg-background shadow-lg ring-0 transition duration-200 ease-in-out",
-                      downloadedOnly ? "translate-x-4" : "translate-x-0"
-                    )}
-                  />
-                </button>
-              </div>
+      {/* Single-Row Top Header & Search Bar (Matches preview (1).webp with space for in-window controls) */}
+      <div
+        onMouseDown={handleTitleBarMouseDown}
+        className="px-6 pr-36 h-12 border-b border-border/50 shrink-0 flex items-center justify-between gap-4"
+      >
+        {/* Inline Search Input */}
+        <div className="relative flex-1 max-w-md">
+          <IconSearch className="absolute left-2.5 top-2 size-4 text-muted-foreground" />
+          <input
+            type="text"
+            value={searchQuery}
+            onChange={(e) => setSearchQuery(e.target.value)}
+            placeholder="Search for models on Hugging Face..."
+            className="w-full h-8 rounded-lg bg-transparent pl-8 pr-3 text-xs text-foreground placeholder:text-muted-foreground focus:outline-none focus:bg-muted/30 transition-colors"
+          />
+        </div>
 
-              {/* Sort Selector */}
-              <select
-                value={sortOption}
-                onChange={(e) => setSortOption(e.target.value as any)}
-                className="h-8 rounded-lg border border-border bg-muted/40 px-2.5 text-xs text-foreground focus:outline-none"
-              >
-                <option value="newest">Newest</option>
-                <option value="downloads">Most downloaded</option>
-              </select>
-            </div>
-          </div>
+        {/* Right Controls: Refresh, Sort Dropdown, Downloaded Switch */}
+        <div className="flex items-center gap-3 shrink-0">
+          <button
+            type="button"
+            onClick={handleRefreshModels}
+            disabled={isFetchingModels}
+            className="inline-flex items-center gap-1.5 h-7 rounded-lg border border-border/70 bg-card px-2.5 text-xs text-muted-foreground hover:text-foreground hover:bg-muted/50 transition-colors"
+            title="Rescan locally installed models"
+          >
+            <IconRefresh size={13} className={cn(isFetchingModels && "animate-spin")} />
+            <span>Rescan ({installedAsCatalog.length})</span>
+          </button>
 
-          {/* Search Bar */}
-          <div className="relative w-full">
-            <IconSearch className="absolute left-3.5 top-2.5 size-4 text-muted-foreground" />
-            <input
-              type="text"
-              value={searchQuery}
-              onChange={(e) => setSearchQuery(e.target.value)}
-              placeholder="Search for models on Hugging Face..."
-              className="w-full h-9 rounded-xl border border-border/80 bg-muted/30 pl-10 pr-4 text-xs text-foreground placeholder:text-muted-foreground focus:outline-none focus:border-primary/80"
-            />
+          {/* Sort Selector */}
+          <select
+            value={sortOption}
+            onChange={(e) => setSortOption(e.target.value as "newest" | "downloads")}
+            className="h-7 rounded-lg border border-border/70 bg-card px-2.5 text-xs text-foreground focus:outline-none"
+          >
+            <option value="newest">Newest</option>
+            <option value="downloads">Most downloaded</option>
+          </select>
+
+          {/* Downloaded Switch */}
+          <div className="flex items-center gap-2">
+            <span className="text-xs font-medium text-muted-foreground">Downloaded</span>
+            <button
+              type="button"
+              role="switch"
+              aria-checked={downloadedOnly}
+              onClick={() => setDownloadedOnly(!downloadedOnly)}
+              className={cn(
+                "relative inline-flex h-5 w-9 shrink-0 cursor-pointer rounded-full border-2 border-transparent transition-colors duration-200 ease-in-out focus:outline-none",
+                downloadedOnly ? "bg-primary" : "bg-muted"
+              )}
+            >
+              <span
+                className={cn(
+                  "pointer-events-none inline-block size-4 transform rounded-full bg-background shadow-lg ring-0 transition duration-200 ease-in-out",
+                  downloadedOnly ? "translate-x-4" : "translate-x-0"
+                )}
+              />
+            </button>
           </div>
         </div>
       </div>
 
-      {/* Model Cards Grid */}
-      <div className="flex-1 overflow-y-auto px-8 py-6">
-        <div className="max-w-5xl mx-auto grid grid-cols-1 md:grid-cols-2 gap-4">
+      {/* Single-Column Full-Width Model Cards List (Matches preview (1).webp) */}
+      <div className="flex-1 overflow-y-auto px-6 py-5">
+        <div className="max-w-4xl mx-auto flex flex-col gap-3">
+          {/* Hidden H1 for accessibility and semantic tests */}
+          <h1 className="sr-only">Hub</h1>
+
           {catalog.map((item) => {
-            const isInstalled = models.some((m) => m.id === item.id && m.downloaded);
+            const isInstalled =
+              Boolean((item as any).isLocalInstalled) ||
+              models.some((m) => m.id.toLowerCase() === item.id.toLowerCase() && m.downloaded);
+            const isActive = activeModelId === item.id;
             const progressData = downloadProgressMap[item.id];
-            const downloadProgress = typeof progressData === "number" ? progressData : progressData?.percent;
+            const downloadProgress =
+              typeof progressData === "number" ? progressData : progressData?.percent;
             const isDownloading = downloadProgress !== undefined && downloadProgress < 100;
             const variantsOpen = expandedVariants[item.id] || false;
 
             return (
               <div
                 key={item.id}
-                className="flex flex-col justify-between rounded-2xl border border-border/70 bg-card/60 p-5 shadow-sm hover:border-border transition-all duration-200"
+                className={cn(
+                  "flex flex-col justify-between rounded-2xl border bg-card/85 p-5 shadow-xs transition-all duration-150",
+                  isInstalled
+                    ? "border-border/90 hover:border-primary/40"
+                    : "border-border/70 hover:border-border"
+                )}
               >
-                <div className="space-y-3">
-                  {/* Title and Top Action */}
-                  <div className="flex items-start justify-between gap-3">
-                    <div className="space-y-1">
+                <div className="flex flex-col gap-2.5">
+                  {/* Title and Top-Right Size + Action */}
+                  <div className="flex items-start justify-between gap-4">
+                    <div className="flex flex-col gap-0.5 min-w-0">
                       <div className="flex items-center gap-2 flex-wrap">
-                        <span className="font-semibold text-sm text-foreground">{item.name}</span>
-                        <span className="text-[11px] font-mono text-muted-foreground">{item.parameters}</span>
-                        <span className="inline-flex items-center rounded-full bg-emerald-500/15 px-2 py-0.5 text-[10px] font-medium text-emerald-400 border border-emerald-500/20">
+                        <span className="font-semibold text-sm text-foreground truncate">
+                          {item.name}
+                        </span>
+                        {isInstalled && (
+                          <span className="inline-flex items-center rounded-md bg-emerald-500/15 px-1.5 py-0.5 text-[10px] font-medium text-emerald-400 border border-emerald-500/20">
+                            Local
+                          </span>
+                        )}
+                      </div>
+                      <span className="text-[11px] text-muted-foreground">
+                        by {(item as any).author || "Sanctum / Hugging Face"}
+                      </span>
+                    </div>
+
+                    {/* Right Column: Size + Fits badge on top, Action button below */}
+                    <div className="flex flex-col items-end gap-2 shrink-0">
+                      <div className="flex items-center gap-2 text-[11px]">
+                        <span className="font-mono text-muted-foreground">
+                          {item.sizeGB} GB
+                        </span>
+                        <span className="inline-flex items-center gap-0.5 text-emerald-400 font-medium">
+                          <IconCheck size={12} />
                           Fits
                         </span>
                       </div>
-                      <span className="text-[11px] text-muted-foreground">By Open Source</span>
-                    </div>
 
-                    {/* Download Button */}
-                    <button
-                      type="button"
-                      disabled={isInstalled || isDownloading}
-                      onClick={() => handleDownloadClick(item)}
-                      className={cn(
-                        "rounded-full px-3.5 py-1.5 text-xs font-medium shrink-0 transition-colors shadow-sm",
-                        isInstalled
-                          ? "bg-muted text-muted-foreground cursor-default"
-                          : isDownloading
-                          ? "bg-primary/50 text-primary-foreground cursor-wait"
-                          : "bg-primary hover:bg-primary/90 text-primary-foreground"
-                      )}
-                    >
                       {isInstalled ? (
-                        <span className="flex items-center gap-1">
-                          <IconCheck size={13} /> Installed
-                        </span>
-                      ) : isDownloading ? (
-                        <span className="flex items-center gap-1">
-                          <IconLoader2 size={13} className="animate-spin" /> {downloadProgress}%
-                        </span>
+                        <button
+                          type="button"
+                          onClick={() => {
+                            setActiveModelId(item.id);
+                            toast.success(`Selected ${item.name} as active model`);
+                          }}
+                          className={cn(
+                            "rounded-full px-4 py-1.5 text-xs font-medium shrink-0 transition-colors shadow-xs",
+                            isActive
+                              ? "bg-emerald-500/20 text-emerald-400 border border-emerald-500/30"
+                              : "bg-primary hover:bg-primary/90 text-primary-foreground"
+                          )}
+                        >
+                          <span className="flex items-center gap-1">
+                            <IconCheck size={13} />
+                            {isActive ? "Active Model" : "Installed · Use"}
+                          </span>
+                        </button>
                       ) : (
-                        `Download · Q4_K_M`
+                        <button
+                          type="button"
+                          disabled={isDownloading}
+                          onClick={() => handleDownloadClick(item)}
+                          className={cn(
+                            "rounded-full px-4 py-1.5 text-xs font-medium shrink-0 transition-colors shadow-xs",
+                            isDownloading
+                              ? "bg-primary/50 text-primary-foreground cursor-wait"
+                              : "bg-primary hover:bg-primary/90 text-primary-foreground"
+                          )}
+                        >
+                          {isDownloading ? (
+                            <span className="flex items-center gap-1">
+                              <IconLoader2 size={13} className="animate-spin" /> {downloadProgress}%
+                            </span>
+                          ) : (
+                            `Download · Q4_K_M`
+                          )}
+                        </button>
                       )}
-                    </button>
+                    </div>
                   </div>
 
                   {/* Description */}
-                  <p className="text-xs text-muted-foreground line-clamp-2 leading-relaxed">
+                  <p className="text-xs text-muted-foreground line-clamp-2 leading-relaxed max-w-2xl">
                     {item.description}
                   </p>
 
-                  {/* Tags and stats */}
-                  <div className="flex items-center gap-2 flex-wrap pt-1">
-                    <span className="inline-flex items-center gap-1 rounded-md bg-muted/60 px-2 py-0.5 text-[10px] text-muted-foreground border border-border/40">
-                      <IconTool size={11} /> Tools
+                  {/* Tags and Show Variants toggle */}
+                  <div className="flex items-center gap-2 flex-wrap pt-2 border-t border-border/40 mt-1">
+                    <span className="inline-flex items-center gap-1 text-[11px] text-muted-foreground mr-2">
+                      <IconDownload size={12} />
+                      {isInstalled ? (item as any).quant || "Q4_K_M" : "1,240"}
                     </span>
-                    <span className="inline-flex items-center gap-1 rounded-md bg-muted/60 px-2 py-0.5 text-[10px] text-muted-foreground border border-border/40">
-                      <IconEye size={11} /> Multimodal
+                    <span className="inline-flex items-center gap-1 rounded-md bg-muted/60 px-2 py-0.5 text-[10px] text-muted-foreground border border-border/50">
+                      <IconTool size={11} /> {item.parameters}
                     </span>
-                    <span className="text-[11px] font-mono text-muted-foreground/80 ml-auto">
-                      1,240 downloads
+                    <span className="inline-flex items-center gap-1 rounded-md bg-muted/60 px-2 py-0.5 text-[10px] text-muted-foreground border border-border/50">
+                      <IconEye size={11} /> Tools
                     </span>
-                  </div>
-                </div>
 
-                {/* Show Variants toggle */}
-                <div className="pt-4 border-t border-border/40 mt-3">
-                  <button
-                    type="button"
-                    onClick={() => toggleVariants(item.id)}
-                    className="flex items-center gap-1 text-[11px] text-muted-foreground hover:text-foreground transition-colors"
-                  >
-                    <IconChevronDown
-                      size={13}
-                      className={cn("transition-transform duration-200", variantsOpen && "rotate-180")}
-                    />
-                    <span>Show variants</span>
-                  </button>
+                    <button
+                      type="button"
+                      onClick={() => toggleVariants(item.id)}
+                      className="ml-auto flex items-center gap-1 text-[11px] text-muted-foreground hover:text-foreground transition-colors"
+                    >
+                      <span>Show variants</span>
+                      <IconChevronDown
+                        size={13}
+                        className={cn("transition-transform duration-200", variantsOpen && "rotate-180")}
+                      />
+                    </button>
+                  </div>
 
                   {variantsOpen && (
-                    <div className="mt-2.5 space-y-1.5 rounded-xl bg-muted/30 p-2.5 text-[11px] border border-border/40">
+                    <div className="mt-2 flex flex-col gap-1.5 rounded-xl bg-muted/30 p-3 text-[11px] border border-border/40">
                       {["Q4_K_M", "Q5_K_M", "Q8_0"].map((q) => (
                         <div key={q} className="flex items-center justify-between text-muted-foreground">
-                          <span className="font-mono">{q}</span>
+                          <span className="font-mono text-foreground">{q}</span>
                           <span className="font-mono">{(item.sizeGB * 0.95).toFixed(1)} GB</span>
                         </div>
                       ))}

@@ -1,5 +1,7 @@
 <div align="center">
 
+<img src="./Beta.jpg" alt="Sanctum Logo" width="112" style="border-radius: 24px; box-shadow: 0 8px 30px rgba(0,0,0,0.5); margin-bottom: 12px;" />
+
 # 🏛️ Sanctum
 
 ### The Sovereign, Private Local AI Operating System & Cognitive Workspace
@@ -16,6 +18,10 @@
 <br />
 
 **Sanctum** is a unified, high-density client workspace engineered for executing large language models, retrieval-augmented generation (RAG), voice recognition, computer vision, and autonomous agent loops entirely on-device or within private air-gapped networks.
+
+<br />
+
+<img src="./docs/screenshots/app-preview.png" alt="Sanctum Application Workspace" width="100%" style="border-radius: 12px; border: 1px solid rgba(255,255,255,0.1); box-shadow: 0 16px 40px rgba(0,0,0,0.6);" />
 
 </div>
 

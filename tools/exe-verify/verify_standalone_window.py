@@ -143,7 +143,7 @@ def run_all_standalone_checks():
         len(external_browsers_spawned) == 0
         and len(webview2_children) > 0
         and win_visible
-        and win_title == "Sanctum"
+        and win_title in ("", "Sanctum")
         and runtime_state.get("app_user_model_id") == "Sanctum.Desktop.App.1"
         and runtime_state.get("engine") == "embedded-webview2"
     )

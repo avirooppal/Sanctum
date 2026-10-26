@@ -42,6 +42,8 @@ export const useAppStore = create<AppState>()(
         isExplorerCollapsed: state.isExplorerCollapsed,
         chatSessions: state.chatSessions,
         activeSessionId: state.activeSessionId,
+        projects: state.projects,
+        activeProjectId: state.activeProjectId,
         enableRagInChat: state.enableRagInChat,
         activeModelId: state.activeModelId,
         models: state.models,
@@ -77,6 +79,9 @@ export const useAppStore = create<AppState>()(
               });
             }
           });
+        }
+        if (state) {
+          state.initModels?.();
         }
       },
     }

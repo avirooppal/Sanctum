@@ -19,14 +19,33 @@ import { SettingsProviders } from "@/components/jan/sections/SettingsProviders";
 import { SettingsMcp } from "@/components/jan/sections/SettingsMcp";
 import { SettingsClaudeCode } from "@/components/jan/sections/SettingsClaudeCode";
 import { ChatScreen } from "@/components/screens/ChatScreen";
+import { WindowControls, handleTitleBarMouseDown } from "@/components/jan/WindowControls";
 import { useAppStore } from "@/store/useAppStore";
 
 export const JanAppShell: React.FC = () => {
-  const { hasCompletedOnboarding, createNewChatSession, toggleExplorer } = useAppStore();
+  const {
+    hasCompletedOnboarding,
+    createNewChatSession,
+    toggleExplorer,
+    initModels,
+  } = useAppStore();
   const [activeModule, setActiveModule] = useState<"chat" | "hub" | "settings">("chat");
   const [activeSettingsSection, setActiveSettingsSection] = useState<SettingsSection>("general");
+  const [selectedProviderId, setSelectedProviderId] = useState<string>("llamacpp");
+  const [isAddProviderOpen, setIsAddProviderOpen] = useState<boolean>(false);
   const [isProjectDialogOpen, setIsProjectDialogOpen] = useState(false);
   const [isSearchDialogOpen, setIsSearchDialogOpen] = useState(false);
+
+  React.useEffect(() => {
+    useAppStore.persist.rehydrate();
+    initModels();
+  }, [initModels]);
+
+  React.useEffect(() => {
+    if (activeModule === "hub" || activeModule === "chat" || activeModule === "settings") {
+      initModels();
+    }
+  }, [activeModule, initModels]);
 
   React.useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
@@ -74,11 +93,38 @@ export const JanAppShell: React.FC = () => {
   }, [createNewChatSession, toggleExplorer]);
 
   if (!hasCompletedOnboarding) {
-    return <SetupScreen onComplete={() => setActiveModule("chat")} />;
+    return (
+      <div className="relative flex h-screen w-screen overflow-hidden bg-background text-foreground select-none font-sans">
+        {/* In-window drag bar + top-right window controls */}
+        <div
+          className="fixed top-0 right-0 h-10 z-40 flex items-center justify-end px-2 pointer-events-auto"
+        >
+          <WindowControls />
+        </div>
+        <LeftSidebar
+          activeModule={activeModule}
+          onNavigate={(mod) => setActiveModule(mod)}
+          isProjectDialogOpen={isProjectDialogOpen}
+          onProjectDialogOpenChange={setIsProjectDialogOpen}
+          isSearchDialogOpen={isSearchDialogOpen}
+          onSearchDialogOpenChange={setIsSearchDialogOpen}
+        />
+        <main className="flex-1 flex overflow-hidden relative">
+          <SetupScreen onComplete={() => setActiveModule("chat")} />
+        </main>
+      </div>
+    );
   }
 
   return (
-    <div className="flex h-screen w-screen overflow-hidden bg-background text-foreground select-none font-sans">
+    <div className="relative flex h-screen w-screen overflow-hidden bg-background text-foreground select-none font-sans">
+      {/* Top-right in-window native controls (Minimize, Maximize, Close) */}
+      <div
+        className="fixed top-0 right-0 h-10 z-50 flex items-center justify-end pr-2 pl-2 pointer-events-auto"
+      >
+        <WindowControls />
+      </div>
+
       <LeftSidebar
         activeModule={activeModule}
         onNavigate={(mod) => setActiveModule(mod)}
@@ -89,8 +135,16 @@ export const JanAppShell: React.FC = () => {
       />
 
       {/* Main Surface View */}
-      <main className="flex-1 flex overflow-hidden relative">
-        {activeModule === "chat" && <ChatScreen />}
+      <main className="flex-1 flex flex-col overflow-hidden relative">
+        {/* Top draggable strip across views */}
+        {activeModule === "settings" && (
+          <div
+            onMouseDown={handleTitleBarMouseDown}
+            className="abs-drag-bar absolute top-0 left-0 right-28 h-10 z-30"
+          />
+        )}
+
+        {activeModule === "chat" && <ChatScreen onNavigate={setActiveModule} />}
 
         {activeModule === "hub" && <HubView />}
 
@@ -99,8 +153,11 @@ export const JanAppShell: React.FC = () => {
             <SettingsMenu
               activeSection={activeSettingsSection}
               onSelectSection={setActiveSettingsSection}
+              selectedProviderId={selectedProviderId}
+              onSelectProvider={setSelectedProviderId}
+              onAddProvider={() => setIsAddProviderOpen(true)}
             />
-            <div className="flex-1 overflow-y-auto">
+            <div className="flex-1 overflow-y-auto pt-4">
               {activeSettingsSection === "general" && <SettingsGeneral />}
               {activeSettingsSection === "appearance" && <SettingsAppearance />}
               {activeSettingsSection === "assistants" && <SettingsAssistants />}
@@ -113,7 +170,14 @@ export const JanAppShell: React.FC = () => {
               {activeSettingsSection === "privacy" && <SettingsPrivacy />}
               {activeSettingsSection === "mcp-servers" && <SettingsMcp />}
               {activeSettingsSection === "claude-code" && <SettingsClaudeCode />}
-              {activeSettingsSection === "providers" && <SettingsProviders />}
+              {activeSettingsSection === "providers" && (
+                <SettingsProviders
+                  selectedProviderId={selectedProviderId}
+                  onSelectProvider={setSelectedProviderId}
+                  openAddModal={isAddProviderOpen}
+                  onOpenAddModalChange={setIsAddProviderOpen}
+                />
+              )}
             </div>
           </div>
         )}

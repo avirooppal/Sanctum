@@ -1,5 +1,5 @@
 import { StateCreator } from "zustand";
-import { ChatSession, ChatMessage, RequestStatusEvent } from "@/types";
+import { ChatSession, ChatMessage, ChatProject, RequestStatusEvent } from "@/types";
 import { globalVectorStore } from "@/lib/vectorStore";
 import { LocalEngineClient } from "@/lib/engine";
 import { DEFAULT_OLLAMA_ENDPOINT } from "@/lib/constants";
@@ -14,14 +14,28 @@ export interface AttachedDoc {
 export interface ChatSlice {
   chatSessions: ChatSession[];
   activeSessionId: string;
+  projects: ChatProject[];
+  activeProjectId: string | null;
   enableRagInChat: boolean;
   attachedImage: { src: string; name: string; width: number; height: number } | null;
   attachedDocuments: AttachedDoc[];
   activeTracker: RequestStatusTracker | null;
 
   setActiveSessionId: (id: string) => void;
-  createNewChatSession: () => void;
+  setActiveProjectId: (id: string | null) => void;
+  createNewChatSession: (projectId?: string) => void;
   deleteChatSession: (id: string) => void;
+  renameChatSession: (id: string, title: string) => void;
+  togglePinChatSession: (id: string) => void;
+  moveChatToProject: (chatId: string, projectId?: string) => void;
+  duplicateChatSession: (id: string) => void;
+  clearChatMessages: (id: string) => void;
+  deleteChatMessage: (sessionId: string, messageId: string) => void;
+  deleteAllChatSessions: () => void;
+  updateSessionParams: (sessionId: string, params: Partial<Pick<ChatSession, "systemPrompt" | "temperature" | "topP" | "modelId">>) => void;
+  createProject: (name: string, assistantId?: string) => void;
+  renameProject: (id: string, name: string) => void;
+  deleteProject: (id: string) => void;
   setEnableRagInChat: (enabled: boolean) => void;
   setAttachedImage: (img: { src: string; name: string; width: number; height: number } | null) => void;
   addAttachedDocument: (doc: AttachedDoc) => void;
@@ -30,6 +44,15 @@ export interface ChatSlice {
   stopInference: () => void;
   regenerateLastMessage: () => void;
 }
+
+const syncThreadsToBackend = (sessions: ChatSession[]) => {
+  if (typeof window === "undefined") return;
+  fetch("/api/threads", {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify(sessions),
+  }).catch(() => {});
+};
 
 export const createChatSlice: StateCreator<any, [], [], ChatSlice> = (set, get) => ({
   chatSessions: [
@@ -46,12 +69,21 @@ export const createChatSlice: StateCreator<any, [], [], ChatSlice> = (set, get) 
     },
   ],
   activeSessionId: "chat-default",
+  projects: [
+    {
+      id: "proj-default",
+      name: "General Workspace",
+      createdAt: "Today",
+    },
+  ],
+  activeProjectId: null,
   enableRagInChat: false,
   attachedImage: null,
   attachedDocuments: [],
   activeTracker: null,
 
   setActiveSessionId: (id) => set({ activeSessionId: id }),
+  setActiveProjectId: (id) => set({ activeProjectId: id }),
   setEnableRagInChat: (enabled) => set({ enableRagInChat: enabled }),
   setAttachedImage: (img) => set({ attachedImage: img }),
   addAttachedDocument: (doc) =>
@@ -63,31 +95,196 @@ export const createChatSlice: StateCreator<any, [], [], ChatSlice> = (set, get) 
       attachedDocuments: state.attachedDocuments.filter((d: AttachedDoc) => d.name !== name),
     })),
 
-  createNewChatSession: () => {
+  createNewChatSession: (projectId) => {
     const newId = `chat-${Date.now()}`;
+    const targetProject = projectId !== undefined ? projectId : get().activeProjectId || undefined;
     const newSession: ChatSession = {
       id: newId,
-      title: "New Local Session",
-      modelId: get().activeModelId || get().models[0]?.id || "",
+      title: "New Chat",
+      modelId: get().activeModelId || get().models[0]?.id || "llama3.2",
       createdAt: "Just now",
       updatedAt: "Just now",
       systemPrompt: "You are a private local assistant running entirely on-device.",
       temperature: 0.7,
       topP: 0.9,
+      projectId: targetProject,
+      pinned: false,
       messages: [],
     };
-    set((state: any) => ({
-      chatSessions: [newSession, ...state.chatSessions],
-      activeSessionId: newId,
-    }));
+    set((state: any) => {
+      const updated = [newSession, ...state.chatSessions];
+      syncThreadsToBackend(updated);
+      return {
+        chatSessions: updated,
+        activeSessionId: newId,
+      };
+    });
   },
 
   deleteChatSession: (id) =>
     set((state: any) => {
       const filtered = state.chatSessions.filter((s: ChatSession) => s.id !== id);
+      if (filtered.length === 0) {
+        const fallbackId = `chat-${Date.now()}`;
+        const fallback: ChatSession = {
+          id: fallbackId,
+          title: "New Chat",
+          modelId: state.activeModelId || state.models[0]?.id || "llama3.2",
+          createdAt: "Just now",
+          updatedAt: "Just now",
+          systemPrompt: "You are a private local assistant running entirely on-device.",
+          temperature: 0.7,
+          topP: 0.9,
+          messages: [],
+        };
+        syncThreadsToBackend([fallback]);
+        return {
+          chatSessions: [fallback],
+          activeSessionId: fallbackId,
+        };
+      }
+      syncThreadsToBackend(filtered);
       return {
         chatSessions: filtered,
-        activeSessionId: filtered.length > 0 ? filtered[0].id : "",
+        activeSessionId: state.activeSessionId === id ? filtered[0].id : state.activeSessionId,
+      };
+    }),
+
+  renameChatSession: (id, title) =>
+    set((state: any) => {
+      const trimmed = title.trim();
+      if (!trimmed) return state;
+      const updated = state.chatSessions.map((s: ChatSession) =>
+        s.id === id ? { ...s, title: trimmed, updatedAt: "Just now" } : s
+      );
+      syncThreadsToBackend(updated);
+      return { chatSessions: updated };
+    }),
+
+  togglePinChatSession: (id) =>
+    set((state: any) => {
+      const updated = state.chatSessions.map((s: ChatSession) =>
+        s.id === id ? { ...s, pinned: !s.pinned } : s
+      );
+      syncThreadsToBackend(updated);
+      return { chatSessions: updated };
+    }),
+
+  moveChatToProject: (chatId, projectId) =>
+    set((state: any) => {
+      const updated = state.chatSessions.map((s: ChatSession) =>
+        s.id === chatId ? { ...s, projectId: projectId || undefined, updatedAt: "Just now" } : s
+      );
+      syncThreadsToBackend(updated);
+      return { chatSessions: updated };
+    }),
+
+  duplicateChatSession: (id) =>
+    set((state: any) => {
+      const target = state.chatSessions.find((s: ChatSession) => s.id === id);
+      if (!target) return state;
+      const copyId = `chat-${Date.now()}`;
+      const copy: ChatSession = {
+        ...target,
+        id: copyId,
+        title: `${target.title} (Copy)`,
+        createdAt: "Just now",
+        updatedAt: "Just now",
+        messages: target.messages.map((m: ChatMessage, idx: number) => ({ ...m, id: `msg-${Date.now()}-${idx}` })),
+      };
+      const updated = [copy, ...state.chatSessions];
+      syncThreadsToBackend(updated);
+      return {
+        chatSessions: updated,
+        activeSessionId: copyId,
+      };
+    }),
+
+  clearChatMessages: (id) =>
+    set((state: any) => {
+      const updated = state.chatSessions.map((s: ChatSession) =>
+        s.id === id ? { ...s, messages: [], updatedAt: "Just now" } : s
+      );
+      syncThreadsToBackend(updated);
+      return { chatSessions: updated };
+    }),
+
+  deleteChatMessage: (sessionId, messageId) =>
+    set((state: any) => {
+      const updated = state.chatSessions.map((s: ChatSession) =>
+        s.id === sessionId
+          ? { ...s, messages: s.messages.filter((m) => m.id !== messageId), updatedAt: "Just now" }
+          : s
+      );
+      syncThreadsToBackend(updated);
+      return { chatSessions: updated };
+    }),
+
+  deleteAllChatSessions: () =>
+    set((state: any) => {
+      const freshId = `chat-${Date.now()}`;
+      const fresh: ChatSession = {
+        id: freshId,
+        title: "New Chat",
+        modelId: state.activeModelId || state.models[0]?.id || "llama3.2",
+        createdAt: "Just now",
+        updatedAt: "Just now",
+        systemPrompt: "You are a private local assistant running entirely on-device.",
+        temperature: 0.7,
+        topP: 0.9,
+        messages: [],
+      };
+      syncThreadsToBackend([fresh]);
+      return {
+        chatSessions: [fresh],
+        activeSessionId: freshId,
+      };
+    }),
+
+  updateSessionParams: (sessionId, params) =>
+    set((state: any) => {
+      const updated = state.chatSessions.map((s: ChatSession) =>
+        s.id === sessionId ? { ...s, ...params, updatedAt: "Just now" } : s
+      );
+      syncThreadsToBackend(updated);
+      return { chatSessions: updated };
+    }),
+
+  createProject: (name, assistantId) =>
+    set((state: any) => {
+      const trimmed = name.trim();
+      if (!trimmed) return state;
+      const newProj: ChatProject = {
+        id: `proj-${Date.now()}`,
+        name: trimmed,
+        assistantId,
+        createdAt: "Just now",
+      };
+      return {
+        projects: [...state.projects, newProj],
+        activeProjectId: newProj.id,
+      };
+    }),
+
+  renameProject: (id, name) =>
+    set((state: any) => {
+      const trimmed = name.trim();
+      if (!trimmed) return state;
+      return {
+        projects: state.projects.map((p: ChatProject) => (p.id === id ? { ...p, name: trimmed } : p)),
+      };
+    }),
+
+  deleteProject: (id) =>
+    set((state: any) => {
+      const updatedSessions = state.chatSessions.map((s: ChatSession) =>
+        s.projectId === id ? { ...s, projectId: undefined } : s
+      );
+      syncThreadsToBackend(updatedSessions);
+      return {
+        projects: state.projects.filter((p: ChatProject) => p.id !== id),
+        activeProjectId: state.activeProjectId === id ? null : state.activeProjectId,
+        chatSessions: updatedSessions,
       };
     }),
 
@@ -150,13 +347,21 @@ export const createChatSlice: StateCreator<any, [], [], ChatSlice> = (set, get) 
       requestStatus: tracker.getLastEvent(),
     };
 
-    set((state: any) => ({
-      chatSessions: state.chatSessions.map((s: ChatSession) =>
+    const autoTitle =
+      session.messages.length === 0 &&
+      (session.title === "New Chat" || session.title === "New Local Session" || session.title === "Local Inference Session")
+        ? content.trim().slice(0, 40) + (content.trim().length > 40 ? "…" : "")
+        : session.title;
+
+    set((state: any) => {
+      const updated = state.chatSessions.map((s: ChatSession) =>
         s.id === state.activeSessionId
-          ? { ...s, messages: [...s.messages, userMsg, initialAssistantMsg], updatedAt: "Just now" }
+          ? { ...s, title: autoTitle, messages: [...s.messages, userMsg, initialAssistantMsg], updatedAt: "Just now" }
           : s
-      ),
-    }));
+      );
+      syncThreadsToBackend(updated);
+      return { chatSessions: updated };
+    });
 
     let ragContextSnippet = "";
     const attachedDocs = get().attachedDocuments || [];
