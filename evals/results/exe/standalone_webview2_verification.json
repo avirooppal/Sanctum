@@ -1,13 +1,14 @@
 {
-  "overall_pass": true,
+  "overall_pass": false,
   "runtime_state": {
     "status": "ready",
-    "pid": 27820,
-    "hwnd": 4784360,
+    "pid": 5256,
+    "hwnd": 3542550,
     "window_title": "Sanctum",
     "app_user_model_id": "Sanctum.Desktop.App.1",
     "engine": "embedded-webview2",
     "browser_version": "155.0.4283.62",
+    "browser_process_id": 23256,
     "virtual_host": "https://sanctum.app",
     "ui_tcp_listener_active": false,
     "are_browser_accelerator_keys_enabled": false,
@@ -16,7 +17,7 @@
     "is_status_bar_enabled": false,
     "is_zoom_control_enabled": false,
     "job_object_active": true,
-    "first_frame_ms": 504
+    "first_frame_ms": 1397
   },
   "checks": {
     "1_process_identity": {
@@ -24,7 +25,7 @@
       "window_title": "Sanctum",
       "window_visible": true,
       "external_browsers_spawned": [],
-      "embedded_webview2_child_count": 6,
+      "embedded_webview2_child_count": 7,
       "app_user_model_id": "Sanctum.Desktop.App.1"
     },
     "2_accelerators_and_chrome": {
@@ -48,11 +49,11 @@
       "outbound_connections": []
     },
     "5_budgets_gate3": {
-      "pass": true,
-      "first_frame_ms": 504,
+      "pass": false,
+      "first_frame_ms": 1397,
       "first_frame_budget_ms": 2500,
-      "host_rss_mb": 49.71,
-      "total_process_tree_rss_mb": 389.52,
+      "host_rss_mb": 53.07,
+      "total_process_tree_rss_mb": 500.29,
       "process_tree_rss_budget_mb": 500.0
     },
     "6_window_lifecycle": {
@@ -67,7 +68,7 @@
     },
     "7_job_object_no_orphans": {
       "pass": true,
-      "spawned_child_pids_count": 6,
+      "spawned_child_pids_count": 7,
       "surviving_orphan_pids": []
     }
   }

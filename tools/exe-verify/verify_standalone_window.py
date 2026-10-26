@@ -45,13 +45,17 @@ def get_rss_mb(pid: int) -> float:
         ctypes.windll.kernel32.CloseHandle(handle)
 
 
-def get_process_tree(root_pid: int):
+def get_process_tree(root_pid: int, extra_root_pid: int = 0):
+    seeds = [root_pid]
+    if extra_root_pid and extra_root_pid != root_pid:
+        seeds.append(extra_root_pid)
+    enqueue_str = "\n".join(f"$queue.Enqueue({s}); $visited[{s}] = $true" for s in seeds)
     ps_cmd = f"""
 $all = Get-CimInstance Win32_Process | Select-Object ProcessId, ParentProcessId, Name, CommandLine
 $tree = @()
 $queue = New-Object System.Collections.Queue
-$queue.Enqueue({root_pid})
-$visited = @{{{root_pid} = $true}}
+$visited = @{{}}
+{enqueue_str}
 while ($queue.Count -gt 0) {{
     $curr = $queue.Dequeue()
     $proc = $all | Where-Object {{ $_.ProcessId -eq $curr }}
@@ -123,11 +127,12 @@ def run_all_standalone_checks():
 
     time.sleep(1.0)
     hwnd = int(runtime_state.get("hwnd", 0))
+    browser_pid = int(runtime_state.get("browser_process_id", 0))
     win_title = get_window_title(hwnd)
     win_visible = is_window_visible(hwnd)
 
     # 1. Process Tree & Identity Check
-    tree = get_process_tree(proc.pid)
+    tree = get_process_tree(proc.pid, browser_pid)
     proc_names = [p.get("Name", "").lower() for p in tree]
     forbidden_browsers = ["msedge.exe", "chrome.exe", "brave.exe", "firefox.exe"]
     external_browsers_spawned = [n for n in proc_names if n in forbidden_browsers]
@@ -165,7 +170,7 @@ Get-NetTCPConnection -OwningProcess @({pids_csv}) -State Listen -ErrorAction Sil
         ctypes.windll.user32.PostMessageW(wintypes.HWND(hwnd), WM_KEYUP, vk, 0)
     time.sleep(0.5)
 
-    tree_after_keys = get_process_tree(proc.pid)
+    tree_after_keys = get_process_tree(proc.pid, browser_pid)
     browsers_after_keys = [
         p.get("Name", "").lower()
         for p in tree_after_keys
@@ -219,12 +224,28 @@ Get-NetTCPConnection -OwningProcess @({pids_csv}) -ErrorAction SilentlyContinue 
     window_lifecycle_ok = window_bounds_saved and saved_bounds.get("width", 0) >= 900
 
     # 7. Job Object Hard-Kill Zero-Orphan Guarantee
+    data_dir2 = tempfile.mkdtemp(prefix="sanctum_wv2_job_")
+    runtime_state2_path = os.path.join(data_dir2, "webview2_runtime_state.json")
     proc2 = subprocess.Popen(
-        [EXE_PATH, "--data-dir", data_dir],
+        [EXE_PATH, "--data-dir", data_dir2],
         cwd=os.path.dirname(EXE_PATH),
     )
-    time.sleep(2.5)
-    tree2 = get_process_tree(proc2.pid)
+    runtime_state2 = None
+    t2 = time.time()
+    while time.time() - t2 < 30.0:
+        if os.path.exists(runtime_state2_path):
+            try:
+                with open(runtime_state2_path, "r", encoding="utf-8-sig") as f:
+                    d2 = json.load(f)
+                if d2.get("status") == "ready":
+                    runtime_state2 = d2
+                    break
+            except Exception:
+                pass
+        time.sleep(0.1)
+
+    browser_pid2 = int(runtime_state2.get("browser_process_id", 0)) if runtime_state2 else 0
+    tree2 = get_process_tree(proc2.pid, browser_pid2)
     child_wv_pids = [int(p["ProcessId"]) for p in tree2 if int(p["ProcessId"]) != proc2.pid]
 
     # Kill ONLY the parent Sanctum-Desktop.exe PID (without /T) to test Win32 Job Object kernel cleanup

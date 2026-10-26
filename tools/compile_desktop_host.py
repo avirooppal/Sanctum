@@ -502,15 +502,8 @@ namespace Sanctum {
 
                 _wvCore = _wvController.CoreWebView2;
 
-                // Explicitly bind WebView2 root browser process to our Win32 Job Object
-                try {
-                    uint bpid = _wvCore.BrowserProcessId;
-                    if (bpid > 0 && _jobHandle != IntPtr.Zero) {
-                        using (Process bp = Process.GetProcessById((int)bpid)) {
-                            AssignProcessToJobObject(_jobHandle, bp.Handle);
-                        }
-                    }
-                } catch { }
+                // Explicitly bind WebView2 root browser process and all sub-processes to our Win32 Job Object
+                BindWebViewProcessesToJob();
 
                 // Enforce strict non-browser desktop app settings (Section 0 & T2/T3)
                 CoreWebView2Settings s = _wvCore.Settings;
@@ -566,6 +559,7 @@ namespace Sanctum {
                 _wvCore.WebResourceRequested += OnWebResourceRequested;
 
                 _wvCore.NavigationCompleted += (sender, args) => {
+                    BindWebViewProcessesToJob();
                     WriteRuntimeState(_startupWatch.ElapsedMilliseconds, "ready");
                 };
 
@@ -579,11 +573,35 @@ namespace Sanctum {
             }
         }
 
+        private void BindWebViewProcessesToJob() {
+            if (_jobHandle == IntPtr.Zero) return;
+            try {
+                if (_wvCore != null && _wvCore.BrowserProcessId > 0) {
+                    using (Process bp = Process.GetProcessById((int)_wvCore.BrowserProcessId)) {
+                        AssignProcessToJobObject(_jobHandle, bp.Handle);
+                    }
+                }
+            } catch { }
+            try {
+                int currentSession = Process.GetCurrentProcess().SessionId;
+                foreach (Process p in Process.GetProcessesByName("msedgewebview2")) {
+                    using (p) {
+                        try {
+                            if (p.SessionId == currentSession) {
+                                AssignProcessToJobObject(_jobHandle, p.Handle);
+                            }
+                        } catch { }
+                    }
+                }
+            } catch { }
+        }
+
         private void WriteRuntimeState(long firstFrameMs, string status) {
             SaveWindowBounds();
             try {
                 bool tcpListening = (_listener != null && _listener.IsListening);
                 string browserVer = (_wvEnv != null) ? _wvEnv.BrowserVersionString : "unknown";
+                uint browserPid = (_wvCore != null) ? _wvCore.BrowserProcessId : 0;
                 bool accelEnabled = (_wvCore != null) && _wvCore.Settings.AreBrowserAcceleratorKeysEnabled;
                 bool ctxMenuEnabled = (_wvCore != null) && _wvCore.Settings.AreDefaultContextMenusEnabled;
                 bool devToolsEnabled = (_wvCore != null) && _wvCore.Settings.AreDevToolsEnabled;
@@ -599,6 +617,7 @@ namespace Sanctum {
                     "  \"app_user_model_id\": \"Sanctum.Desktop.App.1\",\n" +
                     "  \"engine\": \"embedded-webview2\",\n" +
                     "  \"browser_version\": \"{4}\",\n" +
+                    "  \"browser_process_id\": {13},\n" +
                     "  \"virtual_host\": \"https://sanctum.app\",\n" +
                     "  \"ui_tcp_listener_active\": {5},\n" +
                     "  \"are_browser_accelerator_keys_enabled\": {6},\n" +
@@ -621,7 +640,8 @@ namespace Sanctum {
                     statusBarEnabled ? "true" : "false",
                     zoomEnabled ? "true" : "false",
                     (_jobHandle != IntPtr.Zero) ? "true" : "false",
-                    firstFrameMs
+                    firstFrameMs,
+                    browserPid
                 );
                 File.WriteAllText(_runtimeStateFile, json, new UTF8Encoding(false));
             } catch { }
