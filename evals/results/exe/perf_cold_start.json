@@ -1,0 +1,22 @@
+{
+  "runs": 10,
+  "successful_runs": 10,
+  "median_seconds": 0.5592,
+  "min_seconds": 0.555,
+  "max_seconds": 0.5953,
+  "spread_seconds": 0.0403,
+  "budget_seconds": 2.5,
+  "status": "PASS",
+  "raw_samples": [
+    0.555,
+    0.5561,
+    0.5562,
+    0.5563,
+    0.557,
+    0.5592,
+    0.5678,
+    0.57,
+    0.5725,
+    0.5953
+  ]
+}

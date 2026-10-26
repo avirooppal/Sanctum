@@ -1,0 +1,5 @@
+=== DOWN-4b: HTTP Range & Resumability Verification ===
+HTTP Status: 206 (Expected: 206 Partial Content)
+Content-Range Header: bytes 0-15/6842
+Received bytes length: 16 (Expected: 16)
+Result: PASS

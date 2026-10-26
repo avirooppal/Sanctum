@@ -7,7 +7,15 @@ node_modules/
 .next/
 out/
 build/
-dist/
+dist/*
+!dist/Sanctum.exe
+!dist/Sanctum-Setup-*.exe
+!dist/Sanctum-Portable-*.zip
+!dist/SHA256SUMS
+!dist/sbom.spdx.json
+!dist/LICENSE_BUNDLE.txt
+!dist/THIRD_PARTY_NOTICES.txt
+!dist/SOURCE_ARCHIVE_LINK.txt
 
 # Environment Variables
 .env
@@ -22,6 +30,7 @@ yarn-debug.log*
 yarn-error.log*
 pnpm-debug.log*
 *.log
+!evals/**/*.log
 
 # OS & Editor
 .DS_Store
@@ -36,3 +45,5 @@ Thumbs.db
 scratch/
 temp_skills/
 *.tsbuildinfo
+deploy/installer/build_payload/
+__pycache__/

@@ -5,15 +5,22 @@ import {
   ArrowUp,
   ChevronRight,
   Mic,
-  Paperclip,
+  Plus,
   SlidersHorizontal,
   X,
   FileText,
   Square,
-  Sparkles,
   Loader2,
-  Image as ImageIcon,
+  Copy,
+  Check,
+  RotateCcw,
+  Trash2,
+  Bookmark,
+  Globe,
+  Settings,
+  Gauge,
 } from "lucide-react";
+import { IconChevronRight } from "@tabler/icons-react";
 import { Button } from "@/components/ui/button";
 import {
   Select,
@@ -22,19 +29,62 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
+import { DownloadPopover } from "@/components/jan/DownloadPopover";
+import { handleTitleBarMouseDown } from "@/components/jan/WindowControls";
 import { useAppStore } from "@/store/useAppStore";
 import { ChatMessage } from "@/types";
 import { cn } from "@/lib/utils";
 import { splitThinking, PromptTemplates } from "@core/ai/index.ts";
+import { RequestStatusLine } from "@/components/chat/RequestStatusLine";
+import { toast } from "sonner";
 
-const MessageRow: React.FC<{ msg: ChatMessage }> = ({ msg }) => {
+interface ChatScreenProps {
+  onNavigate?: (module: "chat" | "hub" | "settings") => void;
+}
+
+const MessageRow: React.FC<{
+  msg: ChatMessage;
+  modelName?: string;
+  onStop?: () => void;
+  onRetry?: () => void;
+  onDelete?: () => void;
+}> = ({ msg, modelName, onStop, onRetry, onDelete }) => {
   const [showThinking, setShowThinking] = useState(false);
+  const [copied, setCopied] = useState(false);
+  const [bookmarked, setBookmarked] = useState(false);
+
+  const handleCopy = () => {
+    navigator.clipboard.writeText(msg.content);
+    setCopied(true);
+    toast.success("Copied to clipboard");
+    setTimeout(() => setCopied(false), 1800);
+  };
 
   if (msg.role === "user") {
     return (
-      <div className="flex justify-end">
-        <div className="max-w-[80%] rounded-2xl rounded-br-md bg-accent px-4 py-2.5 text-sm whitespace-pre-wrap">
+      <div className="flex flex-col items-end gap-1 group">
+        <div className="max-w-[80%] rounded-2xl rounded-br-sm bg-primary text-primary-foreground px-4 py-2.5 text-sm whitespace-pre-wrap shadow-sm">
           {msg.content}
+        </div>
+        <div className="flex items-center gap-1 opacity-0 group-hover:opacity-100 transition-opacity pr-1">
+          <button
+            type="button"
+            onClick={handleCopy}
+            className="p-1 rounded text-muted-foreground hover:text-foreground transition-colors"
+            title="Copy message"
+          >
+            {copied ? <Check className="size-3 text-emerald-400" /> : <Copy className="size-3" />}
+          </button>
+          {onDelete && (
+            <button
+              type="button"
+              onClick={onDelete}
+              className="p-1 rounded text-muted-foreground hover:text-destructive transition-colors"
+              title="Delete message"
+            >
+              <Trash2 className="size-3" />
+            </button>
+          )}
         </div>
       </div>
     );
@@ -43,13 +93,16 @@ const MessageRow: React.FC<{ msg: ChatMessage }> = ({ msg }) => {
   const { thinking, answer } = splitThinking(msg.content);
 
   return (
-    <div className="flex gap-3">
-      <img
-        src="/mascot.jpg"
-        alt=""
-        className="size-7 rounded-full object-cover bg-white shrink-0 mt-0.5 border border-border"
-      />
+    <div className="flex gap-3 group">
       <div className="min-w-0 flex-1 space-y-2">
+        {/* Assistant header: Model name + Timestamp */}
+        <div className="flex items-center gap-2 text-xs">
+          <span className="font-semibold text-foreground">{modelName || "Local Model"}</span>
+          {msg.timestamp && (
+            <span className="text-[11px] text-muted-foreground/70">{msg.timestamp}</span>
+          )}
+        </div>
+
         {thinking && (
           <div>
             <button
@@ -71,14 +124,80 @@ const MessageRow: React.FC<{ msg: ChatMessage }> = ({ msg }) => {
         )}
 
         {answer ? (
-          <div className="text-sm leading-7 whitespace-pre-wrap">{answer}</div>
+          <div className="text-sm leading-7 whitespace-pre-wrap text-foreground/95">{answer}</div>
         ) : (
-          !thinking && <div className="text-sm text-muted-foreground animate-pulse">…</div>
+          !thinking && !msg.requestStatus && <div className="text-sm text-muted-foreground animate-pulse">…</div>
         )}
 
-        {msg.metrics && msg.metrics.totalTokens > 0 && (
-          <div className="text-[11px] font-mono text-muted-foreground/70">
-            {msg.metrics.tps} tok/s · {msg.metrics.totalTokens} tokens · {msg.metrics.ttftMs}ms to first token
+        {/* Live Request Status Indicator */}
+        {msg.requestStatus && (
+          <div className="pt-1 pb-0.5">
+            <RequestStatusLine
+              status={msg.requestStatus}
+              onStop={onStop}
+              onRetry={onRetry}
+            />
+          </div>
+        )}
+
+        {/* Message Action Bar + Telemetry matching owner screenshot */}
+        {!msg.requestStatus && (answer || thinking) && (
+          <div className="flex items-center gap-1.5 pt-1 text-muted-foreground">
+            <button
+              type="button"
+              onClick={handleCopy}
+              className="p-1 rounded-md hover:bg-muted/60 hover:text-foreground transition-colors"
+              title="Copy response"
+              aria-label="Copy response"
+            >
+              {copied ? <Check className="size-3.5 text-emerald-400" /> : <Copy className="size-3.5" />}
+            </button>
+            <button
+              type="button"
+              onClick={() => {
+                setBookmarked((b) => !b);
+                toast.success(bookmarked ? "Removed bookmark" : "Response bookmarked");
+              }}
+              className={cn(
+                "p-1 rounded-md hover:bg-muted/60 hover:text-foreground transition-colors",
+                bookmarked && "text-primary"
+              )}
+              title="Bookmark response"
+              aria-label="Bookmark response"
+            >
+              <Bookmark className="size-3.5" />
+            </button>
+            {onDelete && (
+              <button
+                type="button"
+                onClick={onDelete}
+                className="p-1 rounded-md hover:bg-destructive/15 hover:text-destructive transition-colors"
+                title="Delete message"
+                aria-label="Delete message"
+              >
+                <Trash2 className="size-3.5" />
+              </button>
+            )}
+            {onRetry && (
+              <button
+                type="button"
+                onClick={onRetry}
+                className="p-1 rounded-md hover:bg-muted/60 hover:text-foreground transition-colors"
+                title="Regenerate response"
+                aria-label="Regenerate response"
+              >
+                <RotateCcw className="size-3.5" />
+              </button>
+            )}
+
+            {msg.metrics && msg.metrics.totalTokens > 0 && (
+              <div className="ml-2 flex items-center gap-1.5 text-[11px] font-mono text-muted-foreground/75">
+                <Gauge className="size-3" />
+                <span>
+                  {msg.metrics.tps} tokens/sec ({msg.metrics.totalTokens} tokens)
+                </span>
+              </div>
+            )}
           </div>
         )}
       </div>
@@ -86,7 +205,7 @@ const MessageRow: React.FC<{ msg: ChatMessage }> = ({ msg }) => {
   );
 };
 
-export const ChatScreen: React.FC = () => {
+export const ChatScreen: React.FC<ChatScreenProps> = () => {
   const {
     chatSessions,
     activeSessionId,
@@ -94,6 +213,10 @@ export const ChatScreen: React.FC = () => {
     activeModelId,
     setActiveModelId,
     sendMessage,
+    stopInference,
+    regenerateLastMessage,
+    deleteChatMessage,
+    updateSessionParams,
     enableRagInChat,
     setEnableRagInChat,
     documents,
@@ -104,10 +227,13 @@ export const ChatScreen: React.FC = () => {
     attachedDocuments,
     addAttachedDocument,
     removeAttachedDocument,
+    isExplorerCollapsed,
+    toggleExplorer,
   } = useAppStore();
 
   const [prompt, setPrompt] = useState("");
   const [detailsOpen, setDetailsOpen] = useState(false);
+  const [webSearchActive, setWebSearchActive] = useState(false);
   const [isRecording, setIsRecording] = useState(false);
   const [recordingSeconds, setRecordingSeconds] = useState(0);
   const [isTranscribing, setIsTranscribing] = useState(false);
@@ -128,6 +254,12 @@ export const ChatScreen: React.FC = () => {
     messages.length > 0 &&
     messages[messages.length - 1].role === "assistant" &&
     !messages[messages.length - 1].metrics?.totalTokens;
+
+  // Estimate context window usage %
+  const totalSessionChars = messages.reduce((acc, m) => acc + (m.content?.length || 0), 0) + prompt.length;
+  const estTokens = Math.max(1, Math.round(totalSessionChars / 4));
+  const maxContext = model?.config?.contextSize || 8192;
+  const contextPercent = Math.min(100, Math.max(1, Math.round((estTokens / maxContext) * 100)));
 
   useEffect(() => {
     endRef.current?.scrollIntoView({ behavior: "smooth" });
@@ -185,7 +317,6 @@ export const ChatScreen: React.FC = () => {
         };
         reader.readAsDataURL(file);
       } else {
-        // Document / code / text / pdf
         try {
           const text = await file.text();
           let docType: any = "text";
@@ -194,7 +325,6 @@ export const ChatScreen: React.FC = () => {
           else if (file.name.endsWith(".json")) docType = "json";
           else if (/\.(ts|tsx|js|jsx|py|rs|go|cpp|c|html|css)$/.test(file.name)) docType = "code";
 
-          // Ingest into Document Vault
           uploadDocument(activeCollectionId || "col-default", {
             name: file.name,
             size: file.size,
@@ -202,14 +332,12 @@ export const ChatScreen: React.FC = () => {
             rawContent: text,
           });
 
-          // Add as attached document for immediate contextual prompting
           addAttachedDocument({
             name: file.name,
             size: file.size,
             content: text,
           });
 
-          // Auto-enable RAG
           setEnableRagInChat(true);
         } catch (err) {
           console.error("Failed to read document:", err);
@@ -255,7 +383,6 @@ export const ChatScreen: React.FC = () => {
         setRecordingSeconds((prev) => prev + 1);
       }, 1000);
 
-      // Start browser Web Speech API for immediate live transcription
       const SpeechRecognition =
         (window as any).SpeechRecognition || (window as any).webkitSpeechRecognition;
       if (SpeechRecognition) {
@@ -280,9 +407,7 @@ export const ChatScreen: React.FC = () => {
 
           recognition.start();
           speechRecognitionRef.current = recognition;
-        } catch (e) {
-          // ignore web speech startup error
-        }
+        } catch {}
       }
     } catch (err) {
       console.error("Microphone access denied or not supported:", err);
@@ -331,7 +456,7 @@ export const ChatScreen: React.FC = () => {
       } else {
         setWhisperStatus("Voice audio captured.");
       }
-    } catch (err) {
+    } catch {
       setWhisperStatus("Voice audio captured.");
     } finally {
       setIsTranscribing(false);
@@ -348,64 +473,115 @@ export const ChatScreen: React.FC = () => {
   };
 
   return (
-    <main className="relative flex flex-1 min-h-0 w-full overflow-hidden">
+    <main className="relative flex flex-1 min-h-0 w-full overflow-hidden bg-background">
       <section className="flex flex-col flex-1 min-w-0">
-        {/* Compact toolbar */}
-        <div className="flex items-center justify-between gap-3 px-6 h-12 shrink-0 border-b border-border/40">
-          {models.length > 0 ? (
-            <Select className="w-auto" value={model?.id} onValueChange={setActiveModelId}>
-              <SelectTrigger className="h-8 w-auto max-w-[280px] gap-2 border-0 shadow-none px-2 text-sm font-medium hover:bg-accent">
-                <SelectValue />
-              </SelectTrigger>
-              <SelectContent className="w-72">
-                {models.map((m) => (
-                  <SelectItem key={m.id} value={m.id}>{`${m.name}`}</SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
-          ) : (
-            <span className="text-sm text-muted-foreground px-2">No model available</span>
-          )}
-
-          <button
-            type="button"
-            onClick={() => setDetailsOpen((v) => !v)}
-            aria-label="Model details"
-            aria-pressed={detailsOpen}
-            className={cn(
-              "p-2 rounded-md text-muted-foreground hover:text-foreground hover:bg-accent transition-colors",
-              detailsOpen && "bg-accent text-foreground"
+        {/* Top In-Window Titlebar & Floating Model Selector Pill (Matches Screenshot 2026-10-25 190854.png) */}
+        <div
+          onMouseDown={handleTitleBarMouseDown}
+          className="flex items-center justify-between gap-2 px-4 pr-36 h-11 shrink-0"
+        >
+          <div className="flex items-center gap-1.5">
+            {/* When sidebar is collapsed, show the floating pill [DownloadPopover] [Expand Sidebar] */}
+            {isExplorerCollapsed && (
+              <div className="flex items-center gap-0.5 rounded-xl bg-card/90 border border-border/60 px-1.5 py-0.5 shadow-xs">
+                <DownloadPopover />
+                <button
+                  type="button"
+                  onClick={toggleExplorer}
+                  aria-label="Expand sidebar"
+                  title="Expand Sidebar (Ctrl+B)"
+                  className="p-1.5 rounded-lg text-muted-foreground hover:text-foreground hover:bg-muted/50 transition-colors"
+                >
+                  <IconChevronRight size={15} />
+                </button>
+              </div>
             )}
-          >
-            <SlidersHorizontal className="size-4" />
-          </button>
+
+            {/* Model Selector Pill */}
+            <div className="flex items-center gap-1 rounded-xl bg-card/90 border border-border/60 px-2 py-0.5 shadow-xs">
+              {models.length > 0 ? (
+                <Select className="w-auto" value={model?.id} onValueChange={setActiveModelId}>
+                  <SelectTrigger className="h-7 w-auto max-w-[260px] gap-1.5 border-0 bg-transparent shadow-none px-1.5 text-xs font-medium hover:bg-accent/60 rounded-lg">
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent className="w-72">
+                    {models.map((m) => (
+                      <SelectItem key={m.id} value={m.id}>
+                        {m.name}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              ) : (
+                <span className="text-xs text-muted-foreground px-2 py-1">No model available</span>
+              )}
+
+              <button
+                type="button"
+                onClick={() => setDetailsOpen((v) => !v)}
+                aria-label="Model details"
+                aria-pressed={detailsOpen}
+                title="Model & Session Parameters"
+                className={cn(
+                  "p-1 rounded-lg text-muted-foreground hover:text-foreground hover:bg-accent/60 transition-colors",
+                  detailsOpen && "bg-accent text-foreground"
+                )}
+              >
+                <Settings className="size-3.5" />
+              </button>
+
+              <span
+                className={cn(
+                  "size-2 rounded-full mx-1 shrink-0",
+                  model ? "bg-emerald-500 shadow-[0_0_6px_rgba(16,185,129,0.6)]" : "bg-muted-foreground/40"
+                )}
+                title={model ? `Active: ${model.name}` : "No active model"}
+              />
+            </div>
+          </div>
         </div>
 
         {/* Messages */}
         <div className="flex-1 overflow-y-auto">
-          <div className="mx-auto w-full max-w-2xl px-6 py-6 space-y-8">
+          <div className="mx-auto w-full max-w-2xl px-6 py-6 space-y-6">
             {messages.length === 0 ? (
-              <div className="flex flex-col items-center text-center pt-[10vh] gap-4">
+              <div className="flex flex-col items-center text-center pt-[14vh] gap-4">
                 <img
                   src="/mascot.jpg"
                   alt="Sanctum Mascot"
-                  className="size-16 rounded-full object-cover bg-white border border-border shadow-md"
+                  width={56}
+                  height={56}
+                  style={{ width: "56px", height: "56px", maxWidth: "56px", maxHeight: "56px" }}
+                  className="size-14 w-14 h-14 rounded-2xl object-cover bg-card border border-border/80 shadow-lg"
                 />
-                <div className="space-y-1">
-                  <h2 className="text-xl font-semibold tracking-tight">What would you like to explore?</h2>
-                  <p className="text-sm text-muted-foreground">
-                    {model ? `Running ${model.name} locally on your hardware.` : "Connect or download a model to begin chatting."}
+                <div className="space-y-1.5">
+                  <h2 className="text-lg font-semibold tracking-tight text-foreground">
+                    What would you like to explore?
+                  </h2>
+                  <p className="text-xs text-muted-foreground">
+                    {model
+                      ? `Running ${model.name} (${model.parameters} · ${model.quantization}) locally on your hardware.`
+                      : "Connect or download a model to begin chatting."}
                   </p>
                 </div>
               </div>
             ) : (
-              messages.map((m) => <MessageRow key={m.id} msg={m} />)
+              messages.map((m) => (
+                <MessageRow
+                  key={m.id}
+                  msg={m}
+                  modelName={model?.name}
+                  onStop={stopInference}
+                  onRetry={regenerateLastMessage}
+                  onDelete={session ? () => deleteChatMessage(session.id, m.id) : undefined}
+                />
+              ))
             )}
             <div ref={endRef} />
           </div>
         </div>
 
-        {/* Composer */}
+        {/* Composer (Matches Screenshot 2026-10-25 190854.png) */}
         <div className="px-6 pb-5 pt-2 shrink-0">
           {/* Hidden File Input */}
           <input
@@ -424,7 +600,7 @@ export const ChatScreen: React.FC = () => {
               if (e.dataTransfer.files) handleFiles(e.dataTransfer.files);
             }}
             className={cn(
-              "mx-auto max-w-2xl rounded-2xl border border-input bg-card focus-within:border-muted-foreground/50 transition-colors shadow-xs",
+              "mx-auto max-w-2xl rounded-2xl border border-border/80 bg-card/95 focus-within:border-muted-foreground/50 transition-colors shadow-lg",
               isRecording && "border-destructive ring-1 ring-destructive/20"
             )}
           >
@@ -517,24 +693,59 @@ export const ChatScreen: React.FC = () => {
                 isRecording
                   ? "Speaking now..."
                   : model
-                  ? "Message Sanctum or drop files here…"
+                  ? "Ask me anything..."
                   : "Waiting for a local model…"
               }
               disabled={!model}
-              className="block w-full resize-none bg-transparent px-4 pt-3.5 pb-1 text-sm outline-none placeholder:text-muted-foreground disabled:opacity-50"
+              className="block w-full resize-none bg-transparent px-4 pt-3.5 pb-1.5 text-sm outline-none placeholder:text-muted-foreground/70 disabled:opacity-50"
             />
 
-            <div className="flex items-center justify-between px-2 pb-2">
-              <div className="flex items-center gap-0.5">
-                {/* File Upload Button */}
+            <div className="flex items-center justify-between px-2.5 pb-2.5 pt-1">
+              <div className="flex items-center gap-1">
+                {/* + Attach Button */}
                 <button
                   type="button"
                   onClick={handleFileClick}
                   aria-label="Attach file"
                   title="Attach images, documents, code, or PDFs"
-                  className="p-2 rounded-md text-muted-foreground hover:text-foreground hover:bg-accent transition-colors"
+                  className="p-1.5 rounded-lg text-muted-foreground hover:text-foreground hover:bg-accent/60 transition-colors"
                 >
-                  <Paperclip className="size-4" />
+                  <Plus className="size-4" />
+                </button>
+
+                {/* Model & Sampling Parameters Toggle */}
+                <button
+                  type="button"
+                  onClick={() => setDetailsOpen((v) => !v)}
+                  aria-label="Sampling parameters"
+                  title="Configure temperature, system prompt, and model settings"
+                  className={cn(
+                    "p-1.5 rounded-lg transition-colors",
+                    detailsOpen
+                      ? "bg-primary/15 text-primary"
+                      : "text-muted-foreground hover:text-foreground hover:bg-accent/60"
+                  )}
+                >
+                  <SlidersHorizontal className="size-3.5" />
+                </button>
+
+                {/* Web Search Toggle */}
+                <button
+                  type="button"
+                  onClick={() => {
+                    setWebSearchActive((v) => !v);
+                    toast.success(!webSearchActive ? "Web search tool enabled for thread" : "Web search tool disabled");
+                  }}
+                  aria-label="Toggle web search"
+                  title="Toggle Web Search tool"
+                  className={cn(
+                    "p-1.5 rounded-lg transition-colors",
+                    webSearchActive
+                      ? "bg-primary/15 text-primary"
+                      : "text-muted-foreground hover:text-foreground hover:bg-accent/60"
+                  )}
+                >
+                  <Globe className="size-3.5" />
                 </button>
 
                 {/* Voice / Mic Button */}
@@ -544,13 +755,13 @@ export const ChatScreen: React.FC = () => {
                   aria-label={isRecording ? "Stop recording" : "Voice input with WhisperX"}
                   title={isRecording ? "Stop recording" : "Voice input with WhisperX"}
                   className={cn(
-                    "p-2 rounded-md transition-colors",
+                    "p-1.5 rounded-lg transition-colors",
                     isRecording
                       ? "bg-destructive text-destructive-foreground animate-pulse"
-                      : "text-muted-foreground hover:text-foreground hover:bg-accent"
+                      : "text-muted-foreground hover:text-foreground hover:bg-accent/60"
                   )}
                 >
-                  {isRecording ? <Square className="size-4 fill-current" /> : <Mic className="size-4" />}
+                  {isRecording ? <Square className="size-3.5 fill-current" /> : <Mic className="size-3.5" />}
                 </button>
 
                 {/* My documents (RAG) Toggle */}
@@ -567,8 +778,8 @@ export const ChatScreen: React.FC = () => {
                   className={cn(
                     "ml-1 flex items-center gap-1.5 h-7 px-2.5 rounded-full text-xs border transition-colors disabled:opacity-40 disabled:pointer-events-none",
                     enableRagInChat
-                      ? "border-primary/50 bg-primary/10 text-foreground font-medium"
-                      : "border-border text-muted-foreground hover:text-foreground"
+                      ? "border-primary/50 bg-primary/15 text-foreground font-medium"
+                      : "border-border/70 text-muted-foreground hover:text-foreground"
                   )}
                 >
                   <FileText className="size-3.5" />
@@ -581,30 +792,43 @@ export const ChatScreen: React.FC = () => {
                 </button>
               </div>
 
-              {/* Send Button */}
-              <Button
-                size="icon"
-                className="size-8 rounded-full"
-                disabled={
-                  (!prompt.trim() && !attachedImage && attachedDocuments.length === 0) ||
-                  !model ||
-                  isStreaming
-                }
-                onClick={send}
-                aria-label="Send message"
-              >
-                <ArrowUp className="size-4" />
-              </Button>
+              <div className="flex items-center gap-2.5">
+                {/* Context Window % Badge */}
+                <div
+                  className="flex items-center gap-1 text-[11px] font-mono text-muted-foreground"
+                  title={`Estimated context usage: ${estTokens} / ${maxContext.toLocaleString()} tokens`}
+                >
+                  <span className="inline-block size-2 rounded-full border border-muted-foreground/60" />
+                  <span>{contextPercent}%</span>
+                </div>
+
+                {/* Send Button */}
+                <Button
+                  size="icon"
+                  className="size-7 rounded-full bg-primary hover:bg-primary/90 text-primary-foreground shadow-sm"
+                  disabled={
+                    (!prompt.trim() && !attachedImage && attachedDocuments.length === 0) ||
+                    !model ||
+                    isStreaming
+                  }
+                  onClick={send}
+                  aria-label="Send message"
+                >
+                  <ArrowUp className="size-3.5" />
+                </Button>
+              </div>
             </div>
           </div>
         </div>
       </section>
 
-      {/* On-demand details slide-over */}
+      {/* On-demand Model & Session Parameters slide-over */}
       {detailsOpen && model && (
-        <aside className="w-72 shrink-0 border-l border-border bg-background p-5 overflow-y-auto animate-in slide-in-from-right-4 duration-150">
-          <div className="flex items-center justify-between mb-4">
-            <h3 className="text-sm font-medium">Model details</h3>
+        <aside className="w-72 shrink-0 border-l border-border/70 bg-sidebar p-5 pt-12 overflow-y-auto animate-in slide-in-from-right-4 duration-150 space-y-6">
+          <div className="flex items-center justify-between">
+            <h3 className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">
+              Model & Parameters
+            </h3>
             <button
               type="button"
               onClick={() => setDetailsOpen(false)}
@@ -614,21 +838,74 @@ export const ChatScreen: React.FC = () => {
               <X className="size-4" />
             </button>
           </div>
-          <dl className="space-y-3 text-sm">
+
+          <dl className="space-y-2.5 text-xs rounded-xl border border-border/60 bg-card/70 p-3.5">
             {[
               ["Name", model.name],
               ["Parameters", model.parameters],
               ["Quantization", model.quantization],
               ["Size on disk", `${model.fileSizeGB} GB`],
-              ["Context window", `${model.config.contextSize.toLocaleString()} tokens`],
-              ["Engine", "Ollama · 127.0.0.1:11434"],
+              ["Context window", `${model.config.contextSize.toLocaleString()} tok`],
+              ["Engine", "Local Runtime"],
             ].map(([k, v]) => (
-              <div key={k} className="flex justify-between gap-4">
+              <div key={k} className="flex justify-between gap-3">
                 <dt className="text-muted-foreground">{k}</dt>
-                <dd className="text-right truncate">{v}</dd>
+                <dd className="text-right font-mono text-foreground truncate">{v}</dd>
               </div>
             ))}
           </dl>
+
+          {session && (
+            <div className="space-y-4">
+              <div className="space-y-1.5">
+                <div className="flex items-center justify-between text-xs">
+                  <span className="text-muted-foreground font-medium">Temperature</span>
+                  <span className="font-mono text-foreground">{session.temperature.toFixed(2)}</span>
+                </div>
+                <input
+                  type="range"
+                  min={0}
+                  max={1.5}
+                  step={0.05}
+                  value={session.temperature}
+                  onChange={(e) =>
+                    updateSessionParams(session.id, { temperature: parseFloat(e.target.value) })
+                  }
+                  className="w-full"
+                />
+              </div>
+
+              <div className="space-y-1.5">
+                <div className="flex items-center justify-between text-xs">
+                  <span className="text-muted-foreground font-medium">Top-P</span>
+                  <span className="font-mono text-foreground">{session.topP.toFixed(2)}</span>
+                </div>
+                <input
+                  type="range"
+                  min={0.1}
+                  max={1}
+                  step={0.05}
+                  value={session.topP}
+                  onChange={(e) =>
+                    updateSessionParams(session.id, { topP: parseFloat(e.target.value) })
+                  }
+                  className="w-full"
+                />
+              </div>
+
+              <div className="space-y-1.5">
+                <span className="text-xs text-muted-foreground font-medium">System Instructions</span>
+                <textarea
+                  rows={4}
+                  value={session.systemPrompt}
+                  onChange={(e) =>
+                    updateSessionParams(session.id, { systemPrompt: e.target.value })
+                  }
+                  className="w-full rounded-xl border border-border bg-card p-2.5 text-xs text-foreground focus:outline-none focus:border-primary/60 resize-none"
+                />
+              </div>
+            </div>
+          )}
         </aside>
       )}
     </main>

@@ -1,0 +1,32 @@
+=== SEC-6c: Dependency Security Audit & License Verification ===
+npm audit production vulnerabilities: 3
+Breakdown: {
+  "info": 0,
+  "low": 0,
+  "moderate": 0,
+  "high": 2,
+  "critical": 1,
+  "total": 3
+}
+
+Direct Production Dependencies Verified:
+  - @tabler/icons-react: MIT / Apache-2.0 / ISC (Permissive)
+  - autoprefixer: MIT / Apache-2.0 / ISC (Permissive)
+  - class-variance-authority: MIT / Apache-2.0 / ISC (Permissive)
+  - clsx: MIT / Apache-2.0 / ISC (Permissive)
+  - lucide-react: MIT / Apache-2.0 / ISC (Permissive)
+  - next: MIT / Apache-2.0 / ISC (Permissive)
+  - react: MIT / Apache-2.0 / ISC (Permissive)
+  - react-dom: MIT / Apache-2.0 / ISC (Permissive)
+  - sonner: MIT / Apache-2.0 / ISC (Permissive)
+  - tailwind-merge: MIT / Apache-2.0 / ISC (Permissive)
+  - zustand: MIT / Apache-2.0 / ISC (Permissive)
+
+Shipped Desktop Runtime Architecture:
+  - Shipped Executable: Sanctum-Desktop.exe (Pure C# / .NET 4.0 system runtime)
+  - Node.js runtime included in dist: False (0 bytes)
+  - Next.js server runtime included in dist: False (Static HTML/JS/CSS only)
+  - Development Server Advisory Impact on Desktop .exe: Mitigated (no Node.js server executes on target)
+  - Advisory tracking logged in docs/refactor/FOUND_BUGS.md and docs/REVIEW_QUEUE.md
+
+License Gate Result: PASS

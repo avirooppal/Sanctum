@@ -1,0 +1,5 @@
+=== DATA-5b: Single-Instance Enforcement & Window Focus ===
+Second instance exit code: 2 (Expected: 2)
+Second instance stdout: Another instance of Sanctum Desktop is already running. Focusing active window.
+Single-instance enforcement verified: True
+Result: PASS

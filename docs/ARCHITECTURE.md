@@ -18,8 +18,10 @@ core/
   infra/              LocalStorage persistence, process supervision, platform layers
 apps/
   ui/                 Frontend components, layout, state hooks, styling tokens
+src-tauri/            Tauri 2 / WebView2 desktop shell configuration & capabilities
+vendor/webview2/      Pinned Microsoft.Web.WebView2.Core, WinForms & WebView2Loader SDK
 tests/                Integration suites, characterization tests, fixtures
-tools/                Architecture verification scripts, benchmark harnesses
+tools/                Desktop host compiler, installer builder, exe-verify suites
 ```
 
 ## 2. Invariant Rules
@@ -31,3 +33,8 @@ tools/                Architecture verification scripts, benchmark harnesses
    Core modules never import React components, JSX elements, or UI styling libraries.
 4. **Contract Supremacy**:
    All inter-boundary data structures are governed by explicit TypeScript interfaces in `contracts/`.
+
+## 3. Standalone Desktop Host Architecture (ADR 0104)
+- **Window & Process Ownership**: `Sanctum-Desktop.exe` creates a native Win32 `Form` (`HWND`) with `SetCurrentProcessExplicitAppUserModelID("Sanctum.Desktop.App.1")`, binds a Win32 Job Object (`JOB_OBJECT_LIMIT_KILL_ON_JOB_CLOSE`), and embeds `CoreWebView2Controller` directly inside `this.Handle`.
+- **In-Process UI & API Transport**: Static assets are mapped to `https://sanctum.app` via `SetVirtualHostNameToFolderMapping` and `/api/*` + `/v1/*` requests are handled in-process via `CoreWebView2.WebResourceRequested` with **0 listening TCP ports** by default (the OpenAI-compatible Local API Server binds `127.0.0.1:<port>` only when enabled in Settings > Local API Server or via `--headless`).
+- **Network Silence & Accelerator Lock**: WebView2 runs with `AreBrowserAcceleratorKeysEnabled = false`, `AreDefaultContextMenusEnabled = false`, `AreDevToolsEnabled = false` (release), and `--host-resolver-rules="MAP * ~NOTFOUND"` so renderer/network sub-processes make 0 outbound connections.

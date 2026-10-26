@@ -1,0 +1,55 @@
+{
+  "$schema": "https://schema.tauri.app/config/2",
+  "productName": "Sanctum",
+  "version": "1.0.0",
+  "identifier": "com.sanctum.desktop",
+  "build": {
+    "frontendDist": "../out",
+    "devUrl": "http://127.0.0.1:3000"
+  },
+  "app": {
+    "withGlobalTauri": false,
+    "windows": [
+      {
+        "label": "main",
+        "title": "",
+        "decorations": false,
+        "width": 1280,
+        "height": 840,
+        "minWidth": 900,
+        "minHeight": 600,
+        "resizable": true,
+        "fullscreen": false,
+        "visible": false,
+        "backgroundColor": "#121214",
+        "browserExtensionsEnabled": false,
+        "additionalBrowserArgs": "--host-resolver-rules=\"MAP * ~NOTFOUND\" --disable-background-networking --disable-component-update --disable-domain-reliability --disable-sync --disable-translate --disable-client-side-phishing-detection --disable-default-apps --disable-breakpad --disable-crash-reporter --no-first-run --no-default-browser-check --no-pings --metrics-recording-only --disable-features=msSmartScreenProtection,msEdgeShopping,msEdgeWallet,msImplicitSignin,msAccountConsistency,msEdgeExperiments,Translate,OptimizationHints,MediaRouter,DialMediaRouteProvider,AutofillServerCommunication,CertificateTransparencyComponentUpdater"
+      }
+    ],
+    "security": {
+      "csp": "default-src 'self' https://sanctum.app tauri://localhost; script-src 'self' 'unsafe-inline' https://sanctum.app tauri://localhost; style-src 'self' 'unsafe-inline' https://sanctum.app tauri://localhost; img-src 'self' data: blob: https://sanctum.app tauri://localhost; font-src 'self' data: https://sanctum.app tauri://localhost; connect-src 'self' https://sanctum.app tauri://localhost http://127.0.0.1:*; object-src 'none'; frame-ancestors 'none'; base-uri 'self'",
+      "capabilities": ["default"],
+      "freezePrototype": true
+    }
+  },
+  "bundle": {
+    "active": true,
+    "targets": ["nsis"],
+    "icon": [
+      "../assets/icons/icon-32.png",
+      "../assets/icons/icon-128.png",
+      "../assets/icons/icon-256.png",
+      "../deploy/installer/app-icon.ico"
+    ],
+    "windows": {
+      "webviewInstallMode": {
+        "type": "downloadBootstrapper",
+        "silent": false
+      },
+      "nsis": {
+        "installMode": "currentUser",
+        "displayLanguageSelector": false
+      }
+    }
+  }
+}

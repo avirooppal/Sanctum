@@ -73,11 +73,7 @@ export const SanctumShell: React.FC<{ children: React.ReactNode }> = ({ children
         <div className={cn("flex items-center h-14", collapsed ? "justify-center" : "justify-between px-1")}>
           {!collapsed && (
             <div className="flex items-center gap-2.5">
-              <img
-                src="/mascot.jpg"
-                alt=""
-                className="size-7 rounded-full object-cover bg-white"
-              />
+              <img src="/mascot.jpg" alt="" width={28} height={28} style={{ width: "28px", height: "28px", maxWidth: "28px", maxHeight: "28px" }} className="size-7 w-7 h-7 rounded-full object-cover bg-white" />
               <span className="font-semibold text-sm">Sanctum</span>
             </div>
           )}
@@ -119,7 +115,7 @@ export const SanctumShell: React.FC<{ children: React.ReactNode }> = ({ children
                   <div className="ml-4 pl-3 border-l border-border my-1 space-y-0.5">
                     <button
                       type="button"
-                      onClick={createNewChatSession}
+                      onClick={() => createNewChatSession()}
                       className="w-full flex items-center gap-2 px-2 h-8 text-xs text-muted-foreground hover:text-foreground hover:bg-accent/60 rounded-md transition-colors"
                     >
                       <Plus className="size-3.5" />

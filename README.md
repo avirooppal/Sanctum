@@ -1,5 +1,7 @@
 <div align="center">
 
+<img src="./Beta.jpg" alt="Sanctum Logo" width="112" style="border-radius: 24px; box-shadow: 0 8px 30px rgba(0,0,0,0.5); margin-bottom: 12px;" />
+
 # 🏛️ Sanctum
 
 ### The Sovereign, Private Local AI Operating System & Cognitive Workspace
@@ -16,6 +18,10 @@
 <br />
 
 **Sanctum** is a unified, high-density client workspace engineered for executing large language models, retrieval-augmented generation (RAG), voice recognition, computer vision, and autonomous agent loops entirely on-device or within private air-gapped networks.
+
+<br />
+
+<img src="./docs/screenshots/app-preview.png" alt="Sanctum Application Workspace" width="100%" style="border-radius: 12px; border: 1px solid rgba(255,255,255,0.1); box-shadow: 0 16px 40px rgba(0,0,0,0.6);" />
 
 </div>
 
@@ -119,12 +125,20 @@ ollama serve
 ```
 *(Sanctum will automatically detect models already installed via `ollama list`)*
 
-### 3. Start Sanctum
+### 3. Start Sanctum (Development Server)
 ```bash
 npm run dev
 ```
 
-Open [http://localhost:3000](http://localhost:3000) in your browser.
+### 4. Build Standalone Windows Desktop Application (`Sanctum.exe`)
+```bash
+python tools/build_installer.py
+```
+Produces:
+- `dist/Sanctum-Setup-1.0.0-x64.exe` (Per-user installer with `/S` silent support and `Uninstall.exe`)
+- `dist/Sanctum.exe` & `deploy/installer/build_payload/Sanctum-Desktop.exe` (Standalone desktop executable)
+
+**Desktop Engine Architecture Disclosure:** Sanctum's Windows desktop interface is rendered inside an embedded web engine (Microsoft Edge WebView2 / Tauri 2 Wry architecture, the same architectural class used by Jan and Visual Studio Code) hosted directly inside Sanctum's native Win32 window (`Sanctum-Desktop.exe`). It never spawns an external `msedge.exe`, `chrome.exe`, or `brave.exe` browser window, disables browser chrome and browser accelerators (`AreBrowserAcceleratorKeysEnabled = false`), serves its UI over the virtual host `https://sanctum.app` with `0` listening TCP ports by default, and enforces network silence (`--host-resolver-rules="MAP * ~NOTFOUND"`). See [`docs/APP_NOT_WRAPPER.md`](docs/APP_NOT_WRAPPER.md) and [`docs/EXE_VERIFICATION.md`](docs/EXE_VERIFICATION.md) for measured verification results.
 
 ---
 

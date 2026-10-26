@@ -18,7 +18,7 @@ export const ChatExplorer: React.FC = () => {
   return (
     <div className="space-y-3">
       <button
-        onClick={createNewChatSession}
+        onClick={() => createNewChatSession()}
         className="flex items-center justify-center gap-2 w-full py-2 px-3 text-xs font-medium text-white bg-indigo-600 hover:bg-indigo-500 rounded-lg shadow-sm transition-colors"
       >
         <Plus className="w-4 h-4" />

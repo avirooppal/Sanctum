@@ -1,0 +1,7 @@
+=== INST-2c: Silent Unattended Install Verification ===
+Executing: C:\Users\aviroop\Desktop\Sru\dist\Sanctum-Setup-1.0.0-x64.exe /S /D=C:\Users\aviroop\Desktop\Sru\build\test_silent_install
+Return code: 0
+Sanctum-Desktop.exe exists: True
+Uninstall.exe exists: True
+resources/web/index.html exists: True
+Result: PASS

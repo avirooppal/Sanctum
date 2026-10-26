@@ -1,0 +1,11 @@
+=== SEC-6a: Loopback Only Listener Verification ===
+Active Listeners for Port 1391:
+{
+    "LocalAddress":  "127.0.0.1",
+    "LocalPort":  1391,
+    "State":  2
+}
+
+Listening strictly on loopback: True
+Non-loopback listeners detected: False
+Result: PASS

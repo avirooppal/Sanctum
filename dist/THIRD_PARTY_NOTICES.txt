@@ -1,0 +1,11 @@
+=== SANCTUM THIRD PARTY NOTICES ===
+
+Sanctum bundles components licensed under permissive open-source licenses:
+
+- Next.js (MIT License) - Vercel, Inc.
+- React (MIT License) - Meta Platforms, Inc.
+- Zustand (MIT License) - Zustand Contributors
+- Tailwind CSS (MIT License) - Tailwind Labs, Inc.
+- Lucide React (ISC License) - Lucide Contributors
+- class-variance-authority (Apache-2.0) - Joe Bell
+- clsx (MIT License) - Luke Edwards
