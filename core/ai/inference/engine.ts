@@ -117,7 +117,7 @@ export class LocalEngineClient {
       }
 
       return rawModels.map((m: any, idx: number) => {
-        const name: string = m.name || m.id || "llama3.2";
+        const name: string = m.name || m.id || "local-model";
         const details = m.details || {};
         const nameParamMatch = name.match(/(\d+(?:\.\d+)?[bBmM])/);
         const nameQuantMatch = name.match(/(Q\d_[A-Z0-9_]+|F16|FP16|BF16)/i);
@@ -233,10 +233,17 @@ export class LocalEngineClient {
           try {
             const data = JSON.parse(line);
             if (data.total && data.completed) {
-              const pct = Math.round((data.completed / data.total) * 100);
+              const pct = Math.min(98, Math.max(1, Math.round((data.completed / data.total) * 98)));
               onProgress(pct, data.status || "Downloading");
+            } else if (data.status === "success") {
+              onProgress(100, "Installed successfully");
             } else if (data.status) {
-              onProgress(100, data.status);
+              const statusLower = data.status.toLowerCase();
+              if (statusLower.includes("manifest") || statusLower.includes("pulling")) {
+                onProgress(1, data.status);
+              } else if (statusLower.includes("verifying") || statusLower.includes("writing")) {
+                onProgress(99, data.status);
+              }
             }
           } catch {
             // Ignore parse errors on partial chunks
@@ -295,6 +302,7 @@ export class LocalEngineClient {
     }
 
     let response: Response | null = null;
+    let lastError = "";
     const chatCandidates = ["/api/chat", `${endpoint}/api/chat`, "/v1/chat/completions"];
     for (const chatUrl of chatCandidates) {
       try {
@@ -316,14 +324,26 @@ export class LocalEngineClient {
         if (res.ok && res.body) {
           response = res;
           break;
+        } else {
+          try {
+            const errData = await res.json();
+            if (errData?.error) {
+              lastError = typeof errData.error === "string" ? errData.error : errData.error.message || JSON.stringify(errData.error);
+            }
+          } catch {
+            // Ignore json parse error
+          }
         }
-      } catch {
-        // try next candidate
+      } catch (e: any) {
+        lastError = e?.message || "";
       }
     }
 
     if (!response || !response.body) {
-      throw new Error(`Inference engine unreachable at ${endpoint}. Start Ollama with 'ollama serve' or configure an active engine endpoint.`);
+      if (lastError && (lastError.toLowerCase().includes("not found") || lastError.toLowerCase().includes("does not exist"))) {
+        throw new Error(`Model '${modelName}' is not installed in local engine. Select an installed model or download it from the Hub.`);
+      }
+      throw new Error(lastError ? `${lastError} (at ${endpoint})` : `Inference engine unreachable at ${endpoint}. Start Ollama with 'ollama serve' or configure an active engine endpoint.`);
     }
 
     const reader = response.body.getReader();

@@ -42,12 +42,12 @@ def prepare():
         shutil.rmtree(target_web, ignore_errors=True)
     os.makedirs(target_web, exist_ok=True)
 
-    # Check if .next build exists, build if not
+    # Always compile fresh Next.js frontend to ensure latest UI fixes and assets are packaged
+    print("Building Next.js frontend...")
+    subprocess.run(["npm", "run", "build"], cwd=ROOT, check=True, shell=True)
+
     html_src = os.path.join(ROOT, ".next", "server", "app", "index.html")
     static_src = os.path.join(ROOT, ".next", "static")
-    if not os.path.exists(html_src) or not os.path.exists(static_src):
-        print("Building Next.js frontend...")
-        subprocess.run(["npm", "run", "build"], cwd=ROOT, check=True, shell=True)
 
     # Copy index.html
     shutil.copy2(html_src, os.path.join(target_web, "index.html"))

@@ -28,7 +28,7 @@ test("P4 Parameters and Options Verification", async (t) => {
         {
           model: "qwen3:1.7b",
           messages: [{ role: "user", content: prompt }],
-          params: { temperature: 0, seed: 42, maxTokens: 40 },
+          params: { temperature: 0, seed: 42, topK: 1, topP: 1.0, maxTokens: 40 },
           think: false,
         }
       )) {

@@ -25,6 +25,8 @@ export interface ModelsSlice {
   updateModelConfig: (modelId: string, newConfig: Partial<LocalModel["config"]>) => void;
   toggleModelLoad: (modelId: string) => void;
   startModelDownload: (modelName: string) => Promise<boolean>;
+  cancelModelDownload: (modelName: string) => void;
+  clearDownloadEntry: (modelName: string) => void;
   setSelectedCategory: (cat: ModelCategory) => void;
   setSearchModelQuery: (q: string) => void;
   setActiveModelId: (id: string) => void;
@@ -45,12 +47,17 @@ export const createModelsSlice: StateCreator<any, [], [], ModelsSlice> = (set, g
     try {
       const realModels = await LocalEngineClient.fetchOllamaModels(DEFAULT_OLLAMA_ENDPOINT);
       if (realModels.length > 0) {
-        const activeId = realModels[0].id;
+        const currentActive = get().activeModelId;
+        const isValid = realModels.some((m: any) => m.id === currentActive);
+        const activeId = isValid ? currentActive : realModels[0].id;
         set((state: any) => ({
           models: realModels,
           activeModelId: activeId,
           isFetchingModels: false,
-          chatSessions: state.chatSessions.map((s: any) => ({ ...s, modelId: activeId })),
+          chatSessions: state.chatSessions.map((s: any) => ({
+            ...s,
+            modelId: realModels.some((m: any) => m.id === s.modelId) ? s.modelId : activeId,
+          })),
           arenaPanes: [
             {
               modelId: realModels[0].id,
@@ -133,6 +140,22 @@ export const createModelsSlice: StateCreator<any, [], [], ModelsSlice> = (set, g
 
     await get().initModels();
     return success;
+  },
+
+  cancelModelDownload: (modelName: string) => {
+    set((state: any) => {
+      const nextMap = { ...state.downloadProgressMap };
+      delete nextMap[modelName];
+      return { downloadProgressMap: nextMap };
+    });
+  },
+
+  clearDownloadEntry: (modelName: string) => {
+    set((state: any) => {
+      const nextMap = { ...state.downloadProgressMap };
+      delete nextMap[modelName];
+      return { downloadProgressMap: nextMap };
+    });
   },
 
   setSelectedCategory: (cat) => set({ selectedCategory: cat }),

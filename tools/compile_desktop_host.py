@@ -720,6 +720,14 @@ namespace Sanctum {
         private void OnWebResourceRequested(object sender, CoreWebView2WebResourceRequestedEventArgs e) {
             try {
                 Uri uri = new Uri(e.Request.Uri);
+
+                // Allow direct loopback to local inference daemons (e.g. Ollama 11434, llama-server 18080) for real SSE streaming
+                if ((uri.Host.Equals("127.0.0.1", StringComparison.OrdinalIgnoreCase) ||
+                     uri.Host.Equals("localhost", StringComparison.OrdinalIgnoreCase)) &&
+                    uri.Port != 80 && uri.Port != 443 && uri.Port != _port) {
+                    return; // Pass through to local daemon
+                }
+
                 if (!uri.Host.Equals("sanctum.app", StringComparison.OrdinalIgnoreCase) &&
                     !uri.Host.Equals("127.0.0.1", StringComparison.OrdinalIgnoreCase) &&
                     !uri.Host.Equals("localhost", StringComparison.OrdinalIgnoreCase)) {
@@ -823,6 +831,16 @@ namespace Sanctum {
                             string respJson = sr.ReadToEnd();
                             return Encoding.UTF8.GetBytes(respJson + "\n");
                         }
+                    }
+                } catch (WebException wex) {
+                    HttpWebResponse errResp = wex.Response as HttpWebResponse;
+                    if (errResp != null) {
+                        statusCode = (int)errResp.StatusCode;
+                        try {
+                            using (StreamReader sr = new StreamReader(errResp.GetResponseStream(), Encoding.UTF8)) {
+                                return Encoding.UTF8.GetBytes(sr.ReadToEnd());
+                            }
+                        } catch { }
                     }
                 } catch { }
                 statusCode = 502;

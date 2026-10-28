@@ -98,10 +98,11 @@ export const createChatSlice: StateCreator<any, [], [], ChatSlice> = (set, get) 
   createNewChatSession: (projectId) => {
     const newId = `chat-${Date.now()}`;
     const targetProject = projectId !== undefined ? projectId : get().activeProjectId || undefined;
+    const fallbackModel = get().activeModelId || get().models[0]?.id || "";
     const newSession: ChatSession = {
       id: newId,
       title: "New Chat",
-      modelId: get().activeModelId || get().models[0]?.id || "llama3.2",
+      modelId: fallbackModel,
       createdAt: "Just now",
       updatedAt: "Just now",
       systemPrompt: "You are a private local assistant running entirely on-device.",
@@ -126,10 +127,11 @@ export const createChatSlice: StateCreator<any, [], [], ChatSlice> = (set, get) 
       const filtered = state.chatSessions.filter((s: ChatSession) => s.id !== id);
       if (filtered.length === 0) {
         const fallbackId = `chat-${Date.now()}`;
+        const fallbackModel = state.activeModelId || state.models[0]?.id || "";
         const fallback: ChatSession = {
           id: fallbackId,
           title: "New Chat",
-          modelId: state.activeModelId || state.models[0]?.id || "llama3.2",
+          modelId: fallbackModel,
           createdAt: "Just now",
           updatedAt: "Just now",
           systemPrompt: "You are a private local assistant running entirely on-device.",
@@ -223,10 +225,11 @@ export const createChatSlice: StateCreator<any, [], [], ChatSlice> = (set, get) 
   deleteAllChatSessions: () =>
     set((state: any) => {
       const freshId = `chat-${Date.now()}`;
+      const freshModel = state.activeModelId || state.models[0]?.id || "";
       const fresh: ChatSession = {
         id: freshId,
         title: "New Chat",
-        modelId: state.activeModelId || state.models[0]?.id || "llama3.2",
+        modelId: freshModel,
         createdAt: "Just now",
         updatedAt: "Just now",
         systemPrompt: "You are a private local assistant running entirely on-device.",
@@ -388,8 +391,11 @@ export const createChatSlice: StateCreator<any, [], [], ChatSlice> = (set, get) 
       }
     }
 
+    const effectiveModelId = get().activeModelId || session.modelId;
     const activeModel =
-      get().models.find((m: any) => m.id === session.modelId) || get().models[0];
+      get().models.find((m: any) => m.id === effectiveModelId) ||
+      get().models.find((m: any) => m.id === session.modelId) ||
+      get().models[0];
 
     if (!activeModel) {
       tracker.transition("error", {
@@ -416,6 +422,15 @@ export const createChatSlice: StateCreator<any, [], [], ChatSlice> = (set, get) 
       tracker.destroy();
       set({ activeTracker: null });
       return;
+    }
+
+    // Keep session synchronized with the answering model
+    if (session.modelId !== activeModel.id) {
+      set((state: any) => ({
+        chatSessions: state.chatSessions.map((s: ChatSession) =>
+          s.id === state.activeSessionId ? { ...s, modelId: activeModel.id } : s
+        ),
+      }));
     }
 
     tracker.transition("reading_message", {
