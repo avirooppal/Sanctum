@@ -22,14 +22,14 @@ We evaluated Candidate A (**Embedded WebView2 inside native `Sanctum-Desktop.exe
 
 ### Gate 1: Network Silence (Hard Privacy Gate)
 - **Initial Run (Failed — Preserved as Named Evidence):**
-  - Evidence file: [`evals/results/exe/gate1_network_silence_initial_failure.json`](file:///c:/Users/aviroop/Desktop/Sru/evals/results/exe/gate1_network_silence_initial_failure.json)
+  - Evidence file: [`evals/results/exe/gate1_network_silence_initial_failure.json`](https://github.com/avirooppal/Sanctum/blob/feecd7a/evals/results/exe/gate1_network_silence_initial_failure.json)
   - With `--disable-background-networking --disable-component-update --disable-sync` alone, the embedded WebView2 Network Service child process (`msedgewebview2.exe`, PID `15632`) opened **4 outbound TCP connections** on port `443` to `13.248.169.48` and `76.223.54.146` (`a904c694c05102f30.awsglobalaccelerator.com`).
 - **Root Cause & Fix:**
   - The WebView2 runtime initiates background connections or page-embedded fetches unless the Chromium `MappedHostResolver` inside the Network Service is locked to local virtual hosts.
   - We added `--host-resolver-rules="MAP * ~NOTFOUND, EXCLUDE sanctum.app, EXCLUDE 127.0.0.1, EXCLUDE localhost"` along with `--disable-features=msSmartScreenProtection,msEdgeShopping,msEdgeWallet,msImplicitSignin,msAccountConsistency,msEdgeExperiments,Translate,OptimizationHints,MediaRouter,DialMediaRouteProvider,AutofillServerCommunication,CertificateTransparencyComponentUpdater`, `EnableTrackingPrevention = false`, `AllowSingleSignOnUsingOSPrimaryAccount = false`, and `IsReputationCheckingRequired = false`.
   - All consented external model downloads and remote provider calls execute strictly through the C# core Egress Broker (`HandleDownloadOrPull`), never directly from the WebView2 renderer process.
 - **Post-Fix Verification:**
-  - Evidence file: [`evals/results/exe/standalone_webview2_verification.json`](file:///c:/Users/aviroop/Desktop/Sru/evals/results/exe/standalone_webview2_verification.json)
+  - Evidence file: [`evals/results/exe/standalone_webview2_verification.json`](https://github.com/avirooppal/Sanctum/blob/feecd7a/evals/results/exe/standalone_webview2_verification.json)
   - Outbound non-loopback connections across the entire `Sanctum-Desktop.exe` + `msedgewebview2.exe` process tree: **0**.
   - **Verdict:** **PASS**.
 

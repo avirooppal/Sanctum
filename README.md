@@ -76,8 +76,9 @@ tests exercise the actual store and engine parser, including cancellation,
 thread switching, duplicate prevention, stream errors and truthful downloads.
 
 See [current verification notes](docs/PROJECT_CHECKLIST.md) for this pass.
-Older evidence under `evals/` and `docs/STATUS.md` describes earlier environments
-and must not be treated as a guarantee for the current checkout.
+Historical evidence is available through [evals/README.md](evals/README.md).
+Generated reports stay in ignored `evals/results/` and CI artifacts; historical
+claims in `docs/STATUS.md` are not guarantees for the current checkout.
 
 ## Architecture and integration limits
 

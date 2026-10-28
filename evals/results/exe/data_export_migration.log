@@ -1,4 +1,0 @@
-=== DATA-5c: Export, Import & Schema Migration Round-Trip ===
-Exported threads count: 2
-Migration round-trip verified: True
-Result: PASS

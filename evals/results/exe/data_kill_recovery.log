@@ -1,7 +1,0 @@
-=== DATA-5a: Storage Integrity Under Process Kill Loops ===
-Iteration 0: threads.json parsed cleanly (1 items)
-Iteration 1: threads.json parsed cleanly (1 items)
-Iteration 2: threads.json parsed cleanly (1 items)
-Iteration 3: threads.json parsed cleanly (1 items)
-Iteration 4: threads.json parsed cleanly (1 items)
-Result: PASS - 100% integrity maintained under kill loops

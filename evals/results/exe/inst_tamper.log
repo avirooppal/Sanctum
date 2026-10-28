@@ -1,3 +1,0 @@
-=== INST-2g: Corrupted / Tampered Installer Defense ===
-Windows kernel rejected invalid/truncated binary: [WinError 193] %1 is not a valid Win32 application
-Corrupted installer rejected cleanly: True

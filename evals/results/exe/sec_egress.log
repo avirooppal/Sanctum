@@ -1,4 +1,0 @@
-=== SEC-6d: Zero Unconsented Outbound Egress on First Launch ===
-Outbound non-loopback established connections: 0
-Unconsented outbound WAN packets: 0
-Result: PASS

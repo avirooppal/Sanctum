@@ -1,6 +1,0 @@
-=== DOWN-4a: Consent Gate & Host Allowlist Enforcement ===
-Unconsented request blocked with status: 403
-Response error body: {"error":"Egress consent required before initiating network download","code":"CONSENT_REQUIRED"}
-Non-allowlisted host blocked with status: 403
-Response error body: {"error":"Host not permitted by Egress Broker allowlist","host":"untrusted-foreign-tracker.com"}
-Result: PASS

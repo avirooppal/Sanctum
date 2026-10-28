@@ -1,5 +1,0 @@
-=== DOWN-4c: SHA-256 Integrity Verification & Disk Margin ===
-Mismatched hash blocked with status: 422 (Expected 422 Unprocessable)
-Response body: {"error":"Checksum mismatch against published catalog","expected":"0000000000000000000000000000000000000000000000000000000000000000","computed":"f4b6ec338e3f40243ade8f938bb10ca5656b7559f6857a191b80b75c59606f2f"}
-Corrupt partial file purged from disk: True
-Result: PASS
