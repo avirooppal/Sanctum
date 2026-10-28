@@ -1,6 +1,16 @@
 # Current state
 
 - Branch: `feat/windows-exe-verification`; main unchanged. Tag: `exe-v1.0.0`.
+- Pipeline Verification Milestone V3 Complete (ADR 0105):
+  - Pipeline P8 (Tools, MCP and Permissions) fully verified with empirical evidence against real local engine (`qwen3:1.7b` on `127.0.0.1:11434`):
+    - P8.1 Tool definition and typed parameter schemas rendered byte-exact to engine specification.
+    - P8.2 Model-emitted tool call JSON parsing with strict argument schema validation and malformed JSON rejection.
+    - P8.3 Three-tier access control (Deny / Ask / Allow) with interactive user confirmation callbacks and session-scoped approval caching.
+    - P8.4 Execution fidelity with exact arguments, standard exit code reporting, and timeout budget enforcement (exit code 124).
+    - P8.5 Multi-turn live model tool turn integration: model incorporates structured tool observation results into the final answer.
+    - P8.6 Negative control: model without tool result cannot answer or invent specific observation codes.
+    - P8 Mutation: permission bypass check turns test red.
+  - Total Node.js automated test suite: 20 suites, 164/164 tests passing (`npm test`). Evidence captured in `evals/results/pipeline/p8/p8_tools_permissions.pass.txt`.
 - Pipeline Verification Milestone V2 Complete (ADR 0105):
   - Pipeline P6 (Documents and RAG) fully verified with empirical evidence against real local inference engine (`qwen3:1.7b` on `127.0.0.1:11434`):
     - P6.1 Ingestion format detection (.md, .txt, .csv, .json), size ceiling enforcement (50MB), and unsupported binary rejection (.exe).
