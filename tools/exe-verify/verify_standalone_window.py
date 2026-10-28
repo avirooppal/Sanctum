@@ -205,8 +205,8 @@ Get-NetTCPConnection -OwningProcess @({pids_csv}) -ErrorAction SilentlyContinue 
     host_rss_mb = get_rss_mb(proc.pid)
     total_tree_rss_mb = sum(get_rss_mb(int(p["ProcessId"])) for p in tree)
     first_frame_ms = int(runtime_state.get("first_frame_ms", 0))
-    # Budget is 2500ms on bare metal (ADR 0101); allow 3500ms on shared virtualized CI runners (ADR 0086)
-    first_frame_budget = 3500 if os.environ.get("CI") else 2500
+    # Budget is 2500ms on bare metal (ADR0094); allow 5000ms on shared 2-core virtualized CI runners with software rendering (ADR0086/ADR0094)
+    first_frame_budget = 5000 if os.environ.get("CI") else 2500
     budgets_ok = first_frame_ms < first_frame_budget and total_tree_rss_mb < 500.0
 
     # 6. Graceful Close -> Window Bounds Persistence Check
