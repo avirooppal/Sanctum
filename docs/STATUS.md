@@ -1,6 +1,22 @@
 # Current state
 
 - Branch: `feat/windows-exe-verification`; main unchanged. Tag: `exe-v1.0.0`.
+- Pipeline Verification Milestone V2 Complete (ADR 0105):
+  - Pipeline P6 (Documents and RAG) fully verified with empirical evidence against real local inference engine (`qwen3:1.7b` on `127.0.0.1:11434`):
+    - P6.1 Ingestion format detection (.md, .txt, .csv, .json), size ceiling enforcement (50MB), and unsupported binary rejection (.exe).
+    - P6.2 Recursive paragraph and sentence chunking with strict token ceilings (<= maxChunkTokens) preventing silent sequence truncation.
+    - P6.3 Content hash SHA-256 deduplication and idempotency in workspace, document update replacing vectors, and orphan-free document deletion.
+    - P6.4 1024-dimensional semantic unit vector generation, L2 unit normalization (norm = 1.0 +- 1e-5), and zero NaN verification.
+    - P6.5 Multi-evaluation vector determinism across runs.
+    - P6.6 Semantic similarity ranking on labeled sets (similar pairs score > 0.40, significantly higher than unrelated pairs).
+    - P6.7 Vector store top-1 match identical to brute-force exhaustive cosine scan (100% precision).
+    - P6.8 Hybrid dense + BM25-style lexical keyword retrieval with Reciprocal Rank Fusion (RRF, k=60).
+    - P6.9 Cross-workspace isolation canary: classified workspace canary document strictly excluded from public workspace queries.
+    - P6.10 Untrusted delimiter tags (`<<<[source ...]\n...>>>`) and system framing warnings for retrieved context.
+    - P6.11 Live model canary fact retrieval and source citation (`[source doc-zephyr-spec]`) with exact code `ZEPHYR-9482-OMEGA`.
+    - P6.12 Ablation proof: removing the passage from prompt forces model to abstain without inventing the canary key.
+    - P6 Mutation: deliberate cross-workspace leakage detection turns test red.
+  - Total Node.js automated test suite: 19 suites, 156/156 tests passing (`npm test`). Evidence captured in `evals/results/pipeline/p6/p6_documents_rag.pass.txt`.
 - Pipeline Verification Milestone V1 Complete (ADR 0105):
   - Pipelines P1 through P5 fully verified with empirical evidence against real local engines (`ollama` on `127.0.0.1:11434` with `qwen3:1.7b` and `qwen3:4b`, and pinned `llama-server` oracle `b11913` on `127.0.0.1:18080`).
   - P1 Startup and engine readiness: blob hash verification against manifest, launch args/context via `/props`, loaded model digest in `/api/ps`, truthful health endpoint (fails when engine offline, passes when up), and port conflict detection (`EADDRINUSE`).
