@@ -68,6 +68,7 @@ export function buildOllamaChatRequest(req: {
   messages: { role: string; content: string }[];
   params?: OllamaSamplingParams;
   stream?: boolean;
+  think?: boolean;
 }): OllamaChatPayload {
   const options: Record<string, any> = {};
   const p = req.params || {};
@@ -89,6 +90,10 @@ export function buildOllamaChatRequest(req: {
     messages: req.messages,
     stream: req.stream !== undefined ? req.stream : true,
   };
+
+  if (req.think !== undefined) {
+    payload.think = req.think;
+  }
 
   if (Object.keys(options).length > 0) {
     payload.options = options;
@@ -142,6 +147,7 @@ export async function* streamOllamaChat(
     model: string;
     messages: { role: string; content: string }[];
     params?: OllamaSamplingParams;
+    think?: boolean;
   },
   context: {
     counters?: CallCounters;
@@ -195,6 +201,7 @@ export async function* streamOllamaChat(
   const decoder = new TextDecoder();
   let buffer = "";
   let accumulatedText = "";
+  let inThinking = false;
   let finalEvent: StreamDoneEvent | null = null;
 
   try {
@@ -217,16 +224,35 @@ export async function* streamOllamaChat(
           continue;
         }
 
-        const delta = data.message?.content;
-        if (delta) {
-          accumulatedText += delta;
-          yield {
-            type: "delta",
-            text: delta,
-          };
+        const thinkingDelta = data.message?.thinking;
+        const contentDelta = data.message?.content;
+
+        if (thinkingDelta) {
+          if (!inThinking) {
+            inThinking = true;
+            accumulatedText += "<think>\n";
+            yield { type: "delta", text: "<think>\n" };
+          }
+          accumulatedText += thinkingDelta;
+          yield { type: "delta", text: thinkingDelta };
+        }
+
+        if (contentDelta) {
+          if (inThinking) {
+            inThinking = false;
+            accumulatedText += "\n</think>\n\n";
+            yield { type: "delta", text: "\n</think>\n\n" };
+          }
+          accumulatedText += contentDelta;
+          yield { type: "delta", text: contentDelta };
         }
 
         if (data.done) {
+          if (inThinking) {
+            inThinking = false;
+            accumulatedText += "\n</think>\n\n";
+            yield { type: "delta", text: "\n</think>\n\n" };
+          }
           finalEvent = {
             type: "done",
             text: accumulatedText,
@@ -250,12 +276,32 @@ export async function* streamOllamaChat(
     if (buffer.trim()) {
       try {
         const data = JSON.parse(buffer.trim());
-        const delta = data.message?.content;
-        if (delta) {
-          accumulatedText += delta;
-          yield { type: "delta", text: delta };
+        const thinkingDelta = data.message?.thinking;
+        const contentDelta = data.message?.content;
+        if (thinkingDelta) {
+          if (!inThinking) {
+            inThinking = true;
+            accumulatedText += "<think>\n";
+            yield { type: "delta", text: "<think>\n" };
+          }
+          accumulatedText += thinkingDelta;
+          yield { type: "delta", text: thinkingDelta };
+        }
+        if (contentDelta) {
+          if (inThinking) {
+            inThinking = false;
+            accumulatedText += "\n</think>\n\n";
+            yield { type: "delta", text: "\n</think>\n\n" };
+          }
+          accumulatedText += contentDelta;
+          yield { type: "delta", text: contentDelta };
         }
         if (data.done && !finalEvent) {
+          if (inThinking) {
+            inThinking = false;
+            accumulatedText += "\n</think>\n\n";
+            yield { type: "delta", text: "\n</think>\n\n" };
+          }
           finalEvent = {
             type: "done",
             text: accumulatedText,
@@ -283,6 +329,9 @@ export async function* streamOllamaChat(
       });
       yield finalEvent;
     } else {
+      if (inThinking) {
+        accumulatedText += "\n</think>\n\n";
+      }
       streamSpan?.end("ok", { tokens: accumulatedText.length });
       yield {
         type: "done",

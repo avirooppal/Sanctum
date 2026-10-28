@@ -1,6 +1,15 @@
 # Current state
 
 - Branch: `feat/windows-exe-verification`; main unchanged. Tag: `exe-v1.0.0`.
+- Pipeline Verification Milestone V1 Complete (ADR 0105):
+  - Pipelines P1 through P5 fully verified with empirical evidence against real local engines (`ollama` on `127.0.0.1:11434` with `qwen3:1.7b` and `qwen3:4b`, and pinned `llama-server` oracle `b11913` on `127.0.0.1:18080`).
+  - P1 Startup and engine readiness: blob hash verification against manifest, launch args/context via `/props`, loaded model digest in `/api/ps`, truthful health endpoint (fails when engine offline, passes when up), and port conflict detection (`EADDRINUSE`).
+  - P2 Chat request path: byte-exact user prompt delivery across Unicode/newlines/quotes, prompt assembly and chat template fidelity compared against oracle `/apply-template` and `/tokenize`, streaming delta concatenation integrity with usage metrics, and abort signal cancellation.
+  - P3 Model identity and switching: model identity strictly matched to engine loaded digest, mid-thread model switching with conversation history recall, and engine unload (`keep_alive: 0`) and reload lifecycle.
+  - P4 Parameters and options: temperature 0 determinism (5/5 byte-identical runs on `qwen3:1.7b`), stop sequence truncation (`stop: ["5"]`), token ceilings (`max_tokens`), and JSON-schema constrained generation (`format: "json"`).
+  - P5 Context handling: multilingual round-trip across CJK/Indic/Arabic/Japanese/Cyrillic, code block formatting preservation, large paste processing (20,000+ characters), and engine tokenizer token counting & detokenization round-trip.
+  - Defect D-004 logged and resolved: streaming client drops thinking tokens from `data.message.thinking` in reasoning models; resolved with `<think>...</think>` streaming tag preservation.
+  - Total Node.js automated test suite: 18 suites, 142/142 tests passing (`npm test`). All evidence captured under `evals/results/pipeline/p1/` through `evals/results/pipeline/p5/`.
 - Pipeline Verification Milestone V0 Complete (ADR 0105):
   - Baseline runs recorded: 77/77 pre-existing tests passing, clean TypeScript types, architecture rules passing.
   - Baseline reality probe completed and archived (evals/results/pipeline/baseline/reality_probe_prefix.json), catching 3 synthetic stand-in defects (D-001 synthetic fallback chat reply, D-002 synthetic llama3.2 model injection, D-003 synthetic loopback response). All three fixed and re-verified (evals/results/pipeline/v0/reality_probe_postfix.json).
