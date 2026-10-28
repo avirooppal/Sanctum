@@ -1,9 +1,9 @@
-import { StateCreator } from "zustand";
-import { ChatSession, ChatMessage, ChatProject, RequestStatusEvent } from "@/types";
-import { globalVectorStore } from "@/lib/vectorStore";
-import { LocalEngineClient } from "@/lib/engine";
-import { DEFAULT_OLLAMA_ENDPOINT } from "@/lib/constants";
-import { RequestStatusTracker } from "@core/ai/request_status.ts";
+import type { StateCreator } from "zustand";
+import type { ChatSession, ChatMessage, ChatProject, RequestStatusEvent } from "../../../contracts/types/index.ts";
+import { globalVectorStore } from "../../../core/ai/rag/vectorStore.ts";
+import { LocalEngineClient } from "../../../core/ai/inference/engine.ts";
+import { DEFAULT_OLLAMA_ENDPOINT } from "../../../contracts/constants/index.ts";
+import { RequestStatusTracker } from "../../../core/ai/request_status.ts";
 
 export interface AttachedDoc {
   name: string;
@@ -20,6 +20,8 @@ export interface ChatSlice {
   attachedImage: { src: string; name: string; width: number; height: number } | null;
   attachedDocuments: AttachedDoc[];
   activeTracker: RequestStatusTracker | null;
+  activeAbortController: AbortController | null;
+  toggleMessageBookmark: (sessionId: string, messageId: string) => void;
 
   setActiveSessionId: (id: string) => void;
   setActiveProjectId: (id: string | null) => void;
@@ -46,7 +48,7 @@ export interface ChatSlice {
 }
 
 const syncThreadsToBackend = (sessions: ChatSession[]) => {
-  if (typeof window === "undefined") return;
+  if (typeof window === "undefined" || !(window as any).chrome?.webview) return;
   fetch("/api/threads", {
     method: "POST",
     headers: { "Content-Type": "application/json" },
@@ -81,6 +83,11 @@ export const createChatSlice: StateCreator<any, [], [], ChatSlice> = (set, get) 
   attachedImage: null,
   attachedDocuments: [],
   activeTracker: null,
+  activeAbortController: null,
+  toggleMessageBookmark: (sessionId, messageId) => set((state: any) => ({
+    chatSessions: state.chatSessions.map((s: ChatSession) => s.id === sessionId
+      ? { ...s, messages: s.messages.map(m => m.id === messageId ? { ...m, bookmarked: !m.bookmarked } : m) } : s),
+  })),
 
   setActiveSessionId: (id) => set({ activeSessionId: id }),
   setActiveProjectId: (id) => set({ activeProjectId: id }),
@@ -96,7 +103,7 @@ export const createChatSlice: StateCreator<any, [], [], ChatSlice> = (set, get) 
     })),
 
   createNewChatSession: (projectId) => {
-    const newId = `chat-${Date.now()}`;
+    const newId = `chat-${crypto.randomUUID()}`;
     const targetProject = projectId !== undefined ? projectId : get().activeProjectId || undefined;
     const fallbackModel = get().activeModelId || get().models[0]?.id || "";
     const newSession: ChatSession = {
@@ -126,7 +133,7 @@ export const createChatSlice: StateCreator<any, [], [], ChatSlice> = (set, get) 
     set((state: any) => {
       const filtered = state.chatSessions.filter((s: ChatSession) => s.id !== id);
       if (filtered.length === 0) {
-        const fallbackId = `chat-${Date.now()}`;
+        const fallbackId = `chat-${crypto.randomUUID()}`;
         const fallbackModel = state.activeModelId || state.models[0]?.id || "";
         const fallback: ChatSession = {
           id: fallbackId,
@@ -185,7 +192,7 @@ export const createChatSlice: StateCreator<any, [], [], ChatSlice> = (set, get) 
     set((state: any) => {
       const target = state.chatSessions.find((s: ChatSession) => s.id === id);
       if (!target) return state;
-      const copyId = `chat-${Date.now()}`;
+      const copyId = `chat-${crypto.randomUUID()}`;
       const copy: ChatSession = {
         ...target,
         id: copyId,
@@ -224,7 +231,7 @@ export const createChatSlice: StateCreator<any, [], [], ChatSlice> = (set, get) 
 
   deleteAllChatSessions: () =>
     set((state: any) => {
-      const freshId = `chat-${Date.now()}`;
+      const freshId = `chat-${crypto.randomUUID()}`;
       const freshModel = state.activeModelId || state.models[0]?.id || "";
       const fresh: ChatSession = {
         id: freshId,
@@ -258,7 +265,7 @@ export const createChatSlice: StateCreator<any, [], [], ChatSlice> = (set, get) 
       const trimmed = name.trim();
       if (!trimmed) return state;
       const newProj: ChatProject = {
-        id: `proj-${Date.now()}`,
+        id: `proj-${crypto.randomUUID()}`,
         name: trimmed,
         assistantId,
         createdAt: "Just now",
@@ -292,6 +299,7 @@ export const createChatSlice: StateCreator<any, [], [], ChatSlice> = (set, get) 
     }),
 
   stopInference: () => {
+    get().activeAbortController?.abort();
     const tracker = get().activeTracker;
     if (tracker) {
       tracker.transition("stopped", { detail: "User stopped generation" });
@@ -301,12 +309,13 @@ export const createChatSlice: StateCreator<any, [], [], ChatSlice> = (set, get) 
   },
 
   sendMessage: async (content) => {
+    if (get().activeTracker || !content.trim()) return;
     const session = get().chatSessions.find((s: ChatSession) => s.id === get().activeSessionId);
     if (!session) return;
 
-    const requestId = `req-${Date.now()}`;
-    const userMsgId = `msg-${Date.now()}`;
-    const assistantMsgId = `msg-${Date.now() + 1}`;
+    const requestId = `req-${crypto.randomUUID()}`;
+    const userMsgId = `${requestId}-user`;
+    const assistantMsgId = `${requestId}-assistant`;
 
     // Initialize RequestStatusTracker
     const tracker = new RequestStatusTracker({
@@ -318,7 +327,7 @@ export const createChatSlice: StateCreator<any, [], [], ChatSlice> = (set, get) 
     const updateAssistantStatus = (event: RequestStatusEvent) => {
       set((state: any) => ({
         chatSessions: state.chatSessions.map((s: ChatSession) =>
-          s.id === state.activeSessionId
+          s.id === session.id
             ? {
                 ...s,
                 messages: s.messages.map((m: ChatMessage) =>
@@ -331,10 +340,13 @@ export const createChatSlice: StateCreator<any, [], [], ChatSlice> = (set, get) 
     };
 
     tracker.subscribe(updateAssistantStatus);
-    set({ activeTracker: tracker });
+    const controller = new AbortController();
+    set({ activeTracker: tracker, activeAbortController: controller });
 
     // Step 1: Optimistic render of user message + initial assistant message
     const userMsg: ChatMessage = {
+      attachments: get().attachedDocuments || [],
+      image: get().attachedImage || undefined,
       id: userMsgId,
       role: "user",
       content,
@@ -358,7 +370,7 @@ export const createChatSlice: StateCreator<any, [], [], ChatSlice> = (set, get) 
 
     set((state: any) => {
       const updated = state.chatSessions.map((s: ChatSession) =>
-        s.id === state.activeSessionId
+        s.id === session.id
           ? { ...s, title: autoTitle, messages: [...s.messages, userMsg, initialAssistantMsg], updatedAt: "Just now" }
           : s
       );
@@ -366,6 +378,7 @@ export const createChatSlice: StateCreator<any, [], [], ChatSlice> = (set, get) 
       return { chatSessions: updated };
     });
 
+    tracker.transition("reading_message");
     let ragContextSnippet = "";
     const attachedDocs = get().attachedDocuments || [];
     if (attachedDocs.length > 0) {
@@ -378,7 +391,7 @@ export const createChatSlice: StateCreator<any, [], [], ChatSlice> = (set, get) 
       tracker.transition("searching_documents", {
         detail: "Searching local Vault embeddings...",
       });
-      const retrieved = globalVectorStore.search(content, 3, 0.2);
+      const retrieved = globalVectorStore.search(content, 3, 0.2, new Set((get().documents || []).filter((d: any) => d.collectionId === get().activeCollectionId).map((d: any) => d.id)));
       if (retrieved.length > 0) {
         const vaultContext = retrieved
           .map((r, i) => `[Vault Reference ${i + 1} (${r.docName})]:\n${r.content}`)
@@ -407,7 +420,7 @@ export const createChatSlice: StateCreator<any, [], [], ChatSlice> = (set, get) 
       });
       set((state: any) => ({
         chatSessions: state.chatSessions.map((s: ChatSession) =>
-          s.id === state.activeSessionId
+          s.id === session.id
             ? {
                 ...s,
                 messages: s.messages.map((m: ChatMessage) =>
@@ -428,7 +441,7 @@ export const createChatSlice: StateCreator<any, [], [], ChatSlice> = (set, get) 
     if (session.modelId !== activeModel.id) {
       set((state: any) => ({
         chatSessions: state.chatSessions.map((s: ChatSession) =>
-          s.id === state.activeSessionId ? { ...s, modelId: activeModel.id } : s
+          s.id === session.id ? { ...s, modelId: activeModel.id } : s
         ),
       }));
     }
@@ -439,22 +452,27 @@ export const createChatSlice: StateCreator<any, [], [], ChatSlice> = (set, get) 
 
     const historyPayload = session.messages.map((m: any) => ({
       role: m.role,
-      content: m.content,
+      content: m.attachments?.length ? `${m.content}\n\n${m.attachments.map((d: AttachedDoc) => `[Attached Document: ${d.name}]\n${d.content}`).join("\n\n")}` : m.content,
     }));
+    if (session.systemPrompt) historyPayload.unshift({ role: "system", content: session.systemPrompt });
     historyPayload.push({ role: "user", content });
 
     const imageBase64 = get().attachedImage?.src;
 
+    set({ attachedImage: null, attachedDocuments: [] });
     try {
       for await (const chunk of LocalEngineClient.streamChat(activeModel.id, historyPayload, {
         endpoint: DEFAULT_OLLAMA_ENDPOINT,
-        temperature: activeModel.config.temperature,
+        temperature: session.temperature,
+        topP: session.topP,
+        signal: controller.signal,
         contextSize: activeModel.config.contextSize,
         gpuLayers: activeModel.config.gpuLayers,
         threads: activeModel.config.threads,
         ragContext: ragContextSnippet,
         imageAttached: imageBase64,
       })) {
+        if (controller.signal.aborted) break;
         if (tracker.getCurrentPhase() !== "writing_answer" && !chunk.isFinished) {
           tracker.transition("writing_answer", {
             detail: `Streaming response from ${activeModel.name}`,
@@ -474,7 +492,7 @@ export const createChatSlice: StateCreator<any, [], [], ChatSlice> = (set, get) 
 
         set((state: any) => ({
           chatSessions: state.chatSessions.map((s: ChatSession) =>
-            s.id === state.activeSessionId
+            s.id === session.id
               ? {
                   ...s,
                   messages: s.messages.map((m: ChatMessage) =>
@@ -506,7 +524,7 @@ export const createChatSlice: StateCreator<any, [], [], ChatSlice> = (set, get) 
         }
       }
     } catch (err: any) {
-      tracker.transition("error", {
+      if (!controller.signal.aborted) tracker.transition("error", {
         error: {
           code: "ENGINE_STREAM_ERROR",
           message: err?.message || "Failed to communicate with local inference daemon",
@@ -515,23 +533,28 @@ export const createChatSlice: StateCreator<any, [], [], ChatSlice> = (set, get) 
       });
     } finally {
       tracker.destroy();
-      set({ activeTracker: null, attachedImage: null, attachedDocuments: [] });
+      if (get().activeAbortController === controller) {
+        set({ activeTracker: null, activeAbortController: null });
+      }
+      syncThreadsToBackend(get().chatSessions);
     }
   },
 
   regenerateLastMessage: () => {
     const session = get().chatSessions.find((s: ChatSession) => s.id === get().activeSessionId);
-    if (!session || session.messages.length === 0) return;
+    if (get().activeTracker || !session || session.messages.length < 2) return;
     const last = session.messages[session.messages.length - 1];
     if (last.role === "assistant") {
-      const popped = session.messages.slice(0, -1);
+      const lastUser = session.messages[session.messages.length - 2];
+      if (lastUser.role !== "user") return;
+      const popped = session.messages.slice(0, -2);
       set((state: any) => ({
         chatSessions: state.chatSessions.map((s: ChatSession) =>
           s.id === state.activeSessionId ? { ...s, messages: popped } : s
         ),
       }));
-      const lastUser = popped[popped.length - 1];
       if (lastUser) {
+        set({ attachedDocuments: lastUser.attachments || [], attachedImage: lastUser.image || null });
         get().sendMessage(lastUser.content);
       }
     }

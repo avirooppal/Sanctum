@@ -14,8 +14,10 @@ export async function POST(req: NextRequest) {
     let successfulEndpoint = "";
 
     for (const ep of endpoints) {
+      req.signal.throwIfAborted();
       try {
         const res = await fetch(`${ep}/api/pull`, {
+          signal: req.signal,
           method: "POST",
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify({ name, stream: true }),
@@ -40,24 +42,7 @@ export async function POST(req: NextRequest) {
     }
 
     // Forward the streaming response directly to client
-    const stream = new ReadableStream({
-      async start(controller) {
-        const reader = ollamaResponse!.body!.getReader();
-        try {
-          while (true) {
-            const { done, value } = await reader.read();
-            if (done) break;
-            controller.enqueue(value);
-          }
-        } catch (err) {
-          controller.error(err);
-        } finally {
-          controller.close();
-        }
-      },
-    });
-
-    return new Response(stream, {
+    return new Response(ollamaResponse.body, {
       headers: {
         "Content-Type": "application/x-ndjson",
         "Cache-Control": "no-cache, no-transform",

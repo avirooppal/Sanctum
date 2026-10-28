@@ -137,7 +137,7 @@ test("P8 Tools, MCP and Permissions Verification", async (t) => {
     let askCount = 0;
     const promptHandler = async () => {
       askCount++;
-      return { decision: "approved", scope: "session" as const };
+      return { decision: "approved" as const, scope: "session" as const };
     };
 
     const approvedResult = await executor.executeCall(

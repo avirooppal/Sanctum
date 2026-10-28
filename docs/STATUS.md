@@ -1,3 +1,5 @@
+> Historical verification record. For the 2026-10-28 source changes and their actual verification scope, see [PROJECT_CHECKLIST.md](PROJECT_CHECKLIST.md). Previous all-pipeline claims below are not current release guarantees.
+
 # Current state
 
 - Branch: `feat/windows-exe-verification`; main unchanged. Tag: `exe-v1.0.0`.

@@ -177,7 +177,7 @@ export class InMemoryVectorStore {
   /**
    * Cosine-similarity top-k semantic search
    */
-  public search(query: string, topK: number = 4, minSimilarity: number = 0.2): VectorChunk[] {
+  public search(query: string, topK: number = 4, minSimilarity: number = 0.2, documentIds?: ReadonlySet<string>): VectorChunk[] {
     if (this.chunks.size === 0 || !query.trim()) {
       return [];
     }
@@ -186,6 +186,7 @@ export class InMemoryVectorStore {
     const scoredChunks: VectorChunk[] = [];
 
     for (const chunk of this.chunks.values()) {
+      if (documentIds && !documentIds.has(chunk.docId)) continue;
       const similarity = InMemoryVectorStore.cosineSimilarity(queryVector, chunk.vector);
       if (similarity >= minSimilarity) {
         scoredChunks.push({

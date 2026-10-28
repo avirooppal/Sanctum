@@ -3,6 +3,7 @@ import json
 import os
 import subprocess
 import zipfile
+from datetime import datetime, timezone
 
 ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 VERSION = "1.0.0"
@@ -17,6 +18,12 @@ def hash_file(path: str) -> str:
 
 
 def package():
+    with open(os.path.join(ROOT, "package-lock.json"), encoding="utf-8") as lock_file:
+        locked_packages = json.load(lock_file)["packages"]
+
+    def locked_version(name):
+        return locked_packages[f"node_modules/{name}"]["version"]
+
     dist_dir = os.path.join(ROOT, "dist")
     os.makedirs(dist_dir, exist_ok=True)
 
@@ -105,7 +112,7 @@ def package():
         "name": "Sanctum Desktop Installer SBOM",
         "documentNamespace": f"https://github.com/avirooppal/Sanctum/spdxdocs/sanctum-{VERSION}",
         "creationInfo": {
-            "created": "2026-10-25T12:00:00Z",
+            "created": datetime.now(timezone.utc).strftime("%Y-%m-%dT%H:%M:%SZ"),
             "creators": ["Organization: Sanctum Contributors"],
         },
         "packages": [
@@ -121,21 +128,21 @@ def package():
             {
                 "name": "next",
                 "SPDXID": "SPDXRef-Package-NextJS",
-                "versionInfo": "15.1.7",
+                "versionInfo": locked_version("next"),
                 "downloadLocation": "https://registry.npmjs.org/next",
                 "licenseConcluded": "MIT",
             },
             {
                 "name": "react",
                 "SPDXID": "SPDXRef-Package-React",
-                "versionInfo": "19.0.0",
+                "versionInfo": locked_version("react"),
                 "downloadLocation": "https://registry.npmjs.org/react",
                 "licenseConcluded": "MIT",
             },
             {
                 "name": "zustand",
                 "SPDXID": "SPDXRef-Package-Zustand",
-                "versionInfo": "5.0.3",
+                "versionInfo": locked_version("zustand"),
                 "downloadLocation": "https://registry.npmjs.org/zustand",
                 "licenseConcluded": "MIT",
             },

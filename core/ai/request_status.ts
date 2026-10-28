@@ -24,16 +24,16 @@ export class RequestStatusTracker {
 
   // Transition validation map matching docs/design/INTERACTION.md
   private static readonly LEGAL_TRANSITIONS: Record<RequestPhase, RequestPhase[]> = {
-    sending: ["queued", "loading_model", "reading_message", "error"],
+    sending: ["stopped", "queued", "loading_model", "reading_message", "error"],
     queued: ["loading_model", "reading_message", "cancelled"],
     loading_model: ["reading_message", "cancelled", "error"],
-    reading_message: ["searching_documents", "thinking", "using_tool", "writing_answer", "error"],
-    searching_documents: ["thinking", "writing_answer", "error"],
+    reading_message: ["stopped", "finishing", "searching_documents", "thinking", "using_tool", "writing_answer", "error"],
+    searching_documents: ["stopped", "reading_message", "finishing", "thinking", "writing_answer", "error"],
     thinking: ["using_tool", "writing_answer", "stopped", "error"],
     using_tool: ["waiting_approval", "thinking", "writing_answer", "error"],
     waiting_approval: ["using_tool", "thinking", "writing_answer", "cancelled"],
     writing_answer: ["stalled", "finishing", "stopped", "error"],
-    stalled: ["writing_answer", "stopped", "error"],
+    stalled: ["finishing", "writing_answer", "stopped", "error"],
     finishing: ["done", "error"],
     done: [],
     stopped: [],

@@ -36,6 +36,7 @@ import { ChatMessage } from "@/types";
 import { cn } from "@/lib/utils";
 import { splitThinking, PromptTemplates } from "@core/ai/index.ts";
 import { RequestStatusLine } from "@/components/chat/RequestStatusLine";
+import { determineDocumentType } from "@core/domain/documents.ts";
 import { toast } from "sonner";
 
 interface ChatScreenProps {
@@ -48,16 +49,19 @@ const MessageRow: React.FC<{
   onStop?: () => void;
   onRetry?: () => void;
   onDelete?: () => void;
-}> = ({ msg, modelName, onStop, onRetry, onDelete }) => {
+  onBookmark?: () => void;
+}> = ({ msg, modelName, onStop, onRetry, onDelete, onBookmark }) => {
   const [showThinking, setShowThinking] = useState(false);
   const [copied, setCopied] = useState(false);
-  const [bookmarked, setBookmarked] = useState(false);
+  const bookmarked = Boolean(msg.bookmarked);
 
-  const handleCopy = () => {
-    navigator.clipboard.writeText(msg.content);
+  const handleCopy = async () => {
+    try {
+    await navigator.clipboard.writeText(msg.content);
     setCopied(true);
     toast.success("Copied to clipboard");
     setTimeout(() => setCopied(false), 1800);
+    } catch { toast.error("Could not copy. Select the message text and copy it manually."); }
   };
 
   if (msg.role === "user") {
@@ -141,7 +145,7 @@ const MessageRow: React.FC<{
         )}
 
         {/* Message Action Bar + Telemetry matching owner screenshot */}
-        {!msg.requestStatus && (answer || thinking) && (
+        {(!msg.requestStatus || ["done", "stopped", "error", "cancelled"].includes(msg.requestStatus.phase)) && (answer || thinking) && (
           <div className="flex items-center gap-1.5 pt-1 text-muted-foreground">
             <button
               type="button"
@@ -155,7 +159,7 @@ const MessageRow: React.FC<{
             <button
               type="button"
               onClick={() => {
-                setBookmarked((b) => !b);
+                onBookmark?.();
                 toast.success(bookmarked ? "Removed bookmark" : "Response bookmarked");
               }}
               className={cn(
@@ -164,6 +168,7 @@ const MessageRow: React.FC<{
               )}
               title="Bookmark response"
               aria-label="Bookmark response"
+              aria-pressed={bookmarked}
             >
               <Bookmark className="size-3.5" />
             </button>
@@ -216,6 +221,8 @@ export const ChatScreen: React.FC<ChatScreenProps> = () => {
     stopInference,
     regenerateLastMessage,
     deleteChatMessage,
+    toggleMessageBookmark,
+    activeTracker,
     updateSessionParams,
     enableRagInChat,
     setEnableRagInChat,
@@ -233,7 +240,7 @@ export const ChatScreen: React.FC<ChatScreenProps> = () => {
 
   const [prompt, setPrompt] = useState("");
   const [detailsOpen, setDetailsOpen] = useState(false);
-  const [webSearchActive, setWebSearchActive] = useState(false);
+  const [bookmarksOnly, setBookmarksOnly] = useState(false);
   const [isRecording, setIsRecording] = useState(false);
   const [recordingSeconds, setRecordingSeconds] = useState(0);
   const [isTranscribing, setIsTranscribing] = useState(false);
@@ -250,10 +257,7 @@ export const ChatScreen: React.FC<ChatScreenProps> = () => {
   const session = chatSessions.find((s) => s.id === activeSessionId) || chatSessions[0];
   const model = models.find((m) => m.id === (activeModelId || session?.modelId)) || models[0];
   const messages = session?.messages ?? [];
-  const isStreaming =
-    messages.length > 0 &&
-    messages[messages.length - 1].role === "assistant" &&
-    !messages[messages.length - 1].metrics?.totalTokens;
+  const isStreaming = Boolean(activeTracker);
 
   // Estimate context window usage %
   const totalSessionChars = messages.reduce((acc, m) => acc + (m.content?.length || 0), 0) + prompt.length;
@@ -304,6 +308,10 @@ export const ChatScreen: React.FC<ChatScreenProps> = () => {
 
   const handleFiles = async (files: FileList | File[]) => {
     for (const file of Array.from(files)) {
+      if (file.size > 10 * 1024 * 1024) {
+        toast.error(`${file.name}: maximum attachment size is 10 MB.`);
+        continue;
+      }
       if (file.type.startsWith("image/")) {
         const reader = new FileReader();
         reader.onload = (e) => {
@@ -318,12 +326,16 @@ export const ChatScreen: React.FC<ChatScreenProps> = () => {
         reader.readAsDataURL(file);
       } else {
         try {
+          if (!/\.(txt|md|json|csv|ts|tsx|js|jsx|py|rs|go|cpp|c|html|css)$/i.test(file.name)) {
+            toast.error(`${file.name}: use a text, Markdown, JSON, CSV or source-code file. PDF text extraction is unavailable.`);
+            continue;
+          }
           const text = await file.text();
-          let docType: any = "text";
-          if (file.name.endsWith(".md")) docType = "markdown";
-          else if (file.name.endsWith(".pdf")) docType = "pdf";
-          else if (file.name.endsWith(".json")) docType = "json";
-          else if (/\.(ts|tsx|js|jsx|py|rs|go|cpp|c|html|css)$/.test(file.name)) docType = "code";
+          if (!text.trim() || text.includes("\0")) {
+            toast.error(`${file.name}: file is empty or contains binary data.`);
+            continue;
+          }
+          const docType = determineDocumentType(file.name);
 
           uploadDocument(activeCollectionId || "col-default", {
             name: file.name,
@@ -340,7 +352,7 @@ export const ChatScreen: React.FC<ChatScreenProps> = () => {
 
           setEnableRagInChat(true);
         } catch (err) {
-          console.error("Failed to read document:", err);
+          toast.error(`Could not read ${file.name}. Please retry.`);
         }
       }
     }
@@ -566,30 +578,32 @@ export const ChatScreen: React.FC<ChatScreenProps> = () => {
                 </div>
               </div>
             ) : (
-              messages.map((m) => (
+              messages.filter(m => !bookmarksOnly || m.bookmarked).map((m) => (
                 <MessageRow
                   key={m.id}
                   msg={m}
                   modelName={model?.name}
                   onStop={stopInference}
-                  onRetry={regenerateLastMessage}
-                  onDelete={session ? () => deleteChatMessage(session.id, m.id) : undefined}
+                  onRetry={!isStreaming && m.id === messages.at(-1)?.id ? regenerateLastMessage : undefined}
+                  onDelete={!isStreaming && session ? () => deleteChatMessage(session.id, m.id) : undefined}
+                  onBookmark={session ? () => toggleMessageBookmark(session.id, m.id) : undefined}
                 />
               ))
             )}
+            {bookmarksOnly && !messages.some(m => m.bookmarked) && <p className="text-sm text-muted-foreground py-6">No bookmarked responses in this chat. Save a response using its bookmark button.</p>}
             <div ref={endRef} />
           </div>
         </div>
 
         {/* Composer (Matches Screenshot 2026-10-25 190854.png) */}
-        <div className="px-6 pb-5 pt-2 shrink-0">
+        <div className="px-2 sm:px-6 pb-5 pt-2 shrink-0">
           {/* Hidden File Input */}
           <input
             type="file"
             ref={fileInputRef}
             onChange={handleFileInputChange}
             multiple
-            accept="image/*,.pdf,.txt,.md,.json,.csv,.py,.js,.tsx,.ts,.rs,.go,.cpp,.c,.html,.css"
+            accept="image/*,.txt,.md,.json,.csv,.py,.js,.tsx,.ts,.rs,.go,.cpp,.c,.html,.css"
             className="hidden"
           />
 
@@ -707,7 +721,7 @@ export const ChatScreen: React.FC<ChatScreenProps> = () => {
                   type="button"
                   onClick={handleFileClick}
                   aria-label="Attach file"
-                  title="Attach images, documents, code, or PDFs"
+                  title="Attach images, text documents, or code"
                   className="p-1.5 rounded-lg text-muted-foreground hover:text-foreground hover:bg-accent/60 transition-colors"
                 >
                   <Plus className="size-4" />
@@ -729,23 +743,11 @@ export const ChatScreen: React.FC<ChatScreenProps> = () => {
                   <SlidersHorizontal className="size-3.5" />
                 </button>
 
-                {/* Web Search Toggle */}
-                <button
-                  type="button"
-                  onClick={() => {
-                    setWebSearchActive((v) => !v);
-                    toast.success(!webSearchActive ? "Web search tool enabled for thread" : "Web search tool disabled");
-                  }}
-                  aria-label="Toggle web search"
-                  title="Toggle Web Search tool"
-                  className={cn(
-                    "p-1.5 rounded-lg transition-colors",
-                    webSearchActive
-                      ? "bg-primary/15 text-primary"
-                      : "text-muted-foreground hover:text-foreground hover:bg-accent/60"
-                  )}
-                >
-                  <Globe className="size-3.5" />
+                <button type="button" onClick={() => setBookmarksOnly(v => !v)}
+                  aria-label="Show bookmarked responses" aria-pressed={bookmarksOnly}
+                  title="Show bookmarked responses"
+                  className={cn("p-1.5 rounded-lg hover:bg-accent/60", bookmarksOnly && "text-primary bg-primary/15")}>
+                  <Bookmark className="size-3.5" />
                 </button>
 
                 {/* Voice / Mic Button */}
@@ -806,15 +808,14 @@ export const ChatScreen: React.FC<ChatScreenProps> = () => {
                 <Button
                   size="icon"
                   className="size-7 rounded-full bg-primary hover:bg-primary/90 text-primary-foreground shadow-sm"
-                  disabled={
+                  disabled={!isStreaming && (
                     (!prompt.trim() && !attachedImage && attachedDocuments.length === 0) ||
-                    !model ||
-                    isStreaming
-                  }
-                  onClick={send}
-                  aria-label="Send message"
+                    !model
+                  )}
+                  onClick={isStreaming ? stopInference : send}
+                  aria-label={isStreaming ? "Stop generation" : "Send message"}
                 >
-                  <ArrowUp className="size-3.5" />
+                  {isStreaming ? <Square className="size-3.5" /> : <ArrowUp className="size-3.5" />}
                 </Button>
               </div>
             </div>
@@ -824,7 +825,7 @@ export const ChatScreen: React.FC<ChatScreenProps> = () => {
 
       {/* On-demand Model & Session Parameters slide-over */}
       {detailsOpen && model && (
-        <aside className="w-72 shrink-0 border-l border-border/70 bg-sidebar p-5 pt-12 overflow-y-auto animate-in slide-in-from-right-4 duration-150 space-y-6">
+        <aside className="absolute right-0 top-0 bottom-0 z-30 w-72 max-w-full shrink-0 border-l border-border/70 bg-sidebar p-5 pt-12 overflow-y-auto animate-in slide-in-from-right-4 duration-150 space-y-6">
           <div className="flex items-center justify-between">
             <h3 className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">
               Model & Parameters
@@ -863,6 +864,7 @@ export const ChatScreen: React.FC<ChatScreenProps> = () => {
                   <span className="font-mono text-foreground">{session.temperature.toFixed(2)}</span>
                 </div>
                 <input
+                  aria-label="Temperature"
                   type="range"
                   min={0}
                   max={1.5}
@@ -882,6 +884,7 @@ export const ChatScreen: React.FC<ChatScreenProps> = () => {
                 </div>
                 <input
                   type="range"
+                  aria-label="Top-P"
                   min={0.1}
                   max={1}
                   step={0.05}
@@ -896,6 +899,7 @@ export const ChatScreen: React.FC<ChatScreenProps> = () => {
               <div className="space-y-1.5">
                 <span className="text-xs text-muted-foreground font-medium">System Instructions</span>
                 <textarea
+                  aria-label="System Instructions"
                   rows={4}
                   value={session.systemPrompt}
                   onChange={(e) =>

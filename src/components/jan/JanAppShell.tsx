@@ -30,6 +30,7 @@ export const JanAppShell: React.FC = () => {
     toggleExplorer,
     initModels,
   } = useAppStore();
+  const [hydrated, setHydrated] = useState(false);
   const [activeModule, setActiveModule] = useState<"chat" | "hub" | "settings">("chat");
   const [activeSettingsSection, setActiveSettingsSection] = useState<SettingsSection>("general");
   const [selectedProviderId, setSelectedProviderId] = useState<string>("llamacpp");
@@ -38,15 +39,16 @@ export const JanAppShell: React.FC = () => {
   const [isSearchDialogOpen, setIsSearchDialogOpen] = useState(false);
 
   React.useEffect(() => {
-    useAppStore.persist.rehydrate();
-    initModels();
+    Promise.resolve(useAppStore.persist.rehydrate()).finally(() => setHydrated(true));
+    if (window.matchMedia("(max-width: 640px)").matches) useAppStore.setState({ isExplorerCollapsed: true });
   }, [initModels]);
 
   React.useEffect(() => {
+    if (!hydrated) return;
     if (activeModule === "hub" || activeModule === "chat" || activeModule === "settings") {
       initModels();
     }
-  }, [activeModule, initModels]);
+  }, [activeModule, initModels, hydrated]);
 
   React.useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
@@ -93,6 +95,8 @@ export const JanAppShell: React.FC = () => {
     return () => window.removeEventListener("keydown", handleKeyDown, true);
   }, [createNewChatSession, toggleExplorer]);
 
+  if (!hydrated) return <main className="flex h-screen items-center justify-center bg-background text-foreground" role="status">Loading workspace…</main>;
+
   if (!hasCompletedOnboarding) {
     return (
       <div className="relative flex h-screen w-screen overflow-hidden bg-background text-foreground select-none font-sans">
@@ -111,7 +115,7 @@ export const JanAppShell: React.FC = () => {
           onSearchDialogOpenChange={setIsSearchDialogOpen}
         />
         <main className="flex-1 flex overflow-hidden relative">
-          <SetupScreen onComplete={() => setActiveModule("chat")} />
+          <SetupScreen onComplete={(destination = "chat") => setActiveModule(destination)} />
         </main>
       </div>
     );
@@ -136,7 +140,7 @@ export const JanAppShell: React.FC = () => {
       />
 
       {/* Main Surface View */}
-      <main className="flex-1 flex flex-col overflow-hidden relative">
+      <main className="min-w-0 flex-1 flex flex-col overflow-hidden relative">
         {/* Top draggable strip across views */}
         {activeModule === "settings" && (
           <div
@@ -150,7 +154,7 @@ export const JanAppShell: React.FC = () => {
         {activeModule === "hub" && <HubView />}
 
         {activeModule === "settings" && (
-          <div className="flex h-full w-full overflow-hidden">
+          <div className="flex h-full w-full overflow-x-auto">
             <SettingsMenu
               activeSection={activeSettingsSection}
               onSelectSection={setActiveSettingsSection}

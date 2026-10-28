@@ -69,6 +69,9 @@ export interface ChatMessage {
     vramUsedGB: number;
   };
   requestStatus?: RequestStatusEvent;
+  bookmarked?: boolean;
+  attachments?: { name: string; size: number; content: string }[];
+  image?: { src: string; name: string; width: number; height: number };
 }
 
 export interface ChatProject {
@@ -105,6 +108,9 @@ export interface ArenaPaneState {
     vramUsedGB: number;
   };
   requestStatus?: RequestStatusEvent;
+  bookmarked?: boolean;
+  attachments?: { name: string; size: number; content: string }[];
+  image?: { src: string; name: string; width: number; height: number };
 }
 
 export type ResearchStage =
