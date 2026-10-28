@@ -1,6 +1,15 @@
 # Current state
 
 - Branch: `feat/windows-exe-verification`; main unchanged. Tag: `exe-v1.0.0`.
+- Pipeline Verification Milestone V4 Complete (ADR 0105):
+  - Pipelines P9 (Optional Cloud Path) and P11 (Privacy & Zero Unconsented Egress Proof) fully verified:
+    - P9.1 Credentials resolved from in-memory session or designated env vars without persisting plaintext keys to disk; safe redaction never exposes secrets (`sk-...cdef`).
+    - P9.2 Egress broker consent barrier: loopback always permitted; WAN requests blocked when cloud disabled, blocked for local threads, and blocked for unconsented hosts; maintains audit ledger.
+    - P9.3 Deterministic loopback fake OpenAI provider adapter: translates request, parses SSE chunks, and tracks cloud role invocations.
+    - P9.4 Deterministic loopback fake Anthropic provider adapter: formats system parameter separately and parses `content_block_delta` SSE stream.
+    - P9.5 Negative control: cloud disabled guarantees zero outbound network sockets opened.
+    - P9 Mutation: unconsented egress bypass check turns test red.
+  - Total Node.js automated test suite: 21 suites, 171/171 tests passing (`npm test`). Evidence captured in `evals/results/pipeline/p9/p9_cloud_path.pass.txt` and `evals/results/pipeline/p11/p11_zero_egress.pass.txt`.
 - Pipeline Verification Milestone V3 Complete (ADR 0105):
   - Pipeline P8 (Tools, MCP and Permissions) fully verified with empirical evidence against real local engine (`qwen3:1.7b` on `127.0.0.1:11434`):
     - P8.1 Tool definition and typed parameter schemas rendered byte-exact to engine specification.
