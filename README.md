@@ -1,8 +1,28 @@
 # Sanctum
 
-A local AI chat workspace built with Next.js, React, TypeScript and Zustand.
-The current entry point is `src/components/jan/JanAppShell.tsx`: onboarding,
-chat, projects, search, the model hub and settings.
+![Sanctum beta artwork: a hand-drawn smiling face](public/beta.jpg)
+
+**A local AI workspace for conversations, projects and your documents.**
+
+Sanctum connects to Ollama to run local models, stream responses, organize chats
+and work with attached files. Built with Next.js, React, TypeScript and Zustand,
+it provides a browser workspace and a Windows desktop build.
+
+**Beta:** core local chat is supported; some integrations remain experimental.
+See [supported workflows](#supported-chat-workflow) and
+[integration limits](#architecture-and-integration-limits) before getting started.
+
+## Windows downloads
+
+- [Windows x64 installer](dist/Sanctum-Setup-1.0.0-x64.exe)
+- [Portable Windows x64 ZIP](dist/Sanctum-Portable-1.0.0-x64.zip)
+- [SHA-256 checksums](dist/SHA256SUMS)
+
+Download the file using GitHub's **Download raw file** control. The desktop app
+requires the WebView2 runtime, and local model inference requires Ollama.
+Checked-in binaries are built separately from source; they do not automatically
+include subsequent source changes. To build your own, see
+[Windows packaging](deploy/README.md).
 
 ## Run locally
 
@@ -21,7 +41,7 @@ ollama pull qwen3:1.7b
 npm run dev -- --hostname 127.0.0.1
 ```
 
-Open http://127.0.0.1:3000. Setup checks the local service and allows continuing
+Open [localhost:3000](http://127.0.0.1:3000). Setup checks the local service and allows continuing
 offline. The service normally listens on `127.0.0.1:11434`; chat uses a
 same-origin streaming proxy, so browser CORS access to Ollama is unnecessary.
 Use the model selector to choose an installed model. First-token latency depends
@@ -88,6 +108,11 @@ claims in `docs/STATUS.md` are not guarantees for the current checkout.
 - `core/ai`: engine clients, streaming, retrieval and domain services.
 - `core/infra`, `contracts`: storage, shared types and settings contracts.
 - `tools`, `deploy`, `src-tauri`: Windows desktop packaging and host code.
+
+The current UI entry point is `src/components/jan/JanAppShell.tsx`, which connects
+onboarding, chat, projects, search, the model hub and settings. Generated build
+outputs, local editor settings and verification reports are ignored; historical
+reports remain available through [the evidence archive](evals/README.md).
 
 The Windows build remains available through `python tools/build_installer.py`;
 see [deployment documentation](deploy/README.md) for its toolchain. Source changes
