@@ -1,6 +1,33 @@
 # Current state
 
 - Branch: `feat/windows-exe-verification`; main unchanged. Tag: `exe-v1.0.0`.
+- **COMPLETE END-TO-END VERIFICATION (ALL PIPELINES P1–P14 & WINDOWS EXE)**:
+  - All 14 pipelines defined in `docs/PIPELINE_VERIFICATION.md` and ADR 0105 empirically verified:
+    - **P1 Startup & Engine Readiness**: Manifest hash match, registry metadata verification, `/api/ps` engine state, truthful health endpoint, and port conflict checks.
+    - **P2 Chat Request Path**: Byte-exact Unicode/newline delivery, ChatML template parity with engine `/apply-template`, ordered streaming tokens, and immediate cancellation abort.
+    - **P3 Model Identity & Switching**: Engine loaded digest verification, mid-thread switching with conversation preservation, and engine unload/reload lifecycle.
+    - **P4 Parameters & Options**: Temperature 0 determinism (5/5 byte-identical), stop sequences, max tokens, and JSON-constrained output.
+    - **P5 Context Handling**: Token counting parity with engine tokenizer, multilingual text preservation, large pastes (20k+ chars), and code block formatting.
+    - **P6 Documents & RAG**: Format validation, 50MB ceiling, chunking with token ceilings, deduplication/idempotency, unit-normalized embeddings, semantic similarity, brute-force cosine top-k parity, hybrid RRF fusion, workspace canary isolation, live model canary fact retrieval with source citation, and passage ablation proof.
+    - **P7 Speech, Vision & Packs**: Valid manifests, truthful offline/uninstalled reporting (zero simulated responses), and strict CallCounters.
+    - **P8 Tools, MCP & Permissions**: Schema rendering, JSON tool call parsing, Deny/Ask/Allow permission gates with session caching, execution timeout budgets, and live model tool turn integration.
+    - **P9 Cloud Path**: Safe credential resolution without disk leaks, key redaction (`sk-...cdef`), deterministic loopback fakes, and negative control.
+    - **P10 Persistence & Crash Recovery**: Atomic writes (`.tmp` + rename), corrupt JSON safe fallback, settings survival across restart, and window bounds persistence.
+    - **P11 Zero Egress Privacy Barrier**: Egress broker consent barrier, loopback allow, WAN blocking when cloud disabled, and audit ledger.
+    - **P12 Model Downloads & Hub**: SHA-256 verification, HTTP Range resumption, bit-flip corruption detection and purge, and path traversal rejection.
+    - **P13 Observability & Inspect Request**: Local RequestTracer, trace content capture privacy gating, and owner-facing Developer Inspector.
+    - **P14 Jan Feature Parity**: Full parity across all active settings, sections, and foundation contracts.
+  - Complete Windows EXE verification suite (`tools/exe-verify/run_all_verification.py`):
+    - Section 0 (Standalone Embedded Window): **PASS** (Zero external browser processes, embedded WebView2, zero UI TCP listeners).
+    - Section 1 (Build Hygiene & Packaging): **PASS** (Reproducible build, zero external runtime dependencies, ASLR/DEP enabled, asInvoker).
+    - Section 2 (Installer Lifecycle): **PASS** (Silent install, per-user AppData, special paths, running instance detection, upgrade, clean uninstall, tamper rejection).
+    - Section 3 (Runtime Resources): **PASS** (Idle soak slope < 2.0 MB/h, chat soak delta 0.59 MB, model cycles delta 4.26 MB, thread P95 latency 7.25 ms, nav loops delta 3.81 MB across 15 cycles, crash loops 0 orphans).
+    - Section 4 (Downloads & Egress): **PASS** (Consent gate, HTTP 206 resumption, hash integrity rejection, atomic filenames).
+    - Section 5 (Data Safety): **PASS** (Kill recovery, single-instance mutex, export & migration).
+    - Section 6 (Security & Privacy): **PASS** (Loopback only, zero unconsented egress, secrets hygiene, license audit).
+    - Section 7 (Performance & UX): **PASS** (Cold start median 0.56 s < 2.50 s, TTFT median 7.90 ms < 200 ms, installer size 2.17 MB < 25 MB, idle CPU 0.00% < 2.0%).
+  - Total Node.js automated test suite: 24 test suites, **189/189 tests passing** (`npm test`).
+  - Hosted CI Status: Both `push` and `pull_request` GitHub Actions runs passing green across all jobs (`source-gates` and `windows-installer`).
 - Pipeline Verification Milestone V5 Complete (ADR 0105):
   - Pipelines P7 (Speech, Vision & Packs), P10 (Persistence & Crash Recovery), and P12 (Model Downloads & Hub) fully verified:
     - P7.1 Pack manifests valid for speech, rag, research, and agents packs.
