@@ -1,6 +1,22 @@
 # Current state
 
 - Branch: `feat/windows-exe-verification`; main unchanged. Tag: `exe-v1.0.0`.
+- Pipeline Verification Milestone V5 Complete (ADR 0105):
+  - Pipelines P7 (Speech, Vision & Packs), P10 (Persistence & Crash Recovery), and P12 (Model Downloads & Hub) fully verified:
+    - P7.1 Pack manifests valid for speech, rag, research, and agents packs.
+    - P7.2 Truthful reporting for offline/uninstalled packs (WhisperX reports unavailable when daemon offline; zero synthetic simulation).
+    - P7.3 Speech ASR and TTS invocations tracked in CallCounters; 0 on negative control.
+    - P7.4 Vision invocations tracked in CallCounters; 0 on negative control.
+    - P10.1 Atomic file writes (.tmp + rename) preventing partial writes.
+    - P10.2 Truncated/corrupted JSON file safe fallback to schema defaults without crashing.
+    - P10.3 Settings and state survive full process restart and store re-instantiation.
+    - P10.4 Window bounds state file saves and restores correctly across restarts.
+    - P12.1 Downloaded model SHA-256 matches catalog digest.
+    - P12.2 Interrupted downloads resume seamlessly with HTTP Range headers.
+    - P12.3 Bit-flip corrupted downloads detected and purged without promoting to final path.
+    - P12.4 Path traversal in model filename strictly sanitized to stay within model directory.
+    - P7/P10/P12 Mutations: fake pack availability, missing fallback, and unverified promotion turn tests red.
+  - Total Node.js automated test suite: 24 suites, 189/189 tests passing (`npm test`). Evidence captured in `evals/results/pipeline/p7/`, `evals/results/pipeline/p10/`, and `evals/results/pipeline/p12/`.
 - Pipeline Verification Milestone V4 Complete (ADR 0105):
   - Pipelines P9 (Optional Cloud Path) and P11 (Privacy & Zero Unconsented Egress Proof) fully verified:
     - P9.1 Credentials resolved from in-memory session or designated env vars without persisting plaintext keys to disk; safe redaction never exposes secrets (`sk-...cdef`).
