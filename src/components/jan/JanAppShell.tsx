@@ -18,6 +18,7 @@ import { SettingsWebSearch } from "@/components/jan/sections/SettingsWebSearch";
 import { SettingsProviders } from "@/components/jan/sections/SettingsProviders";
 import { SettingsMcp } from "@/components/jan/sections/SettingsMcp";
 import { SettingsClaudeCode } from "@/components/jan/sections/SettingsClaudeCode";
+import { SettingsDeveloper } from "@/components/jan/sections/SettingsDeveloper";
 import { ChatScreen } from "@/components/screens/ChatScreen";
 import { WindowControls, handleTitleBarMouseDown } from "@/components/jan/WindowControls";
 import { useAppStore } from "@/store/useAppStore";
@@ -168,6 +169,7 @@ export const JanAppShell: React.FC = () => {
               {activeSettingsSection === "shortcuts" && <SettingsShortcuts />}
               {activeSettingsSection === "hardware" && <SettingsHardware />}
               {activeSettingsSection === "privacy" && <SettingsPrivacy />}
+              {activeSettingsSection === "developer" && <SettingsDeveloper />}
               {activeSettingsSection === "mcp-servers" && <SettingsMcp />}
               {activeSettingsSection === "claude-code" && <SettingsClaudeCode />}
               {activeSettingsSection === "providers" && (

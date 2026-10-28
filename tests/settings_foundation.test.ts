@@ -161,6 +161,13 @@ test("Settings Foundation (S0): Unified Schema, Storage, Precedence, and CLI", a
     store.set("privacy.diagnosticOptIn", false);
     store.set("privacy.strictConsentPrompt", true);
     assert.equal(store.get("privacy.strictConsentPrompt"), true);
+
+    // Developer & Observability
+    store.set("developer.inspectRequests", true);
+    store.set("developer.traceContentCapture", false);
+    store.set("developer.traceRetention", 500);
+    assert.equal(store.get("developer.inspectRequests"), true);
+    assert.equal(store.get("developer.traceRetention"), 500);
   });
 
   await t.test("CLI command execution: get, set, list, reset", () => {

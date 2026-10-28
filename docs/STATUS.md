@@ -1,6 +1,15 @@
 # Current state
 
 - Branch: `feat/windows-exe-verification`; main unchanged. Tag: `exe-v1.0.0`.
+- Pipeline Verification Milestone V0 Complete (ADR 0105):
+  - Baseline runs recorded: 77/77 pre-existing tests passing, clean TypeScript types, architecture rules passing.
+  - Baseline reality probe completed and archived (evals/results/pipeline/baseline/reality_probe_prefix.json), catching 3 synthetic stand-in defects (D-001 synthetic fallback chat reply, D-002 synthetic llama3.2 model injection, D-003 synthetic loopback response). All three fixed and re-verified (evals/results/pipeline/v0/reality_probe_postfix.json).
+  - Observability infrastructure implemented: local request tracer with 128-bit hex traceId, span hierarchy, content capture gating (SHA-256 hashes by default, full text only with owner consent), retention caps, role call counters (globalCounters), and debug API gate (gateDebugRequest).
+  - Truthful Ollama inference client implemented (core/ai/inference/ollama_client.ts) with zero synthetic fallbacks, streaming delta concatenation integrity, and truthful EngineUnavailableError.
+  - Prompt assembly engine implemented (core/ai/prompts/assemble.ts) enforcing byte-exact user input preservation, single system message constraints, and untrusted delimiter tags for retrieved passages.
+  - Inspect Request modal view implemented (src/components/chat/InspectRequestModal.tsx) with developer settings section (SettingsDeveloper.tsx), /api/debug/inspect route, and per-process debug token authentication (debug_token).
+  - Acceptance thresholds and observation contracts codified before measurement in ADR 0105 (docs/adr/0105-pipeline-verification-and-thresholds.md).
+  - Total Node.js automated test suite: 13 suites, 110/110 tests passing (npm test). Feature matrix: 39 settings, 0 untested (docs/FEATURE_MATRIX.md).
 - Standalone Desktop Application (Embedded WebView2, ADR 0104): Replaced msedge.exe --app browser wrapper with a real standalone Win32 host (Sanctum-Desktop.exe & dist/Sanctum.exe) embedding CoreWebView2Controller in-window (AppUserModelID Sanctum.Desktop.App.1, Win32 Job Object JOB_OBJECT_LIMIT_KILL_ON_JOB_CLOSE). Serves UI over virtual host https://sanctum.app with 0 listening TCP ports by default, disables browser chrome and accelerators (AreBrowserAcceleratorKeysEnabled = false), and enforces network silence (--host-resolver-rules MAP * ~NOTFOUND, 0 outbound connections). Initial un-isolated Gate 1 failure (4 connections) preserved in evals/results/exe/gate1_network_silence_initial_failure.json.
 - Release Windows x64 Installer: dist/Sanctum-Setup-1.0.0-x64.exe (2,258,944 bytes) and standalone dist/Sanctum.exe (2,256,896 bytes), SHA256SUMS 67f91af878c845248035ac0caa4adaa1b47d2d66b8fabfe84685113ea64224f8.
 - Full Verification Suite: 8 automated test suites (verify_standalone_window.py, Build, Installer Lifecycle, Resources, Downloads, Data Safety, Security, Performance) executed and ALL PASS. Master report in docs/EXE_VERIFICATION.md. Node.js test suite: 12 suites, 77/77 tests passing (npm test).

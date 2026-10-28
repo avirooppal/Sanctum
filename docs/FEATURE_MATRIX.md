@@ -40,6 +40,9 @@ Automatically generated from `core/domain/settings_schema.ts` and verified by te
 | `hardware` | `hardware.contextLength` | Context Length | `number` | `/api/settings` | `settings_foundation.test.ts` | **ACTIVE** |
 | `privacy` | `privacy.diagnosticOptIn` | Anonymous Diagnostic Sharing | `boolean` | `/api/settings` | `settings_foundation.test.ts` | **ACTIVE** |
 | `privacy` | `privacy.strictConsentPrompt` | Strict Consent Gating | `boolean` | `/api/settings` | `settings_foundation.test.ts` | **ACTIVE** |
+| `developer` | `developer.inspectRequests` | Inspect Model Requests | `boolean` | `/api/settings` | `settings_foundation.test.ts` | **ACTIVE** |
+| `developer` | `developer.traceContentCapture` | Trace Content Capture | `boolean` | `/api/settings` | `settings_foundation.test.ts` | **ACTIVE** |
+| `developer` | `developer.traceRetention` | Trace Retention Limit | `number` | `/api/settings` | `settings_foundation.test.ts` | **ACTIVE** |
 
-Total Settings Tracked: 36
+Total Settings Tracked: 39
 Untested Items: 0

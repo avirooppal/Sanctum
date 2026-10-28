@@ -825,8 +825,8 @@ namespace Sanctum {
                         }
                     }
                 } catch { }
-                string reply = "{\"id\":\"chatcmpl-local\",\"object\":\"chat.completion\",\"done\":true,\"message\":{\"role\":\"assistant\",\"content\":\"Local inference loopback active. Ready for instructions.\"},\"choices\":[{\"index\":0,\"message\":{\"role\":\"assistant\",\"content\":\"Local inference loopback active. Ready for instructions.\"},\"finish_reason\":\"stop\"}]}";
-                return Encoding.UTF8.GetBytes(reply);
+                statusCode = 502;
+                return Encoding.UTF8.GetBytes("{\"error\":{\"code\":\"ENGINE_UNAVAILABLE\",\"message\":\"Inference daemon unreachable at http://127.0.0.1:11434\"}}");
             }
 
             statusCode = 404;

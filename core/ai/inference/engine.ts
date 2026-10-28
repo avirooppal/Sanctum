@@ -113,18 +113,7 @@ export class LocalEngineClient {
       }
 
       if (rawModels.length === 0) {
-        rawModels = [
-          {
-            name: "llama3.2",
-            size: 2147483648,
-            details: {
-              family: "llama",
-              parameter_size: "3.2B",
-              quantization_level: "Q4_K_M",
-              context_length: 8192,
-            },
-          },
-        ];
+        return [];
       }
 
       return rawModels.map((m: any, idx: number) => {
@@ -334,14 +323,7 @@ export class LocalEngineClient {
     }
 
     if (!response || !response.body) {
-      const lastUserMsg = payloadMessages.filter((m) => m.role === "user").pop()?.content || "";
-      const fallbackReply = `Local engine (${modelName}) processed your prompt: "${lastUserMsg.slice(0, 120)}". Context window: ${options.contextSize || 8192} tokens, temperature: ${options.temperature ?? 0.7}.`;
-      yield {
-        text: fallbackReply,
-        isFinished: true,
-        metrics: { tps: 44.2, ttftMs: 14, totalTokens: fallbackReply.split(/\s+/).length, vramUsedGB: 1.8 },
-      };
-      return;
+      throw new Error(`Inference engine unreachable at ${endpoint}. Start Ollama with 'ollama serve' or configure an active engine endpoint.`);
     }
 
     const reader = response.body.getReader();
