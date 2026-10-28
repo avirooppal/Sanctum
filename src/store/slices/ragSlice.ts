@@ -69,9 +69,9 @@ export const createRagSlice: StateCreator<any, [], [], RagSlice> = (set, get) =>
   },
 
   uploadDocument: (collectionId, file) => {
-    const newDocId = `doc-${Date.now()}`;
+    const newDocId = `doc-${crypto.randomUUID()}`;
     const configuredChunkSize = get().chunkSize || 800;
-    const configuredOverlap = get().overlap || 120;
+    const configuredOverlap = get().overlap ?? 120;
 
     const vectorChunks = globalVectorStore.addDocument(
       newDocId,

@@ -55,6 +55,7 @@ export const handleTitleBarDoubleClick = (e: React.MouseEvent<HTMLElement>) => {
 
 export const WindowControls: React.FC<WindowControlsProps> = ({ className }) => {
   const [isMaximized, setIsMaximized] = useState(false);
+  const [hasDesktopHost, setHasDesktopHost] = useState(false);
 
   const checkInitialBounds = useCallback(() => {
     if (typeof window !== "undefined" && window.screen) {
@@ -66,6 +67,7 @@ export const WindowControls: React.FC<WindowControlsProps> = ({ className }) => 
   }, []);
 
   useEffect(() => {
+    setHasDesktopHost(Boolean((window as any).chrome?.webview));
     checkInitialBounds();
 
     const handleMessage = (event: MessageEvent) => {
@@ -124,6 +126,8 @@ export const WindowControls: React.FC<WindowControlsProps> = ({ className }) => 
     e.preventDefault();
     postHostWindowMessage("windowClose");
   };
+
+  if (!hasDesktopHost) return null;
 
   return (
     <div

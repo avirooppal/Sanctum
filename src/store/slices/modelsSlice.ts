@@ -25,10 +25,14 @@ export interface ModelsSlice {
   updateModelConfig: (modelId: string, newConfig: Partial<LocalModel["config"]>) => void;
   toggleModelLoad: (modelId: string) => void;
   startModelDownload: (modelName: string) => Promise<boolean>;
+  cancelModelDownload: (modelName: string) => void;
+  clearDownloadEntry: (modelName: string) => void;
   setSelectedCategory: (cat: ModelCategory) => void;
   setSearchModelQuery: (q: string) => void;
   setActiveModelId: (id: string) => void;
 }
+
+const downloadControllers = new Map<string, AbortController>();
 
 export const createModelsSlice: StateCreator<any, [], [], ModelsSlice> = (set, get) => ({
   models: [],
@@ -41,16 +45,22 @@ export const createModelsSlice: StateCreator<any, [], [], ModelsSlice> = (set, g
   downloadProgressMap: {},
 
   initModels: async () => {
+    if (get().isFetchingModels) return;
     set({ isFetchingModels: true });
     try {
       const realModels = await LocalEngineClient.fetchOllamaModels(DEFAULT_OLLAMA_ENDPOINT);
       if (realModels.length > 0) {
-        const activeId = realModels[0].id;
+        const currentActive = get().activeModelId;
+        const isValid = realModels.some((m: any) => m.id === currentActive);
+        const activeId = isValid ? currentActive : realModels[0].id;
         set((state: any) => ({
-          models: realModels,
+          models: realModels.map(model => ({ ...model, config: state.models.find((old: LocalModel) => old.id === model.id)?.config || model.config })),
           activeModelId: activeId,
           isFetchingModels: false,
-          chatSessions: state.chatSessions.map((s: any) => ({ ...s, modelId: activeId })),
+          chatSessions: state.chatSessions.map((s: any) => ({
+            ...s,
+            modelId: realModels.some((m: any) => m.id === s.modelId) ? s.modelId : activeId,
+          })),
           arenaPanes: [
             {
               modelId: realModels[0].id,
@@ -96,6 +106,9 @@ export const createModelsSlice: StateCreator<any, [], [], ModelsSlice> = (set, g
     })),
 
   startModelDownload: async (modelName) => {
+    if (downloadControllers.has(modelName)) return false;
+    const controller = new AbortController();
+    downloadControllers.set(modelName, controller);
     set((state: any) => ({
       downloadProgressMap: {
         ...state.downloadProgressMap,
@@ -107,6 +120,7 @@ export const createModelsSlice: StateCreator<any, [], [], ModelsSlice> = (set, g
       modelName,
       DEFAULT_OLLAMA_ENDPOINT,
       (pct, status) => {
+        if (controller.signal.aborted) return;
         set((state: any) => ({
           downloadProgressMap: {
             ...state.downloadProgressMap,
@@ -117,14 +131,17 @@ export const createModelsSlice: StateCreator<any, [], [], ModelsSlice> = (set, g
             },
           },
         }));
-      }
+      },
+      controller.signal
     );
+    downloadControllers.delete(modelName);
+    if (controller.signal.aborted) return false;
 
     set((state: any) => ({
       downloadProgressMap: {
         ...state.downloadProgressMap,
         [modelName]: {
-          percent: 100,
+          percent: success ? 100 : state.downloadProgressMap[modelName]?.percent || 0,
           status: success ? "Installed successfully" : "Download failed",
           isDownloading: false,
         },
@@ -133,6 +150,23 @@ export const createModelsSlice: StateCreator<any, [], [], ModelsSlice> = (set, g
 
     await get().initModels();
     return success;
+  },
+
+  cancelModelDownload: (modelName: string) => {
+    downloadControllers.get(modelName)?.abort();
+    set((state: any) => {
+      const nextMap = { ...state.downloadProgressMap };
+      delete nextMap[modelName];
+      return { downloadProgressMap: nextMap };
+    });
+  },
+
+  clearDownloadEntry: (modelName: string) => {
+    set((state: any) => {
+      const nextMap = { ...state.downloadProgressMap };
+      delete nextMap[modelName];
+      return { downloadProgressMap: nextMap };
+    });
   },
 
   setSelectedCategory: (cat) => set({ selectedCategory: cat }),

@@ -1,0 +1,19 @@
+﻿(node:3032) [MODULE_TYPELESS_PACKAGE_JSON] Warning: Module type of file:///C:/Users/aviroop/Desktop/Sru/tests/pipeline_p10_persistence.test.ts is not specified and it doesn't parse as CommonJS.
+Reparsing as ES module because module syntax was detected. This incurs a performance overhead.
+To eliminate this warning, add "type": "module" to C:\Users\aviroop\Desktop\Sru\package.json.
+(Use `node --trace-warnings ...` to show where the warning was created)
+▶ P10 Persistence and Crash Recovery Verification
+  ✔ P10.1: File writes are atomic using temporary file replacement to prevent partial writes (22.0005ms)
+  ✔ P10.2: Truncated or corrupt JSON file does not crash the system and falls back safely (3.2047ms)
+  ✔ P10.3: Settings persist cleanly across full store re-instantiation (37.8762ms)
+  ✔ P10.4: Window bounds state file saves and restores correctly (3.6981ms)
+  ✔ P10 Mutation: Missing atomic rename or unhandled corruption turns red (0.2546ms)
+✔ P10 Persistence and Crash Recovery Verification (69.5132ms)
+ℹ tests 6
+ℹ suites 0
+ℹ pass 6
+ℹ fail 0
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 200.122

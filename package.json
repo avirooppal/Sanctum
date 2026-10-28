@@ -7,9 +7,10 @@
     "dev": "next dev",
     "build": "next build",
     "start": "next start",
-    "lint": "next lint",
-    "test": "node --experimental-strip-types --test tests/vector_store_rag.test.ts tests/constants_catalogs.test.ts tests/api_contracts.test.ts tests/contracts_validation.test.ts tests/core_ai.test.ts tests/core_domain.test.ts tests/packs_manifests.test.ts tests/ui_strings.test.ts tests/agent_and_features.test.ts tests/request_status_contract.test.ts tests/request_status_tracker.test.ts tests/jan_parity_flow.test.ts tests/settings_reality_gate.test.ts tests/settings_foundation.test.ts tests/shortcuts_interception.test.ts tests/app_not_wrapper.test.ts",
-    "check-arch": "python tools/check_architecture.py"
+    "lint": "npm run check-arch",
+    "test": "node --experimental-strip-types --test tests/vector_store_rag.test.ts tests/constants_catalogs.test.ts tests/api_contracts.test.ts tests/contracts_validation.test.ts tests/core_ai.test.ts tests/core_domain.test.ts tests/packs_manifests.test.ts tests/ui_strings.test.ts tests/agent_and_features.test.ts tests/request_status_contract.test.ts tests/request_status_tracker.test.ts tests/jan_parity_flow.test.ts tests/settings_reality_gate.test.ts tests/settings_foundation.test.ts tests/shortcuts_interception.test.ts tests/app_not_wrapper.test.ts tests/observability.test.ts tests/pipeline_p1_readiness.test.ts tests/pipeline_p2_chat_path.test.ts tests/pipeline_p3_model_identity.test.ts tests/pipeline_p4_parameters.test.ts tests/pipeline_p5_context.test.ts tests/pipeline_p6_documents_rag.test.ts tests/pipeline_p7_packs.test.ts tests/pipeline_p8_tools_permissions.test.ts tests/pipeline_p9_cloud_path.test.ts tests/pipeline_p10_persistence.test.ts tests/pipeline_p12_downloads.test.ts tests/chat_reliability.test.ts",
+    "check-arch": "python tools/check_architecture.py",
+    "typecheck": "tsc --noEmit"
   },
   "dependencies": {
     "@tabler/icons-react": "^3.49.0",
@@ -17,7 +18,7 @@
     "class-variance-authority": "^0.7.1",
     "clsx": "^2.1.1",
     "lucide-react": "^0.475.0",
-    "next": "15.1.7",
+    "next": "15.5.28",
     "react": "^19.0.0",
     "react-dom": "^19.0.0",
     "sonner": "^2.0.8",
@@ -28,8 +29,14 @@
     "@types/node": "^22.13.4",
     "@types/react": "^19.0.10",
     "@types/react-dom": "^19.0.4",
-    "postcss": "^8.5.2",
+    "postcss": "^8.5.32",
     "tailwindcss": "^3.4.17",
     "typescript": "^5.7.3"
+  },
+  "overrides": {
+    "next": {
+      "postcss": "^8.5.32",
+      "sharp": "^0.35.5"
+    }
   }
 }

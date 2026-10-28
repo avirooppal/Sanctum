@@ -162,11 +162,12 @@ export const HubView: React.FC = () => {
           <h1 className="sr-only">Hub</h1>
 
           {catalog.map((item) => {
+            const progressData = downloadProgressMap[item.id];
             const isInstalled =
               Boolean((item as any).isLocalInstalled) ||
-              models.some((m) => m.id.toLowerCase() === item.id.toLowerCase() && m.downloaded);
+              models.some((m) => m.id.toLowerCase() === item.id.toLowerCase() && m.downloaded) ||
+              (progressData?.percent === 100 && !progressData?.isDownloading);
             const isActive = activeModelId === item.id;
-            const progressData = downloadProgressMap[item.id];
             const downloadProgress =
               typeof progressData === "number" ? progressData : progressData?.percent;
             const isDownloading = downloadProgress !== undefined && downloadProgress < 100;

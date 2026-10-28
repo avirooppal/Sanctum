@@ -19,9 +19,10 @@ import { cn } from "@/lib/utils";
 interface SearchDialogProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
+  onSelect?: () => void;
 }
 
-export const SearchDialog: React.FC<SearchDialogProps> = ({ open, onOpenChange }) => {
+export const SearchDialog: React.FC<SearchDialogProps> = ({ open, onOpenChange, onSelect }) => {
   const [query, setQuery] = useState("");
   const [selectedIndex, setSelectedIndex] = useState(0);
   const inputRef = useRef<HTMLInputElement>(null);
@@ -47,11 +48,13 @@ export const SearchDialog: React.FC<SearchDialogProps> = ({ open, onOpenChange }
 
   const handleSelectNewChat = () => {
     createNewChatSession();
+    onSelect?.();
     onOpenChange(false);
   };
 
   const handleSelectThread = (id: string) => {
     setActiveSessionId(id);
+    onSelect?.();
     onOpenChange(false);
   };
 
@@ -70,6 +73,17 @@ export const SearchDialog: React.FC<SearchDialogProps> = ({ open, onOpenChange }
             onChange={(e) => {
               setQuery(e.target.value);
               setSelectedIndex(0);
+            }}
+            aria-label="Search threads"
+            onKeyDown={(event) => {
+              if (event.key === "ArrowDown" || event.key === "ArrowUp") {
+                event.preventDefault();
+                setSelectedIndex(index => (index + (event.key === "ArrowDown" ? 1 : filteredThreads.length)) % (filteredThreads.length + 1));
+              } else if (event.key === "Enter") {
+                event.preventDefault();
+                if (selectedIndex === 0) handleSelectNewChat();
+                else if (filteredThreads[selectedIndex - 1]) handleSelectThread(filteredThreads[selectedIndex - 1].id);
+              }
             }}
             placeholder="Search threads..."
             className="flex-1 bg-transparent text-sm text-foreground placeholder:text-muted-foreground focus:outline-none"

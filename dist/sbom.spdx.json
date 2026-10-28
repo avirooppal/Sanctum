@@ -5,7 +5,7 @@
   "name": "Sanctum Desktop Installer SBOM",
   "documentNamespace": "https://github.com/avirooppal/Sanctum/spdxdocs/sanctum-1.0.0",
   "creationInfo": {
-    "created": "2026-10-25T12:00:00Z",
+    "created": "2026-10-28T17:57:14Z",
     "creators": [
       "Organization: Sanctum Contributors"
     ]
@@ -21,28 +21,28 @@
       "checksums": [
         {
           "algorithm": "SHA256",
-          "checksumValue": "67f91af878c845248035ac0caa4adaa1b47d2d66b8fabfe84685113ea64224f8"
+          "checksumValue": "4ce6cb4d566fd993e8289692621b494b797787b587fd7c36b53ca2e3c08835f4"
         }
       ]
     },
     {
       "name": "next",
       "SPDXID": "SPDXRef-Package-NextJS",
-      "versionInfo": "15.1.7",
+      "versionInfo": "15.5.28",
       "downloadLocation": "https://registry.npmjs.org/next",
       "licenseConcluded": "MIT"
     },
     {
       "name": "react",
       "SPDXID": "SPDXRef-Package-React",
-      "versionInfo": "19.0.0",
+      "versionInfo": "19.3.1",
       "downloadLocation": "https://registry.npmjs.org/react",
       "licenseConcluded": "MIT"
     },
     {
       "name": "zustand",
       "SPDXID": "SPDXRef-Package-Zustand",
-      "versionInfo": "5.0.3",
+      "versionInfo": "5.0.15",
       "downloadLocation": "https://registry.npmjs.org/zustand",
       "licenseConcluded": "MIT"
     }

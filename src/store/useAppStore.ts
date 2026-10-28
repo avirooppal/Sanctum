@@ -1,3 +1,4 @@
+import { toast } from "sonner";
 import { create } from "zustand";
 import { persist, createJSONStorage } from "zustand/middleware";
 import { NavigationSlice, createNavigationSlice } from "./slices/navigationSlice";
@@ -19,6 +20,8 @@ export type AppState = NavigationSlice &
   TelemetrySlice &
   AgentSlice;
 
+let storageReadable = true;
+
 export const useAppStore = create<AppState>()(
   persist(
     (...a) => ({
@@ -33,7 +36,25 @@ export const useAppStore = create<AppState>()(
     }),
     {
       name: "sanctum-platform-state",
-      storage: createJSONStorage(() => (typeof window !== "undefined" ? localStorage : ({} as any))),
+      storage: createJSONStorage(() => ({
+        getItem: (key) => {
+          if (typeof window === "undefined") return null;
+          try {
+            const value = localStorage.getItem(key);
+            if (value !== null) JSON.parse(value);
+            storageReadable = true;
+            return value;
+          }
+          catch { storageReadable = false; toast.error("Saved workspace could not be read. Existing storage is preserved; new changes are not saved.", { id: "storage-error", duration: Infinity }); return null; }
+        },
+        setItem: (key, value) => {
+          if (typeof window === "undefined") return;
+          if (!storageReadable) return;
+          try { localStorage.setItem(key, value); toast.dismiss("storage-error"); }
+          catch { toast.error("Workspace changes could not be saved. Export your chats before closing this tab, and free browser storage.", { id: "storage-error", duration: Infinity }); }
+        },
+        removeItem: (key) => { if (typeof window !== "undefined") localStorage.removeItem(key); },
+      })),
       // Hydrate manually after mount so the first client render matches SSR (no hydration mismatch)
       skipHydration: true,
       partialize: (state) => ({
@@ -81,6 +102,13 @@ export const useAppStore = create<AppState>()(
           });
         }
         if (state) {
+          for (const session of state.chatSessions) {
+            for (const message of session.messages) {
+              if (message.requestStatus && !["done", "error", "stopped", "cancelled"].includes(message.requestStatus.phase)) {
+                message.requestStatus = { ...message.requestStatus, phase: "stopped", detail: "Generation interrupted by reload. Retry to continue." };
+              }
+            }
+          }
           state.initModels?.();
         }
       },

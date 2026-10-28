@@ -47,3 +47,7 @@ temp_skills/
 *.tsbuildinfo
 deploy/installer/build_payload/
 __pycache__/
+
+# dev-only engine oracle and pipeline caches (ADR 0105)
+.cache/
+

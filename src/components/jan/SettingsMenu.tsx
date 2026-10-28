@@ -15,6 +15,7 @@ import {
   IconFolderCode,
   IconCircles,
   IconPlus,
+  IconCode,
 } from "@tabler/icons-react";
 import { cn } from "@/lib/utils";
 
@@ -29,6 +30,7 @@ export type SettingsSection =
   | "shortcuts"
   | "hardware"
   | "privacy"
+  | "developer"
   | "mcp-servers"
   | "claude-code"
   | "providers";
@@ -72,6 +74,7 @@ export const SettingsMenu: React.FC<SettingsMenuProps> = ({
     { id: "shortcuts", label: "Shortcuts", icon: <IconCommand size={16} /> },
     { id: "hardware", label: "Hardware", icon: <IconCpu size={16} /> },
     { id: "privacy", label: "Privacy", icon: <IconLock size={16} /> },
+    { id: "developer", label: "Developer", icon: <IconCode size={16} /> },
   ];
 
   const handleChooseProvider = (providerId: string) => {

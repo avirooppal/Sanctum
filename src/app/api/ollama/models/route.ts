@@ -180,12 +180,14 @@ export async function GET() {
     }
   }
 
-  scanOllamaManifestsOnDisk(seen, models);
-  scanLocalGgufDirs(seen, models);
+  const discoveredFiles: DiscoveredModel[] = [];
+  scanOllamaManifestsOnDisk(seen, discoveredFiles);
+  scanLocalGgufDirs(seen, discoveredFiles);
 
   return NextResponse.json({
-    online: online || models.length > 0,
+    online,
     endpoint: activeEndpoint,
     models,
+    discoveredFiles,
   });
 }

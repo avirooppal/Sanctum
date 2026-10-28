@@ -1,0 +1,19 @@
+﻿(node:27492) [MODULE_TYPELESS_PACKAGE_JSON] Warning: Module type of file:///C:/Users/aviroop/Desktop/Sru/tests/pipeline_p7_packs.test.ts is not specified and it doesn't parse as CommonJS.
+Reparsing as ES module because module syntax was detected. This incurs a performance overhead.
+To eliminate this warning, add "type": "module" to C:\Users\aviroop\Desktop\Sru\package.json.
+(Use `node --trace-warnings ...` to show where the warning was created)
+▶ P7 Packs (Speech, Vision, OCR) Verification
+  ✔ P7.1: All declared optional packs have valid manifests and entrypoints (3.5904ms)
+  ✔ P7.2: Uninstalled or offline packs report unavailable truthfully without simulated responses (28.6954ms)
+  ✔ P7.3: Speech ASR and TTS invocations are tracked strictly by CallCounters; negative control is 0 (0.2894ms)
+  ✔ P7.4: Vision invocations are tracked strictly by CallCounters; negative control is 0 (0.1302ms)
+  ✔ P7 Mutation: Faking pack availability when daemon is dead turns red (0.1209ms)
+✔ P7 Packs (Speech, Vision, OCR) Verification (33.9944ms)
+ℹ tests 6
+ℹ suites 0
+ℹ pass 6
+ℹ fail 0
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 157.1425

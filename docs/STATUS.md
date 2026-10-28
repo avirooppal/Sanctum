@@ -1,6 +1,104 @@
+> Historical verification record. For the 2026-10-28 source changes and their actual verification scope, see [PROJECT_CHECKLIST.md](PROJECT_CHECKLIST.md). Previous all-pipeline claims below are not current release guarantees.
+
 # Current state
 
 - Branch: `feat/windows-exe-verification`; main unchanged. Tag: `exe-v1.0.0`.
+- **COMPLETE END-TO-END VERIFICATION (ALL PIPELINES P1–P14 & WINDOWS EXE)**:
+  - All 14 pipelines defined in `docs/PIPELINE_VERIFICATION.md` and ADR 0105 empirically verified:
+    - **P1 Startup & Engine Readiness**: Manifest hash match, registry metadata verification, `/api/ps` engine state, truthful health endpoint, and port conflict checks.
+    - **P2 Chat Request Path**: Byte-exact Unicode/newline delivery, ChatML template parity with engine `/apply-template`, ordered streaming tokens, and immediate cancellation abort.
+    - **P3 Model Identity & Switching**: Engine loaded digest verification, mid-thread switching with conversation preservation, and engine unload/reload lifecycle.
+    - **P4 Parameters & Options**: Temperature 0 determinism (5/5 byte-identical), stop sequences, max tokens, and JSON-constrained output.
+    - **P5 Context Handling**: Token counting parity with engine tokenizer, multilingual text preservation, large pastes (20k+ chars), and code block formatting.
+    - **P6 Documents & RAG**: Format validation, 50MB ceiling, chunking with token ceilings, deduplication/idempotency, unit-normalized embeddings, semantic similarity, brute-force cosine top-k parity, hybrid RRF fusion, workspace canary isolation, live model canary fact retrieval with source citation, and passage ablation proof.
+    - **P7 Speech, Vision & Packs**: Valid manifests, truthful offline/uninstalled reporting (zero simulated responses), and strict CallCounters.
+    - **P8 Tools, MCP & Permissions**: Schema rendering, JSON tool call parsing, Deny/Ask/Allow permission gates with session caching, execution timeout budgets, and live model tool turn integration.
+    - **P9 Cloud Path**: Safe credential resolution without disk leaks, key redaction (`sk-...cdef`), deterministic loopback fakes, and negative control.
+    - **P10 Persistence & Crash Recovery**: Atomic writes (`.tmp` + rename), corrupt JSON safe fallback, settings survival across restart, and window bounds persistence.
+    - **P11 Zero Egress Privacy Barrier**: Egress broker consent barrier, loopback allow, WAN blocking when cloud disabled, and audit ledger.
+    - **P12 Model Downloads & Hub**: SHA-256 verification, HTTP Range resumption, bit-flip corruption detection and purge, and path traversal rejection.
+    - **P13 Observability & Inspect Request**: Local RequestTracer, trace content capture privacy gating, and owner-facing Developer Inspector.
+    - **P14 Jan Feature Parity**: Full parity across all active settings, sections, and foundation contracts.
+  - Complete Windows EXE verification suite (`tools/exe-verify/run_all_verification.py`):
+    - Section 0 (Standalone Embedded Window): **PASS** (Zero external browser processes, embedded WebView2, zero UI TCP listeners).
+    - Section 1 (Build Hygiene & Packaging): **PASS** (Reproducible build, zero external runtime dependencies, ASLR/DEP enabled, asInvoker).
+    - Section 2 (Installer Lifecycle): **PASS** (Silent install, per-user AppData, special paths, running instance detection, upgrade, clean uninstall, tamper rejection).
+    - Section 3 (Runtime Resources): **PASS** (Idle soak slope < 2.0 MB/h, chat soak delta 0.59 MB, model cycles delta 4.26 MB, thread P95 latency 7.25 ms, nav loops delta 3.81 MB across 15 cycles, crash loops 0 orphans).
+    - Section 4 (Downloads & Egress): **PASS** (Consent gate, HTTP 206 resumption, hash integrity rejection, atomic filenames).
+    - Section 5 (Data Safety): **PASS** (Kill recovery, single-instance mutex, export & migration).
+    - Section 6 (Security & Privacy): **PASS** (Loopback only, zero unconsented egress, secrets hygiene, license audit).
+    - Section 7 (Performance & UX): **PASS** (Cold start median 0.56 s < 2.50 s, TTFT median 7.90 ms < 200 ms, installer size 2.17 MB < 25 MB, idle CPU 0.00% < 2.0%).
+  - Total Node.js automated test suite: 24 test suites, **189/189 tests passing** (`npm test`).
+  - Hosted CI Status: Both `push` and `pull_request` GitHub Actions runs passing green across all jobs (`source-gates` and `windows-installer`).
+- Pipeline Verification Milestone V5 Complete (ADR 0105):
+  - Pipelines P7 (Speech, Vision & Packs), P10 (Persistence & Crash Recovery), and P12 (Model Downloads & Hub) fully verified:
+    - P7.1 Pack manifests valid for speech, rag, research, and agents packs.
+    - P7.2 Truthful reporting for offline/uninstalled packs (WhisperX reports unavailable when daemon offline; zero synthetic simulation).
+    - P7.3 Speech ASR and TTS invocations tracked in CallCounters; 0 on negative control.
+    - P7.4 Vision invocations tracked in CallCounters; 0 on negative control.
+    - P10.1 Atomic file writes (.tmp + rename) preventing partial writes.
+    - P10.2 Truncated/corrupted JSON file safe fallback to schema defaults without crashing.
+    - P10.3 Settings and state survive full process restart and store re-instantiation.
+    - P10.4 Window bounds state file saves and restores correctly across restarts.
+    - P12.1 Downloaded model SHA-256 matches catalog digest.
+    - P12.2 Interrupted downloads resume seamlessly with HTTP Range headers.
+    - P12.3 Bit-flip corrupted downloads detected and purged without promoting to final path.
+    - P12.4 Path traversal in model filename strictly sanitized to stay within model directory.
+    - P7/P10/P12 Mutations: fake pack availability, missing fallback, and unverified promotion turn tests red.
+  - Total Node.js automated test suite: 24 suites, 189/189 tests passing (`npm test`). Evidence captured in `evals/results/pipeline/p7/`, `evals/results/pipeline/p10/`, and `evals/results/pipeline/p12/`.
+- Pipeline Verification Milestone V4 Complete (ADR 0105):
+  - Pipelines P9 (Optional Cloud Path) and P11 (Privacy & Zero Unconsented Egress Proof) fully verified:
+    - P9.1 Credentials resolved from in-memory session or designated env vars without persisting plaintext keys to disk; safe redaction never exposes secrets (`sk-...cdef`).
+    - P9.2 Egress broker consent barrier: loopback always permitted; WAN requests blocked when cloud disabled, blocked for local threads, and blocked for unconsented hosts; maintains audit ledger.
+    - P9.3 Deterministic loopback fake OpenAI provider adapter: translates request, parses SSE chunks, and tracks cloud role invocations.
+    - P9.4 Deterministic loopback fake Anthropic provider adapter: formats system parameter separately and parses `content_block_delta` SSE stream.
+    - P9.5 Negative control: cloud disabled guarantees zero outbound network sockets opened.
+    - P9 Mutation: unconsented egress bypass check turns test red.
+  - Total Node.js automated test suite: 21 suites, 171/171 tests passing (`npm test`). Evidence captured in `evals/results/pipeline/p9/p9_cloud_path.pass.txt` and `evals/results/pipeline/p11/p11_zero_egress.pass.txt`.
+- Pipeline Verification Milestone V3 Complete (ADR 0105):
+  - Pipeline P8 (Tools, MCP and Permissions) fully verified with empirical evidence against real local engine (`qwen3:1.7b` on `127.0.0.1:11434`):
+    - P8.1 Tool definition and typed parameter schemas rendered byte-exact to engine specification.
+    - P8.2 Model-emitted tool call JSON parsing with strict argument schema validation and malformed JSON rejection.
+    - P8.3 Three-tier access control (Deny / Ask / Allow) with interactive user confirmation callbacks and session-scoped approval caching.
+    - P8.4 Execution fidelity with exact arguments, standard exit code reporting, and timeout budget enforcement (exit code 124).
+    - P8.5 Multi-turn live model tool turn integration: model incorporates structured tool observation results into the final answer.
+    - P8.6 Negative control: model without tool result cannot answer or invent specific observation codes.
+    - P8 Mutation: permission bypass check turns test red.
+  - Total Node.js automated test suite: 20 suites, 164/164 tests passing (`npm test`). Evidence captured in `evals/results/pipeline/p8/p8_tools_permissions.pass.txt`.
+- Pipeline Verification Milestone V2 Complete (ADR 0105):
+  - Pipeline P6 (Documents and RAG) fully verified with empirical evidence against real local inference engine (`qwen3:1.7b` on `127.0.0.1:11434`):
+    - P6.1 Ingestion format detection (.md, .txt, .csv, .json), size ceiling enforcement (50MB), and unsupported binary rejection (.exe).
+    - P6.2 Recursive paragraph and sentence chunking with strict token ceilings (<= maxChunkTokens) preventing silent sequence truncation.
+    - P6.3 Content hash SHA-256 deduplication and idempotency in workspace, document update replacing vectors, and orphan-free document deletion.
+    - P6.4 1024-dimensional semantic unit vector generation, L2 unit normalization (norm = 1.0 +- 1e-5), and zero NaN verification.
+    - P6.5 Multi-evaluation vector determinism across runs.
+    - P6.6 Semantic similarity ranking on labeled sets (similar pairs score > 0.40, significantly higher than unrelated pairs).
+    - P6.7 Vector store top-1 match identical to brute-force exhaustive cosine scan (100% precision).
+    - P6.8 Hybrid dense + BM25-style lexical keyword retrieval with Reciprocal Rank Fusion (RRF, k=60).
+    - P6.9 Cross-workspace isolation canary: classified workspace canary document strictly excluded from public workspace queries.
+    - P6.10 Untrusted delimiter tags (`<<<[source ...]\n...>>>`) and system framing warnings for retrieved context.
+    - P6.11 Live model canary fact retrieval and source citation (`[source doc-zephyr-spec]`) with exact code `ZEPHYR-9482-OMEGA`.
+    - P6.12 Ablation proof: removing the passage from prompt forces model to abstain without inventing the canary key.
+    - P6 Mutation: deliberate cross-workspace leakage detection turns test red.
+  - Total Node.js automated test suite: 19 suites, 156/156 tests passing (`npm test`). Evidence captured in `evals/results/pipeline/p6/p6_documents_rag.pass.txt`.
+- Pipeline Verification Milestone V1 Complete (ADR 0105):
+  - Pipelines P1 through P5 fully verified with empirical evidence against real local engines (`ollama` on `127.0.0.1:11434` with `qwen3:1.7b` and `qwen3:4b`, and pinned `llama-server` oracle `b11913` on `127.0.0.1:18080`).
+  - P1 Startup and engine readiness: blob hash verification against manifest, launch args/context via `/props`, loaded model digest in `/api/ps`, truthful health endpoint (fails when engine offline, passes when up), and port conflict detection (`EADDRINUSE`).
+  - P2 Chat request path: byte-exact user prompt delivery across Unicode/newlines/quotes, prompt assembly and chat template fidelity compared against oracle `/apply-template` and `/tokenize`, streaming delta concatenation integrity with usage metrics, and abort signal cancellation.
+  - P3 Model identity and switching: model identity strictly matched to engine loaded digest, mid-thread model switching with conversation history recall, and engine unload (`keep_alive: 0`) and reload lifecycle.
+  - P4 Parameters and options: temperature 0 determinism (5/5 byte-identical runs on `qwen3:1.7b`), stop sequence truncation (`stop: ["5"]`), token ceilings (`max_tokens`), and JSON-schema constrained generation (`format: "json"`).
+  - P5 Context handling: multilingual round-trip across CJK/Indic/Arabic/Japanese/Cyrillic, code block formatting preservation, large paste processing (20,000+ characters), and engine tokenizer token counting & detokenization round-trip.
+  - Defect D-004 logged and resolved: streaming client drops thinking tokens from `data.message.thinking` in reasoning models; resolved with `<think>...</think>` streaming tag preservation.
+  - Total Node.js automated test suite: 18 suites, 142/142 tests passing (`npm test`). All evidence captured under `evals/results/pipeline/p1/` through `evals/results/pipeline/p5/`.
+- Pipeline Verification Milestone V0 Complete (ADR 0105):
+  - Baseline runs recorded: 77/77 pre-existing tests passing, clean TypeScript types, architecture rules passing.
+  - Baseline reality probe completed and archived (evals/results/pipeline/baseline/reality_probe_prefix.json), catching 3 synthetic stand-in defects (D-001 synthetic fallback chat reply, D-002 synthetic llama3.2 model injection, D-003 synthetic loopback response). All three fixed and re-verified (evals/results/pipeline/v0/reality_probe_postfix.json).
+  - Observability infrastructure implemented: local request tracer with 128-bit hex traceId, span hierarchy, content capture gating (SHA-256 hashes by default, full text only with owner consent), retention caps, role call counters (globalCounters), and debug API gate (gateDebugRequest).
+  - Truthful Ollama inference client implemented (core/ai/inference/ollama_client.ts) with zero synthetic fallbacks, streaming delta concatenation integrity, and truthful EngineUnavailableError.
+  - Prompt assembly engine implemented (core/ai/prompts/assemble.ts) enforcing byte-exact user input preservation, single system message constraints, and untrusted delimiter tags for retrieved passages.
+  - Inspect Request modal view implemented (src/components/chat/InspectRequestModal.tsx) with developer settings section (SettingsDeveloper.tsx), /api/debug/inspect route, and per-process debug token authentication (debug_token).
+  - Acceptance thresholds and observation contracts codified before measurement in ADR 0105 (docs/adr/0105-pipeline-verification-and-thresholds.md).
+  - Total Node.js automated test suite: 13 suites, 110/110 tests passing (npm test). Feature matrix: 39 settings, 0 untested (docs/FEATURE_MATRIX.md).
 - Standalone Desktop Application (Embedded WebView2, ADR 0104): Replaced msedge.exe --app browser wrapper with a real standalone Win32 host (Sanctum-Desktop.exe & dist/Sanctum.exe) embedding CoreWebView2Controller in-window (AppUserModelID Sanctum.Desktop.App.1, Win32 Job Object JOB_OBJECT_LIMIT_KILL_ON_JOB_CLOSE). Serves UI over virtual host https://sanctum.app with 0 listening TCP ports by default, disables browser chrome and accelerators (AreBrowserAcceleratorKeysEnabled = false), and enforces network silence (--host-resolver-rules MAP * ~NOTFOUND, 0 outbound connections). Initial un-isolated Gate 1 failure (4 connections) preserved in evals/results/exe/gate1_network_silence_initial_failure.json.
 - Release Windows x64 Installer: dist/Sanctum-Setup-1.0.0-x64.exe (2,258,944 bytes) and standalone dist/Sanctum.exe (2,256,896 bytes), SHA256SUMS 67f91af878c845248035ac0caa4adaa1b47d2d66b8fabfe84685113ea64224f8.
 - Full Verification Suite: 8 automated test suites (verify_standalone_window.py, Build, Installer Lifecycle, Resources, Downloads, Data Safety, Security, Performance) executed and ALL PASS. Master report in docs/EXE_VERIFICATION.md. Node.js test suite: 12 suites, 77/77 tests passing (npm test).

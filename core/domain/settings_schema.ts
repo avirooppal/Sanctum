@@ -483,6 +483,42 @@ export const SETTINGS_SCHEMA: SettingDefinition[] = [
     risk: "low",
     restartRequired: false,
   },
+
+  // --- DEVELOPER & OBSERVABILITY ---
+  {
+    key: "developer.inspectRequests",
+    section: "developer",
+    label: "Inspect Model Requests",
+    description: "Record exact prompts, token counts, and engine payloads for developer inspection",
+    type: "boolean",
+    default: false,
+    scope: "global",
+    risk: "low",
+    restartRequired: false,
+  },
+  {
+    key: "developer.traceContentCapture",
+    section: "developer",
+    label: "Trace Content Capture",
+    description: "Store full prompt and response text in local trace spans (default stores hashes only)",
+    type: "boolean",
+    default: false,
+    scope: "global",
+    risk: "low",
+    restartRequired: false,
+  },
+  {
+    key: "developer.traceRetention",
+    section: "developer",
+    label: "Trace Retention Limit",
+    description: "Maximum number of local execution traces kept before FIFO eviction",
+    type: "number",
+    default: 200,
+    scope: "global",
+    risk: "low",
+    restartRequired: false,
+    validation: { min: 1, max: 2000 },
+  },
 ];
 
 export const SETTINGS_SCHEMA_MAP = new Map<string, SettingDefinition>(

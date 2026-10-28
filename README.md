@@ -1,238 +1,110 @@
-<div align="center">
+# Sanctum
 
-<img src="./Beta.jpg" alt="Sanctum Logo" width="112" style="border-radius: 24px; box-shadow: 0 8px 30px rgba(0,0,0,0.5); margin-bottom: 12px;" />
+A local AI chat workspace built with Next.js, React, TypeScript and Zustand.
+The current entry point is `src/components/jan/JanAppShell.tsx`: onboarding,
+chat, projects, search, the model hub and settings.
 
-# 🏛️ Sanctum
+## Run locally
 
-### The Sovereign, Private Local AI Operating System & Cognitive Workspace
+Use Node.js **22.6 or newer** (tests use native TypeScript stripping), npm,
+and an installed Ollama service for inference.
 
-*Inspired by power-user AI platforms like [Jan](https://github.com/janhq/jan) and [Odysseus](https://github.com/odysseus-dev/odysseus).*
-
-[![Next.js](https://img.shields.io/badge/Next.js-15.1.7-black?style=flat-square&logo=next.js)](https://nextjs.org/)
-[![TypeScript](https://img.shields.io/badge/TypeScript-5.7-blue?style=flat-square&logo=typescript)](https://www.typescriptlang.org/)
-[![Tailwind CSS](https://img.shields.io/badge/Tailwind-3.4-38bdf8?style=flat-square&logo=tailwind-css)](https://tailwindcss.com/)
-[![Local Engine](https://img.shields.io/badge/Engine-Ollama%20%7C%20llama.cpp%20%7C%20LM%20Studio-emerald?style=flat-square)](https://ollama.ai)
-[![Privacy Shield](https://img.shields.io/badge/Telemetry-0%20Bytes%20Egress%20(Air--Gapped)-success?style=flat-square)](#-privacy--security-invariants)
-[![License](https://img.shields.io/badge/License-MIT-purple?style=flat-square)](LICENSE)
-
-<br />
-
-**Sanctum** is a unified, high-density client workspace engineered for executing large language models, retrieval-augmented generation (RAG), voice recognition, computer vision, and autonomous agent loops entirely on-device or within private air-gapped networks.
-
-<br />
-
-<img src="./docs/screenshots/app-preview.png" alt="Sanctum Application Workspace" width="100%" style="border-radius: 12px; border: 1px solid rgba(255,255,255,0.1); box-shadow: 0 16px 40px rgba(0,0,0,0.6);" />
-
-</div>
-
----
-
-## 🧭 System Architecture & Workspace Layout
-
-Sanctum implements a rigid, high-performance desktop layout designed for uninterrupted power-user workflows:
-
-```
-┌──────┬──────────────────────┬────────────────────────────────────────────────────────┐
-│ Left │ Context Explorer     │                    Primary Canvas                      │
-│ Rail │ (Left-Center)        │                    (Center/Right)                      │
-│      │                      │                                                        │
-│ [⊞]  │ • Catalog Search     │  • Model Hub: Quantization, VRAM & GPU Layer Offload   │
-│ [💬] │ • Chat Threads       │  • Local Chat: CoT <think> Folders & Live Metrics      │
-│ [⚔️]  │ • Arena Presets      │  • Model Arena: 2x/3x/4x Synchronous Split Stream      │
-│ [🔍] │ • Dossier Trees      │  • Deep Research: Multi-Agent Search & Synthesis       │
-│ [🗄️] │ • Vector Vaults      │  • Knowledge Vault: Drag-and-Drop & 1024d Vector Chunks│
-│ [⚙️]  │ • Engine Config      │  • Engine Settings: Daemon Health & Host Endpoints     │
-│      │                      │                                                        │
-├──────┴──────────────────────┴────────────────────────────────────────────────────────┤
-│ Hardware Telemetry Dock: CPU Cores | RAM Used | VRAM Allocation | Active TPS Meter    │
-└──────────────────────────────────────────────────────────────────────────────────────┘
-```
-
-- **Global Navigation Rail (Left)**: Instant module switching across Hub, Chat, Arena, Deep Research, Knowledge Vault, and Settings.
-- **Context Explorer Panel (Left-Center)**: A collapsible utility column (`Ctrl + B`) that dynamically adapts its tools and filters to the active module.
-- **Primary Canvas (Center/Right)**: Dynamic workspace rendering concurrent chat streams, split-screen model battles, markdown document readers, or vector inspection graphs.
-- **Hardware Telemetry Dock (Bottom)**: Desktop-style persistent status bar displaying live logical core loads, physical RAM/VRAM allocations, and daemon latency.
-
----
-
-## ⚡ Core Capabilities
-
-### 1. 🧠 System & Model Engine Hub
-- **Auto-Discovery**: Automatically probes your local Ollama daemon (`http://localhost:11434`) or OpenAI-compatible backends (`LM Studio`, `llama.cpp`) to discover real weights resident on your machine (`qwen3`, `llama3`, `deepseek-r1`, etc.).
-- **Live Model Pulling**: Pull new models directly into your local runtime through the unified pull bar (`POST /api/pull`) with streaming progress feedback.
-- **Hardware Offload Tuning**: Modal slider controls for GPU layer offloading (`cuBLAS`/`Metal`), context window allocation ($n_{\text{ctx}}$), CPU compute threads, Flash Attention 2, and `mlock` RAM pinning.
-
-### 2. 💬 Local Chat & Native Chain-of-Thought
-- **True NDJSON Token Streaming**: Streams tokens character-by-character directly from local backend endpoints with zero latency proxying.
-- **Reasoning (`<think>`) Folding**: Automatically parses native reasoning steps (Qwen 3, DeepSeek-R1) into collapsible glassmorphic drawers.
-- **Real-Time Inference Telemetry**: Every assistant message logs exact Tokens/second (TPS), Time-to-First-Token (TTFT), total token count, and resident VRAM.
-
-### 3. ⚔️ Multi-Model Synchronous Arena
-- **Side-by-Side Split Viewports**: Synchronize prompts across **Dual (2x)**, **Triple (3x)**, or **Quad (4x)** viewports.
-- **Parallel Inference**: Broadcasts a single prompt simultaneously across multiple local models to compare TPS throughput, latency, and reasoning depth.
-- **Benchmark Export**: One-click export that generates a structured Markdown benchmark report comparing speed, TTFT, and parameter metrics.
-
-### 4. 🗄️ Knowledge Base & Vector Vault (RAG)
-- **1024-Dimensional Unit Vectors**: High-speed, unit-normalized semantic embedding engine where dot product equals exact cosine similarity.
-- **Recursive Text Chunking**: Automatically processes sliding window token chunks with configurable overlap.
-- **Real File Vault**: Drag-and-drop or upload real `.txt`, `.md`, `.json`, `.csv`, or `.pdf` files.
-- **Live Cosine Match Tester**: Test queries in real-time to preview candidate chunks scored with exact percentage matches.
-- **In-Chat RAG Context**: Toggle **RAG Context ON** in chat to automatically inject retrieved knowledge chunks with source citations into your prompt.
-
-### 5. 🔍 Autonomous Deep Research Pipeline
-- **Multi-Step Agent Loop**:
-  1. *Deconstruct query into sub-hypotheses*
-  2. *Query public encyclopedias via live Wikipedia APIs*
-  3. *Extract and filter semantic text chunks*
-  4. *Synthesize technical findings via your local LLM*
-  5. *Verify citations against retrieved source references*
-- **Artifact Export**: Real-time markdown generation with one-click **"Download .md"** export.
-
-### 6. 🎙️ Voice Recognition & Multimodal Vision Studio
-- **Native Audio Recognition**: Live voice transcription powered by the browser's native Web Speech API (`SpeechRecognition`).
-- **Physical Audio Waveform**: Animated visualizer driven by the Web Audio API (`AudioContext` + `AnalyserNode`) connected directly to your microphone.
-- **Vision Tensor Inspector**: Attach images via drag-and-drop or file picker; extracts spatial dimensions and prepares multimodal inputs for vision models (`LLaVA`, `Qwen-VL`).
-
----
-
-## 🔒 Privacy & Security Invariants
-
-Sanctum is architected with a strict zero-trust, privacy-first posture:
-
-- **Zero Cloud Network Egress**: Prompts, documents, voice audio, and weights never traverse external third-party servers.
-- **Local In-Memory Vector Storage**: Vector embeddings and semantic chunks reside in private process memory.
-- **No Third-Party Analytics**: Sanctum does not bundle trackers, analytics, telemetry pings, or third-party cookies.
-
----
-
-## 🚀 Quick Start
-
-### Prerequisites
-- [Node.js](https://nodejs.org/) v18.0.0 or higher
-- [Ollama](https://ollama.ai) (recommended) or any OpenAI-compatible server (LM Studio, llama.cpp, vLLM)
-
-### 1. Clone & Install
-```bash
-git clone https://github.com/avirooppal/Sanctum.git
-cd Sanctum
-npm install
-```
-
-### 2. Launch Local AI Daemon
-Ensure your local model runner is active. For Ollama:
-```bash
+```powershell
+npm ci
 ollama serve
 ```
-*(Sanctum will automatically detect models already installed via `ollama list`)*
 
-### 3. Start Sanctum (Development Server)
-```bash
-npm run dev
+In another terminal, install a model if needed, then start the UI:
+
+```powershell
+ollama pull qwen3:1.7b
+npm run dev -- --hostname 127.0.0.1
 ```
 
-### 4. Build Standalone Windows Desktop Application (`Sanctum.exe`)
-```bash
-python tools/build_installer.py
-```
-Produces:
-- `dist/Sanctum-Setup-1.0.0-x64.exe` (Per-user installer with `/S` silent support and `Uninstall.exe`)
-- `dist/Sanctum.exe` & `deploy/installer/build_payload/Sanctum-Desktop.exe` (Standalone desktop executable)
+Open http://127.0.0.1:3000. Setup checks the local service and allows continuing
+offline. The service normally listens on `127.0.0.1:11434`; chat uses a
+same-origin streaming proxy, so browser CORS access to Ollama is unnecessary.
+Use the model selector to choose an installed model. First-token latency depends
+on model loading, context allocation and hardware. Stop works during loading and
+generation; Retry replaces the last response without duplicating its prompt.
 
-**Desktop Engine Architecture Disclosure:** Sanctum's Windows desktop interface is rendered inside an embedded web engine (Microsoft Edge WebView2 / Tauri 2 Wry architecture, the same architectural class used by Jan and Visual Studio Code) hosted directly inside Sanctum's native Win32 window (`Sanctum-Desktop.exe`). It never spawns an external `msedge.exe`, `chrome.exe`, or `brave.exe` browser window, disables browser chrome and browser accelerators (`AreBrowserAcceleratorKeysEnabled = false`), serves its UI over the virtual host `https://sanctum.app` with `0` listening TCP ports by default, and enforces network silence (`--host-resolver-rules="MAP * ~NOTFOUND"`). See [`docs/APP_NOT_WRAPPER.md`](docs/APP_NOT_WRAPPER.md) and [`docs/EXE_VERIFICATION.md`](docs/EXE_VERIFICATION.md) for measured verification results.
+For a production web build:
 
----
-
-## 🛠️ Tech Stack & Dependencies
-
-| Category | Technology |
-| :--- | :--- |
-| **Framework** | Next.js 15 (App Router, Client Components) |
-| **Language** | TypeScript (Strict mode enabled) |
-| **Styling** | Tailwind CSS (Power-user obsidian palette, Glassmorphism) |
-| **State Management** | Zustand (Modular client store with live telemetry) |
-| **Icons** | Lucide React |
-| **Audio Processing** | Web Audio API (`AudioContext`, `AnalyserNode`) |
-| **Vector Engine** | Custom In-Memory Vector Store (1024d Cosine Similarity) |
-
----
-
-## 📂 Project Structure
-
-```
-Sanctum/
-├── src/
-│   ├── app/
-│   │   ├── globals.css                       # Power-user obsidian theme & glass tokens
-│   │   ├── layout.tsx                        # Root layout metadata & dark mode wrapper
-│   │   └── page.tsx                          # Application entry point
-│   ├── components/
-│   │   ├── layout/
-│   │   │   ├── AppShell.tsx                  # Layout orchestrator & Ctrl+B shortcut
-│   │   │   ├── LeftRail.tsx                  # Global module navigation rail
-│   │   │   ├── ContextExplorer.tsx           # Dynamic context-aware sidebar router
-│   │   │   ├── explorer/                     # Decomposed module explorers
-│   │   │   │   ├── HubExplorer.tsx           # Category filters & VRAM gauge
-│   │   │   │   ├── ChatExplorer.tsx          # Thread management & history
-│   │   │   │   ├── ArenaExplorer.tsx         # Split layout & benchmark presets
-│   │   │   │   ├── ResearchExplorer.tsx      # Deep inquiry launcher & archives
-│   │   │   │   ├── RagExplorer.tsx           # Vector collections manager
-│   │   │   │   └── SystemExplorer.tsx        # Compute topology & daemon health
-│   │   │   └── TelemetryDock.tsx             # Persistent bottom hardware status bar
-│   │   ├── hub/
-│   │   │   ├── ModelHubView.tsx              # Live Ollama model catalog & pull bar
-│   │   │   ├── ModelCard.tsx                 # Atomic model card with VRAM & layer indicators
-│   │   │   └── HardwareConfigModal.tsx       # GPU offload & context window tuning
-│   │   ├── chat/
-│   │   │   ├── ChatCanvas.tsx                # Streaming chat orchestrator
-│   │   │   ├── ChatHeader.tsx                # Session info, RAG toggle, tuning actions
-│   │   │   ├── ChatEmptyState.tsx            # Initial inference ready suggestions
-│   │   │   ├── ChatMessageItem.tsx           # Glassmorphic message bubble with <think> folding
-│   │   │   ├── ChatInputBar.tsx              # Multimodal input dock, voice & image upload
-│   │   │   ├── VoiceRecorder.tsx             # Live speech recognition & waveform canvas
-│   │   │   └── VisionInspector.tsx           # Multimodal image attachment inspector
-│   │   ├── arena/
-│   │   │   ├── ArenaCanvas.tsx               # Synchronized multi-model arena
-│   │   │   └── ArenaPane.tsx                 # Atomic arena viewport with TPS/latency benchmarks
-│   │   ├── research/
-│   │   │   ├── DeepResearchWorkspace.tsx     # Autonomous agent multi-step research pipeline
-│   │   │   ├── ResearchStepCard.tsx          # Step progress card with expandable logs
-│   │   │   ├── ResearchCitationCard.tsx      # Verified source citation with relevance score
-│   │   │   └── ResearchDocumentViewer.tsx    # Dossier markdown reader with export
-│   │   ├── rag/
-│   │   │   ├── KnowledgeBaseWorkspace.tsx    # Vector vault workspace orchestrator
-│   │   │   ├── VaultDropZone.tsx             # Real-time drag-and-drop file ingestion zone
-│   │   │   ├── DocumentListItem.tsx          # Document item with status & chunk metrics
-│   │   │   └── VectorChunkCard.tsx           # 1024d chunk card with cosine match scoring
-│   │   ├── settings/
-│   │   │   └── SettingsView.tsx              # Daemon health check & storage path config
-│   │   └── telemetry/
-│   │       └── HardwareDetailsModal.tsx      # System accelerator & compute diagnostics
-│   ├── lib/
-│   │   ├── constants.ts                      # Global endpoints, options & presets
-│   │   ├── engine.ts                         # Real Ollama & Wikipedia API client
-│   │   ├── vectorStore.ts                    # In-memory 1024d vector similarity engine
-│   │   └── utils.ts                          # Class merge & format utilities
-│   ├── store/
-│   │   ├── useAppStore.ts                    # Combined reactive store
-│   │   └── slices/                           # Modular domain state slices
-│   │       ├── navigationSlice.ts            # Layout & collapse state
-│   │       ├── modelsSlice.ts                # Model catalog & Ollama pull state
-│   │       ├── chatSlice.ts                  # Inference threads & streaming
-│   │       ├── arenaSlice.ts                 # Parallel multi-model arena
-│   │       ├── researchSlice.ts              # Wikipedia search & agent pipeline
-│   │       ├── ragSlice.ts                   # Ingested vaults & vector search
-│   │       └── telemetrySlice.ts             # Host cores & VRAM telemetry
-│   └── types/
-│       └── index.ts                          # Strict TypeScript domain interfaces
-├── tailwind.config.ts                        # Spacing tokens, colors, glassmorphism
-├── postcss.config.mjs
-├── tsconfig.json
-├── package.json
-└── README.md
+```powershell
+npm run build
+npm start -- --hostname 127.0.0.1
 ```
 
----
+Keep this personal workspace bound to loopback. The web server does not implement
+multi-user authentication or tenant isolation.
 
-## 📄 License
+## Supported chat workflow
 
-This project is licensed under the [MIT License](LICENSE).
+- Stream local model replies; inspect status, errors and measured timing.
+- Set conversation system instructions, temperature and top-p.
+- Create, rename, pin, duplicate, group, search and export conversations.
+- Copy responses, regenerate the latest response, and persist bookmarks. The
+  composer bookmark button filters saved responses within the current chat.
+- Attach images or text, Markdown, JSON, CSV and source files (10 MB per file).
+  Images require a compatible vision model. PDF extraction is unavailable and
+  PDFs are rejected rather than sent as binary text.
+- Text attachments enter the local document index; My documents retrieves
+  passages from the active collection. The built-in index uses deterministic
+  hashed vectors, not a downloaded semantic embedding model.
+
+Browser conversations, projects, bookmarks and document chunks persist in this
+origin's localStorage. Reloading marks unfinished generations as interrupted.
+Storage failures produce an explicit warning; unreadable storage is preserved.
+Use the sidebar's chat export before clearing browser data or changing origins.
+The desktop host has separate persistence and integration behavior; the browser
+does not silently post its conversations to an absent desktop threads endpoint.
+
+## Verification
+
+```powershell
+npm run typecheck
+npm run lint
+npm test
+npm run build
+```
+
+`lint` runs the repository's Python architecture gate (Python 3 required), not
+ESLint. `typecheck` performs the TypeScript check. Tests use Node's test runner;
+live engine tests can skip when their required endpoint/model is unavailable.
+A passing suite with skips does not prove those integrations. New chat regression
+tests exercise the actual store and engine parser, including cancellation,
+thread switching, duplicate prevention, stream errors and truthful downloads.
+
+See [current verification notes](docs/PROJECT_CHECKLIST.md) for this pass.
+Older evidence under `evals/` and `docs/STATUS.md` describes earlier environments
+and must not be treated as a guarantee for the current checkout.
+
+## Architecture and integration limits
+
+- `src/app`: Next.js entry point and HTTP routes.
+- `src/components/jan`, `src/components/screens`: active interface.
+- `src/store/slices`: conversation, model and document state.
+- `core/ai`: engine clients, streaming, retrieval and domain services.
+- `core/infra`, `contracts`: storage, shared types and settings contracts.
+- `tools`, `deploy`, `src-tauri`: Windows desktop packaging and host code.
+
+The Windows build remains available through `python tools/build_installer.py`;
+see [deployment documentation](deploy/README.md) for its toolchain. Source changes
+do not update the checked-in EXE automatically.
+
+The repository also contains legacy arena, research and agent screens, and
+experimental cloud, MCP, speech and desktop integrations. Their presence or
+settings controls do not imply an end-to-end connection to the active chat UI.
+Cloud-provider settings are not used by this local chat dispatch path. The
+unconnected chat Web Search toggle has been removed. Speech requires the
+corresponding local service or browser speech support; no speech or vision
+quality claim is made by the chat regression tests.
+
+Local chat targets the local inference service. Model downloads, optional cloud
+features, research and browser speech recognition can contact external services;
+this is **not** a blanket zero-network-egress guarantee. No third-party analytics
+are intentionally bundled.
+
+Licensed under [MIT](LICENSE).
+
+Dependency remediation and verification: [Security update](docs/SECURITY_UPDATE.md). The Next.js-scoped PostCSS and Sharp overrides retain patched dependency versions; review them with future framework upgrades.

@@ -13,7 +13,7 @@ import { useAppStore } from "@/store/useAppStore";
 import { ConsentModal } from "@/components/hub/ConsentModal";
 
 interface SetupScreenProps {
-  onComplete?: () => void;
+  onComplete?: (destination?: "chat" | "hub") => void;
 }
 
 export const SetupScreen: React.FC<SetupScreenProps> = ({ onComplete }) => {
@@ -24,13 +24,15 @@ export const SetupScreen: React.FC<SetupScreenProps> = ({ onComplete }) => {
   const [hasStarted, setHasStarted] = useState<boolean>(false);
 
   // Step 1 -> Step 2 transition
-  const handleStart = () => {
+  const handleStart = async () => {
     setHasStarted(true);
     setStep(2);
-    // Simulate real local probe of bundled engine
-    setTimeout(() => {
-      setEngineStatus("ready");
-    }, 1200);
+    setEngineStatus("checking");
+    try {
+      const response = await fetch("/api/ollama/models", { signal: AbortSignal.timeout(8000) });
+      const data = await response.json();
+      setEngineStatus(response.ok && data.online === true ? "ready" : "failed");
+    } catch { setEngineStatus("failed"); }
   };
 
   const handleStep2Continue = () => {
@@ -85,7 +87,7 @@ export const SetupScreen: React.FC<SetupScreenProps> = ({ onComplete }) => {
               Sanctum needs to set up on your system
             </h1>
             <p className="mt-3 text-sm leading-relaxed text-muted-foreground">
-              This takes a few minutes: Sanctum verifies its bundled inference engine and prepares local embeddings for file search. You can keep using your computer while it runs.
+              Sanctum checks your local inference service. You can continue offline and connect a model later.
             </p>
 
             <div className="mt-8 w-full">
@@ -118,32 +120,33 @@ export const SetupScreen: React.FC<SetupScreenProps> = ({ onComplete }) => {
             </span>
 
             <h1 className="text-2xl font-semibold tracking-tight text-foreground">
-              {engineStatus === "ready" ? "Engine ready" : "Setting up the local engine"}
+              {engineStatus === "ready" ? "Engine ready" : engineStatus === "failed" ? "Local engine offline" : "Checking local engine"}
             </h1>
             <p className="mt-2 text-sm leading-relaxed text-muted-foreground">
               {engineStatus === "ready"
-                ? "Sanctum will run local models with bundled llama.cpp engine."
-                : "Verifying CPU instructions (AVX2/AVX-512) and memory headroom..."}
+                ? "Connected to your local inference service."
+                : engineStatus === "failed" ? "Start Ollama with ollama serve, then retry. You can also continue to browse your workspace." : "Checking the local inference service…"}
             </p>
 
             {/* Hardware badge */}
             <div className="mt-6 flex w-full items-start gap-3 rounded-xl border border-border/80 bg-muted/40 p-4">
               <IconCpu className="size-5 text-muted-foreground mt-0.5 shrink-0" />
               <div className="space-y-0.5 text-xs">
-                <span className="font-medium text-foreground">Will run on CPU</span>
+                <span className="font-medium text-foreground">Local inference</span>
                 <p className="text-muted-foreground">
-                  Bundled CPU llama.cpp runtime active. GPU backends can be toggled in Settings &gt; Hardware.
+                  Your inference service manages CPU and GPU execution. Model files alone do not mean the service is running.
                 </p>
               </div>
             </div>
 
+            {engineStatus === "failed" && <Button variant="outline" className="mt-4" onClick={handleStart}>Retry connection</Button>}
             <div className="mt-8 flex w-full gap-3">
               <Button
                 className="w-full rounded-full bg-primary hover:bg-primary/90 text-primary-foreground font-medium py-2.5 h-10 shadow-sm"
-                disabled={engineStatus !== "ready"}
+                disabled={engineStatus === "checking"}
                 onClick={handleStep2Continue}
               >
-                Continue
+                {engineStatus === "failed" ? "Continue offline" : "Continue"}
               </Button>
             </div>
           </div>
@@ -160,7 +163,7 @@ export const SetupScreen: React.FC<SetupScreenProps> = ({ onComplete }) => {
               Your first model
             </h1>
             <p className="mt-2 text-sm leading-relaxed text-muted-foreground">
-              Sanctum is ready. You can browse the Hugging Face Model Hub to download a quantized model, or import existing `.gguf` weights from your drive.
+              Open the Hub to browse models. For browser chat, install a model in Ollama and keep the local service running.
             </p>
 
             <div className="mt-6 flex flex-col w-full gap-3">
@@ -172,7 +175,7 @@ export const SetupScreen: React.FC<SetupScreenProps> = ({ onComplete }) => {
               </Button>
               <button
                 type="button"
-                onClick={handleFinish}
+                onClick={() => { completeOnboarding(); onComplete?.("hub"); }}
                 className="text-xs text-muted-foreground hover:text-foreground text-center py-1 transition-colors"
               >
                 Browse models in the Hub

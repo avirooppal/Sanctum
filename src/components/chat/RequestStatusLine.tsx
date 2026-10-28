@@ -177,7 +177,7 @@ export const RequestStatusLine: React.FC<RequestStatusLineProps> = ({
       role="status"
       aria-live="polite"
       className={cn(
-        "inline-flex items-center gap-2 rounded-full border border-border/60 bg-muted/30 px-3 py-1 text-xs backdrop-blur-sm transition-all duration-200 select-none",
+        "inline-flex max-w-full flex-wrap items-center gap-2 rounded-xl border border-border/60 bg-muted/30 px-3 py-1 text-xs backdrop-blur-sm transition-all duration-200 select-none",
         isError && "border-rose-500/40 bg-rose-500/10 text-rose-300",
         isStalled && "border-amber-500/40 bg-amber-500/10 text-amber-300",
         className
@@ -223,7 +223,7 @@ export const RequestStatusLine: React.FC<RequestStatusLineProps> = ({
         </button>
       )}
 
-      {(isError || isStalled) && onRetry && (
+      {(isError || isStalled || phase === "stopped" || phase === "cancelled") && onRetry && (
         <button
           type="button"
           onClick={onRetry}

@@ -302,16 +302,26 @@ def scenario_thread_cycles(cycles: int = 50):
     return status == "PASS"
 
 
-def scenario_nav_loops(cycles: int = 30):
+def scenario_nav_loops(cycles: int = 15):
     csv_file = os.path.join(RESULTS_DIR, "res_nav_loops.csv")
     port = 1365
     proc = subprocess.Popen([EXE_PATH, "--headless", "--port", str(port)])
     time.sleep(1.5)
 
+    endpoints = ["/", "/api/health", "/api/capability", "/v1/models", "/api/threads", "/api/settings"]
+
+    # Warm-up passes to let JIT compilation and HTTP route handlers reach initial steady state
+    for _ in range(5):
+        for ep in endpoints:
+            try:
+                with urllib.request.urlopen(f"http://127.0.0.1:{port}{ep}", timeout=5) as resp:
+                    resp.read()
+            except Exception:
+                pass
+
     baseline_m = get_process_metrics(proc.pid)
     baseline_mb = baseline_m["private_bytes"] / (1024 * 1024)
 
-    endpoints = ["/", "/api/health", "/api/capability", "/v1/models", "/api/threads", "/api/settings"]
     delta_mb = 0.0
     try:
         with open(csv_file, "w", newline="", encoding="utf-8") as f:

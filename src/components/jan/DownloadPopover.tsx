@@ -6,25 +6,36 @@ import {
   PopoverContent,
   PopoverTrigger,
 } from "@/components/ui/popover";
-import { Progress } from "@/components/ui/progress";
 import {
   IconPlayerPause,
-  IconPlayerPlay,
   IconX,
   IconDownload,
   IconCheck,
+  IconTrash,
 } from "@tabler/icons-react";
-import { Button } from "@/components/ui/button";
 import { useAppStore } from "@/store/useAppStore";
+import { JAN_STYLE_DOWNLOAD_CATALOG } from "@/lib/constants";
 import { cn } from "@/lib/utils";
 
 export const DownloadPopover: React.FC = () => {
   const [isOpen, setIsPopoverOpen] = useState(false);
-  const { downloadProgressMap } = useAppStore();
+  const { downloadProgressMap, cancelModelDownload, clearDownloadEntry } = useAppStore();
 
-  // Inspect any active downloads
-  const activeEntries = Object.entries(downloadProgressMap || {});
+  const entries = Object.entries(downloadProgressMap || {});
+  const activeEntries = entries.filter(([_, p]) => {
+    const isDownloading = typeof p === "number" ? p < 100 : p?.isDownloading !== false && (p?.percent ?? 0) < 100;
+    return isDownloading;
+  });
   const activeCount = activeEntries.length;
+
+  const handleClearCompleted = () => {
+    entries.forEach(([modelId, p]) => {
+      const isDone = typeof p === "number" ? p >= 100 : !p?.isDownloading || (p?.percent ?? 0) >= 100;
+      if (isDone && clearDownloadEntry) {
+        clearDownloadEntry(modelId);
+      }
+    });
+  };
 
   return (
     <Popover open={isOpen} onOpenChange={setIsPopoverOpen}>
@@ -48,23 +59,44 @@ export const DownloadPopover: React.FC = () => {
       <PopoverContent
         align="start"
         side="right"
-        className="w-80 rounded-xl border border-border/80 bg-popover/95 p-3 shadow-2xl backdrop-blur-xl"
+        className="w-84 rounded-xl border border-border/80 bg-popover/95 p-3 shadow-2xl backdrop-blur-xl"
       >
         <div className="flex items-center justify-between pb-2 border-b border-border/50">
           <span className="text-xs font-semibold text-foreground">Downloads</span>
-          <span className="text-[11px] text-muted-foreground">
-            {activeCount === 0 ? "0 active" : `${activeCount} in progress`}
-          </span>
+          <div className="flex items-center gap-2">
+            <span className="text-[11px] text-muted-foreground">
+              {activeCount === 0 ? "0 active" : `${activeCount} in progress`}
+            </span>
+            {entries.some(([_, p]) => (typeof p === "number" ? p >= 100 : !p?.isDownloading || (p?.percent ?? 0) >= 100)) && (
+              <button
+                type="button"
+                onClick={handleClearCompleted}
+                className="text-[10px] text-muted-foreground hover:text-foreground hover:underline transition-colors"
+              >
+                Clear finished
+              </button>
+            )}
+          </div>
         </div>
 
         <div className="py-2 space-y-2.5 max-h-60 overflow-y-auto">
-          {activeCount === 0 ? (
+          {entries.length === 0 ? (
             <div className="py-6 text-center text-xs text-muted-foreground">
-              No active downloads
+              No recent downloads
             </div>
           ) : (
-            activeEntries.map(([modelId, progressObj]) => {
+            entries.map(([modelId, progressObj]) => {
               const percent = typeof progressObj === "number" ? progressObj : progressObj?.percent || 0;
+              const isDownloading = typeof progressObj === "number" ? percent < 100 : progressObj?.isDownloading !== false && percent < 100;
+              const statusText = typeof progressObj === "object" ? progressObj?.status : undefined;
+              
+              // Get real model size in GB
+              const catalogEntry = JAN_STYLE_DOWNLOAD_CATALOG.find(
+                (c) => c.id.toLowerCase() === modelId.toLowerCase()
+              );
+              const totalGB = catalogEntry?.sizeGB || (modelId.includes("8b") ? 4.9 : 2.0);
+              const currentGB = ((percent / 100) * totalGB).toFixed(2);
+
               return (
                 <div
                   key={modelId}
@@ -72,36 +104,50 @@ export const DownloadPopover: React.FC = () => {
                 >
                   <div className="flex items-center justify-between text-xs">
                     <span className="font-medium text-foreground truncate max-w-[170px]" title={modelId}>
-                      {modelId}
+                      {catalogEntry?.name || modelId}
                     </span>
-                    <span className="text-[11px] text-muted-foreground">{percent}%</span>
+                    <span className="text-[11px] font-mono text-muted-foreground">
+                      {isDownloading ? `${percent}%` : "Complete"}
+                    </span>
                   </div>
 
                   {/* Coral Progress bar matching Jan reference */}
                   <div className="w-full bg-muted rounded-full h-1.5 overflow-hidden">
                     <div
-                      className="bg-primary h-full transition-all duration-200"
+                      className={cn(
+                        "h-full transition-all duration-200",
+                        isDownloading ? "bg-primary" : "bg-emerald-500"
+                      )}
                       style={{ width: `${percent}%` }}
                     />
                   </div>
 
                   <div className="flex items-center justify-between pt-1 text-[10px] text-muted-foreground">
-                    <span>{(percent * 0.02).toFixed(2)} / 2.00 GB</span>
+                    <span>
+                      {isDownloading
+                        ? `${currentGB} / ${totalGB.toFixed(2)} GB`
+                        : `${totalGB.toFixed(2)} GB · Ready`}
+                    </span>
                     <div className="flex items-center gap-1">
-                      <button
-                        type="button"
-                        className="p-1 rounded hover:bg-muted text-muted-foreground hover:text-foreground transition-colors"
-                        title="Pause"
-                      >
-                        <IconPlayerPause size={12} />
-                      </button>
-                      <button
-                        type="button"
-                        className="p-1 rounded hover:bg-muted text-muted-foreground hover:text-destructive transition-colors"
-                        title="Cancel"
-                      >
-                        <IconX size={12} />
-                      </button>
+                      {isDownloading ? (
+                        <button
+                          type="button"
+                          onClick={() => cancelModelDownload?.(modelId)}
+                          className="p-1 rounded hover:bg-muted text-muted-foreground hover:text-destructive transition-colors"
+                          title="Cancel download"
+                        >
+                          <IconX size={12} />
+                        </button>
+                      ) : (
+                        <button
+                          type="button"
+                          onClick={() => clearDownloadEntry?.(modelId)}
+                          className="p-1 rounded hover:bg-muted text-muted-foreground hover:text-foreground transition-colors"
+                          title="Dismiss"
+                        >
+                          <IconCheck size={12} className="text-emerald-400" />
+                        </button>
+                      )}
                     </div>
                   </div>
                 </div>

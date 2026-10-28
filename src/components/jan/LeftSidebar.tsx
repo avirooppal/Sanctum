@@ -690,7 +690,7 @@ export const LeftSidebar: React.FC<LeftSidebarProps> = ({
         onSave={handleCreateProject}
       />
 
-      <SearchDialog
+      <SearchDialog onSelect={() => onNavigate("chat")}
         open={isSearchDialogOpen}
         onOpenChange={setIsSearchDialogOpen}
       />

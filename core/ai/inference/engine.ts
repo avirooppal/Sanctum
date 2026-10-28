@@ -4,6 +4,8 @@
  * Zero synthetic, mock, or hardcoded strings.
  */
 
+import { readStreamRecords } from "./stream.ts";
+
 import type { LocalModel } from "../../../contracts/types/index.ts";
 
 export interface DaemonStatus {
@@ -113,22 +115,11 @@ export class LocalEngineClient {
       }
 
       if (rawModels.length === 0) {
-        rawModels = [
-          {
-            name: "llama3.2",
-            size: 2147483648,
-            details: {
-              family: "llama",
-              parameter_size: "3.2B",
-              quantization_level: "Q4_K_M",
-              context_length: 8192,
-            },
-          },
-        ];
+        return [];
       }
 
       return rawModels.map((m: any, idx: number) => {
-        const name: string = m.name || m.id || "llama3.2";
+        const name: string = m.name || m.id || "local-model";
         const details = m.details || {};
         const nameParamMatch = name.match(/(\d+(?:\.\d+)?[bBmM])/);
         const nameQuantMatch = name.match(/(Q\d_[A-Z0-9_]+|F16|FP16|BF16)/i);
@@ -198,7 +189,8 @@ export class LocalEngineClient {
   public static async pullOllamaModel(
     modelName: string,
     endpoint: string = "http://127.0.0.1:11434",
-    onProgress: (percent: number, status: string) => void
+    onProgress: (percent: number, status: string) => void,
+    signal?: AbortSignal
   ): Promise<boolean> {
     const candidateEndpoints = [
       "/api/ollama/pull",
@@ -209,8 +201,10 @@ export class LocalEngineClient {
 
     let response: Response | null = null;
     for (const ep of candidateEndpoints) {
+      if (signal?.aborted) return false;
       try {
         const res = await fetch(ep, {
+          signal,
           method: "POST",
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify({ name: modelName, model: modelName, stream: true }),
@@ -227,44 +221,18 @@ export class LocalEngineClient {
     if (!response || !response.body) return false;
 
     try {
-      const reader = response.body.getReader();
-      const decoder = new TextDecoder();
-      let buffer = "";
-
-      while (true) {
-        const { value, done } = await reader.read();
-        if (done) break;
-
-        buffer += decoder.decode(value, { stream: true });
-        const lines = buffer.split("\n");
-        buffer = lines.pop() || "";
-
-        for (const line of lines) {
-          if (!line.trim()) continue;
-          try {
-            const data = JSON.parse(line);
-            if (data.total && data.completed) {
-              const pct = Math.round((data.completed / data.total) * 100);
-              onProgress(pct, data.status || "Downloading");
-            } else if (data.status) {
-              onProgress(100, data.status);
-            }
-          } catch {
-            // Ignore parse errors on partial chunks
-          }
+      let succeeded = false;
+      for await (const data of readStreamRecords(response.body, signal)) {
+        if (data.status === "success") {
+          succeeded = true;
+          onProgress(100, "Installed successfully");
+        } else if (data.total && typeof data.completed === "number") {
+          onProgress(Math.min(98, Math.max(1, Math.round(data.completed / data.total * 98))), data.status || "Downloading");
+        } else if (data.status) {
+          onProgress(/verifying|writing/i.test(data.status) ? 99 : 1, data.status);
         }
       }
-
-      if (buffer.trim()) {
-        try {
-          const data = JSON.parse(buffer.trim());
-          if (data.status) onProgress(100, data.status);
-        } catch {
-          // ignore
-        }
-      }
-
-      return true;
+      return succeeded;
     } catch {
       return false;
     }
@@ -279,6 +247,8 @@ export class LocalEngineClient {
     options: {
       endpoint?: string;
       temperature?: number;
+      topP?: number;
+      signal?: AbortSignal;
       contextSize?: number;
       gpuLayers?: number;
       threads?: number;
@@ -291,7 +261,7 @@ export class LocalEngineClient {
     let firstTokenTimestamp: number | null = null;
 
     // Inject RAG context into conversation if provided
-    const payloadMessages = [...messages];
+    const payloadMessages = messages.map((message) => ({ ...message }));
     if (options.ragContext) {
       payloadMessages.unshift({
         role: "system",
@@ -306,18 +276,24 @@ export class LocalEngineClient {
     }
 
     let response: Response | null = null;
+    let lastError = "";
     const chatCandidates = ["/api/chat", `${endpoint}/api/chat`, "/v1/chat/completions"];
     for (const chatUrl of chatCandidates) {
+      options.signal?.throwIfAborted();
       try {
         const res = await fetch(chatUrl, {
+          signal: options.signal,
           method: "POST",
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify({
             model: modelName,
             messages: payloadMessages,
             stream: true,
+            temperature: options.temperature,
+            top_p: options.topP,
             options: {
               temperature: options.temperature,
+              top_p: options.topP,
               num_ctx: options.contextSize,
               num_gpu: options.gpuLayers,
               num_thread: options.threads,
@@ -327,129 +303,52 @@ export class LocalEngineClient {
         if (res.ok && res.body) {
           response = res;
           break;
+        } else {
+          try {
+            const errData = await res.json();
+            if (errData?.error) {
+              lastError = typeof errData.error === "string" ? errData.error : errData.error.message || JSON.stringify(errData.error);
+            }
+          } catch {
+            // Ignore json parse error
+          }
         }
-      } catch {
-        // try next candidate
+      } catch (e: any) {
+        options.signal?.throwIfAborted();
+        lastError = e?.message || "";
       }
     }
 
     if (!response || !response.body) {
-      const lastUserMsg = payloadMessages.filter((m) => m.role === "user").pop()?.content || "";
-      const fallbackReply = `Local engine (${modelName}) processed your prompt: "${lastUserMsg.slice(0, 120)}". Context window: ${options.contextSize || 8192} tokens, temperature: ${options.temperature ?? 0.7}.`;
-      yield {
-        text: fallbackReply,
-        isFinished: true,
-        metrics: { tps: 44.2, ttftMs: 14, totalTokens: fallbackReply.split(/\s+/).length, vramUsedGB: 1.8 },
-      };
-      return;
+      if (lastError && (lastError.toLowerCase().includes("not found") || lastError.toLowerCase().includes("does not exist"))) {
+        throw new Error(`Model '${modelName}' is not installed in local engine. Select an installed model or download it from the Hub.`);
+      }
+      throw new Error(lastError ? `${lastError} (at ${endpoint})` : `Inference engine unreachable at ${endpoint}. Start Ollama with 'ollama serve' or configure an active engine endpoint.`);
     }
 
-    const reader = response.body.getReader();
-    const decoder = new TextDecoder();
     let accumulatedText = "";
     let tokenCount = 0;
-    let buffer = "";
-
-    try {
-      while (true) {
-        const { value, done } = await reader.read();
-        if (done) break;
-
-        buffer += decoder.decode(value, { stream: true });
-        const lines = buffer.split("\n");
-        buffer = lines.pop() || "";
-
-        for (const rawLine of lines) {
-          const line = rawLine.trim().replace(/^data:\s*/, "");
-          if (!line || line === "[DONE]") continue;
-          try {
-            const data = JSON.parse(line);
-            const token =
-              data.message?.content ??
-              data.choices?.[0]?.delta?.content ??
-              data.choices?.[0]?.message?.content;
-
-            if (token) {
-              accumulatedText += token;
-              tokenCount++;
-
-              const now = performance.now();
-              if (firstTokenTimestamp === null) {
-                firstTokenTimestamp = now;
-              }
-
-              const elapsedSec = (now - startTimestamp) / 1000;
-              const ttftMs = firstTokenTimestamp ? Math.round(firstTokenTimestamp - startTimestamp) : 0;
-              const tps = elapsedSec > 0 ? Number((tokenCount / elapsedSec).toFixed(1)) : 38.5;
-
-              yield {
-                text: accumulatedText,
-                isFinished: false,
-                metrics: {
-                  tps,
-                  ttftMs,
-                  totalTokens: tokenCount,
-                  vramUsedGB: 0,
-                },
-              };
-            }
-
-            if (data.done || data.choices?.[0]?.finish_reason === "stop") {
-              const totalElapsedSec = (performance.now() - startTimestamp) / 1000;
-              const finalTps =
-                data.eval_count && data.eval_duration
-                  ? Number((data.eval_count / (data.eval_duration / 1e9)).toFixed(1))
-                  : Number((tokenCount / (totalElapsedSec || 0.05)).toFixed(1));
-
-              yield {
-                text: accumulatedText,
-                isFinished: true,
-                metrics: {
-                  tps: finalTps,
-                  ttftMs: firstTokenTimestamp ? Math.round(firstTokenTimestamp - startTimestamp) : 12,
-                  totalTokens: data.eval_count || tokenCount,
-                  vramUsedGB: 0,
-                },
-              };
-              return;
-            }
-          } catch {
-            // Incomplete JSON chunk, skip to next line
-          }
-        }
+    for await (const data of readStreamRecords(response.body, options.signal)) {
+      const token = data.message?.content ?? data.choices?.[0]?.delta?.content ?? data.choices?.[0]?.message?.content;
+      if (token) {
+        accumulatedText += token;
+        tokenCount++;
+        firstTokenTimestamp ??= performance.now();
       }
-
-      if (buffer.trim()) {
-        try {
-          const data = JSON.parse(buffer.trim().replace(/^data:\s*/, ""));
-          const token =
-            data.message?.content ??
-            data.choices?.[0]?.delta?.content ??
-            data.choices?.[0]?.message?.content;
-          if (token) {
-            accumulatedText += token;
-            tokenCount += token.split(/\s+/).length;
-          }
-        } catch {
-          // ignore
-        }
-      }
-
-      if (accumulatedText) {
-        yield {
-          text: accumulatedText,
-          isFinished: true,
-          metrics: {
-            tps: 42.0,
-            ttftMs: firstTokenTimestamp ? Math.round(firstTokenTimestamp - startTimestamp) : 12,
-            totalTokens: Math.max(1, tokenCount),
-            vramUsedGB: 0,
-          },
-        };
-      }
-    } finally {
-      reader.releaseLock();
+      const finished = data.done === true || Boolean(data.choices?.[0]?.finish_reason);
+      const elapsedSec = (performance.now() - startTimestamp) / 1000;
+      const metrics = {
+        tps: data.eval_count && data.eval_duration
+          ? Number((data.eval_count / (data.eval_duration / 1e9)).toFixed(1))
+          : Number((tokenCount / Math.max(elapsedSec, 0.001)).toFixed(1)),
+        ttftMs: firstTokenTimestamp === null ? 0 : Math.round(firstTokenTimestamp - startTimestamp),
+        totalTokens: data.eval_count ?? data.usage?.completion_tokens ?? tokenCount,
+        vramUsedGB: 0,
+      };
+      if (token || finished) yield { text: accumulatedText, isFinished: finished, metrics };
+      if (finished) return;
     }
+    throw new Error("The engine stream ended before completion. Retry to generate a complete response.");
   }
 
   /**
