@@ -7,10 +7,17 @@ import test from "node:test";
 import assert from "node:assert/strict";
 
 import { streamOllamaChat } from "../core/ai/inference/ollama_client.ts";
+import { isEndpointAvailable } from "./helpers/engine_check.ts";
 
 test("P4 Parameters and Options Verification", async (t) => {
+  const ollamaUp = await isEndpointAvailable("http://127.0.0.1:11434/api/tags");
+
   // P4.1 Temperature 0 Determinism (5/5 byte-identical runs)
-  await t.test("P4.1: Temperature 0 and fixed seed produces 5/5 byte-identical completions", async () => {
+  await t.test("P4.1: Temperature 0 and fixed seed produces 5/5 byte-identical completions", async (st) => {
+    if (!ollamaUp) {
+      st.skip("Ollama not running on 127.0.0.1:11434");
+      return;
+    }
     const prompt = "Write exactly three short rhyming lines about coding in Rust.";
     const runs: string[] = [];
 
@@ -42,7 +49,11 @@ test("P4 Parameters and Options Verification", async (t) => {
   });
 
   // P4.2 Stop Sequence Enforcement
-  await t.test("P4.2: Stop sequences truncate generation immediately without continuing", async () => {
+  await t.test("P4.2: Stop sequences truncate generation immediately without continuing", async (st) => {
+    if (!ollamaUp) {
+      st.skip("Ollama not running on 127.0.0.1:11434");
+      return;
+    }
     const prompt = "Count up sequentially: 1, 2, 3, 4, 5, 6, 7, 8, 9, 10";
     let output = "";
 
@@ -64,7 +75,11 @@ test("P4 Parameters and Options Verification", async (t) => {
   });
 
   // P4.3 Max Tokens / num_predict Enforcement
-  await t.test("P4.3: maxTokens strictly limits completion tokens evaluated by engine", async () => {
+  await t.test("P4.3: maxTokens strictly limits completion tokens evaluated by engine", async (st) => {
+    if (!ollamaUp) {
+      st.skip("Ollama not running on 127.0.0.1:11434");
+      return;
+    }
     const prompt = "Write a long essay explaining the history of computing.";
     let doneEvent: any = null;
 
@@ -88,7 +103,11 @@ test("P4 Parameters and Options Verification", async (t) => {
   });
 
   // P4.4 JSON-Constrained Output Mode
-  await t.test("P4.4: JSON format constraint enforces valid JSON parseability", async () => {
+  await t.test("P4.4: JSON format constraint enforces valid JSON parseability", async (st) => {
+    if (!ollamaUp) {
+      st.skip("Ollama not running on 127.0.0.1:11434");
+      return;
+    }
     // Send request directly to Ollama with format: 'json'
     const res = await fetch("http://127.0.0.1:11434/api/chat", {
       method: "POST",

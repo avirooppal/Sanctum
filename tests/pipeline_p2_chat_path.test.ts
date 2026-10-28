@@ -9,8 +9,12 @@ import { assemblePrompt } from "../core/ai/prompts/assemble.ts";
 import { streamOllamaChat, buildOllamaChatRequest } from "../core/ai/inference/ollama_client.ts";
 import { Tracer } from "../core/ai/observability/trace.ts";
 import { CallCounters } from "../core/ai/observability/counters.ts";
+import { isEndpointAvailable } from "./helpers/engine_check.ts";
 
 test("P2 Chat Request Path Verification", async (t) => {
+  const ollamaUp = await isEndpointAvailable("http://127.0.0.1:11434/api/tags");
+  const oracleUp = await isEndpointAvailable("http://127.0.0.1:18080/props");
+
   // P2.1 Byte-Exact Text Delivery
   await t.test("P2.1: User input text preserved byte-exact across Unicode, newlines, and quotes", () => {
     const complexInput = "Hello 世界! 🚀\nLine 2\r\n\tTabbed 'single' and \"double\" quotes <tag>";
@@ -33,7 +37,11 @@ test("P2 Chat Request Path Verification", async (t) => {
   });
 
   // P2.2 Chat Template Ground Truth (Comparison with pinned llama.cpp apply-template)
-  await t.test("P2.2: Chat template applies ChatML tags matching engine apply-template", async () => {
+  await t.test("P2.2: Chat template applies ChatML tags matching engine apply-template", async (st) => {
+    if (!oracleUp) {
+      st.skip("Oracle llama-server not running on 127.0.0.1:18080");
+      return;
+    }
     const testMessages = [
       { role: "system", content: "You are Sanctum." },
       { role: "user", content: "Ping" },
@@ -64,7 +72,11 @@ test("P2 Chat Request Path Verification", async (t) => {
   });
 
   // P2.3 Real Streaming Concatenation & Usage Verification
-  await t.test("P2.3: Real streaming deltas arrive in order; concatenation equals final text; usage non-zero", async () => {
+  await t.test("P2.3: Real streaming deltas arrive in order; concatenation equals final text; usage non-zero", async (st) => {
+    if (!ollamaUp) {
+      st.skip("Ollama not running on 127.0.0.1:11434");
+      return;
+    }
     const prompt = "Say: P2_TEST_PASS";
     const tracer = new Tracer();
     const trace = tracer.startTrace("pipeline.p2.chat");
@@ -101,7 +113,11 @@ test("P2 Chat Request Path Verification", async (t) => {
   });
 
   // P2.4 Cancel / Abort Signal Verification
-  await t.test("P2.4: Abort signal terminates streaming immediately without continuation", async () => {
+  await t.test("P2.4: Abort signal terminates streaming immediately without continuation", async (st) => {
+    if (!ollamaUp) {
+      st.skip("Ollama not running on 127.0.0.1:11434");
+      return;
+    }
     const ac = new AbortController();
     let deltaCount = 0;
 

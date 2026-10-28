@@ -6,10 +6,17 @@ import test from "node:test";
 import assert from "node:assert/strict";
 
 import { streamOllamaChat } from "../core/ai/inference/ollama_client.ts";
+import { isEndpointAvailable } from "./helpers/engine_check.ts";
 
 test("P3 Model Identity and Switching Verification", async (t) => {
+  const ollamaUp = await isEndpointAvailable("http://127.0.0.1:11434/api/tags");
+
   // P3.1 Model Identity Proof
-  await t.test("P3.1: Answering model equals selected model and matches loaded digest in engine", async () => {
+  await t.test("P3.1: Answering model equals selected model and matches loaded digest in engine", async (st) => {
+    if (!ollamaUp) {
+      st.skip("Ollama not running on 127.0.0.1:11434");
+      return;
+    }
     const selectedModel = "qwen3:1.7b";
     let doneEvent: any = null;
 
@@ -40,7 +47,11 @@ test("P3 Model Identity and Switching Verification", async (t) => {
   });
 
   // P3.2 Mid-Thread Model Switching
-  await t.test("P3.2: Mid-thread model switch preserves history and switches answering model", async () => {
+  await t.test("P3.2: Mid-thread model switch preserves history and switches answering model", async (st) => {
+    if (!ollamaUp) {
+      st.skip("Ollama not running on 127.0.0.1:11434");
+      return;
+    }
     // Turn 1 with Model A
     const history: { role: string; content: string }[] = [];
     history.push({ role: "user", content: "Remember the code word: PINEAPPLE" });
@@ -84,7 +95,11 @@ test("P3 Model Identity and Switching Verification", async (t) => {
   });
 
   // P3.3 Model Unload & Reload
-  await t.test("P3.3: Engine unload (keep_alive: 0) frees memory and reload succeeds", async () => {
+  await t.test("P3.3: Engine unload (keep_alive: 0) frees memory and reload succeeds", async (st) => {
+    if (!ollamaUp) {
+      st.skip("Ollama not running on 127.0.0.1:11434");
+      return;
+    }
     // Unload qwen3:4b
     const unloadRes = await fetch("http://127.0.0.1:11434/api/chat", {
       method: "POST",

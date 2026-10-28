@@ -8,10 +8,14 @@ import assert from "node:assert/strict";
 
 import { assemblePrompt } from "../core/ai/prompts/assemble.ts";
 import { streamOllamaChat } from "../core/ai/inference/ollama_client.ts";
+import { isEndpointAvailable } from "./helpers/engine_check.ts";
 
 test("P5 Context Handling Verification", async (t) => {
+  const ollamaUp = await isEndpointAvailable("http://127.0.0.1:11434/api/tags");
+  const oracleUp = await isEndpointAvailable("http://127.0.0.1:18080/props");
+
   // P5.1 Multilingual Unicode Handling
-  await t.test("P5.1: Multilingual text (CJK, Indic, Arabic, Cyrillic) preserves exact characters", async () => {
+  await t.test("P5.1: Multilingual text (CJK, Indic, Arabic, Cyrillic) preserves exact characters", async (st) => {
     const multilingual = "CJK: 你好世界, Indic: नमस्ते दुनिया, Arabic: مرحبا بالعالم, Japanese: こんにちは, Cyrillic: Привет мир";
     const assembled = assemblePrompt({
       systemPrompt: "You are an assistant.",
@@ -21,6 +25,11 @@ test("P5 Context Handling Verification", async (t) => {
 
     const userMsg = assembled.messages.find((m) => m.role === "user");
     assert.equal(userMsg?.content, multilingual, "Multilingual text must match byte-exact");
+
+    if (!ollamaUp) {
+      st.skip("Ollama not running on 127.0.0.1:11434");
+      return;
+    }
 
     // Live engine round-trip
     let doneEvent: any = null;
@@ -54,7 +63,7 @@ test("P5 Context Handling Verification", async (t) => {
   });
 
   // P5.3 Very Large Paste / Long Input Stress
-  await t.test("P5.3: Very large paste (20,000+ characters) is assembled and processed without crash", async () => {
+  await t.test("P5.3: Very large paste (20,000+ characters) is assembled and processed without crash", async (st) => {
     const repeatedSentence = "The quick brown fox jumps over the lazy dog in the private sanctuary. ";
     const largeText = repeatedSentence.repeat(300); // ~21,000 characters
     assert.ok(largeText.length > 20000);
@@ -66,6 +75,11 @@ test("P5 Context Handling Verification", async (t) => {
     });
 
     assert.equal(assembled.messages[1].content.length, largeText.length);
+
+    if (!ollamaUp) {
+      st.skip("Ollama not running on 127.0.0.1:11434");
+      return;
+    }
 
     // Call engine with large prompt and verify prompt_eval_count handles it
     const res = await fetch("http://127.0.0.1:11434/api/chat", {
@@ -87,7 +101,11 @@ test("P5 Context Handling Verification", async (t) => {
   });
 
   // P5.4 Tokenizer Token Counting Verification (Oracle ground truth)
-  await t.test("P5.4: Engine tokenizer token counting matches token evaluation", async () => {
+  await t.test("P5.4: Engine tokenizer token counting matches token evaluation", async (st) => {
+    if (!oracleUp) {
+      st.skip("Oracle llama-server not running on 127.0.0.1:18080");
+      return;
+    }
     const sampleText = "Sanctum local sovereign AI workspace running on device.";
     const tokRes = await fetch("http://127.0.0.1:18080/tokenize", {
       method: "POST",
