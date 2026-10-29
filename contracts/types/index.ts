@@ -61,8 +61,12 @@ export interface ToolActivity {
   id: string;
   name: string;
   arguments: Record<string, unknown>;
-  status: "running" | "success" | "error";
+  status: "queued" | "awaiting_approval" | "running" | "success" | "error" | "cancelled";
   output?: string;
+  callId?: string;
+  index?: number;
+  summary?: string;
+  durationMs?: number;
 }
 
 export interface ChatMessage {
