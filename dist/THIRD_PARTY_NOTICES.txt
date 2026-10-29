@@ -9,3 +9,5 @@ Sanctum bundles components licensed under permissive open-source licenses:
 - Lucide React (ISC License) - Lucide Contributors
 - class-variance-authority (Apache-2.0) - Joe Bell
 - clsx (MIT License) - Luke Edwards
+- PDF.js / pdfjs-dist (Apache-2.0) - Mozilla Foundation
+- Mammoth (BSD-2-Clause) - Michael Williamson

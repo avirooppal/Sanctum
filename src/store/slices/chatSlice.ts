@@ -452,6 +452,7 @@ export const createChatSlice: StateCreator<any, [], [], ChatSlice> = (set, get) 
 
     const historyPayload = session.messages.map((m: any) => ({
       role: m.role,
+      ...(m.image?.src ? { images: [m.image.src.replace(/^data:image\/[^;]+;base64,/, "")] } : {}),
       content: m.attachments?.length ? `${m.content}\n\n${m.attachments.map((d: AttachedDoc) => `[Attached Document: ${d.name}]\n${d.content}`).join("\n\n")}` : m.content,
     }));
     if (session.systemPrompt) historyPayload.unshift({ role: "system", content: session.systemPrompt });

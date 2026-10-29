@@ -25,6 +25,7 @@ export const HubView: React.FC = () => {
     setActiveModelId,
     initModels,
     isFetchingModels,
+    modelError,
     startModelDownload,
     downloadProgressMap,
   } = useAppStore();
@@ -86,11 +87,13 @@ export const HubView: React.FC = () => {
 
   const handleRefreshModels = async () => {
     await initModels();
-    toast.success("Scanned local model directories and Ollama runtime");
+    const error = useAppStore.getState().modelError;
+    if (error) toast.error(error); else toast.success("Refreshed installed Ollama models");
   };
 
   return (
     <div className="flex flex-col h-full w-full bg-background overflow-hidden select-none">
+      {modelError && <div role="alert" className="m-4 rounded-lg border border-destructive/40 p-3 text-sm">{modelError}</div>}
       {/* Single-Row Top Header & Search Bar (Matches preview (1).webp with space for in-window controls) */}
       <div
         onMouseDown={handleTitleBarMouseDown}
@@ -103,7 +106,7 @@ export const HubView: React.FC = () => {
             type="text"
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
-            placeholder="Search for models on Hugging Face..."
+            placeholder="Search installed models and the download catalog..."
             className="w-full h-8 rounded-lg bg-transparent pl-8 pr-3 text-xs text-foreground placeholder:text-muted-foreground focus:outline-none focus:bg-muted/30 transition-colors"
           />
         </div>
@@ -308,7 +311,7 @@ export const HubView: React.FC = () => {
       {/* Consent Modal for Hugging Face network egress */}
       <ConsentModal
         isOpen={Boolean(consentTarget)}
-        targetHost="huggingface.co"
+        targetHost="registry.ollama.ai"
         resourceName={consentTarget ? `${consentTarget.name} (${consentTarget.parameters})` : "Model Weights"}
         sizeBytes={consentTarget ? consentTarget.sizeGB * 1024 * 1024 * 1024 : 0}
         onConsent={handleConfirmConsent}

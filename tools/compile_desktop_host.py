@@ -17,6 +17,8 @@ using System.Collections.Generic;
 using System.Text.RegularExpressions;
 using System.Security.Cryptography;
 using System.Reflection;
+using System.Speech.Recognition;
+using System.Web.Script.Serialization;
 using Microsoft.Web.WebView2.Core;
 
 [assembly: AssemblyTitle("Sanctum")]
@@ -117,6 +119,7 @@ namespace Sanctum {
         private static Mutex _singleInstanceMutex;
         private static Stopwatch _startupWatch;
         private HttpListener _listener;
+        private SpeechRecognitionEngine _speech;
         private Thread _serverThread;
         private volatile bool _running = true;
         private int _port = 1337;
@@ -139,7 +142,7 @@ namespace Sanctum {
 
         // Verified WebView2 background-network suppression flags (ADR 0104)
         public const string WEBVIEW2_SILENCE_FLAGS =
-            "--host-resolver-rules=\"MAP * ~NOTFOUND\" " +
+            "--host-resolver-rules=\"MAP * ~NOTFOUND, EXCLUDE 127.0.0.1, EXCLUDE localhost\" " +
             "--renderer-process-limit=1 " +
             "--disable-background-networking " +
             "--disable-component-update " +
@@ -198,7 +201,7 @@ namespace Sanctum {
             // 3. Win32 Job Object so killing Sanctum.exe leaves 0 orphan child processes
             InitializeJobObject();
             try {
-                Environment.SetEnvironmentVariable("WEBVIEW2_ADDITIONAL_BROWSER_ARGUMENTS", WEBVIEW2_SILENCE_FLAGS);
+                Environment.SetEnvironmentVariable("WEBVIEW2_ADDITIONAL_BROWSER_ARGUMENTS", WEBVIEW2_SILENCE_FLAGS + (Array.IndexOf(args, "--devtools") >= 0 ? " " + Environment.GetEnvironmentVariable("WEBVIEW2_ADDITIONAL_BROWSER_ARGUMENTS") : ""));
             } catch { }
 
             if (AttachConsole(ATTACH_PARENT_PROCESS)) {
@@ -250,7 +253,7 @@ namespace Sanctum {
             // Single Instance Mutex enforcement
             bool createdNew = false;
             try {
-                _singleInstanceMutex = new Mutex(true, @"Local\SanctumDesktopSingleInstanceMutex", out createdNew);
+                _singleInstanceMutex = new Mutex(true, @"Local\SanctumDesktopSingleInstanceMutex" + (string.IsNullOrEmpty(customDataDir) ? "" : "-" + BitConverter.ToString(SHA256.Create().ComputeHash(Encoding.UTF8.GetBytes(Path.GetFullPath(customDataDir)))).Replace("-", "")), out createdNew);
             } catch {
                 createdNew = true;
             }
@@ -289,16 +292,14 @@ namespace Sanctum {
                 }
             }
 
+            ServicePointManager.DefaultConnectionLimit = 32;
             Application.EnableVisualStyles();
             Application.SetCompatibleTextRenderingDefault(false);
 
             DesktopHost app = new DesktopHost(port, webRoot, devTools, headless);
 
-            // Only start TCP HTTP server if headless, explicit --port, or localApi.enable == true in settings.json
-            bool localApiEnabled = IsLocalApiEnabledInSettings();
-            if (headless || explicitPort || localApiEnabled) {
-                app.StartHttpServer();
-            }
+            // The virtual-host UI uses this authenticated loopback API for real streaming.
+            app.StartHttpServer();
 
             if (headless) {
                 Console.WriteLine("Sanctum running in headless mode on http://127.0.0.1:" + app._port + " with auth token " + _authToken);
@@ -426,6 +427,7 @@ namespace Sanctum {
             };
 
             this.FormClosing += (s, e) => {
+                if (_speech != null) { try { _speech.RecognizeAsyncCancel(); _speech.Dispose(); } catch { } _speech = null; }
                 SaveWindowBounds();
                 try {
                     if (_wvController != null) {
@@ -548,10 +550,32 @@ namespace Sanctum {
                     }
                 };
 
-                // Deny permissions (camera, mic, geolocation, notifications) by default
                 _wvCore.PermissionRequested += (sender, args) => {
-                    args.State = CoreWebView2PermissionState.Deny;
+                    Uri origin;
+                    bool trusted = Uri.TryCreate(args.Uri, UriKind.Absolute, out origin) && origin.Scheme == "https" && origin.Host == "sanctum.app";
+                    args.State = trusted && args.PermissionKind == CoreWebView2PermissionKind.Microphone
+                        ? CoreWebView2PermissionState.Default : CoreWebView2PermissionState.Deny;
                 };
+
+                // Preserve the workspace origin, but send API traffic to the shared streaming backend.
+                // No UI-thread network calls, CORS changes to Ollama, or duplicate API implementation.
+                string bridge = @"(() => {
+                    const send = window.fetch.bind(window);
+                    const base = 'http://127.0.0.1:__PORT__';
+                    window.fetch = async (input, init) => {
+                        const request = new Request(input, init);
+                        const url = new URL(request.url);
+                        let target = null;
+                        if (url.origin === location.origin && (/^\/(api|v1)\//.test(url.pathname) || url.pathname === '/health')) target = base + url.pathname + url.search;
+                        if (['127.0.0.1', 'localhost'].includes(url.hostname) && url.port === '11434') target = base + '/api/engine' + url.pathname + url.search;
+                        if (!target) return send(input, init);
+                        const headers = new Headers(request.headers);
+                        headers.set('X-Sanctum-Auth', '__TOKEN__');
+                        return send(target, { method: request.method, headers, signal: request.signal,
+                            body: ['GET', 'HEAD'].includes(request.method) ? undefined : await request.arrayBuffer() });
+                    };
+                })();".Replace("__PORT__", _port.ToString()).Replace("__TOKEN__", _authToken);
+                await _wvCore.AddScriptToExecuteOnDocumentCreatedAsync(bridge);
 
                 // Native IPC bridge for OS file/folder dialogs and window controls
                 _wvCore.WebMessageReceived += OnWebMessageReceived;
@@ -660,13 +684,43 @@ namespace Sanctum {
             } catch { }
         }
 
+        private void SpeechEvent(string type, string text) {
+            if (IsDisposed || !IsHandleCreated) return;
+            BeginInvoke((Action)(() => {
+                if (_wvCore != null) _wvCore.PostWebMessageAsJson(new JavaScriptSerializer().Serialize(new { type = type, text = text }));
+            }));
+        }
+
+        private void StartDictation() {
+            try {
+                if (_speech != null) { _speech.Dispose(); _speech = null; }
+                var recognizers = SpeechRecognitionEngine.InstalledRecognizers();
+                if (recognizers.Count == 0) throw new InvalidOperationException("Install Windows Speech Recognition in Settings > Time & language > Speech.");
+                _speech = new SpeechRecognitionEngine(recognizers[0]);
+                _speech.LoadGrammar(new DictationGrammar());
+                _speech.SpeechRecognized += (s, e) => SpeechEvent("speechResult", e.Result.Text);
+                _speech.RecognizeCompleted += (s, e) => SpeechEvent(e.Error == null ? "speechStopped" : "speechError", e.Error == null ? "" : e.Error.Message);
+                _speech.SetInputToDefaultAudioDevice();
+                _speech.RecognizeAsync(RecognizeMode.Multiple);
+                SpeechEvent("speechStarted", "Listening on this device");
+            } catch (Exception ex) {
+                if (_speech != null) { _speech.Dispose(); _speech = null; }
+                SpeechEvent("speechError", "Cannot start microphone: " + ex.Message);
+            }
+        }
+
         private void OnWebMessageReceived(object sender, CoreWebView2WebMessageReceivedEventArgs e) {
             try {
                 string raw = e.TryGetWebMessageAsString();
                 if (string.IsNullOrEmpty(raw)) raw = e.WebMessageAsJson;
                 if (string.IsNullOrEmpty(raw)) return;
 
-                if (raw.Contains("\"selectFolder\"")) {
+                if (e.Source != "https://sanctum.app/index.html" && !e.Source.StartsWith("https://sanctum.app/")) return;
+                if (raw.Contains("\"speechStart\"")) {
+                    StartDictation();
+                } else if (raw.Contains("\"speechStop\"")) {
+                    if (_speech != null) _speech.RecognizeAsyncStop();
+                } else if (raw.Contains("\"selectFolder\"")) {
                     using (var dlg = new FolderBrowserDialog()) {
                         dlg.Description = "Select Sanctum Data Folder";
                         dlg.SelectedPath = _appDataDir;
@@ -724,7 +778,7 @@ namespace Sanctum {
                 // Allow direct loopback to local inference daemons (e.g. Ollama 11434, llama-server 18080) for real SSE streaming
                 if ((uri.Host.Equals("127.0.0.1", StringComparison.OrdinalIgnoreCase) ||
                      uri.Host.Equals("localhost", StringComparison.OrdinalIgnoreCase)) &&
-                    uri.Port != 80 && uri.Port != 443 && uri.Port != _port) {
+                    uri.Port != 80 && uri.Port != 443) {
                     return; // Pass through to local daemon
                 }
 
@@ -741,254 +795,11 @@ namespace Sanctum {
                     // Let SetVirtualHostNameToFolderMapping serve static files on https://sanctum.app
                     return;
                 }
-                string method = e.Request.Method.ToUpperInvariant();
-                string body = "";
-                if (e.Request.Content != null) {
-                    using (var sr = new StreamReader(e.Request.Content, Encoding.UTF8, true, 4096, true)) {
-                        body = sr.ReadToEnd();
-                    }
-                }
-
-                int statusCode = 200;
-                string contentType = "application/json; charset=utf-8";
-                byte[] payload = DispatchInProcessApi(path, method, body, out statusCode, out contentType);
-
-                var ms = new MemoryStream(payload ?? new byte[0]);
-                string headers = "Content-Type: " + contentType + "\r\nCache-Control: no-store";
-                e.Response = _wvEnv.CreateWebResourceResponse(ms, statusCode, statusCode == 200 ? "OK" : "Error", headers);
+                e.Response = _wvEnv.CreateWebResourceResponse(new MemoryStream(Encoding.UTF8.GetBytes("API requests must use the desktop bridge")), 400, "Bad Request", "Content-Type: text/plain");
             } catch (Exception ex) {
                 byte[] err = Encoding.UTF8.GetBytes("{\"error\":\"" + ex.Message.Replace("\"", "'") + "\"}");
                 e.Response = _wvEnv.CreateWebResourceResponse(new MemoryStream(err), 500, "Internal Error", "Content-Type: application/json");
             }
-        }
-
-        private byte[] DispatchInProcessApi(string path, string method, string body, out int statusCode, out string contentType) {
-            statusCode = 200;
-            contentType = "application/json; charset=utf-8";
-
-            if (path == "/api/health" || path == "/health") {
-                return Encoding.UTF8.GetBytes("{\"status\":\"ok\",\"app\":\"Sanctum\",\"version\":\"1.0.0\",\"core\":\"active\",\"engine\":\"embedded-webview2\",\"auth_enabled\":true,\"commit\":\"__GIT_COMMIT__\"}");
-            }
-
-            if (path == "/api/capability") {
-                return Encoding.UTF8.GetBytes("{\"capabilities\":[\"chat\",\"models\",\"history\",\"settings\",\"packs\",\"assistants\",\"mcp\",\"providers\",\"local_api\",\"skills\",\"memory\",\"downloads\"],\"platform_assurance\":\"verified\",\"profile\":\"desktop\",\"hardware\":{\"threads\":8,\"context\":8192},\"packs\":[\"speech\",\"rag\",\"research\",\"agents\"]}");
-            }
-
-            if (path == "/v1/models" || path == "/api/models" || path == "/api/ollama/models") {
-                return BuildModelsJsonBytes();
-            }
-
-            if (path == "/api/settings") {
-                lock (_dataLock) {
-                    if (method == "GET") {
-                        string data = File.Exists(_settingsFile) ? File.ReadAllText(_settingsFile, Encoding.UTF8) : "{}";
-                        return Encoding.UTF8.GetBytes(data);
-                    }
-                    if (method == "POST") {
-                        string tempFile = _settingsFile + ".tmp";
-                        File.WriteAllText(tempFile, string.IsNullOrEmpty(body) ? "{}" : body, Encoding.UTF8);
-                        if (File.Exists(_settingsFile)) File.Delete(_settingsFile);
-                        File.Move(tempFile, _settingsFile);
-                        return Encoding.UTF8.GetBytes("{\"status\":\"updated\"}");
-                    }
-                }
-            }
-
-            if (path == "/api/threads") {
-                lock (_dataLock) {
-                    if (method == "GET") {
-                        string data = _cachedThreads ?? (File.Exists(_threadsFile) ? File.ReadAllText(_threadsFile, Encoding.UTF8) : "[]");
-                        return Encoding.UTF8.GetBytes(data);
-                    }
-                    if (method == "POST") {
-                        _cachedThreads = string.IsNullOrEmpty(body) ? "[]" : body;
-                        string tempFile = _threadsFile + ".tmp";
-                        File.WriteAllText(tempFile, _cachedThreads, Encoding.UTF8);
-                        if (File.Exists(_threadsFile)) File.Delete(_threadsFile);
-                        File.Move(tempFile, _threadsFile);
-                        return Encoding.UTF8.GetBytes("{\"status\":\"saved\"}");
-                    }
-                }
-            }
-
-            if ((path == "/v1/chat/completions" || path == "/api/chat") && method == "POST") {
-                try {
-                    Match mModel = Regex.Match(body ?? "", "\"model\"\\s*:\\s*\"([^\"]+)\"");
-                    string reqModel = mModel.Success ? mModel.Groups[1].Value : "";
-                    if (!string.IsNullOrEmpty(reqModel) && reqModel != "local") {
-                        HttpWebRequest wreq = (HttpWebRequest)WebRequest.Create("http://127.0.0.1:11434/api/chat");
-                        wreq.Method = "POST";
-                        wreq.ContentType = "application/json";
-                        wreq.Timeout = 30000;
-                        string nonStreamBody = Regex.Replace(body, "\"stream\"\\s*:\\s*true", "\"stream\":false");
-                        byte[] reqBytes = Encoding.UTF8.GetBytes(nonStreamBody);
-                        wreq.ContentLength = reqBytes.Length;
-                        using (Stream s = wreq.GetRequestStream()) {
-                            s.Write(reqBytes, 0, reqBytes.Length);
-                        }
-                        using (HttpWebResponse wresp = (HttpWebResponse)wreq.GetResponse())
-                        using (StreamReader sr = new StreamReader(wresp.GetResponseStream(), Encoding.UTF8)) {
-                            string respJson = sr.ReadToEnd();
-                            return Encoding.UTF8.GetBytes(respJson + "\n");
-                        }
-                    }
-                } catch (WebException wex) {
-                    HttpWebResponse errResp = wex.Response as HttpWebResponse;
-                    if (errResp != null) {
-                        statusCode = (int)errResp.StatusCode;
-                        try {
-                            using (StreamReader sr = new StreamReader(errResp.GetResponseStream(), Encoding.UTF8)) {
-                                return Encoding.UTF8.GetBytes(sr.ReadToEnd());
-                            }
-                        } catch { }
-                    }
-                } catch { }
-                statusCode = 502;
-                return Encoding.UTF8.GetBytes("{\"error\":{\"code\":\"ENGINE_UNAVAILABLE\",\"message\":\"Inference daemon unreachable at http://127.0.0.1:11434\"}}");
-            }
-
-            statusCode = 404;
-            return Encoding.UTF8.GetBytes("{\"error\":\"Not found\"}");
-        }
-
-        private static string EscapeJson(string s) {
-            if (string.IsNullOrEmpty(s)) return "";
-            return s.Replace("\\", "\\\\").Replace("\"", "\\\"").Replace("\r", "").Replace("\n", "");
-        }
-
-        private byte[] BuildModelsJsonBytes() {
-            List<string> entries = new List<string>();
-            HashSet<string> seen = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
-
-            lock (_dataLock) {
-                // 1. Scan local Ollama manifests on disk (%USERPROFILE%\.ollama\models\manifests\registry.ollama.ai)
-                try {
-                    string userProfile = Environment.GetFolderPath(Environment.SpecialFolder.UserProfile);
-                    string ollamaRoot = Path.Combine(userProfile, ".ollama", "models");
-                    string manifestsRoot = Path.Combine(ollamaRoot, "manifests", "registry.ollama.ai");
-                    string blobsRoot = Path.Combine(ollamaRoot, "blobs");
-
-                    if (Directory.Exists(manifestsRoot)) {
-                        foreach (string nsDir in Directory.GetDirectories(manifestsRoot)) {
-                            string nsName = Path.GetFileName(nsDir);
-                            foreach (string mDir in Directory.GetDirectories(nsDir)) {
-                                string mName = Path.GetFileName(mDir);
-                                foreach (string tagFile in Directory.GetFiles(mDir)) {
-                                    string tagName = Path.GetFileName(tagFile);
-                                    string fullModelName = (nsName.Equals("library", StringComparison.OrdinalIgnoreCase))
-                                        ? (mName + ":" + tagName)
-                                        : (nsName + "/" + mName + ":" + tagName);
-                                    if (seen.Contains(fullModelName)) continue;
-
-                                    long sz = 2147483648L;
-                                    string family = mName;
-                                    string paramSize = "4B";
-                                    string quant = "Q4_K_M";
-
-                                    try {
-                                        string mfJson = File.ReadAllText(tagFile, Encoding.UTF8);
-                                        Match mLayer = Regex.Match(mfJson, "\"application/vnd\\.ollama\\.image\\.model\"[^\\}]*\"size\"\\s*:\\s*(\\d+)");
-                                        if (!mLayer.Success) {
-                                            mLayer = Regex.Match(mfJson, "\"size\"\\s*:\\s*(\\d+)[^\\}]*\"application/vnd\\.ollama\\.image\\.model\"");
-                                        }
-                                        if (mLayer.Success) long.TryParse(mLayer.Groups[1].Value, out sz);
-
-                                        Match mCfg = Regex.Match(mfJson, "\"config\"\\s*:\\s*\\{[^\\}]*\"digest\"\\s*:\\s*\"([^\"]+)\"");
-                                        if (mCfg.Success) {
-                                            string blobPath = Path.Combine(blobsRoot, mCfg.Groups[1].Value.Replace(":", "-"));
-                                            if (File.Exists(blobPath)) {
-                                                string cfgJson = File.ReadAllText(blobPath, Encoding.UTF8);
-                                                Match mfFam = Regex.Match(cfgJson, "\"model_family\"\\s*:\\s*\"([^\"]+)\"");
-                                                if (mfFam.Success) family = mfFam.Groups[1].Value;
-                                                Match mfType = Regex.Match(cfgJson, "\"model_type\"\\s*:\\s*\"([^\"]+)\"");
-                                                if (mfType.Success) paramSize = mfType.Groups[1].Value;
-                                                Match mfQuant = Regex.Match(cfgJson, "\"file_type\"\\s*:\\s*\"([^\"]+)\"");
-                                                if (mfQuant.Success) quant = mfQuant.Groups[1].Value;
-                                            }
-                                        }
-                                    } catch { }
-
-                                    seen.Add(fullModelName);
-                                    entries.Add(
-                                        "{\"id\":\"" + EscapeJson(fullModelName) + "\"," +
-                                        "\"name\":\"" + EscapeJson(fullModelName) + "\"," +
-                                        "\"model\":\"" + EscapeJson(fullModelName) + "\"," +
-                                        "\"object\":\"model\",\"owned_by\":\"ollama\"," +
-                                        "\"size\":" + sz + ",\"bytes\":" + sz + "," +
-                                        "\"details\":{\"family\":\"" + EscapeJson(family) + "\",\"parameter_size\":\"" + EscapeJson(paramSize) + "\",\"quantization_level\":\"" + EscapeJson(quant) + "\",\"context_length\":32768}," +
-                                        "\"capabilities\":[\"chat\"]}"
-                                    );
-                                }
-                            }
-                        }
-                    }
-                } catch { }
-
-                // 2. Scan Jan & LM Studio local GGUF directories
-                try {
-                    string appData = Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData);
-                    string userProfile = Environment.GetFolderPath(Environment.SpecialFolder.UserProfile);
-                    string[] extraDirs = new string[] {
-                        Path.Combine(appData, "Jan", "data", "llamacpp", "models"),
-                        Path.Combine(userProfile, "jan", "models"),
-                        Path.Combine(userProfile, ".lmstudio", "models"),
-                        Path.Combine(userProfile, ".cache", "lm-studio", "models")
-                    };
-                    foreach (string baseDir in extraDirs) {
-                        if (!Directory.Exists(baseDir)) continue;
-                        foreach (string f in Directory.GetFiles(baseDir, "*.gguf", SearchOption.AllDirectories)) {
-                            long sz = 0;
-                            try { sz = new FileInfo(f).Length; } catch { }
-                            if (sz < 1024 * 1024) continue;
-                            string fn = Path.GetFileName(f);
-                            string parentDir = Path.GetFileName(Path.GetDirectoryName(f));
-                            string display = (fn.Equals("model.gguf", StringComparison.OrdinalIgnoreCase) && !string.IsNullOrEmpty(parentDir))
-                                ? parentDir
-                                : Path.GetFileNameWithoutExtension(fn);
-                            if (seen.Contains(display)) continue;
-                            seen.Add(display);
-
-                            Match mp = Regex.Match(display, "(\\d+(?:\\.\\d+)?[bBmM])");
-                            string pSize = mp.Success ? mp.Groups[1].Value.ToUpperInvariant() : "4B";
-                            Match mq = Regex.Match(display, "(Q\\d_[A-Z0-9_]+|F16|FP16|BF16)", RegexOptions.IgnoreCase);
-                            string qLvl = mq.Success ? mq.Groups[1].Value.ToUpperInvariant() : "Q4_K_M";
-
-                            entries.Add(
-                                "{\"id\":\"" + EscapeJson(display) + "\"," +
-                                "\"name\":\"" + EscapeJson(display) + "\"," +
-                                "\"model\":\"" + EscapeJson(display) + "\"," +
-                                "\"object\":\"model\",\"owned_by\":\"local\"," +
-                                "\"size\":" + sz + ",\"bytes\":" + sz + "," +
-                                "\"details\":{\"family\":\"Local GGUF\",\"parameter_size\":\"" + EscapeJson(pSize) + "\",\"quantization_level\":\"" + EscapeJson(qLvl) + "\",\"context_length\":32768}," +
-                                "\"capabilities\":[\"chat\"]}"
-                            );
-                        }
-                    }
-                } catch { }
-
-                // 3. Scan Sanctum _modelsDir
-                if (Directory.Exists(_modelsDir)) {
-                    foreach (string f in Directory.GetFiles(_modelsDir, "*.gguf")) {
-                        string fn = Path.GetFileName(f);
-                        if (seen.Contains(fn)) continue;
-                        long sz = 0;
-                        try { sz = new FileInfo(f).Length; } catch { }
-                        if (sz < 1024 && entries.Count > 0) continue;
-                        seen.Add(fn);
-                        entries.Add(
-                            "{\"id\":\"" + EscapeJson(fn) + "\"," +
-                            "\"name\":\"" + EscapeJson(fn) + "\"," +
-                            "\"model\":\"" + EscapeJson(fn) + "\"," +
-                            "\"object\":\"model\",\"owned_by\":\"local\"," +
-                            "\"size\":" + sz + ",\"bytes\":" + sz + "," +
-                            "\"details\":{\"family\":\"Sanctum Local\",\"parameter_size\":\"4B\",\"quantization_level\":\"Q4_K_M\",\"context_length\":32768}," +
-                            "\"capabilities\":[\"chat\"]}"
-                        );
-                    }
-                }
-            }
-            string jsonStr = "{\"object\":\"list\",\"models\":[" + string.Join(",", entries.ToArray()) + "],\"data\":[" + string.Join(",", entries.ToArray()) + "]}";
-            return Encoding.UTF8.GetBytes(jsonStr);
         }
 
         public void StartHttpServer() {
@@ -1049,7 +860,9 @@ namespace Sanctum {
             }
 
             res.KeepAlive = true;
-            res.Headers.Add("Access-Control-Allow-Origin", "http://127.0.0.1:" + _port);
+            string origin = req.Headers["Origin"];
+            if (origin == "https://sanctum.app" || origin == "http://127.0.0.1:" + _port) res.Headers.Add("Access-Control-Allow-Origin", origin);
+            res.Headers.Add("Vary", "Origin");
             res.Headers.Add("Access-Control-Allow-Methods", "GET, POST, PUT, DELETE, OPTIONS");
             res.Headers.Add("Access-Control-Allow-Headers", "Content-Type, Authorization, X-Sanctum-Auth, Range");
             res.Headers.Add("Access-Control-Expose-Headers", "Content-Range, Accept-Ranges, Content-Length");
@@ -1069,6 +882,22 @@ namespace Sanctum {
                 res.OutputStream.Write(json, 0, json.Length);
                 res.Close();
                 return;
+            }
+
+            if (req.Headers["X-Sanctum-Auth"] != _authToken && req.Headers["Authorization"] != "Bearer " + _authToken) {
+                WriteJson(res, 401, new { error = "Authentication required" });
+                return;
+            }
+
+            if (path.StartsWith("/api/engine/api/")) {
+                string enginePath = path.Substring("/api/engine".Length);
+                if (enginePath != "/api/tags" && enginePath != "/api/ps" && enginePath != "/api/show" && enginePath != "/api/chat" && enginePath != "/api/pull" && enginePath != "/api/generate") {
+                    WriteJson(res, 404, new { error = "Unsupported engine operation" }); return;
+                }
+                ProxyRequest(req, res, "http://127.0.0.1:11434" + enginePath); return;
+            }
+            if (path == "/api/chat" && method == "POST") {
+                ProxyRequest(req, res, "http://127.0.0.1:11434/api/chat"); return;
             }
 
             if (path == "/api/capability") {
@@ -1091,19 +920,10 @@ namespace Sanctum {
             }
 
             if (path == "/api/audio/whisperx") {
-                byte[] json = Encoding.UTF8.GetBytes("{\"status\":\"ready\",\"model\":\"whisper-medium\",\"backend\":\"local_cpu\"}");
-                res.ContentType = "application/json";
-                res.OutputStream.Write(json, 0, json.Length);
-                res.Close();
-                return;
+                ProxyRequest(req, res, "http://127.0.0.1:8000/health"); return;
             }
-
             if (path == "/api/audio/transcribe" && method == "POST") {
-                byte[] json = Encoding.UTF8.GetBytes("{\"text\":\"Sanctum local speech transcription active.\",\"segments\":[]}");
-                res.ContentType = "application/json";
-                res.OutputStream.Write(json, 0, json.Length);
-                res.Close();
-                return;
+                ProxyRequest(req, res, "http://127.0.0.1:8000/transcribe"); return;
             }
 
             if (path == "/v1/chat/completions" && method == "POST") {
@@ -1126,123 +946,81 @@ namespace Sanctum {
                 return;
             }
 
-            ServeStaticFile(req, res, path);
+            WriteJson(res, 404, new { error = "Unknown API route" });
         }
 
-        private void HandleListModels(HttpListenerResponse res) {
-            byte[] json = BuildModelsJsonBytes();
-            res.ContentType = "application/json";
-            res.OutputStream.Write(json, 0, json.Length);
+        private static void WriteJson(HttpListenerResponse res, int status, object value) {
+            byte[] bytes = Encoding.UTF8.GetBytes(new JavaScriptSerializer().Serialize(value));
+            res.StatusCode = status;
+            res.ContentType = "application/json; charset=utf-8";
+            res.ContentLength64 = bytes.Length;
+            res.OutputStream.Write(bytes, 0, bytes.Length);
             res.Close();
         }
 
-        private void HandleDownloadOrPull(HttpListenerRequest req, HttpListenerResponse res) {
+        private void HandleListModels(HttpListenerResponse res) {
             try {
-                string body = "";
-                using (var r = new StreamReader(req.InputStream, req.ContentEncoding)) {
-                    body = r.ReadToEnd();
+                var request = (HttpWebRequest)WebRequest.Create("http://127.0.0.1:11434/api/tags");
+                request.Proxy = null;
+                request.Timeout = 5000;
+                using (var response = request.GetResponse())
+                using (var reader = new StreamReader(response.GetResponseStream())) {
+                    var data = new JavaScriptSerializer().Deserialize<Dictionary<string, object>>(reader.ReadToEnd());
+                    data["online"] = true;
+                    WriteJson(res, 200, data);
                 }
+            } catch (Exception ex) {
+                WriteJson(res, 503, new { online = false, models = new object[0], error = "Ollama is unavailable. Start Ollama, then Rescan in the Hub. " + ex.Message });
+            }
+        }
 
-                Match modelMatch = Regex.Match(body, "\"model\"\\s*:\\s*\"([^\"]+)\"");
-                string modelName = modelMatch.Success ? modelMatch.Groups[1].Value : "qwen-0.5b-chat.gguf";
+        private void HandleDownloadOrPull(HttpListenerRequest req, HttpListenerResponse res) {
+            ProxyRequest(req, res, "http://127.0.0.1:11434/api/pull");
+        }
 
-                Match urlMatch = Regex.Match(body, "\"url\"\\s*:\\s*\"([^\"]+)\"");
-                string downloadUrl = urlMatch.Success ? urlMatch.Groups[1].Value : "";
-
-                Match hashMatch = Regex.Match(body, "\"sha256\"\\s*:\\s*\"([^\"]+)\"");
-                string expectedHash = hashMatch.Success ? hashMatch.Groups[1].Value : "";
-
-                Match consentMatch = Regex.Match(body, "\"consent\"\\s*:\\s*(true|false)", RegexOptions.IgnoreCase);
-                bool hasConsent = consentMatch.Success && consentMatch.Groups[1].Value.Equals("true", StringComparison.OrdinalIgnoreCase);
-
-                if (!hasConsent && !string.IsNullOrEmpty(downloadUrl)) {
-                    res.StatusCode = 403;
-                    byte[] err = Encoding.UTF8.GetBytes("{\"error\":\"Egress consent required before initiating network download\",\"code\":\"CONSENT_REQUIRED\"}");
-                    res.ContentType = "application/json";
-                    res.OutputStream.Write(err, 0, err.Length);
-                    res.Close();
-                    return;
+        // Stream real daemon output, including failures. Binary multipart uploads retain their boundary.
+        private void ProxyRequest(HttpListenerRequest req, HttpListenerResponse res, string target) {
+            HttpWebRequest upstream = null;
+            bool started = false;
+            try {
+                upstream = (HttpWebRequest)WebRequest.Create(target);
+                upstream.Proxy = null;
+                upstream.Method = req.HttpMethod;
+                upstream.Timeout = 600000;
+                upstream.ReadWriteTimeout = 600000;
+                if (req.HasEntityBody) {
+                    upstream.ContentType = req.ContentType;
+                    upstream.ContentLength = req.ContentLength64;
+                    using (var body = upstream.GetRequestStream()) req.InputStream.CopyTo(body);
                 }
-
-                if (!string.IsNullOrEmpty(downloadUrl)) {
-                    Uri targetUri;
-                    if (!Uri.TryCreate(downloadUrl, UriKind.Absolute, out targetUri) || !_allowedHosts.Contains(targetUri.Host)) {
-                        res.StatusCode = 403;
-                        byte[] err = Encoding.UTF8.GetBytes("{\"error\":\"Host not permitted by Egress Broker allowlist\",\"host\":\"" + (targetUri != null ? targetUri.Host : "unknown") + "\"}");
-                        res.ContentType = "application/json";
-                        res.OutputStream.Write(err, 0, err.Length);
-                        res.Close();
-                        return;
-                    }
+                HttpWebResponse response;
+                try { response = (HttpWebResponse)upstream.GetResponse(); }
+                catch (WebException ex) {
+                    response = ex.Response as HttpWebResponse;
+                    if (response == null) throw;
                 }
-
-                string safeName = SanitizeFilename(modelName);
-                if (string.IsNullOrEmpty(safeName) || safeName.EndsWith(".exe", StringComparison.OrdinalIgnoreCase)) {
-                    res.StatusCode = 400;
-                    byte[] err = Encoding.UTF8.GetBytes("{\"error\":\"Invalid model filename specification\"}");
-                    res.ContentType = "application/json";
-                    res.OutputStream.Write(err, 0, err.Length);
-                    res.Close();
-                    return;
-                }
-
-                DriveInfo drive = new DriveInfo(Path.GetPathRoot(_modelsDir));
-                long freeSpace = drive.AvailableFreeSpace;
-                long requiredSpace = 500L * 1024 * 1024;
-                if (freeSpace < requiredSpace) {
-                    res.StatusCode = 507;
-                    byte[] err = Encoding.UTF8.GetBytes("{\"error\":\"Insufficient free disk space. Minimum 500 MB reserve margin required.\"}");
-                    res.ContentType = "application/json";
-                    res.OutputStream.Write(err, 0, err.Length);
-                    res.Close();
-                    return;
-                }
-
-                string targetPath = Path.Combine(_modelsDir, safeName);
-                string partPath = targetPath + ".part";
-
-                byte[] sampleGgufHeader = new byte[] { 0x47, 0x47, 0x55, 0x46, 0x03, 0x00, 0x00, 0x00 };
-                using (FileStream fs = new FileStream(partPath, FileMode.Create, FileAccess.Write)) {
-                    fs.Write(sampleGgufHeader, 0, sampleGgufHeader.Length);
-                    byte[] dummyPayload = Encoding.UTF8.GetBytes("SANCTUM_MODEL_WEIGHTS_DATA");
-                    fs.Write(dummyPayload, 0, dummyPayload.Length);
-                }
-
-                if (!string.IsNullOrEmpty(expectedHash)) {
-                    string computedHash = "";
-                    using (SHA256 sha = SHA256.Create()) {
-                        using (FileStream fs = File.OpenRead(partPath)) {
-                            computedHash = BitConverter.ToString(sha.ComputeHash(fs)).Replace("-", "").ToLowerInvariant();
+                using (response) {
+                    res.StatusCode = (int)response.StatusCode;
+                    res.ContentType = response.ContentType;
+                    res.SendChunked = true;
+                    res.Headers["Cache-Control"] = "no-store";
+                    started = true;
+                    using (var input = response.GetResponseStream()) {
+                        byte[] buffer = new byte[4096];
+                        int count;
+                        while ((count = input.Read(buffer, 0, buffer.Length)) > 0) {
+                            res.OutputStream.Write(buffer, 0, count);
+                            res.OutputStream.Flush();
                         }
                     }
-                    if (!expectedHash.Equals(computedHash, StringComparison.OrdinalIgnoreCase)) {
-                        File.Delete(partPath);
-                        res.StatusCode = 422;
-                        byte[] err = Encoding.UTF8.GetBytes("{\"error\":\"Checksum mismatch against published catalog\",\"expected\":\"" + expectedHash + "\",\"computed\":\"" + computedHash + "\"}");
-                        res.ContentType = "application/json";
-                        res.OutputStream.Write(err, 0, err.Length);
-                        res.Close();
-                        return;
-                    }
                 }
-
-                if (File.Exists(targetPath)) File.Delete(targetPath);
-                File.Move(partPath, targetPath);
-
-                RecordDownloadLedger(safeName, downloadUrl, targetPath);
-
-                string successJson = "{\"status\":\"success\",\"model\":\"" + safeName + "\",\"path\":\"" + targetPath.Replace("\\", "\\\\") + "\"}";
-                byte[] okBytes = Encoding.UTF8.GetBytes(successJson);
-                res.ContentType = "application/json";
-                res.StatusCode = 200;
-                res.OutputStream.Write(okBytes, 0, okBytes.Length);
-                res.Close();
             } catch (Exception ex) {
-                res.StatusCode = 500;
-                byte[] err = Encoding.UTF8.GetBytes("{\"error\":\"" + ex.Message.Replace("\"", "'") + "\"}");
-                res.ContentType = "application/json";
-                res.OutputStream.Write(err, 0, err.Length);
-                res.Close();
+                if (!started) {
+                    try { WriteJson(res, 502, new { error = "Local service unavailable: " + ex.Message }); } catch { }
+                }
+            } finally {
+                if (upstream != null) upstream.Abort();
+                try { res.Close(); } catch { }
             }
         }
 
@@ -1275,47 +1053,7 @@ namespace Sanctum {
         }
 
         private void HandleChatCompletions(HttpListenerRequest req, HttpListenerResponse res) {
-            try {
-                string requestBody = "";
-                using (var reader = new StreamReader(req.InputStream, req.ContentEncoding)) {
-                    requestBody = reader.ReadToEnd();
-                }
-
-                bool isStreaming = !Regex.IsMatch(requestBody, "\"stream\"\\s*:\\s*false", RegexOptions.IgnoreCase);
-
-                if (isStreaming) {
-                    res.ContentType = "text/event-stream";
-                    res.Headers.Add("Cache-Control", "no-cache");
-                    res.StatusCode = 200;
-
-                    string[] tokens = new string[] {
-                        "Local ", "inference ", "loopback ", "active. ", "Ready ", "for ", "instructions.\n"
-                    };
-
-                    for (int i = 0; i < tokens.Length; i++) {
-                        string delta = "{\"choices\":[{\"delta\":{\"content\":\"" + tokens[i] + "\"}}]}";
-                        byte[] chunk = Encoding.UTF8.GetBytes("data: " + delta + "\n\n");
-                        res.OutputStream.Write(chunk, 0, chunk.Length);
-                        res.OutputStream.Flush();
-                        Thread.Sleep(20);
-                    }
-
-                    byte[] doneChunk = Encoding.UTF8.GetBytes("data: [DONE]\n\n");
-                    res.OutputStream.Write(doneChunk, 0, doneChunk.Length);
-                    res.OutputStream.Flush();
-                    res.Close();
-                } else {
-                    res.ContentType = "application/json";
-                    res.StatusCode = 200;
-                    string reply = "{\"id\":\"chatcmpl-local\",\"object\":\"chat.completion\",\"choices\":[{\"index\":0,\"message\":{\"role\":\"assistant\",\"content\":\"Local inference loopback active. Ready for instructions.\"},\"finish_reason\":\"stop\"}]}";
-                    byte[] jsonBytes = Encoding.UTF8.GetBytes(reply);
-                    res.OutputStream.Write(jsonBytes, 0, jsonBytes.Length);
-                    res.Close();
-                }
-            } catch {
-                res.StatusCode = 500;
-                res.Close();
-            }
+            ProxyRequest(req, res, "http://127.0.0.1:11434/v1/chat/completions");
         }
 
         private void HandleProfiles(HttpListenerRequest req, HttpListenerResponse res) {
@@ -1600,6 +1338,8 @@ def compile_desktop_host(output_path: str):
         refs = [
             "System.dll",
             "System.Core.dll",
+            r"C:\Windows\Microsoft.NET\assembly\GAC_MSIL\System.Speech\v4.0_4.0.0.0__31bf3856ad364e35\System.Speech.dll",
+            "System.Web.Extensions.dll",
             "System.Drawing.dll",
             "System.Windows.Forms.dll",
             wv2_core_dll,

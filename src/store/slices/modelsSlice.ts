@@ -15,6 +15,7 @@ export interface ModelsSlice {
   searchModelQuery: string;
   activeModelId: string;
   isFetchingModels: boolean;
+  modelError: string | null;
   isConfigModalOpen: boolean;
   selectedModelForConfig: LocalModel | null;
   downloadProgressMap: Record<string, DownloadProgress>;
@@ -40,13 +41,14 @@ export const createModelsSlice: StateCreator<any, [], [], ModelsSlice> = (set, g
   searchModelQuery: "",
   activeModelId: "",
   isFetchingModels: false,
+  modelError: null,
   isConfigModalOpen: false,
   selectedModelForConfig: null,
   downloadProgressMap: {},
 
   initModels: async () => {
     if (get().isFetchingModels) return;
-    set({ isFetchingModels: true });
+    set({ isFetchingModels: true, modelError: null });
     try {
       const realModels = await LocalEngineClient.fetchOllamaModels(DEFAULT_OLLAMA_ENDPOINT);
       if (realModels.length > 0) {
@@ -81,10 +83,10 @@ export const createModelsSlice: StateCreator<any, [], [], ModelsSlice> = (set, g
           ],
         }));
       } else {
-        set({ isFetchingModels: false });
+        set({ isFetchingModels: false, models: [], activeModelId: "" });
       }
-    } catch {
-      set({ isFetchingModels: false });
+    } catch (error) {
+      set({ isFetchingModels: false, models: [], activeModelId: "", modelError: error instanceof Error ? error.message : "Could not load models" });
     }
   },
 
@@ -142,7 +144,7 @@ export const createModelsSlice: StateCreator<any, [], [], ModelsSlice> = (set, g
         ...state.downloadProgressMap,
         [modelName]: {
           percent: success ? 100 : state.downloadProgressMap[modelName]?.percent || 0,
-          status: success ? "Installed successfully" : "Download failed",
+          status: success ? "Installed successfully" : (state.downloadProgressMap[modelName]?.status?.startsWith("Download failed") ? state.downloadProgressMap[modelName].status : "Download failed. Check Ollama and retry."),
           isDownloading: false,
         },
       },

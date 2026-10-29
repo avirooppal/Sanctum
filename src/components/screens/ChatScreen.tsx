@@ -38,6 +38,7 @@ import { splitThinking, PromptTemplates } from "@core/ai/index.ts";
 import { RequestStatusLine } from "@/components/chat/RequestStatusLine";
 import { determineDocumentType } from "@core/domain/documents.ts";
 import { toast } from "sonner";
+import { extractAttachmentText } from "@/lib/attachments";
 
 interface ChatScreenProps {
   onNavigate?: (module: "chat" | "hub" | "settings") => void;
@@ -69,6 +70,8 @@ const MessageRow: React.FC<{
       <div className="flex flex-col items-end gap-1 group">
         <div className="max-w-[80%] rounded-2xl rounded-br-sm bg-primary text-primary-foreground px-4 py-2.5 text-sm whitespace-pre-wrap shadow-sm">
           {msg.content}
+          {msg.image && <img src={msg.image.src} alt={msg.image.name} className="mt-2 max-h-52 rounded-lg" />}
+          {msg.attachments?.map(doc => <div key={doc.name} className="mt-2 text-xs opacity-80">📎 {doc.name}</div>)}
         </div>
         <div className="flex items-center gap-1 opacity-0 group-hover:opacity-100 transition-opacity pr-1">
           <button
@@ -277,6 +280,31 @@ export const ChatScreen: React.FC<ChatScreenProps> = () => {
     el.style.height = `${Math.min(el.scrollHeight, 200)}px`;
   }, [prompt]);
 
+  useEffect(() => {
+    const desktop = (window as any).chrome?.webview;
+    if (!desktop) return;
+    const handleSpeech = (event: any) => {
+      const data = event.data;
+      if (data?.type === "speechStarted") {
+        setIsRecording(true); setRecordingSeconds(0);
+        setWhisperStatus("Listening offline. Click the microphone to stop.");
+        if (timerRef.current) clearInterval(timerRef.current);
+        timerRef.current = setInterval(() => setRecordingSeconds(value => value + 1), 1000);
+      } else if (data?.type === "speechResult") {
+        setPrompt(value => value ? `${value} ${data.text}` : data.text);
+      } else if (data?.type === "speechError" || data?.type === "speechStopped") {
+        setIsRecording(false);
+        if (timerRef.current) { clearInterval(timerRef.current); timerRef.current = null; }
+        setWhisperStatus(data.type === "speechError" ? data.text : "Dictation stopped.");
+      }
+    };
+    desktop.addEventListener("message", handleSpeech);
+    return () => {
+      desktop.removeEventListener("message", handleSpeech);
+      desktop.postMessage(JSON.stringify({ type: "speechStop" }));
+    };
+  }, []);
+
   // Cleanup audio recorder on unmount
   useEffect(() => {
     return () => {
@@ -326,11 +354,7 @@ export const ChatScreen: React.FC<ChatScreenProps> = () => {
         reader.readAsDataURL(file);
       } else {
         try {
-          if (!/\.(txt|md|json|csv|ts|tsx|js|jsx|py|rs|go|cpp|c|html|css)$/i.test(file.name)) {
-            toast.error(`${file.name}: use a text, Markdown, JSON, CSV or source-code file. PDF text extraction is unavailable.`);
-            continue;
-          }
-          const text = await file.text();
+          const text = await extractAttachmentText(file);
           if (!text.trim() || text.includes("\0")) {
             toast.error(`${file.name}: file is empty or contains binary data.`);
             continue;
@@ -352,7 +376,7 @@ export const ChatScreen: React.FC<ChatScreenProps> = () => {
 
           setEnableRagInChat(true);
         } catch (err) {
-          toast.error(`Could not read ${file.name}. Please retry.`);
+          toast.error(`${file.name}: ${err instanceof Error ? err.message : "Could not read file. Please retry."}`);
         }
       }
     }
@@ -368,6 +392,12 @@ export const ChatScreen: React.FC<ChatScreenProps> = () => {
   // --- WHISPERX & MICROPHONE RECORDING ---
   const startRecording = async () => {
     setWhisperStatus(null);
+    const desktop = (window as any).chrome?.webview;
+    if (desktop) {
+      setWhisperStatus("Starting offline dictation…");
+      desktop.postMessage(JSON.stringify({ type: "speechStart" }));
+      return;
+    }
     try {
       const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
       audioChunksRef.current = [];
@@ -395,32 +425,7 @@ export const ChatScreen: React.FC<ChatScreenProps> = () => {
         setRecordingSeconds((prev) => prev + 1);
       }, 1000);
 
-      const SpeechRecognition =
-        (window as any).SpeechRecognition || (window as any).webkitSpeechRecognition;
-      if (SpeechRecognition) {
-        try {
-          const recognition = new SpeechRecognition();
-          recognition.continuous = true;
-          recognition.interimResults = true;
-          recognition.lang = "en-US";
 
-          recognition.onresult = (event: any) => {
-            let interimTranscript = "";
-            for (let i = event.resultIndex; i < event.results.length; ++i) {
-              interimTranscript += event.results[i][0].transcript;
-            }
-            if (interimTranscript.trim()) {
-              setPrompt((prev) => {
-                const base = prev.trim();
-                return base ? `${base} ${interimTranscript.trim()}` : interimTranscript.trim();
-              });
-            }
-          };
-
-          recognition.start();
-          speechRecognitionRef.current = recognition;
-        } catch {}
-      }
     } catch (err) {
       console.error("Microphone access denied or not supported:", err);
       setWhisperStatus("Microphone access denied. Please grant browser permissions.");
@@ -428,6 +433,7 @@ export const ChatScreen: React.FC<ChatScreenProps> = () => {
   };
 
   const stopRecording = () => {
+    (window as any).chrome?.webview?.postMessage(JSON.stringify({ type: "speechStop" }));
     if (timerRef.current) {
       clearInterval(timerRef.current);
       timerRef.current = null;
@@ -459,20 +465,20 @@ export const ChatScreen: React.FC<ChatScreenProps> = () => {
 
       if (res.ok) {
         const data = await res.json();
-        if (data.success && data.text) {
+        if (typeof data.text === "string" && data.text.trim()) {
           setPrompt((prev) => (prev ? `${prev} ${data.text}` : data.text));
-          setWhisperStatus("WhisperX phoneme-aligned transcript applied.");
+          setWhisperStatus("Transcript added.");
         } else {
-          setWhisperStatus("Live voice captured. WhisperX server optional on :8000.");
+          setWhisperStatus(data.error || data.message || "No speech detected. Please try again.");
         }
       } else {
-        setWhisperStatus("Voice audio captured.");
+        setWhisperStatus("Transcription failed. Start the local speech service on port 8000, or use the Windows desktop app for offline dictation.");
       }
     } catch {
-      setWhisperStatus("Voice audio captured.");
+      setWhisperStatus("Transcription failed. Start the local speech service on port 8000, or use the Windows desktop app for offline dictation.");
     } finally {
       setIsTranscribing(false);
-      setTimeout(() => setWhisperStatus(null), 4000);
+
     }
   };
 
@@ -603,7 +609,7 @@ export const ChatScreen: React.FC<ChatScreenProps> = () => {
             ref={fileInputRef}
             onChange={handleFileInputChange}
             multiple
-            accept="image/*,.txt,.md,.json,.csv,.py,.js,.tsx,.ts,.rs,.go,.cpp,.c,.html,.css"
+            accept="image/png,image/jpeg,image/webp,.pdf,.docx,.txt,.md,.json,.csv,.py,.js,.tsx,.ts,.rs,.go,.cpp,.c,.html,.css"
             className="hidden"
           />
 
@@ -670,7 +676,7 @@ export const ChatScreen: React.FC<ChatScreenProps> = () => {
               <div className="flex items-center justify-between px-4 py-2 bg-destructive/10 text-destructive text-xs font-medium rounded-t-xl animate-in fade-in duration-150">
                 <div className="flex items-center gap-2">
                   <span className="size-2 rounded-full bg-destructive animate-ping" />
-                  <span>Listening with WhisperX...</span>
+                  <span>Listening…</span>
                 </div>
                 <span className="font-mono">
                   {Math.floor(recordingSeconds / 60)}:{(recordingSeconds % 60).toString().padStart(2, "0")}
@@ -721,7 +727,7 @@ export const ChatScreen: React.FC<ChatScreenProps> = () => {
                   type="button"
                   onClick={handleFileClick}
                   aria-label="Attach file"
-                  title="Attach images, text documents, or code"
+                  title="Attach PDF, DOCX, images, text, or code"
                   className="p-1.5 rounded-lg text-muted-foreground hover:text-foreground hover:bg-accent/60 transition-colors"
                 >
                   <Plus className="size-4" />
@@ -754,8 +760,8 @@ export const ChatScreen: React.FC<ChatScreenProps> = () => {
                 <button
                   type="button"
                   onClick={toggleMic}
-                  aria-label={isRecording ? "Stop recording" : "Voice input with WhisperX"}
-                  title={isRecording ? "Stop recording" : "Voice input with WhisperX"}
+                  aria-label={isRecording ? "Stop recording" : "Voice input"}
+                  title={isRecording ? "Stop recording" : "Voice input"}
                   className={cn(
                     "p-1.5 rounded-lg transition-colors",
                     isRecording

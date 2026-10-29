@@ -93,6 +93,7 @@ export class LocalEngineClient {
       ];
 
       let rawModels: any[] = [];
+      let connected = false;
       for (const ep of candidateEndpoints) {
         try {
           const url = ep.startsWith("/api") || ep.startsWith("/v1") ? ep : `${ep}/api/tags`;
@@ -104,7 +105,8 @@ export class LocalEngineClient {
               : Array.isArray(data.data)
               ? data.data
               : [];
-            if (list.length > 0) {
+            if (data.online !== false) {
+              connected = true;
               rawModels = list;
               break;
             }
@@ -114,9 +116,8 @@ export class LocalEngineClient {
         }
       }
 
-      if (rawModels.length === 0) {
-        return [];
-      }
+      if (!connected) throw new Error("Cannot reach Ollama. Start Ollama, then click Rescan. If it is not installed, install it from ollama.com/download/windows.");
+      if (rawModels.length === 0) return [];
 
       return rawModels.map((m: any, idx: number) => {
         const name: string = m.name || m.id || "local-model";
@@ -167,7 +168,7 @@ export class LocalEngineClient {
           config: {
             gpuLayers: 48,
             maxGpuLayers: 64,
-            contextSize: Math.min(ctx, 32768),
+            contextSize: Math.min(ctx, 8192),
             threads: 8,
             temperature: 0.7,
             topP: 0.9,
@@ -178,8 +179,8 @@ export class LocalEngineClient {
           },
         };
       });
-    } catch {
-      return [];
+    } catch (error) {
+      throw error;
     }
   }
 
@@ -218,7 +219,7 @@ export class LocalEngineClient {
       }
     }
 
-    if (!response || !response.body) return false;
+    if (!response || !response.body) { onProgress(0, "Download failed: cannot reach Ollama. Start Ollama and retry."); return false; }
 
     try {
       let succeeded = false;
@@ -233,7 +234,8 @@ export class LocalEngineClient {
         }
       }
       return succeeded;
-    } catch {
+    } catch (error) {
+      onProgress(0, `Download failed: ${error instanceof Error ? error.message : "connection interrupted"}`);
       return false;
     }
   }
@@ -327,10 +329,18 @@ export class LocalEngineClient {
     }
 
     let accumulatedText = "";
+    let inThinking = false;
     let tokenCount = 0;
     for await (const data of readStreamRecords(response.body, options.signal)) {
+      const thinking = data.message?.thinking;
+      if (thinking) {
+        if (!inThinking) { accumulatedText += "<think>\n"; inThinking = true; }
+        accumulatedText += thinking;
+        firstTokenTimestamp ??= performance.now();
+      }
       const token = data.message?.content ?? data.choices?.[0]?.delta?.content ?? data.choices?.[0]?.message?.content;
       if (token) {
+        if (inThinking) { accumulatedText += "\n</think>\n\n"; inThinking = false; }
         accumulatedText += token;
         tokenCount++;
         firstTokenTimestamp ??= performance.now();
@@ -345,7 +355,8 @@ export class LocalEngineClient {
         totalTokens: data.eval_count ?? data.usage?.completion_tokens ?? tokenCount,
         vramUsedGB: 0,
       };
-      if (token || finished) yield { text: accumulatedText, isFinished: finished, metrics };
+      if (finished && inThinking) { accumulatedText += "\n</think>\n\n"; inThinking = false; }
+      if (token || thinking || finished) yield { text: accumulatedText, isFinished: finished, metrics };
       if (finished) return;
     }
     throw new Error("The engine stream ended before completion. Retry to generate a complete response.");

@@ -27,9 +27,9 @@
 
 ## 3. UI Is Not a Web Page Served on a Public/Local TCP Port
 - **Requirement:** The application UI is loaded from bundled local assets over the embedded engine's virtual host / custom scheme mapping (`https://sanctum.app/index.html` mapped via `SetVirtualHostNameToFolderMapping` and in-process `WebResourceRequested` interception for `/api/*` and `/v1/*`).
-- **Zero Default UI TCP Port:** In standard desktop mode (`localApi.enable = false`, the default), **no HTTP server listens on any TCP port**. An external browser pointing at `http://127.0.0.1:1337` cannot open the UI.
-- **Optional Local API Server:** The OpenAI-compatible Local API Server (`127.0.0.1:<port>`) is a separate opt-in service controlled by **Settings > Local API Server** (`localApi.enable = true`) or the `--headless` CLI flag, authenticated by a per-launch token.
-- **Automated Verification:** `verify_standalone_window.py --test=zero_ui_tcp_port` (launches `Sanctum-Desktop.exe` in desktop mode and verifies via `Get-NetTCPConnection` that its PID owns `0` listening TCP ports while serving the UI in-process).
+- **Bundled UI:** The UI remains on `https://sanctum.app`; the HTTP listener does not serve frontend files.
+- **Streaming API:** Desktop mode starts a loopback-only API listener. The injected fetch bridge adds a per-launch authentication token and proxies real Ollama responses without blocking the window thread. Only the trusted app origin receives CORS access. Loopback names are excluded from the browser's external DNS blocking rules.
+- **Verification:** `python tools/exe-verify/verify_core_flows.py --model qwen3:1.7b` exercises the built host against real inference. The historical `zero_ui_tcp_port` assertion is superseded by this authenticated transport design.
 
 ## 4. Native Window Behavior
 - **Requirement:**

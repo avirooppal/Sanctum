@@ -92,8 +92,7 @@ public class SetupProgram {
         }
 
         // Check for running instance before overwriting
-        Process[] runningProcs = Process.GetProcessesByName("Sanctum-Desktop");
-        if (runningProcs.Length > 0) {
+        while (IsTargetRunning(installDir)) {
             if (!silent) {
                 DialogResult dr = MessageBox.Show("Sanctum is currently running. Please close it before continuing the installation.", "Sanctum Installer", MessageBoxButtons.RetryCancel, MessageBoxIcon.Warning);
                 if (dr == DialogResult.Cancel) return 1;
@@ -148,6 +147,16 @@ public class SetupProgram {
             }
             return 1;
         }
+    }
+
+    private static bool IsTargetRunning(string installDir) {
+        string target = Path.GetFullPath(Path.Combine(installDir, "Sanctum-Desktop.exe"));
+        foreach (Process process in Process.GetProcessesByName("Sanctum-Desktop")) {
+            try {
+                if (string.Equals(process.MainModule.FileName, target, StringComparison.OrdinalIgnoreCase)) return true;
+            } catch { }
+        }
+        return false;
     }
 
     private static void ExtractZip(string zipPath, string targetDir) {
@@ -236,10 +245,10 @@ Add-Type -TypeDefinition $source -Language CSharp -ReferencedAssemblies "System.
 
 
 def build_direct_launcher(out_path, payload_b64):
-    import time
-    git_commit = f"1d382e3-{int(time.time())}"
+    import hashlib
+    git_commit = hashlib.sha256(base64.b64decode(payload_b64)).hexdigest()
 
-    cs_launcher = """using System;
+    cs_launcher = r"""using System;
 using System.Diagnostics;
 using System.IO;
 using System.IO.Compression;
@@ -274,7 +283,13 @@ public class SanctumLauncher {
         if (needsUnpack) {
             try {
                 foreach (Process oldProc in Process.GetProcessesByName("Sanctum-Desktop")) {
-                    try { oldProc.Kill(); oldProc.WaitForExit(3000); } catch { }
+                    try {
+                        if (!string.Equals(oldProc.MainModule.FileName, exe, StringComparison.OrdinalIgnoreCase)) continue;
+                    } catch { continue; }
+                    if (!oldProc.CloseMainWindow() || !oldProc.WaitForExit(10000)) {
+                        System.Windows.Forms.MessageBox.Show("Please close Sanctum, then run this launcher again. Your workspace has been preserved.", "Sanctum update");
+                        return 1;
+                    }
                 }
                 Directory.CreateDirectory(appDir);
                 string tempZip = Path.Combine(Path.GetTempPath(), "sanctum_unpack_" + Guid.NewGuid().ToString("N") + ".zip");
@@ -293,7 +308,10 @@ public class SanctumLauncher {
                 }
                 File.WriteAllText(stampFile, expectedStamp);
                 try { File.Delete(tempZip); } catch { }
-            } catch { }
+            } catch (Exception error) {
+                System.Windows.Forms.MessageBox.Show("Could not update Sanctum: " + error.Message, "Sanctum update failed");
+                return 1;
+            }
         }
 
         if (!File.Exists(exe)) return 1;
@@ -301,7 +319,7 @@ public class SanctumLauncher {
         ProcessStartInfo psi = new ProcessStartInfo {
             FileName = exe,
             WorkingDirectory = appDir,
-            Arguments = string.Join(" ", args),
+            Arguments = string.Join(" ", Array.ConvertAll(args, arg => "\"" + arg.Replace("\"", "\\\"") + "\"")),
             UseShellExecute = false
         };
         try {
@@ -330,7 +348,7 @@ public class SanctumLauncher {
             f"/out:{out_path}",
             "/optimize+",
             "/platform:x64",
-            "/reference:System.dll,System.IO.Compression.dll,System.IO.Compression.FileSystem.dll",
+            "/reference:System.dll,System.Windows.Forms.dll,System.IO.Compression.dll,System.IO.Compression.FileSystem.dll",
         ]
         if os.path.exists(icon_path):
             cmd.append(f"/win32icon:{icon_path}")

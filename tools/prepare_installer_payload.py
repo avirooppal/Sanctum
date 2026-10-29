@@ -43,6 +43,7 @@ def prepare():
     os.makedirs(target_web, exist_ok=True)
 
     # Always compile fresh Next.js frontend to ensure latest UI fixes and assets are packaged
+    shutil.copy2(os.path.join(ROOT, "node_modules", "pdfjs-dist", "build", "pdf.worker.min.mjs"), os.path.join(ROOT, "public", "pdf.worker.min.mjs"))
     print("Building Next.js frontend...")
     subprocess.run(["npm", "run", "build"], cwd=ROOT, check=True, shell=True)
 

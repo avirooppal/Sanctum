@@ -92,6 +92,8 @@ def package():
         f.write("- Lucide React (ISC License) - Lucide Contributors\n")
         f.write("- class-variance-authority (Apache-2.0) - Joe Bell\n")
         f.write("- clsx (MIT License) - Luke Edwards\n")
+        f.write("- PDF.js / pdfjs-dist (Apache-2.0) - Mozilla Foundation\n")
+        f.write("- Mammoth (BSD-2-Clause) - Michael Williamson\n")
     print(f"Generated {bundle_file} and {notices_file}")
 
     # 4. Source Link / Offer

@@ -32,19 +32,24 @@ describe("Standalone Desktop App (Not a Browser Wrapper) Gate", () => {
     assert.ok(hostPy.includes("IsZoomControlEnabled = false"), "Must disable browser zoom controls");
   });
 
-  it("3. UI Is Not a Web Page on a Public/Local TCP Port: uses virtual host mapping and in-process WebResourceRequested", () => {
+  it("3. UI uses a virtual host and an authenticated loopback streaming API", () => {
     assert.ok(
       hostPy.includes("SetVirtualHostNameToFolderMapping") && hostPy.includes('"sanctum.app"'),
       "Must serve UI via SetVirtualHostNameToFolderMapping('sanctum.app')"
     );
     assert.ok(
       hostPy.includes('AddWebResourceRequestedFilter("https://sanctum.app/api/*"'),
-      "Must intercept /api/* requests in-process without requiring a TCP port"
+      "Must reject unbridged API calls"
     );
     assert.ok(
-      hostPy.includes("if (headless || explicitPort || localApiEnabled)"),
-      "TCP HTTP listener must only start when headless, explicit --port, or localApi.enable is active"
+      hostPy.includes('req.Headers["X-Sanctum-Auth"] != _authToken'),
+      "The streaming API must require per-launch authentication"
     );
+    assert.ok(hostPy.includes("EXCLUDE 127.0.0.1"), "The UI must be able to reach the loopback API");
+    assert.ok(hostPy.includes('ProxyRequest(req, res, "http://127.0.0.1:11434/api/chat")'));
+    assert.ok(hostPy.includes('ProxyRequest(req, res, "http://127.0.0.1:11434/api/pull")'));
+    assert.ok(!hostPy.includes("SANCTUM_MODEL_WEIGHTS_DATA"));
+    assert.ok(!hostPy.includes("Local inference loopback active. Ready for instructions."));
   });
 
   it("4. Native Window Behavior: dark #121214 background, DWM dark mode, persistent window bounds, single-instance lock", () => {
