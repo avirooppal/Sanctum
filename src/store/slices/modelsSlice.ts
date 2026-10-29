@@ -173,5 +173,9 @@ export const createModelsSlice: StateCreator<any, [], [], ModelsSlice> = (set, g
 
   setSelectedCategory: (cat) => set({ selectedCategory: cat }),
   setSearchModelQuery: (q) => set({ searchModelQuery: q }),
-  setActiveModelId: (id) => set({ activeModelId: id }),
+  setActiveModelId: (id) => {
+    if (!get().models.some((m: LocalModel) => m.id === id)) return;
+    set({ activeModelId: id });
+    get().updateSessionParams(get().activeSessionId, { modelId: id });
+  },
 });

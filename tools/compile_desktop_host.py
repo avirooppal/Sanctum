@@ -130,6 +130,9 @@ namespace Sanctum {
         private CoreWebView2 _wvCore;
 
         private static string _appDataDir;
+        private static string _toolWorkspace;
+        private static string _workspaceId = Guid.NewGuid().ToString("N");
+        private static readonly object _toolLock = new object();
         private static string _modelsDir;
         private static string _profilesFile;
         private static string _threadsFile;
@@ -367,6 +370,13 @@ namespace Sanctum {
                 _appDataDir = Path.Combine(appData, "Sanctum");
             }
 
+            _toolWorkspace = Path.Combine(_appDataDir, "workspace");
+            Directory.CreateDirectory(_toolWorkspace);
+            string workspaceConfig = Path.Combine(_appDataDir, "tool_workspace.txt");
+            if (File.Exists(workspaceConfig)) {
+                string saved = File.ReadAllText(workspaceConfig).Trim();
+                if (Directory.Exists(saved)) _toolWorkspace = Path.GetFullPath(saved);
+            }
             _modelsDir = Path.Combine(_appDataDir, "models");
             _profilesFile = Path.Combine(_appDataDir, "profiles.json");
             _threadsFile = Path.Combine(_appDataDir, "threads.json");
@@ -720,6 +730,19 @@ namespace Sanctum {
                     StartDictation();
                 } else if (raw.Contains("\"speechStop\"")) {
                     if (_speech != null) _speech.RecognizeAsyncStop();
+                } else if (raw.Contains("\"selectToolWorkspace\"")) {
+                    using (var dlg = new FolderBrowserDialog()) {
+                        dlg.Description = "Choose the workspace Sanctum can read and edit";
+                        dlg.SelectedPath = _toolWorkspace;
+                        if (dlg.ShowDialog(this) == DialogResult.OK) {
+                            lock (_toolLock) {
+                                _toolWorkspace = Path.GetFullPath(dlg.SelectedPath);
+                                _workspaceId = Guid.NewGuid().ToString("N");
+                                File.WriteAllText(Path.Combine(_appDataDir, "tool_workspace.txt"), _toolWorkspace);
+                            }
+                            _wvCore.PostWebMessageAsJson("{\"type\":\"toolWorkspaceChanged\"}");
+                        }
+                    }
                 } else if (raw.Contains("\"selectFolder\"")) {
                     using (var dlg = new FolderBrowserDialog()) {
                         dlg.Description = "Select Sanctum Data Folder";
@@ -889,6 +912,14 @@ namespace Sanctum {
                 return;
             }
 
+            if (path == "/api/workspace" && method == "GET") {
+                lock (_toolLock) WriteJson(res, 200, new { root = _toolWorkspace, id = _workspaceId });
+                return;
+            }
+            if (path == "/api/tools/execute" && method == "POST") {
+                HandleWorkspaceTool(req, res); return;
+            }
+
             if (path.StartsWith("/api/engine/api/")) {
                 string enginePath = path.Substring("/api/engine".Length);
                 if (enginePath != "/api/tags" && enginePath != "/api/ps" && enginePath != "/api/show" && enginePath != "/api/chat" && enginePath != "/api/pull" && enginePath != "/api/generate") {
@@ -947,6 +978,100 @@ namespace Sanctum {
             }
 
             WriteJson(res, 404, new { error = "Unknown API route" });
+        }
+
+        // Every model-supplied path is relative to the user-selected workspace.
+        private static string ToolPath(string relative, bool allowRoot) {
+            if (relative == "." && allowRoot) relative = "";
+            if (relative == null || Path.IsPathRooted(relative) || relative.Contains(":") || relative.IndexOf('\0') >= 0)
+                throw new Exception("Use a relative workspace path.");
+            string root = Path.GetFullPath(_toolWorkspace).TrimEnd(Path.DirectorySeparatorChar);
+            string full = Path.GetFullPath(Path.Combine(root, relative));
+            if ((!allowRoot && full.Equals(root, StringComparison.OrdinalIgnoreCase)) ||
+                (!full.Equals(root, StringComparison.OrdinalIgnoreCase) && !full.StartsWith(root + Path.DirectorySeparatorChar, StringComparison.OrdinalIgnoreCase)))
+                throw new Exception("Path is outside the workspace or targets its root.");
+            string current = full;
+            while (!string.IsNullOrEmpty(current)) {
+                if ((File.Exists(current) || Directory.Exists(current)) && (File.GetAttributes(current) & FileAttributes.ReparsePoint) != 0)
+                    throw new Exception("Symbolic links and junctions are not allowed in workspace tools.");
+                current = Path.GetDirectoryName(current);
+            }
+            foreach (string part in relative.Replace('/', '\\').Split('\\')) {
+                string stem = part.Split('.')[0].ToUpperInvariant();
+                if (part.EndsWith(" ") || part.EndsWith(".") || stem == "CON" || stem == "PRN" || stem == "AUX" || stem == "NUL" ||
+                    System.Text.RegularExpressions.Regex.IsMatch(stem, "^(COM|LPT)[0-9]$")) throw new Exception("Invalid Windows path segment.");
+            }
+            return full;
+        }
+        private static string ToolArg(System.Collections.Generic.Dictionary<string, object> args, string key, bool required) {
+            object value;
+            if (!args.TryGetValue(key, out value)) { if (required) throw new Exception("Missing argument: " + key); return ""; }
+            if (!(value is string)) throw new Exception("Argument must be text: " + key);
+            return (string)value;
+        }
+        private void HandleWorkspaceTool(HttpListenerRequest req, HttpListenerResponse res) {
+            try {
+                if (req.ContentLength64 < 0 || req.ContentLength64 > 2097152) throw new Exception("Request is too large.");
+                string body;
+                using (var reader = new StreamReader(req.InputStream, Encoding.UTF8)) body = reader.ReadToEnd();
+                var request = new JavaScriptSerializer().Deserialize<System.Collections.Generic.Dictionary<string, object>>(body);
+                lock (_toolLock) {
+                    if (ToolArg(request, "workspaceId", true) != _workspaceId) throw new Exception("Workspace changed. Send the request again.");
+                    if (ToolArg(request, "name", true) != "workspace_files") throw new Exception("Unknown tool.");
+                    var args = request["arguments"] as System.Collections.Generic.Dictionary<string, object>;
+                    if (args == null) throw new Exception("Invalid arguments.");
+                    string action = ToolArg(args, "action", true);
+                    string relative = ToolArg(args, "path", true);
+                    string target = ToolPath(relative, action == "list");
+                    object result;
+                    if (action == "list") {
+                        var entries = new System.Collections.Generic.List<object>();
+                        foreach (string entry in Directory.EnumerateFileSystemEntries(target)) {
+                            if (entries.Count >= 200) break;
+                            var attributes = File.GetAttributes(entry);
+                            entries.Add(new { name = Path.GetFileName(entry), directory = (attributes & FileAttributes.Directory) != 0, link = (attributes & FileAttributes.ReparsePoint) != 0 });
+                        }
+                        result = new { entries = entries, limit = 200 };
+                    } else if (action == "read") {
+                        if (new FileInfo(target).Length > 1048576) throw new Exception("Read limit is 1 MiB.");
+                        result = new { content = File.ReadAllText(target, new UTF8Encoding(false, true)) };
+                    } else if (action == "create") {
+                        string content = ToolArg(args, "content", true);
+                        if (Encoding.UTF8.GetByteCount(content) > 1048576) throw new Exception("Write limit is 1 MiB.");
+                        using (var stream = new FileStream(target, FileMode.CreateNew, FileAccess.Write))
+                        using (var writer = new StreamWriter(stream, new UTF8Encoding(false))) writer.Write(content);
+                        result = new { created = relative };
+                    } else if (action == "edit") {
+                        if (new FileInfo(target).Length > 1048576) throw new Exception("Edit limit is 1 MiB.");
+                        string before = ToolArg(args, "old_text", true), after = ToolArg(args, "new_text", true);
+                        string content = File.ReadAllText(target, new UTF8Encoding(false, true));
+                        int at = content.IndexOf(before, StringComparison.Ordinal);
+                        if (before.Length == 0 || at < 0 || content.IndexOf(before, at + 1, StringComparison.Ordinal) >= 0)
+                            throw new Exception("old_text must match exactly once. Read the file first.");
+                        string updated = content.Substring(0, at) + after + content.Substring(at + before.Length);
+                        if (Encoding.UTF8.GetByteCount(updated) > 1048576) throw new Exception("Edit limit is 1 MiB.");
+                        File.WriteAllText(target, updated, new UTF8Encoding(false));
+                        result = new { edited = relative };
+                    } else if (action == "mkdir") {
+                        Directory.CreateDirectory(target); result = new { created = relative };
+                    } else if (action == "move") {
+                        string destination = ToolArg(args, "destination", true);
+                        string dest = ToolPath(destination, false);
+                        if (File.Exists(dest) || Directory.Exists(dest)) throw new Exception("Destination already exists.");
+                        if (Directory.Exists(target)) Directory.Move(target, dest); else File.Move(target, dest);
+                        result = new { moved = relative, destination = destination };
+                    } else if (action == "delete") {
+                        // Reversible deletion: move to private trash, never recursively erase.
+                        string trash = Path.Combine(_appDataDir, "tool-trash", Guid.NewGuid().ToString("N"));
+                        Directory.CreateDirectory(trash);
+                        string saved = Path.Combine(trash, Path.GetFileName(target));
+                        if (Directory.Exists(target)) Directory.Move(target, saved); else File.Move(target, saved);
+                        File.WriteAllText(Path.Combine(trash, "restore.json"), new JavaScriptSerializer().Serialize(new { original = target, saved = saved }));
+                        result = new { deleted = relative, recoverableAt = saved };
+                    } else throw new Exception("Unsupported file action.");
+                    WriteJson(res, 200, result);
+                }
+            } catch (Exception ex) { WriteJson(res, 400, new { error = ex.Message }); }
         }
 
         private static void WriteJson(HttpListenerResponse res, int status, object value) {

@@ -6,7 +6,7 @@ export async function POST(request: NextRequest) {
   try {
     const body = await request.json();
     if (typeof body.model !== "string" || !body.model.trim() || !Array.isArray(body.messages) ||
-        !body.messages.every((m: any) => m && ["system", "user", "assistant"].includes(m.role) && typeof m.content === "string")) {
+        !body.messages.every((m: any) => m && ["system", "user", "assistant", "tool"].includes(m.role) && typeof m.content === "string")) {
       return NextResponse.json({ error: "A model and valid messages are required." }, { status: 400 });
     }
     const upstream = await fetch(`${DEFAULT_OLLAMA_ENDPOINT}/api/chat`, {

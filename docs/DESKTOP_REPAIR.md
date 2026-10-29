@@ -51,3 +51,29 @@ not establish correctness of the repaired desktop.
 Ollama and the WebView2 runtime remain prerequisites. Browser transcription still
 requires the optional local speech service. Cloud-provider and MCP settings remain
 experimental and are not part of the local chat dispatch path.
+
+
+## Workspace tools and model switching
+
+The desktop titlebar drag handler was intercepting plain div model options.
+Options now use accessible buttons inside a no-drag region. Selection updates the
+active chat immediately and is restored when returning to that chat. Assistant
+messages record their answering model so switching does not relabel old answers.
+
+Desktop chat now supports seven Ollama function tools: list_directory, read_file,
+create_file, edit_file, create_directory, move_path, and delete_path. Authenticated
+native handlers validate workspace-relative paths, reject reparse points/device
+paths/alternate streams, and prevent overwrite on create. Delete moves to private
+recoverable trash. A native folder picker grants access to a different workspace;
+workspace IDs prevent a running call from silently changing its destination.
+
+The chat controller streams model output, executes calls serially, returns real
+results to the model, persists activity records, supports Stop, and limits loops.
+The existing ordinary chat path stays available with Tools off. Models must support
+Ollama tool calling; no arbitrary shell executor is included.
+
+Verification includes native filesystem operations and containment checks in
+`verify_core_flows.py`, streamed tool-loop/cancellation/error tests in
+`tests/workspace_tools.test.ts`, and actual WebView2 UI operations in
+`tools/exe-verify/verify_workspace_ui.cjs`. The UI test requires an isolated profile
+with Qwen3 1.7B and SmolLM2 135M installed and CDP enabled at port 19222.

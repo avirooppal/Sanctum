@@ -57,7 +57,17 @@ export interface LocalModel {
   };
 }
 
+export interface ToolActivity {
+  id: string;
+  name: string;
+  arguments: Record<string, unknown>;
+  status: "running" | "success" | "error";
+  output?: string;
+}
+
 export interface ChatMessage {
+  modelId?: string;
+  toolActivities?: ToolActivity[];
   id: string;
   role: "user" | "assistant" | "system";
   content: string;

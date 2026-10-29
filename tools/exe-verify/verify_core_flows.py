@@ -54,6 +54,35 @@ def main():
                 raise AssertionError("API accepted a request without authentication")
             except urllib.error.HTTPError as error:
                 assert error.code == 401
+            with call("/api/workspace") as response:
+                workspace = json.load(response)
+            def tool(action, path, **kwargs):
+                with call("/api/tools/execute", {"name": "workspace_files", "workspaceId": workspace["id"], "arguments": {"action": action, "path": path, **kwargs}}) as response:
+                    return json.load(response)
+            tool("mkdir", "project")
+            tool("create", "project/hello.txt", content="Hello world 🌍")
+            assert tool("read", "project/hello.txt")["content"] == "Hello world 🌍"
+            tool("edit", "project/hello.txt", old_text="world", new_text="Sanctum")
+            assert tool("read", "project/hello.txt")["content"] == "Hello Sanctum 🌍"
+            tool("move", "project/hello.txt", destination="project/renamed.txt")
+            assert tool("list", "project")["entries"][0]["name"] == "renamed.txt"
+            trash = tool("delete", "project/renamed.txt")["recoverableAt"]
+            assert Path(trash).read_text(encoding="utf-8") == "Hello Sanctum 🌍"
+            assert tool("list", "project")["entries"] == []
+            tool("create", "keep.txt", content="preserve")
+            for action, path, kwargs in [
+                ("read", "../threads.json", {}), ("create", "C:/escape.txt", {"content": "bad"}),
+                ("delete", ".", {}), ("create", "keep.txt", {"content": "overwrite"}),
+                ("read", "keep.txt:stream", {}), ("create", "CON.txt", {"content": "bad"}),
+                ("edit", "keep.txt", {"old_text": "absent", "new_text": "bad"}),
+            ]:
+                try:
+                    tool(action, path, **kwargs)
+                    raise AssertionError(f"Unsafe operation accepted: {action} {path}")
+                except urllib.error.HTTPError as error:
+                    assert error.code == 400
+            assert tool("read", "keep.txt")["content"] == "preserve"
+            print("PASS native workspace: create/read/edit/move/list/trash, UTF-8, containment and overwrite protection", flush=True)
             with call("/api/ollama/models") as response:
                 models = json.load(response)
             assert models["online"] and any(model["name"] == args.model for model in models["models"])

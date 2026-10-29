@@ -38,6 +38,7 @@ import { splitThinking, PromptTemplates } from "@core/ai/index.ts";
 import { RequestStatusLine } from "@/components/chat/RequestStatusLine";
 import { determineDocumentType } from "@core/domain/documents.ts";
 import { toast } from "sonner";
+import { WorkspaceTools } from "@/components/chat/WorkspaceTools";
 import { extractAttachmentText } from "@/lib/attachments";
 
 interface ChatScreenProps {
@@ -110,6 +111,10 @@ const MessageRow: React.FC<{
           )}
         </div>
 
+        {msg.toolActivities?.map(activity => <details key={activity.id} className="rounded border border-border px-3 py-2 text-xs">
+          <summary className="cursor-pointer">{String(activity.arguments.action || activity.name)} {String(activity.arguments.path || "")} — {activity.status}</summary>
+          <pre className="mt-2 max-h-64 overflow-auto whitespace-pre-wrap">{JSON.stringify(activity.arguments, null, 2)}{activity.output ? `\n${activity.output}` : ""}</pre>
+        </details>)}
         {thinking && (
           <div>
             <button
@@ -519,7 +524,7 @@ export const ChatScreen: React.FC<ChatScreenProps> = () => {
             <div className="flex items-center gap-1 rounded-xl bg-card/90 border border-border/60 px-2 py-0.5 shadow-xs">
               {models.length > 0 ? (
                 <Select className="w-auto" value={model?.id} onValueChange={setActiveModelId}>
-                  <SelectTrigger className="h-7 w-auto max-w-[260px] gap-1.5 border-0 bg-transparent shadow-none px-1.5 text-xs font-medium hover:bg-accent/60 rounded-lg">
+                  <SelectTrigger aria-label="Select model" disabled={!!activeTracker} className="h-7 w-auto max-w-[260px] gap-1.5 border-0 bg-transparent shadow-none px-1.5 text-xs font-medium hover:bg-accent/60 rounded-lg">
                     <SelectValue />
                   </SelectTrigger>
                   <SelectContent className="w-72">
@@ -588,7 +593,7 @@ export const ChatScreen: React.FC<ChatScreenProps> = () => {
                 <MessageRow
                   key={m.id}
                   msg={m}
-                  modelName={model?.name}
+                  modelName={m.modelId || model?.name}
                   onStop={stopInference}
                   onRetry={!isStreaming && m.id === messages.at(-1)?.id ? regenerateLastMessage : undefined}
                   onDelete={!isStreaming && session ? () => deleteChatMessage(session.id, m.id) : undefined}
@@ -698,6 +703,7 @@ export const ChatScreen: React.FC<ChatScreenProps> = () => {
               </div>
             )}
 
+            <WorkspaceTools />
             <textarea
               ref={textareaRef}
               rows={1}

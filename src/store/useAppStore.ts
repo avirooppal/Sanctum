@@ -66,6 +66,7 @@ export const useAppStore = create<AppState>()(
         projects: state.projects,
         activeProjectId: state.activeProjectId,
         enableRagInChat: state.enableRagInChat,
+        toolsEnabled: state.toolsEnabled,
         activeModelId: state.activeModelId,
         models: state.models,
         arenaPrompt: state.arenaPrompt,

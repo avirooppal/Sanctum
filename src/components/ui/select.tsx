@@ -10,7 +10,6 @@ interface SelectContextValue {
   open: boolean;
   setOpen: (open: boolean) => void;
   selectedLabel: string;
-  setSelectedLabel: (label: string) => void;
 }
 
 const SelectContext = React.createContext<SelectContextValue | null>(null);
@@ -32,9 +31,19 @@ export function Select({
 }: SelectProps) {
   const [internalValue, setInternalValue] = React.useState(defaultValue);
   const [open, setOpen] = React.useState(false);
-  const [selectedLabel, setSelectedLabel] = React.useState("");
 
   const value = controlledValue !== undefined ? controlledValue : internalValue;
+
+  const findLabel = (nodes: React.ReactNode): string => {
+    for (const node of React.Children.toArray(nodes)) {
+      if (!React.isValidElement<{ value?: string; children?: React.ReactNode }>(node)) continue;
+      if (node.type === SelectItem && node.props.value === value && typeof node.props.children === "string") return node.props.children;
+      const nested = findLabel(node.props.children);
+      if (nested) return nested;
+    }
+    return "";
+  };
+  const selectedLabel = findLabel(children);
 
   const handleValueChange = (val: string) => {
     if (controlledValue === undefined) {
@@ -52,10 +61,9 @@ export function Select({
         open,
         setOpen,
         selectedLabel,
-        setSelectedLabel,
       }}
     >
-      <div className={cn("relative inline-block w-full", className)}>{children}</div>
+      <div data-no-drag className={cn("relative inline-block w-full", className)}>{children}</div>
     </SelectContext.Provider>
   );
 }
@@ -70,6 +78,10 @@ export const SelectTrigger = React.forwardRef<
     <button
       ref={ref}
       type="button"
+      role="combobox"
+      aria-expanded={ctx?.open}
+      aria-haspopup="listbox"
+      onKeyDown={(e) => { if (e.key === "Escape") ctx?.setOpen(false); }}
       onClick={() => ctx?.setOpen(!ctx.open)}
       className={cn(
         "flex h-9 w-full items-center justify-between rounded-md border border-input bg-transparent px-3 py-2 text-sm shadow-xs ring-offset-background placeholder:text-muted-foreground focus:outline-none focus:ring-1 focus:ring-ring disabled:cursor-not-allowed disabled:opacity-50",
@@ -105,7 +117,7 @@ export function SelectContent({
 
   React.useEffect(() => {
     const handleClickOutside = (e: MouseEvent) => {
-      if (ref.current && !ref.current.contains(e.target as Node)) {
+      if (ref.current && !ref.current.contains(e.target as Node) && !(e.target as Element).closest("[role=combobox]")) {
         ctx?.setOpen(false);
       }
     };
@@ -120,6 +132,9 @@ export function SelectContent({
   return (
     <div
       ref={ref}
+      role="listbox"
+      onKeyDown={(e) => { if (e.key === "Escape") ctx?.setOpen(false); }}
+      data-no-drag
       className={cn(
         "absolute z-50 mt-1 max-h-60 w-full overflow-auto rounded-md border border-border bg-popover p-1 text-popover-foreground shadow-md animate-in fade-in-80",
         className
@@ -142,18 +157,13 @@ export function SelectItem({
   const ctx = React.useContext(SelectContext);
   const isSelected = ctx?.value === value;
 
-  React.useEffect(() => {
-    if (isSelected && typeof children === "string") {
-      ctx?.setSelectedLabel(children);
-    }
-  }, [isSelected, children]);
-
   return (
-    <div
+    <button
+      type="button"
+      role="option"
+      aria-selected={isSelected}
+      data-no-drag
       onClick={() => {
-        if (typeof children === "string") {
-          ctx?.setSelectedLabel(children);
-        }
         ctx?.onValueChange(value);
       }}
       className={cn(
@@ -166,6 +176,6 @@ export function SelectItem({
         {isSelected && <Check className="size-4" />}
       </span>
       <span>{children}</span>
-    </div>
+    </button>
   );
 }

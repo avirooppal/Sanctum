@@ -1,3 +1,4 @@
+import { streamWorkspaceChat } from "../../../core/ai/tools/workspace_chat.ts";
 import type { StateCreator } from "zustand";
 import type { ChatSession, ChatMessage, ChatProject, RequestStatusEvent } from "../../../contracts/types/index.ts";
 import { globalVectorStore } from "../../../core/ai/rag/vectorStore.ts";
@@ -17,6 +18,8 @@ export interface ChatSlice {
   projects: ChatProject[];
   activeProjectId: string | null;
   enableRagInChat: boolean;
+  toolsEnabled: boolean;
+  setToolsEnabled: (enabled: boolean) => void;
   attachedImage: { src: string; name: string; width: number; height: number } | null;
   attachedDocuments: AttachedDoc[];
   activeTracker: RequestStatusTracker | null;
@@ -80,6 +83,8 @@ export const createChatSlice: StateCreator<any, [], [], ChatSlice> = (set, get) 
   ],
   activeProjectId: null,
   enableRagInChat: false,
+  toolsEnabled: false,
+  setToolsEnabled: (enabled) => set({ toolsEnabled: enabled }),
   attachedImage: null,
   attachedDocuments: [],
   activeTracker: null,
@@ -89,7 +94,10 @@ export const createChatSlice: StateCreator<any, [], [], ChatSlice> = (set, get) 
       ? { ...s, messages: s.messages.map(m => m.id === messageId ? { ...m, bookmarked: !m.bookmarked } : m) } : s),
   })),
 
-  setActiveSessionId: (id) => set({ activeSessionId: id }),
+  setActiveSessionId: (id) => {
+    const session = get().chatSessions.find((s: ChatSession) => s.id === id);
+    if (session) set({ activeSessionId: id, activeModelId: session.modelId });
+  },
   setActiveProjectId: (id) => set({ activeProjectId: id }),
   setEnableRagInChat: (enabled) => set({ enableRagInChat: enabled }),
   setAttachedImage: (img) => set({ attachedImage: img }),
@@ -156,6 +164,7 @@ export const createChatSlice: StateCreator<any, [], [], ChatSlice> = (set, get) 
       return {
         chatSessions: filtered,
         activeSessionId: state.activeSessionId === id ? filtered[0].id : state.activeSessionId,
+        activeModelId: state.activeSessionId === id ? filtered[0].modelId : state.activeModelId,
       };
     }),
 
@@ -206,6 +215,7 @@ export const createChatSlice: StateCreator<any, [], [], ChatSlice> = (set, get) 
       return {
         chatSessions: updated,
         activeSessionId: copyId,
+        activeModelId: copy.modelId,
       };
     }),
 
@@ -257,7 +267,7 @@ export const createChatSlice: StateCreator<any, [], [], ChatSlice> = (set, get) 
         s.id === sessionId ? { ...s, ...params, updatedAt: "Just now" } : s
       );
       syncThreadsToBackend(updated);
-      return { chatSessions: updated };
+      return { chatSessions: updated, ...(sessionId === state.activeSessionId && params.modelId ? { activeModelId: params.modelId } : {}) };
     }),
 
   createProject: (name, assistantId) =>
@@ -437,6 +447,9 @@ export const createChatSlice: StateCreator<any, [], [], ChatSlice> = (set, get) 
       return;
     }
 
+    set((state: any) => ({ chatSessions: state.chatSessions.map((s: ChatSession) => s.id === session.id
+      ? { ...s, messages: s.messages.map(m => m.id === assistantMsgId ? { ...m, modelId: activeModel.id } : m) } : s) }));
+
     // Keep session synchronized with the answering model
     if (session.modelId !== activeModel.id) {
       set((state: any) => ({
@@ -450,11 +463,20 @@ export const createChatSlice: StateCreator<any, [], [], ChatSlice> = (set, get) 
       detail: `Dispatching prompt to ${activeModel.name}...`,
     });
 
-    const historyPayload = session.messages.map((m: any) => ({
-      role: m.role,
-      ...(m.image?.src ? { images: [m.image.src.replace(/^data:image\/[^;]+;base64,/, "")] } : {}),
-      content: m.attachments?.length ? `${m.content}\n\n${m.attachments.map((d: AttachedDoc) => `[Attached Document: ${d.name}]\n${d.content}`).join("\n\n")}` : m.content,
-    }));
+    const historyPayload = session.messages.flatMap((m: ChatMessage) => {
+      const message = {
+        role: m.role,
+        ...(m.image?.src ? { images: [m.image.src.replace(/^data:image\/[^;]+;base64,/, "")] } : {}),
+        content: m.attachments?.length ? `${m.content}\n\n${m.attachments.map((d: AttachedDoc) => `[Attached Document: ${d.name}]\n${d.content}`).join("\n\n")}` : m.content,
+      };
+      const activities = m.toolActivities?.filter(a => a.status !== "running") || [];
+      if (!get().toolsEnabled || !activities.length) return [message];
+      return [
+        { role: "assistant", content: "", tool_calls: activities.map(a => ({ function: { name: a.name, arguments: a.arguments } })) },
+        ...activities.map(a => ({ role: "tool", tool_name: a.name, content: a.output || "No result recorded" })),
+        message,
+      ];
+    });
     if (session.systemPrompt) historyPayload.unshift({ role: "system", content: session.systemPrompt });
     historyPayload.push({ role: "user", content });
 
@@ -462,8 +484,14 @@ export const createChatSlice: StateCreator<any, [], [], ChatSlice> = (set, get) 
 
     set({ attachedImage: null, attachedDocuments: [] });
     try {
-      for await (const chunk of LocalEngineClient.streamChat(activeModel.id, historyPayload, {
+      const stream = get().toolsEnabled ? streamWorkspaceChat : LocalEngineClient.streamChat.bind(LocalEngineClient);
+      for await (const chunk of stream(activeModel.id, historyPayload, {
         endpoint: DEFAULT_OLLAMA_ENDPOINT,
+        onActivity: (activity: import("../../../core/ai/tools/workspace_chat.ts").ToolActivity) => {
+          tracker.transition("using_tool", { detail: `${activity.arguments.action || activity.name}: ${activity.arguments.path || ""} (${activity.status})` });
+          set((state: any) => ({ chatSessions: state.chatSessions.map((s: ChatSession) => s.id === session.id
+            ? { ...s, messages: s.messages.map(m => m.id === assistantMsgId ? { ...m, toolActivities: [...(m.toolActivities || []).filter(a => a.id !== activity.id), activity] } : m) } : s) }));
+        },
         temperature: session.temperature,
         topP: session.topP,
         signal: controller.signal,

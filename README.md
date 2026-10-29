@@ -171,6 +171,35 @@ steps invoked by the commands above.
 
 See [Windows packaging](deploy/README.md) for more detail.
 
+## Workspace file tools (Windows desktop)
+
+Select a tool-capable Ollama model such as **Qwen3**, click **Choose folder** above
+chat, and turn **Tools on**. The default folder is `%APPDATA%\Sanctum\workspace`.
+The setting persists; turn it off for ordinary chat or models without tool support.
+
+Try: `Create a notes.md file with a project checklist, then read it back.`
+
+The model can list directories, read text files, create files/directories, replace
+an exact unique text match, rename/move paths, and delete files or directories.
+Each call shows its arguments, success/error status, and result in the conversation.
+Follow-up tool results are returned to the model so it can verify its work.
+
+- File paths stay within the chosen workspace; junctions, symlinks, device paths,
+  and alternate streams are rejected.
+- Creating a file never overwrites an existing file. Editing requires an exact,
+  unique match. Read/create/edit limits are 1 MiB; listings return up to 200 entries.
+- Deletion moves items to `%APPDATA%\Sanctum\tool-trash`. Each operation includes
+  its recovery path; `restore.json` records the original location. Move the saved
+  item back manually to restore it.
+- A request is limited to 8 model rounds and 16 tool calls. Stop prevents subsequent
+  calls; a filesystem operation already completed is not undone.
+- This release provides file tools in the native Windows app. It does not execute
+  arbitrary terminal commands. Browser development mode remains ordinary chat.
+
+Model selection is saved per chat. Switching chats restores their model; previous
+answers retain the name of the model that generated them. The selector is disabled
+while a response is running.
+
 ## Development commands
 
 | Command | Purpose |
