@@ -1,12 +1,25 @@
 import { NextResponse } from "next/server";
 import { DEFAULT_WHISPERX_ENDPOINT } from "@/lib/constants";
+import { defaultSettingsStore } from "../../../../../core/infra/storage/settings_store.ts";
 
 export async function GET() {
-  const endpoints = [
-    DEFAULT_WHISPERX_ENDPOINT,
-    `${DEFAULT_WHISPERX_ENDPOINT}/health`,
-    "http://localhost:8000/health",
-  ];
+  let configuredEndpoint: string | null = null;
+  let configuredModel = "base";
+  try {
+    configuredEndpoint = defaultSettingsStore.get("assistants.sttEndpoint");
+    configuredModel = defaultSettingsStore.get("assistants.sttModel") || "base";
+  } catch {}
+
+  const endpoints = Array.from(
+    new Set([
+      configuredEndpoint ? `${configuredEndpoint.replace(/\/$/, "")}/health` : null,
+      configuredEndpoint,
+      `${DEFAULT_WHISPERX_ENDPOINT}/health`,
+      DEFAULT_WHISPERX_ENDPOINT,
+      "http://localhost:8000/health",
+      "http://localhost:8000",
+    ])
+  ).filter(Boolean) as string[];
 
   for (const ep of endpoints) {
     try {
@@ -17,6 +30,7 @@ export async function GET() {
         return NextResponse.json({
           online: true,
           endpoint: ep,
+          model: configuredModel,
           whisperxVersion: "whisperX (fast-whisper + phoneme alignment)",
         });
       }
@@ -27,7 +41,8 @@ export async function GET() {
 
   return NextResponse.json({
     online: false,
-    endpoint: DEFAULT_WHISPERX_ENDPOINT,
-    commandToStart: "python scripts/whisperx_server.py --port 8000 --model base",
+    endpoint: configuredEndpoint || DEFAULT_WHISPERX_ENDPOINT,
+    model: configuredModel,
+    commandToStart: `python scripts/whisperx_server.py --port 8000 --model ${configuredModel}`,
   });
 }

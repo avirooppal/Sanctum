@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { DEFAULT_WHISPERX_ENDPOINT } from "@/lib/constants";
+import { defaultSettingsStore } from "../../../../../core/infra/storage/settings_store.ts";
 
 export async function POST(req: NextRequest) {
   try {
@@ -10,19 +11,37 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ error: "No audio file provided" }, { status: 400 });
     }
 
-    // Try communicating with local WhisperX server (port 8000)
-    const whisperxEndpoints = [
-      `${DEFAULT_WHISPERX_ENDPOINT}/transcribe`,
-      `${DEFAULT_WHISPERX_ENDPOINT}/v1/audio/transcriptions`,
-      "http://localhost:8000/transcribe",
-    ];
+    let configuredEndpoint: string | null = null;
+    let configuredModel = "base";
+    try {
+      configuredEndpoint = defaultSettingsStore.get("assistants.sttEndpoint");
+      configuredModel = defaultSettingsStore.get("assistants.sttModel") || "base";
+    } catch {}
+
+    const customEndpoints = configuredEndpoint
+      ? [
+          configuredEndpoint.endsWith("/transcribe") ? configuredEndpoint : `${configuredEndpoint.replace(/\/$/, "")}/transcribe`,
+          configuredEndpoint.endsWith("/v1/audio/transcriptions") ? configuredEndpoint : `${configuredEndpoint.replace(/\/$/, "")}/v1/audio/transcriptions`,
+          configuredEndpoint,
+        ]
+      : [];
+
+    // Try communicating with local WhisperX server or user-configured endpoint
+    const whisperxEndpoints = Array.from(
+      new Set([
+        ...customEndpoints,
+        `${DEFAULT_WHISPERX_ENDPOINT}/transcribe`,
+        `${DEFAULT_WHISPERX_ENDPOINT}/v1/audio/transcriptions`,
+        "http://localhost:8000/transcribe",
+      ])
+    );
 
     for (const ep of whisperxEndpoints) {
       try {
         const whisperReqData = new FormData();
         whisperReqData.append("audio_file", file, "audio.wav");
         whisperReqData.append("file", file, "audio.wav");
-        whisperReqData.append("model", "base");
+        whisperReqData.append("model", configuredModel);
 
         const res = await fetch(ep, {
           method: "POST",
@@ -44,6 +63,7 @@ export async function POST(req: NextRequest) {
             success: true,
             provider: "whisperX",
             endpoint: ep,
+            model: configuredModel,
             text: text.trim(),
             segments: data.segments || [],
             language: data.language || "en",
@@ -58,7 +78,7 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({
       success: false,
       whisperxAvailable: false,
-      message: "WhisperX server is not currently reachable on localhost:8000.",
+      message: "WhisperX server is not currently reachable on configured endpoint.",
     });
   } catch (err: any) {
     return NextResponse.json({ error: err?.message || "Transcription failed" }, { status: 500 });
