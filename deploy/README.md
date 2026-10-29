@@ -19,10 +19,10 @@ Native setup, logs, and measurements live in `tools/native/DesktopServices.cs`.
 The build compiles the Next.js frontend, copies it into the generated
 `deploy/installer/build_payload/`, and compiles the desktop host, uninstaller,
 self-extracting installer and launcher. `package_distribution.py` produces the
-portable ZIP, checksums and dependency manifest in `dist/`.
+checksums, and metadata in the repository root.
 
 Generated payloads and test installations under `build/` are ignored. Published
-`dist/` binaries remain tracked for users downloading the Windows application.
+`Sanctum.exe` and `SHA256SUMS` remain tracked in the repository root for users downloading the Windows application.
 The NSIS recipe and `src-tauri/` configuration remain as documented alternate
 packaging references; the build above does not invoke them.
 

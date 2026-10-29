@@ -7,13 +7,12 @@ node_modules/
 .next/
 out/
 build/
-dist/*
-!dist/Sanctum.exe
-!dist/SHA256SUMS
-!dist/sbom.spdx.json
-!dist/LICENSE_BUNDLE.txt
-!dist/THIRD_PARTY_NOTICES.txt
-!dist/SOURCE_ARCHIVE_LINK.txt
+dist/
+!Sanctum.exe
+!SHA256SUMS
+!sbom.spdx.json
+!LICENSE_BUNDLE.txt
+!THIRD_PARTY_NOTICES.txt
 
 # Environment Variables
 .env

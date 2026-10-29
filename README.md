@@ -65,7 +65,7 @@ size. Start with a smaller model if you are unsure of your machine's capacity.
 
 ## Quick start
 
-1. Download [Sanctum.exe](dist/Sanctum.exe) (on GitHub, choose **Download raw file**).
+1. Download [Sanctum.exe](Sanctum.exe) (on GitHub, choose **Download raw file**).
 2. Run it. The executable extracts and updates the desktop application automatically.
 3. Click **Set up Sanctum** in the walkthrough. Sanctum installs or starts its local
    AI runtime, downloads Qwen3 1.7B if no chat model is installed, and verifies a real response.
@@ -100,8 +100,8 @@ Runtime logs live in `%APPDATA%\Sanctum\logs\desktop.jsonl` (or the custom
 
 | Artifact | Usage |
 | --- | --- |
-| [Sanctum.exe](dist/Sanctum.exe) | Extract/update the desktop payload in the user's installation directory and launch it |
-| [SHA-256 checksum](dist/SHA256SUMS) | Verify the downloaded EXE |
+| [Sanctum.exe](Sanctum.exe) | Extract/update the desktop payload in the user's installation directory and launch it |
+| [SHA-256 checksum](SHA256SUMS) | Verify the downloaded EXE |
 
 `Sanctum.exe` is the only file end users need. On GitHub, use **Download raw file**. The walkthrough prepares Ollama automatically; subsequent launches start it when needed.
 
@@ -111,7 +111,7 @@ To inspect a downloaded file's checksum:
 Get-FileHash .\dist\Sanctum.exe -Algorithm SHA256
 ```
 
-Compare the result with the matching entry in `dist/SHA256SUMS`.
+Compare the result with the matching entry in `SHA256SUMS`.
 
 ### Build the release from source
 
@@ -131,7 +131,7 @@ the portable ZIP, checksums, and dependency notices.
 | Output | Purpose |
 | --- | --- |
 | `deploy/installer/build_payload/` | Generated desktop payload |
-| `dist/` | Distributable EXEs, ZIP, checksums, and notices |
+| `Sanctum.exe` | Standalone portable executable launcher |
 | `build/` | Ignored local build/test installations |
 
 Source changes do not update an existing EXE automatically. Rebuild and test the
@@ -350,7 +350,7 @@ not a guarantee for future changes.
 | Image is attached but cannot be interpreted | Select a model that supports image input. A text-only model is insufficient. |
 | PDF worker/version error | Refresh `public/pdf.worker.min.mjs` from the installed `pdfjs-dist` package, then rebuild. |
 | Desktop microphone does not start | Check the default input device, Windows microphone access for desktop apps, and the installed speech language. |
-| EXE does not reflect source edits | Rebuild the installer and run the new artifact from `dist/`. Close the existing installation before updating. |
+| EXE does not reflect source edits | Rebuild the installer and run the new `Sanctum.exe`. Close the existing installation before updating. |
 | Chats appear missing | Confirm the same desktop profile is in use. Restore/export data before clearing storage. |
 
 ## Contributing
@@ -363,7 +363,7 @@ not a guarantee for future changes.
 5. Document new setup requirements and distinguish tested behavior from optional integrations.
 
 Keep generated caches, local environments, credentials, and test profiles out of
-commits. Release artifacts under `dist/` are intentionally tracked; update their
+commits. Release artifacts (`Sanctum.exe`, `SHA256SUMS`) are intentionally tracked in the repository root; update their
 checksums and notices together when distributing a new build. Do not replace real
 inference, downloads, or transcription with simulated success responses.
 
@@ -407,5 +407,5 @@ retained in [public/beta.jpg](public/beta.jpg).
 </details>
 
 Sanctum is licensed under the [MIT License](LICENSE). Packaged dependencies have
-their own licenses; see [third-party notices](dist/THIRD_PARTY_NOTICES.txt) and the
-[license bundle](dist/LICENSE_BUNDLE.txt).
+their own licenses; see [third-party notices](THIRD_PARTY_NOTICES.txt) and the
+[license bundle](LICENSE_BUNDLE.txt).

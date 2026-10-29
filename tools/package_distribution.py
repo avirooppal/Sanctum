@@ -23,7 +23,7 @@ def package():
     def locked_version(name):
         return locked_packages[f"node_modules/{name}"]["version"]
 
-    dist_dir = os.path.join(ROOT, "dist")
+    dist_dir = ROOT
     os.makedirs(dist_dir, exist_ok=True)
 
     exe_name = "Sanctum.exe"

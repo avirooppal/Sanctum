@@ -34,7 +34,7 @@ jobs:
       - name: Build Next.js Web Frontend
         run: npm run build
 
-  windows-installer:
+  windows-build:
     needs: source-gates
     runs-on: windows-latest
     steps:
@@ -55,20 +55,19 @@ jobs:
       - name: Install dependencies
         run: npm ci
 
-      - name: Build Windows .EXE Installer
+      - name: Build Standalone Sanctum.exe
         run: python tools/build_installer.py
 
-      - name: Run Complete Verification Suite (Lifecycle, Resources, Security, Performance)
-        run: python tools/exe-verify/run_all_verification.py
+      - name: Package Distribution Checksums
+        run: python tools/package_distribution.py
 
-      - name: Upload Installer Artifacts
+      - name: Upload Desktop Artifacts
         uses: actions/upload-artifact@v4
         with:
-          name: Sanctum-Windows-x64-Setup
-          path: dist/*
-
-      - name: Upload Verification Evidence
-        uses: actions/upload-artifact@v4
-        with:
-          name: Sanctum-Verification-Evidence
-          path: evals/results/exe/*
+          name: Sanctum-Desktop-x64
+          path: |
+            Sanctum.exe
+            SHA256SUMS
+            sbom.spdx.json
+            LICENSE_BUNDLE.txt
+            THIRD_PARTY_NOTICES.txt

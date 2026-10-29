@@ -30,12 +30,12 @@ def build_installer():
 
     prepare()
 
-    dist_dir = os.path.join(ROOT, "dist")
+    dist_dir = ROOT
     os.makedirs(dist_dir, exist_ok=True)
 
     # Sanctum.exe is the only end-user artifact: download, run, done.
     print("=== Step 2: Compiling single-file Sanctum.exe ===")
-    build_direct_launcher(os.path.join(dist_dir, "Sanctum.exe"), build_payload_b64())
+    build_direct_launcher(os.path.join(ROOT, "Sanctum.exe"), build_payload_b64())
     print("=== Build Complete ===")
 
 
