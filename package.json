@@ -4,9 +4,7 @@
   "description": "Sovereign local private AI workspace running open-source LLMs, RAG, speech, vision, and deep research on-device.",
   "private": true,
   "scripts": {
-    "dev": "next dev",
     "build": "next build",
-    "start": "next start",
     "lint": "npm run check-arch",
     "test": "node --experimental-strip-types --test tests/vector_store_rag.test.ts tests/constants_catalogs.test.ts tests/api_contracts.test.ts tests/contracts_validation.test.ts tests/core_ai.test.ts tests/core_domain.test.ts tests/packs_manifests.test.ts tests/ui_strings.test.ts tests/agent_and_features.test.ts tests/request_status_contract.test.ts tests/request_status_tracker.test.ts tests/jan_parity_flow.test.ts tests/settings_reality_gate.test.ts tests/settings_foundation.test.ts tests/shortcuts_interception.test.ts tests/app_not_wrapper.test.ts tests/observability.test.ts tests/pipeline_p1_readiness.test.ts tests/pipeline_p2_chat_path.test.ts tests/pipeline_p3_model_identity.test.ts tests/pipeline_p4_parameters.test.ts tests/pipeline_p5_context.test.ts tests/pipeline_p6_documents_rag.test.ts tests/pipeline_p7_packs.test.ts tests/pipeline_p8_tools_permissions.test.ts tests/pipeline_p9_cloud_path.test.ts tests/pipeline_p10_persistence.test.ts tests/pipeline_p12_downloads.test.ts tests/chat_reliability.test.ts tests/desktop_transport.test.ts tests/workspace_tools.test.ts",
     "check-arch": "python tools/check_architecture.py",

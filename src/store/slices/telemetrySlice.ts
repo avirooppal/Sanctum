@@ -15,18 +15,18 @@ export const createTelemetrySlice: StateCreator<any, [], [], TelemetrySlice> = (
   telemetry: {
     cpuUsage: 0,
     cpuModel: "Host Logical Cores",
-    ramUsedGB: 4.0,
-    ramTotalGB: 16.0,
-    vramUsedGB: 2.0,
-    vramTotalGB: 16.0,
-    gpuName: "Local Hardware Accelerator",
-    gpuTempC: 45,
-    gpuClockMHz: 1800,
-    gpuFanSpeedPercent: 35,
+    ramUsedGB: 0,
+    ramTotalGB: 0,
+    vramUsedGB: 0,
+    vramTotalGB: 0,
+    gpuName: "Unavailable",
+    gpuTempC: 0,
+    gpuClockMHz: 0,
+    gpuFanSpeedPercent: 0,
     computeBackend: "Ollama Local Engine",
     activeTps: 0,
     totalLoadedModels: 0,
-    uptimeHours: 1.0,
+    uptimeHours: 0,
   },
 
   daemons: [
@@ -40,54 +40,19 @@ export const createTelemetrySlice: StateCreator<any, [], [], TelemetrySlice> = (
   ],
 
   updateRealTelemetry: async () => {
-    const pingStart = performance.now();
-    let online = false;
-    let latency = -1;
-
     try {
-      const res = await fetch(`${DEFAULT_OLLAMA_ENDPOINT}/api/tags`);
-      if (res.ok) {
-        online = true;
-        latency = Math.round(performance.now() - pingStart);
-      }
-    } catch {
-      // Offline fallback
-    }
-
-    const cpuCores = typeof navigator !== "undefined" ? navigator.hardwareConcurrency || 8 : 8;
-    const deviceRam =
-      typeof navigator !== "undefined" && (navigator as any).deviceMemory
-        ? (navigator as any).deviceMemory
-        : 16.0;
-
-    let heapUsed = 0;
-    if (typeof performance !== "undefined" && (performance as any).memory) {
-      heapUsed = Number(
-        (((performance as any).memory.usedJSHeapSize || 0) / (1024 * 1024 * 1024)).toFixed(2)
-      );
-    }
-
-    const currentModels = get().models || [];
-
-    set((state: any) => ({
-      telemetry: {
-        ...state.telemetry,
-        cpuModel: `${cpuCores} Logical Compute Cores`,
-        ramUsedGB: heapUsed > 0 ? heapUsed : state.telemetry.ramUsedGB,
-        ramTotalGB: deviceRam,
-        computeBackend: online ? `Ollama Active (${latency}ms)` : "Ollama Standby",
-        totalLoadedModels: currentModels.filter((m: any) => m.isLoaded).length,
-      },
-      daemons: [
-        {
-          endpoint: DEFAULT_OLLAMA_ENDPOINT,
-          type: "ollama",
-          online,
-          latencyMs: latency,
-          modelsFound: currentModels.map((m: any) => m.name),
-        },
-      ],
-    }));
+      const response = await fetch("/api/system", { signal: AbortSignal.timeout(10000) });
+      if (!response.ok) return;
+      const system = await response.json();
+      set((state: any) => ({
+        telemetry: { ...state.telemetry, cpuUsage: system.cpuPercent ?? 0, cpuModel: system.cpuName,
+          ramUsedGB: system.ramUsedGB ?? 0, ramTotalGB: system.ramTotalGB ?? 0,
+          gpuName: system.gpuName, vramUsedGB: system.loadedModels.reduce((sum: number, m: any) => sum + (m.vramBytes || 0) / 1073741824, 0),
+          computeBackend: system.engineOnline ? "Ollama running" : "Ollama offline",
+          totalLoadedModels: system.loadedModels.length, uptimeHours: system.uptimeSeconds / 3600 },
+        daemons: [{ endpoint: DEFAULT_OLLAMA_ENDPOINT, type: "ollama", online: system.engineOnline, latencyMs: -1, modelsFound: system.loadedModels.map((m: any) => m.name) }],
+      }));
+    } catch { /* Missing measurements remain unavailable. */ }
   },
 
   checkDaemons: async () => {

@@ -56,8 +56,12 @@ export const SettingsDeveloper: React.FC = () => {
     }
   };
 
-  const handleClearTraces = () => {
-    toast.success("Local debug traces purged");
+  const handleClearTraces = async () => {
+    try {
+      const response = await fetch("/api/logs", { method: "DELETE" });
+      if (!response.ok) throw new Error("Could not clear desktop logs");
+      toast.success("Desktop logs cleared");
+    } catch { toast.error("Could not clear desktop logs"); }
   };
 
   return (

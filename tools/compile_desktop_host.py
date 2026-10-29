@@ -30,7 +30,7 @@ using Microsoft.Web.WebView2.Core;
 [assembly: AssemblyFileVersion("1.0.0.0")]
 
 namespace Sanctum {
-    public class DesktopHost : Form {
+    public partial class DesktopHost : Form {
         [DllImport("kernel32.dll", SetLastError = true)]
         static extern bool SetDefaultDllDirectories(uint DirectoryFlags);
         private const uint LOAD_LIBRARY_SEARCH_SYSTEM32 = 0x00000800;
@@ -238,6 +238,10 @@ namespace Sanctum {
                     if (int.TryParse(args[++i], out port)) explicitPort = true;
                 } else if (args[i] == "--data-dir" && i + 1 < args.Length) {
                     customDataDir = args[++i];
+                } else if (args[i] == "--engine-port" && i + 1 < args.Length) {
+                    int candidate;
+                    if (!int.TryParse(args[++i], out candidate) || candidate < 1024 || candidate > 65535) throw new ArgumentException("Invalid engine port");
+                    _enginePort = candidate;
                 } else if (args[i] == "--auth-token" && i + 1 < args.Length) {
                     overrideToken = args[++i];
                 }
@@ -303,6 +307,8 @@ namespace Sanctum {
 
             // The virtual-host UI uses this authenticated loopback API for real streaming.
             app.StartHttpServer();
+            LogEvent("info", "startup", "Sanctum started (commit __GIT_COMMIT__)");
+            Task.Run(() => EnsureEngineStarted());
 
             if (headless) {
                 Console.WriteLine("Sanctum running in headless mode on http://127.0.0.1:" + app._port + " with auth token " + _authToken);
@@ -437,6 +443,8 @@ namespace Sanctum {
             };
 
             this.FormClosing += (s, e) => {
+                if (_installerRunning && MessageBox.Show(this, "A runtime installer is running. Close Sanctum and interrupt setup?", "Installation in progress", MessageBoxButtons.YesNo, MessageBoxIcon.Warning) != DialogResult.Yes) { e.Cancel = true; return; }
+                if (_setupCancellation != null) _setupCancellation.Cancel();
                 if (_speech != null) { try { _speech.RecognizeAsyncCancel(); _speech.Dispose(); } catch { } _speech = null; }
                 SaveWindowBounds();
                 try {
@@ -514,6 +522,7 @@ namespace Sanctum {
 
         private async Task InitializeEmbeddedWebViewAsync() {
             try {
+                await EnsureWebViewRuntime();
                 string userDataFolder = Path.Combine(_appDataDir, "ebwebview2_data");
                 var envOptions = new CoreWebView2EnvironmentOptions(WEBVIEW2_SILENCE_FLAGS, "en-US", null, false, null);
                 envOptions.AllowSingleSignOnUsingOSPrimaryAccount = false;
@@ -620,6 +629,8 @@ namespace Sanctum {
                 }
             } catch (Exception ex) {
                 WriteRuntimeState(_startupWatch.ElapsedMilliseconds, "error: " + ex.Message);
+                LogEvent("error", "display", ex.Message);
+                MessageBox.Show(this, "Sanctum could not open its display: " + ex.Message + "\nRestart Sanctum to retry. Logs: " + LogPath, "Sanctum startup");
             }
         }
 
@@ -726,7 +737,12 @@ namespace Sanctum {
                 if (string.IsNullOrEmpty(raw)) return;
 
                 if (e.Source != "https://sanctum.app/index.html" && !e.Source.StartsWith("https://sanctum.app/")) return;
-                if (raw.Contains("\"speechStart\"")) {
+                if (raw.Contains("\"exportLogs\"")) {
+                    ExportLogs();
+                } else if (raw.Contains("\"openLogs\"")) {
+                    Directory.CreateDirectory(Path.GetDirectoryName(LogPath));
+                    Process.Start(new ProcessStartInfo("explorer.exe", "\"" + Path.GetDirectoryName(LogPath) + "\"") { UseShellExecute = true });
+                } else if (raw.Contains("\"speechStart\"")) {
                     StartDictation();
                 } else if (raw.Contains("\"speechStop\"")) {
                     if (_speech != null) _speech.RecognizeAsyncStop();
@@ -912,6 +928,9 @@ namespace Sanctum {
                 return;
             }
 
+            try { if (HandleDesktopServices(req, res, path, method)) return; }
+            catch (Exception ex) { LogEvent("error", "desktop", ex.Message); WriteJson(res, 500, new { error = ex.Message }); return; }
+
             if (path == "/api/workspace" && method == "GET") {
                 lock (_toolLock) WriteJson(res, 200, new { root = _toolWorkspace, id = _workspaceId });
                 return;
@@ -925,10 +944,10 @@ namespace Sanctum {
                 if (enginePath != "/api/tags" && enginePath != "/api/ps" && enginePath != "/api/show" && enginePath != "/api/chat" && enginePath != "/api/pull" && enginePath != "/api/generate") {
                     WriteJson(res, 404, new { error = "Unsupported engine operation" }); return;
                 }
-                ProxyRequest(req, res, "http://127.0.0.1:11434" + enginePath); return;
+                ProxyRequest(req, res, EngineBase + enginePath); return;
             }
             if (path == "/api/chat" && method == "POST") {
-                ProxyRequest(req, res, "http://127.0.0.1:11434/api/chat"); return;
+                ProxyRequest(req, res, EngineBase + "/api/chat"); return;
             }
 
             if (path == "/api/capability") {
@@ -1069,6 +1088,7 @@ namespace Sanctum {
                         File.WriteAllText(Path.Combine(trash, "restore.json"), new JavaScriptSerializer().Serialize(new { original = target, saved = saved }));
                         result = new { deleted = relative, recoverableAt = saved };
                     } else throw new Exception("Unsupported file action.");
+                    LogEvent("info", "tools", action + " completed");
                     WriteJson(res, 200, result);
                 }
             } catch (Exception ex) { WriteJson(res, 400, new { error = ex.Message }); }
@@ -1084,8 +1104,9 @@ namespace Sanctum {
         }
 
         private void HandleListModels(HttpListenerResponse res) {
+            EnsureEngineStarted();
             try {
-                var request = (HttpWebRequest)WebRequest.Create("http://127.0.0.1:11434/api/tags");
+                var request = (HttpWebRequest)WebRequest.Create(EngineBase + "/api/tags");
                 request.Proxy = null;
                 request.Timeout = 5000;
                 using (var response = request.GetResponse())
@@ -1100,7 +1121,7 @@ namespace Sanctum {
         }
 
         private void HandleDownloadOrPull(HttpListenerRequest req, HttpListenerResponse res) {
-            ProxyRequest(req, res, "http://127.0.0.1:11434/api/pull");
+            ProxyRequest(req, res, EngineBase + "/api/pull");
         }
 
         // Stream real daemon output, including failures. Binary multipart uploads retain their boundary.
@@ -1108,6 +1129,7 @@ namespace Sanctum {
             HttpWebRequest upstream = null;
             bool started = false;
             try {
+                if (target.StartsWith(EngineBase + "/")) EnsureEngineStarted();
                 upstream = (HttpWebRequest)WebRequest.Create(target);
                 upstream.Proxy = null;
                 upstream.Method = req.HttpMethod;
@@ -1125,6 +1147,7 @@ namespace Sanctum {
                     if (response == null) throw;
                 }
                 using (response) {
+                    LogEvent((int)response.StatusCode < 400 ? "info" : "error", "engine", req.HttpMethod + " " + req.Url.AbsolutePath + " returned " + (int)response.StatusCode);
                     res.StatusCode = (int)response.StatusCode;
                     res.ContentType = response.ContentType;
                     res.SendChunked = true;
@@ -1141,6 +1164,7 @@ namespace Sanctum {
                 }
             } catch (Exception ex) {
                 if (!started) {
+                    LogEvent("error", "engine", ex.Message);
                     try { WriteJson(res, 502, new { error = "Local service unavailable: " + ex.Message }); } catch { }
                 }
             } finally {
@@ -1178,7 +1202,7 @@ namespace Sanctum {
         }
 
         private void HandleChatCompletions(HttpListenerRequest req, HttpListenerResponse res) {
-            ProxyRequest(req, res, "http://127.0.0.1:11434/v1/chat/completions");
+            ProxyRequest(req, res, EngineBase + "/v1/chat/completions");
         }
 
         private void HandleProfiles(HttpListenerRequest req, HttpListenerResponse res) {
@@ -1465,6 +1489,7 @@ def compile_desktop_host(output_path: str):
             "System.Core.dll",
             r"C:\Windows\Microsoft.NET\assembly\GAC_MSIL\System.Speech\v4.0_4.0.0.0__31bf3856ad364e35\System.Speech.dll",
             "System.Web.Extensions.dll",
+            "System.Management.dll",
             "System.Drawing.dll",
             "System.Windows.Forms.dll",
             wv2_core_dll,
@@ -1482,6 +1507,7 @@ def compile_desktop_host(output_path: str):
         if os.path.exists(icon_path):
             cmd.append(f"/win32icon:{icon_path}")
         cmd.append(temp_cs)
+        cmd.append(os.path.abspath("tools/native/DesktopServices.cs"))
         print(f"Compiling Sanctum Standalone Embedded WebView2 host using csc.exe to {output_path}...")
         res = subprocess.run(cmd, capture_output=True, text=True)
     else:

@@ -82,13 +82,20 @@ export const SettingsHardware: React.FC = () => {
               <IconCpu size={20} className="text-primary" />
               <div>
                 <span className="text-xs font-medium text-foreground">Inference Backend</span>
-                <p className="text-[11px] text-muted-foreground">llama.cpp CPU & DirectML</p>
+                <p className="text-[11px] text-muted-foreground">Ollama local engine</p>
               </div>
             </div>
             <Button
               variant="outline"
               size="sm"
-              onClick={() => toast.info("Device scan: x86_64 AVX2/FMA active")}
+              onClick={async () => {
+                try {
+                  const response = await fetch("/api/system");
+                  if (!response.ok) throw new Error("Could not scan hardware");
+                  const system = await response.json();
+                  toast.info(`${system.logicalCores} logical cores · ${system.gpuName}`);
+                } catch { toast.error("Could not scan hardware. Open System monitor for diagnostics."); }
+              }}
               className="rounded-xl text-xs h-8 flex items-center gap-1.5"
             >
               <IconRefresh size={14} />

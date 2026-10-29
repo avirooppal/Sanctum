@@ -2,7 +2,6 @@ import hashlib
 import json
 import os
 import subprocess
-import zipfile
 from datetime import datetime, timezone
 
 ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
@@ -27,7 +26,7 @@ def package():
     dist_dir = os.path.join(ROOT, "dist")
     os.makedirs(dist_dir, exist_ok=True)
 
-    exe_name = f"Sanctum-Setup-{VERSION}-x64.exe"
+    exe_name = "Sanctum.exe"
     exe_path = os.path.join(dist_dir, exe_name)
     if not os.path.exists(exe_path):
         print(f"Warning: {exe_path} not found yet. Run installer build first.")
@@ -42,30 +41,10 @@ def package():
     except Exception:
         pass
 
-    # 1. Portable ZIP
-    payload_dir = os.path.join(ROOT, "deploy", "installer", "build_payload")
-    portable_zip = os.path.join(dist_dir, f"Sanctum-Portable-{VERSION}-x64.zip")
-    if os.path.exists(payload_dir):
-        print(f"Generating portable distribution archive {portable_zip}...")
-        with zipfile.ZipFile(portable_zip, "w", zipfile.ZIP_DEFLATED) as zf:
-            for root_dir, _, files in os.walk(payload_dir):
-                for f in files:
-                    full_p = os.path.join(root_dir, f)
-                    rel_p = os.path.relpath(full_p, payload_dir)
-                    zf.write(full_p, rel_p)
-
-    # 2. SHA256SUMS
+    # 1. SHA256SUMS (Sanctum.exe is the only shipped binary)
     sha256_exe = hash_file(exe_path)
-    sums_file = os.path.join(dist_dir, "SHA256SUMS")
-    direct_exe = os.path.join(dist_dir, "Sanctum.exe")
-    with open(sums_file, "w", encoding="utf-8") as f:
+    with open(os.path.join(dist_dir, "SHA256SUMS"), "w", encoding="utf-8") as f:
         f.write(f"{sha256_exe}  {exe_name}\n")
-        if os.path.exists(direct_exe):
-            sha256_direct = hash_file(direct_exe)
-            f.write(f"{sha256_direct}  Sanctum.exe\n")
-        if os.path.exists(portable_zip):
-            sha256_zip = hash_file(portable_zip)
-            f.write(f"{sha256_zip}  Sanctum-Portable-{VERSION}-x64.zip\n")
     print(f"Generated SHA256SUMS: {sha256_exe}")
 
     # 3. License Bundle & Third-Party Notices
@@ -111,7 +90,7 @@ def package():
         "spdxVersion": "SPDX-2.3",
         "dataLicense": "CC0-1.0",
         "SPDXID": "SPDXRef-DOCUMENT",
-        "name": "Sanctum Desktop Installer SBOM",
+        "name": "Sanctum Desktop SBOM",
         "documentNamespace": f"https://github.com/avirooppal/Sanctum/spdxdocs/sanctum-{VERSION}",
         "creationInfo": {
             "created": datetime.now(timezone.utc).strftime("%Y-%m-%dT%H:%M:%SZ"),
@@ -119,8 +98,8 @@ def package():
         },
         "packages": [
             {
-                "name": "Sanctum-Setup",
-                "SPDXID": "SPDXRef-Package-Sanctum-Setup",
+                "name": "Sanctum",
+                "SPDXID": "SPDXRef-Package-Sanctum",
                 "versionInfo": VERSION,
                 "packageFileName": exe_name,
                 "downloadLocation": "https://github.com/avirooppal/Sanctum/releases",

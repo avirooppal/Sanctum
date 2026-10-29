@@ -5,9 +5,10 @@ const { chromium, expect } = require('@playwright/test');
   const browser = await chromium.connectOverCDP(process.env.CDP_URL || 'http://127.0.0.1:19222');
   try {
     const page = browser.contexts()[0].pages()[0];
-    for (const name of ["Let's start", 'Engine ready', 'Continue', 'Get Started']) {
-      const button = page.getByRole('button', { name, exact: true });
-      if (await button.count()) await button.click();
+    const setup = page.getByRole('button', { name: 'Set up Sanctum', exact: true });
+    if (await setup.count()) {
+      await setup.click();
+      await page.getByRole('button', { name: 'Start chatting', exact: true }).click({ timeout: 180000 });
     }
     const choose = async model => {
       await page.getByRole('combobox', { name: 'Select model' }).click();

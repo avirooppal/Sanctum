@@ -20,6 +20,8 @@ import {
 import { cn } from "@/lib/utils";
 
 export type SettingsSection =
+  | "logs"
+  | "monitor"
   | "general"
   | "appearance"
   | "assistants"
@@ -72,6 +74,8 @@ export const SettingsMenu: React.FC<SettingsMenuProps> = ({
     { id: "https-proxy", label: "HTTPS Proxy", icon: <IconWorld size={16} /> },
     { id: "web-search", label: "Web Search", icon: <IconWorldSearch size={16} /> },
     { id: "shortcuts", label: "Shortcuts", icon: <IconCommand size={16} /> },
+    { id: "monitor", label: "System monitor", icon: <IconCpu size={16} /> },
+    { id: "logs", label: "Logs", icon: <IconCode size={16} /> },
     { id: "hardware", label: "Hardware", icon: <IconCpu size={16} /> },
     { id: "privacy", label: "Privacy", icon: <IconLock size={16} /> },
     { id: "developer", label: "Developer", icon: <IconCode size={16} /> },

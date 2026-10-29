@@ -1,5 +1,2 @@
-import { JanAppShell } from "@/components/jan/JanAppShell";
-
-export default function Home() {
-  return <JanAppShell />;
-}
+import { DesktopApp } from "@/components/jan/DesktopApp";
+export default function Home() { return <DesktopApp />; }

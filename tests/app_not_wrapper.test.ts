@@ -46,8 +46,11 @@ describe("Standalone Desktop App (Not a Browser Wrapper) Gate", () => {
       "The streaming API must require per-launch authentication"
     );
     assert.ok(hostPy.includes("EXCLUDE 127.0.0.1"), "The UI must be able to reach the loopback API");
-    assert.ok(hostPy.includes('ProxyRequest(req, res, "http://127.0.0.1:11434/api/chat")'));
-    assert.ok(hostPy.includes('ProxyRequest(req, res, "http://127.0.0.1:11434/api/pull")'));
+    const services = fs.readFileSync(path.join(ROOT, "tools", "native", "DesktopServices.cs"), "utf-8");
+    assert.ok(services.includes('EngineBase { get { return "http://127.0.0.1:" + _enginePort; } }'), "Engine proxy must stay on loopback");
+    assert.ok(services.includes("_enginePort = 11434"), "Default engine port must be Ollama's 11434");
+    assert.ok(hostPy.includes('ProxyRequest(req, res, EngineBase + "/api/chat")'));
+    assert.ok(hostPy.includes('ProxyRequest(req, res, EngineBase + "/api/pull")'));
     assert.ok(!hostPy.includes("SANCTUM_MODEL_WEIGHTS_DATA"));
     assert.ok(!hostPy.includes("Local inference loopback active. Ready for instructions."));
   });

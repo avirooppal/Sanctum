@@ -18,6 +18,8 @@ import { SettingsWebSearch } from "@/components/jan/sections/SettingsWebSearch";
 import { SettingsProviders } from "@/components/jan/sections/SettingsProviders";
 import { SettingsMcp } from "@/components/jan/sections/SettingsMcp";
 import { SettingsClaudeCode } from "@/components/jan/sections/SettingsClaudeCode";
+import { SettingsLogs } from "@/components/jan/sections/SettingsLogs";
+import { SettingsMonitor } from "@/components/jan/sections/SettingsMonitor";
 import { SettingsDeveloper } from "@/components/jan/sections/SettingsDeveloper";
 import { ChatScreen } from "@/components/screens/ChatScreen";
 import { WindowControls, handleTitleBarMouseDown } from "@/components/jan/WindowControls";
@@ -163,6 +165,8 @@ export const JanAppShell: React.FC = () => {
               onAddProvider={() => setIsAddProviderOpen(true)}
             />
             <div className="flex-1 overflow-y-auto pt-4">
+              {activeSettingsSection === "logs" && <SettingsLogs />}
+              {activeSettingsSection === "monitor" && <SettingsMonitor />}
               {activeSettingsSection === "general" && <SettingsGeneral />}
               {activeSettingsSection === "appearance" && <SettingsAppearance />}
               {activeSettingsSection === "assistants" && <SettingsAssistants />}

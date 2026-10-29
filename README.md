@@ -6,7 +6,7 @@
 
 <p align="center">
   A local AI workspace for conversations, projects, and documents.<br />
-  <strong>Developer documentation · Windows desktop + local web application</strong>
+  <strong>Developer documentation · Windows desktop application</strong>
 </p>
 
 <p align="center">
@@ -49,10 +49,10 @@ and several legacy modules remain experimental; see [scope and limitations](#sco
 | Dependency | Needed for | Requirement |
 | --- | --- | --- |
 | Git | Source checkout | A working Git installation |
-| Node.js and npm | Web development and frontend builds | Node.js **22.13+**; Node.js 24 was used for the latest desktop repair |
+| Node.js and npm | Building the embedded desktop interface | Node.js **22.13+**; Node.js 24 was used for the latest desktop repair |
 | Python | Architecture checks and Windows packaging | Python **3.10+** is the tested baseline |
-| Ollama | Model discovery, downloads, and inference | Running locally at `http://127.0.0.1:11434` |
-| Microsoft Edge WebView2 Runtime | Running the Windows EXE | Installed on the target Windows machine |
+| Ollama | Model discovery, downloads, and inference | Installed/started automatically by desktop setup |
+| Microsoft Edge WebView2 Runtime | Running the Windows EXE | Installed automatically if missing |
 | .NET Framework C# compiler | Building the Windows EXE | `C:\Windows\Microsoft.NET\Framework64\v4.0.30319\csc.exe` |
 | Windows speech recognizer | Offline desktop dictation | Installed speech language and a working default microphone |
 
@@ -65,60 +65,34 @@ size. Start with a smaller model if you are unsure of your machine's capacity.
 
 ## Quick start
 
-The commands below use PowerShell. Run them from a source checkout, not from an
-extracted release ZIP.
+1. Download [Sanctum.exe](dist/Sanctum.exe) (on GitHub, choose **Download raw file**).
+2. Run it. The executable extracts and updates the desktop application automatically.
+3. Click **Set up Sanctum** in the walkthrough. Sanctum installs or starts its local
+   AI runtime, downloads Qwen3 1.7B if no chat model is installed, and verifies a real response.
+4. Click **Start chatting**. Future launches automatically start the installed runtime.
 
-### 1. Clone and install dependencies
+No Node.js, Python, terminal commands, browser dashboard, or separate Ollama setup
+is needed by the end user. First setup requires internet and several GB of disk
+space. Windows may request installation permission. If setup is interrupted,
+**Retry setup** retries installation and resumes model downloads through Ollama.
+Missing WebView2 is installed in a native preparation screen before the walkthrough.
 
-```powershell
-git clone https://github.com/avirooppal/Sanctum.git
-cd Sanctum
-npm ci
-```
+Downloads use official Microsoft and Ollama installers. Windows validates their
+Authenticode signatures and publishers before execution. Existing working runtimes
+and models are reused. Chat and file operations remain local after setup.
 
-Use `npm ci` to install the versions recorded in `package-lock.json`.
+## Logs and system monitoring
 
-### 2. Start Ollama and install a model
+- **Settings → Logs**: live entries, level/search filters, refresh, clear, export to
+  a chosen file, and open the local log folder. Logs rotate at 2 MiB, retain one
+  previous file, and do not record prompts, model responses, or document contents.
+- **Settings → System monitor**: actual Windows CPU utilization, physical RAM,
+  Sanctum host memory, free disk space, uptime, GPU identity, local engine state,
+  and loaded-model memory/GPU allocations. Unsupported sensors show unavailable.
+- **Repair runtime setup** reruns the same installation and model verification flow.
 
-If the Ollama desktop application is already running, its service may already
-be available. Otherwise, start it in a separate terminal:
-
-```powershell
-ollama serve
-```
-
-In another terminal:
-
-```powershell
-ollama pull qwen3:1.7b
-ollama list
-Invoke-RestMethod http://127.0.0.1:11434/api/tags
-```
-
-The first model download requires internet access. Once installed, local inference
-can run without downloading the model again.
-
-### 3. Start the web application
-
-```powershell
-npm run dev -- --hostname 127.0.0.1
-```
-
-Open [http://127.0.0.1:3000](http://127.0.0.1:3000), complete onboarding, and select
-an installed model. Send a short message to confirm that inference works.
-
-Chat uses a same-origin proxy to Ollama; you do not need to relax Ollama's CORS
-configuration for this flow. No cloud API key is required for local chat.
-
-### Production web build
-
-```powershell
-npm run build
-npm start -- --hostname 127.0.0.1
-```
-
-Keep the web application bound to loopback. It is a personal local workspace,
-not a hosted service with multi-user authentication.
+Runtime logs live in `%APPDATA%\Sanctum\logs\desktop.jsonl` (or the custom
+`--data-dir`). Installer failures include a retryable error in the walkthrough.
 
 ## Windows desktop
 
@@ -127,13 +101,9 @@ not a hosted service with multi-user authentication.
 | Artifact | Usage |
 | --- | --- |
 | [Sanctum.exe](dist/Sanctum.exe) | Extract/update the desktop payload in the user's installation directory and launch it |
-| [Windows x64 installer](dist/Sanctum-Setup-1.0.0-x64.exe) | Install the application and create shortcuts |
-| [Portable Windows x64 ZIP](dist/Sanctum-Portable-1.0.0-x64.zip) | Extract the complete folder, then run `Sanctum-Desktop.exe` |
-| [SHA-256 checksums](dist/SHA256SUMS) | Verify the downloaded artifacts |
+| [SHA-256 checksum](dist/SHA256SUMS) | Verify the downloaded EXE |
 
-On GitHub, use **Download raw file** when viewing an EXE or ZIP. Keep the portable
-EXE alongside its DLLs and `resources/` directory. Ollama must be running for
-model discovery, installation, and responses.
+`Sanctum.exe` is the only file end users need. On GitHub, use **Download raw file**. The walkthrough prepares Ollama automatically; subsequent launches start it when needed.
 
 To inspect a downloaded file's checksum:
 
@@ -194,7 +164,7 @@ Follow-up tool results are returned to the model so it can verify its work.
 - A request is limited to 8 model rounds and 16 tool calls. Stop prevents subsequent
   calls; a filesystem operation already completed is not undone.
 - This release provides file tools in the native Windows app. It does not execute
-  arbitrary terminal commands. Browser development mode remains ordinary chat.
+  arbitrary terminal commands. The workspace is available only inside the Windows desktop host.
 
 Model selection is saved per chat. Switching chats restores their model; previous
 answers retain the name of the model that generated them. The selector is disabled
@@ -204,9 +174,7 @@ while a response is running.
 
 | Command | Purpose |
 | --- | --- |
-| `npm run dev` | Start the Next.js development server |
-| `npm run build` | Compile the production frontend and web routes |
-| `npm start` | Start the production web server after a build |
+| `npm run build` | Compile assets for the embedded desktop interface |
 | `npm run typecheck` | Run TypeScript checking without emitting files |
 | `npm run lint` | Run the Python architecture/boundary checker; this is not ESLint |
 | `npm run check-arch` | Invoke the same architecture checker directly |
@@ -306,34 +274,18 @@ into the composer; review it before sending.
 
 No Whisper service is required for this desktop flow.
 
-### Optional browser transcription
-
-Browser recording uses a separate local Whisper service. To develop that integration,
-create an isolated Python environment and install its dependencies:
-
-```powershell
-python -m venv .venv-speech
-.\.venv-speech\Scripts\python.exe -m pip install whisperx fastapi uvicorn python-multipart torch torchaudio
-.\.venv-speech\Scripts\python.exe core/ai/speech/whisperx_server.py --model base --port 8000
-```
-
-WhisperX may require FFmpeg and platform-specific PyTorch/CUDA setup. Its first run
-can download model weights. These optional dependencies are separate from `npm ci`
-and the desktop build; the latest desktop verification does not validate every
-WhisperX environment. See the [speech server implementation](core/ai/speech/whisperx_server.py).
-
 ## Storage and backups
 
 | Data | Location / behavior |
 | --- | --- |
-| Web workspace | Browser `localStorage`, scoped to its origin |
+| Desktop interface state | WebView2 local storage in the desktop profile |
 | Desktop UI workspace | WebView2 storage for `https://sanctum.app` |
 | Desktop settings, threads, profiles, window state | `%APPDATA%\Sanctum` by default |
 | Desktop WebView2 profile | `%APPDATA%\Sanctum\ebwebview2_data` |
 | Installed desktop files | `%LOCALAPPDATA%\Programs\Sanctum` by default |
 | Ollama model files | Managed separately by Ollama |
 
-Export important conversations before clearing application/browser storage.
+Export important conversations before clearing desktop profile storage.
 Changing the origin or data directory creates a separate workspace. For a complete
 desktop profile backup, close Sanctum before copying its data directory. Keep
 application data separate from the generated installer payload.
@@ -389,7 +341,7 @@ not a guarantee for future changes.
 
 | Symptom | Checks and recovery |
 | --- | --- |
-| No models listed | Run `ollama list` and query `/api/tags` on port 11434. Start Ollama if needed, then use **Rescan** in the Hub. |
+| No models listed | Use **Settings → System monitor → Repair runtime setup**, then **Rescan** in the Hub. |
 | `ollama serve` reports the address is in use | Check `/api/tags`; the Ollama desktop app may already be serving that port. |
 | Model download fails | Inspect the reported error, confirm Ollama is running, and check network access and disk space. Retry from the Hub. |
 | Response is slow to start | Initial model loading and context allocation take time. Try a smaller model or context window and inspect memory use. |
@@ -398,10 +350,8 @@ not a guarantee for future changes.
 | Image is attached but cannot be interpreted | Select a model that supports image input. A text-only model is insufficient. |
 | PDF worker/version error | Refresh `public/pdf.worker.min.mjs` from the installed `pdfjs-dist` package, then rebuild. |
 | Desktop microphone does not start | Check the default input device, Windows microphone access for desktop apps, and the installed speech language. |
-| Browser audio cannot be transcribed | Confirm microphone permission and that the optional local speech service is running on port 8000. |
 | EXE does not reflect source edits | Rebuild the installer and run the new artifact from `dist/`. Close the existing installation before updating. |
-| Portable app does not launch | Extract the entire ZIP; keep the resource directory and DLLs beside the EXE, and confirm WebView2 Runtime is installed. |
-| Chats appear missing | Confirm the same browser origin or desktop profile is in use. Restore/export data before clearing storage. |
+| Chats appear missing | Confirm the same desktop profile is in use. Restore/export data before clearing storage. |
 
 ## Contributing
 

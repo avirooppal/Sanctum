@@ -32,14 +32,14 @@ def build_installer():
 
     dist_dir = os.path.join(ROOT, "dist")
     os.makedirs(dist_dir, exist_ok=True)
-    out_installer = os.path.join(dist_dir, f"Sanctum-Setup-{VERSION}-x64.exe")
 
-    print("=== Step 2: Compiling self-extracting NSIS-compatible installer wrapper ===")
-    build_self_extracting_installer(out_installer)
+    # Sanctum.exe is the only end-user artifact: download, run, done.
+    print("=== Step 2: Compiling single-file Sanctum.exe ===")
+    build_direct_launcher(os.path.join(dist_dir, "Sanctum.exe"), build_payload_b64())
     print("=== Build Complete ===")
 
 
-def build_self_extracting_installer(out_path: str):
+def build_payload_b64() -> str:
     payload_dir = os.path.join(ROOT, "deploy", "installer", "build_payload")
     zip_path = os.path.join(ROOT, "deploy", "installer", "payload.zip")
 
@@ -52,8 +52,12 @@ def build_self_extracting_installer(out_path: str):
                 zf.write(full_path, rel_path)
 
     with open(zip_path, "rb") as f:
-        payload_bytes = f.read()
-    payload_b64 = base64.b64encode(payload_bytes).decode("ascii")
+        return base64.b64encode(f.read()).decode("ascii")
+
+
+def build_self_extracting_installer(out_path: str):
+    """Legacy installer wrapper; not part of the default release."""
+    payload_b64 = build_payload_b64()
 
     cs_setup = r"""using System;
 using System.IO;

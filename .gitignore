@@ -9,8 +9,6 @@ out/
 build/
 dist/*
 !dist/Sanctum.exe
-!dist/Sanctum-Setup-*.exe
-!dist/Sanctum-Portable-*.zip
 !dist/SHA256SUMS
 !dist/sbom.spdx.json
 !dist/LICENSE_BUNDLE.txt
@@ -53,3 +51,4 @@ __pycache__/
 # dev-only engine oracle and pipeline caches (ADR 0105)
 .cache/
 
+deploy/installer/payload.zip

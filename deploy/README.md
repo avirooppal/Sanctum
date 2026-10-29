@@ -9,9 +9,12 @@ python tools/build_installer.py
 python tools/package_distribution.py
 ```
 
-Prerequisites: Node.js 22.6+, Python 3, the Windows .NET Framework C# compiler,
+Prerequisites: Node.js 22.13+, Python 3, the Windows .NET Framework C# compiler,
 and the checked-in WebView2 SDK assemblies under `vendor/webview2/`.
-The installed application also requires the WebView2 runtime.
+The EXE installs a missing WebView2 runtime automatically, then its walkthrough
+installs/starts Ollama and downloads a first chat model when needed. End users
+only download and run `Sanctum.exe`; no frontend server is a supported product.
+Native setup, logs, and measurements live in `tools/native/DesktopServices.cs`.
 
 The build compiles the Next.js frontend, copies it into the generated
 `deploy/installer/build_payload/`, and compiles the desktop host, uninstaller,

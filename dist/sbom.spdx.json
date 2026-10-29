@@ -2,26 +2,26 @@
   "spdxVersion": "SPDX-2.3",
   "dataLicense": "CC0-1.0",
   "SPDXID": "SPDXRef-DOCUMENT",
-  "name": "Sanctum Desktop Installer SBOM",
+  "name": "Sanctum Desktop SBOM",
   "documentNamespace": "https://github.com/avirooppal/Sanctum/spdxdocs/sanctum-1.0.0",
   "creationInfo": {
-    "created": "2026-10-29T13:20:28Z",
+    "created": "2026-10-29T17:18:45Z",
     "creators": [
       "Organization: Sanctum Contributors"
     ]
   },
   "packages": [
     {
-      "name": "Sanctum-Setup",
-      "SPDXID": "SPDXRef-Package-Sanctum-Setup",
+      "name": "Sanctum",
+      "SPDXID": "SPDXRef-Package-Sanctum",
       "versionInfo": "1.0.0",
-      "packageFileName": "Sanctum-Setup-1.0.0-x64.exe",
+      "packageFileName": "Sanctum.exe",
       "downloadLocation": "https://github.com/avirooppal/Sanctum/releases",
       "licenseConcluded": "MIT",
       "checksums": [
         {
           "algorithm": "SHA256",
-          "checksumValue": "ff8df68aea64b773a46fccf76a51595427881dd7d109ee1d31021a9f25f5fe3e"
+          "checksumValue": "48fcbfdadc47cf2ca34c4155e49da349f55228a0b711e1856f4bae28e90a534c"
         }
       ]
     },
