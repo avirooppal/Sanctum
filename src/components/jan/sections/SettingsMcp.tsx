@@ -1,7 +1,7 @@
 "use client";
 
-import React, { useState } from "react";
-import { IconCircles, IconPlus, IconDeviceFloppy, IconPlayerPlay } from "@tabler/icons-react";
+import React, { useState, useEffect } from "react";
+import { IconCircles, IconPlus, IconDeviceFloppy, IconTrash } from "@tabler/icons-react";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
 import { toast } from "sonner";
@@ -36,16 +36,45 @@ const INITIAL_MCP: McpServerConfig[] = [
 
 export const SettingsMcp: React.FC = () => {
   const [servers, setServers] = useState<McpServerConfig[]>(INITIAL_MCP);
+  const [plugins, setPlugins] = useState<{ id: string; name?: string; description?: string }[]>([]);
   const [isAdding, setIsAdding] = useState<boolean>(false);
   const [newName, setNewName] = useState<string>("");
   const [newCommand, setNewCommand] = useState<string>("");
   const [newArgs, setNewArgs] = useState<string>("");
 
+  useEffect(() => {
+    fetch("/api/mcp")
+      .then((r) => (r.ok ? r.json() : null))
+      .then((data) => {
+        if (Array.isArray(data?.servers) && data.servers.length > 0) {
+          setServers(data.servers);
+        }
+        if (Array.isArray(data?.plugins)) {
+          setPlugins(data.plugins);
+        }
+      })
+      .catch(() => {});
+  }, []);
+
+  const persistServers = (next: McpServerConfig[]) => {
+    setServers(next);
+    fetch("/api/mcp", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ servers: next }),
+    }).catch(() => {});
+  };
+
   const toggleServer = (id: string) => {
-    setServers((prev) =>
-      prev.map((s) => (s.id === id ? { ...s, enabled: !s.enabled } : s))
-    );
+    const next = servers.map((s) => (s.id === id ? { ...s, enabled: !s.enabled } : s));
+    persistServers(next);
     toast.success("MCP server state updated");
+  };
+
+  const removeServer = (id: string) => {
+    const next = servers.filter((s) => s.id !== id);
+    persistServers(next);
+    toast.success("MCP server removed");
   };
 
   const handleAddServer = () => {
@@ -61,12 +90,13 @@ export const SettingsMcp: React.FC = () => {
       args: newArgs.trim(),
       enabled: true,
     };
-    setServers([...servers, newServer]);
+    const next = [...servers, newServer];
+    persistServers(next);
     setNewName("");
     setNewCommand("");
     setNewArgs("");
     setIsAdding(false);
-    toast.success(`MCP Server ${newServer.name} added`);
+    toast.success(`MCP Server ${newServer.name} saved`);
   };
 
   return (
@@ -193,11 +223,35 @@ export const SettingsMcp: React.FC = () => {
                     )}
                   />
                 </button>
+                <button
+                  type="button"
+                  onClick={() => removeServer(s.id)}
+                  className="text-muted-foreground hover:text-destructive p-1"
+                  title="Remove server"
+                >
+                  <IconTrash size={14} />
+                </button>
               </div>
             </div>
           ))}
         </div>
       </section>
+
+      {plugins.length > 0 && (
+        <section className="space-y-4">
+          <h2 className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">
+            Discovered Folder Plugins ({plugins.length})
+          </h2>
+          <div className="space-y-2">
+            {plugins.map((p) => (
+              <div key={p.id} className="rounded-xl border border-border/70 bg-card p-4 text-xs">
+                <span className="font-medium text-foreground">{p.name || p.id}</span>
+                {p.description && <p className="text-muted-foreground mt-0.5">{p.description}</p>}
+              </div>
+            ))}
+          </div>
+        </section>
+      )}
     </div>
   );
 };

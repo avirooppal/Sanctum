@@ -3,9 +3,6 @@
  * (ADR 0105 / Pipeline P8 / Multi-Tool Architecture v2).
  */
 
-import os from "node:os";
-import fs from "node:fs";
-import path from "node:path";
 import {
   type ToolDefinition,
   validateToolArguments,
@@ -252,16 +249,24 @@ export class ToolExecutor {
       if (finalOutput && finalOutput.length > maxChars) {
         truncated = true;
         try {
-          const tmpFile = path.join(
-            os.tmpdir(),
-            `sanctum_tool_${call.name}_${Date.now()}.txt`
-          );
-          fs.writeFileSync(tmpFile, finalOutput, "utf-8");
-          fullOutputRef = tmpFile;
-          finalOutput = `${finalOutput.slice(
-            0,
-            maxChars
-          )}\n\n[Output truncated at ${maxChars} chars. Full output preserved at: ${tmpFile}]`;
+          const getBuiltin = (globalThis as any).process?.getBuiltinModule;
+          if (typeof getBuiltin === "function") {
+            const os = getBuiltin("node:os");
+            const fs = getBuiltin("node:fs");
+            const path = getBuiltin("node:path");
+            const tmpFile = path.join(
+              os.tmpdir(),
+              `sanctum_tool_${call.name}_${Date.now()}.txt`
+            );
+            fs.writeFileSync(tmpFile, finalOutput, "utf-8");
+            fullOutputRef = tmpFile;
+            finalOutput = `${finalOutput.slice(
+              0,
+              maxChars
+            )}\n\n[Output truncated at ${maxChars} chars. Full output preserved at: ${tmpFile}]`;
+          } else {
+            finalOutput = `${finalOutput.slice(0, maxChars)}\n\n[Output truncated at ${maxChars} chars]`;
+          }
         } catch {
           finalOutput = finalOutput.slice(0, maxChars) + "\n\n[Output truncated]";
         }

@@ -13,10 +13,21 @@ import { type ToolCallRequest } from "./types.ts";
 export const TOOL_NAME_ALIASES: Record<string, string> = {
   readfile: "read_file",
   read_file: "read_file",
+  readfilerange: "read_file_range",
+  read_file_range: "read_file_range",
+  searchfiles: "search_files",
+  search_files: "search_files",
+  grep: "search_files",
+  find_in_files: "search_files",
   createfile: "create_file",
   create_file: "create_file",
+  writefile: "create_file",
+  write_file: "create_file",
   editfile: "edit_file",
   edit_file: "edit_file",
+  applypatch: "apply_patch",
+  apply_patch: "apply_patch",
+  patchfile: "apply_patch",
   listdir: "list_directory",
   listdirectory: "list_directory",
   list_directory: "list_directory",
@@ -28,10 +39,29 @@ export const TOOL_NAME_ALIASES: Record<string, string> = {
   movefile: "move_path",
   movepath: "move_path",
   move_path: "move_path",
+  rename: "move_path",
   deletefile: "delete_path",
   deletepath: "delete_path",
   delete_path: "delete_path",
   rm: "delete_path",
+  undolastaction: "undo_last_action",
+  undo_last_action: "undo_last_action",
+  undo: "undo_last_action",
+  vaultsearch: "vault_search",
+  vault_search: "vault_search",
+  search_vault: "vault_search",
+  memorysave: "memory_save",
+  memory_save: "memory_save",
+  save_memory: "memory_save",
+  remember: "memory_save",
+  memoryrecall: "memory_recall",
+  memory_recall: "memory_recall",
+  recall_memory: "memory_recall",
+  search_memory: "memory_recall",
+  calc: "calculator",
+  calculator: "calculator",
+  datetime: "datetime",
+  get_time: "datetime",
   execute_command: "shell",
   run_shell: "shell",
   shell: "shell",
@@ -46,9 +76,45 @@ export function repairJsonString(input: string): string {
   // Strip Markdown code fences if model wrapped the JSON in ```json ... ```
   s = s.replace(/^```(?:json)?\s*/i, "").replace(/\s*```$/, "").trim();
 
-  // Replace single quotes with double quotes around keys and strings (heuristic)
   if (s.startsWith("{") || s.startsWith("[")) {
     // Remove trailing commas before closing braces/brackets
+    s = s.replace(/,\s*([}\]])/g, "$1");
+
+    // Balance unclosed braces/brackets from truncated streams
+    let openBraces = 0;
+    let openBrackets = 0;
+    let inString = false;
+    let escaped = false;
+    for (let i = 0; i < s.length; i++) {
+      const ch = s[i];
+      if (escaped) {
+        escaped = false;
+        continue;
+      }
+      if (ch === "\\") {
+        escaped = true;
+        continue;
+      }
+      if (ch === '"') {
+        inString = !inString;
+        continue;
+      }
+      if (!inString) {
+        if (ch === "{") openBraces++;
+        else if (ch === "}") openBraces = Math.max(0, openBraces - 1);
+        else if (ch === "[") openBrackets++;
+        else if (ch === "]") openBrackets = Math.max(0, openBrackets - 1);
+      }
+    }
+    if (inString) s += '"';
+    while (openBrackets > 0) {
+      s += "]";
+      openBrackets--;
+    }
+    while (openBraces > 0) {
+      s += "}";
+      openBraces--;
+    }
     s = s.replace(/,\s*([}\]])/g, "$1");
   }
 

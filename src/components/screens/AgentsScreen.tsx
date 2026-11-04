@@ -26,7 +26,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { useAppStore } from "@/store/useAppStore";
+import { useAppStore, AGENT_PRESETS, type AutonomyMode } from "@/store/useAppStore";
 import { cn } from "@/lib/utils";
 
 export const AgentsScreen: React.FC = () => {
@@ -39,8 +39,14 @@ export const AgentsScreen: React.FC = () => {
     isAgentRunning,
     agentPrompt,
     setAgentPrompt,
+    autonomyMode,
+    setAutonomyMode,
+    activePresetId,
+    setActivePresetId,
     startAgentTask,
     approveNextAction,
+    skipStep,
+    retryStep,
     pauseAgent,
     resumeAgent,
     stopAgent,
@@ -96,7 +102,7 @@ export const AgentsScreen: React.FC = () => {
                   value={agentPrompt}
                   onChange={(e) => setAgentPrompt(e.target.value)}
                   onKeyDown={handleKeyDown}
-                  placeholder="e.g. Update checkout button copy and verify the flow..."
+                  placeholder="e.g. Search workspace for TODOs and summarize findings..."
                   className="rounded-md bg-card border-input h-10 flex-1"
                 />
                 <Button
@@ -110,7 +116,45 @@ export const AgentsScreen: React.FC = () => {
                 </Button>
               </div>
             </div>
-            <div className="flex flex-col gap-2 w-56">
+            <div className="flex flex-col gap-2 w-48">
+              <label className="font-medium text-foreground text-sm">
+                Preset
+              </label>
+              <Select
+                value={activePresetId || "general"}
+                onValueChange={(val) => setActivePresetId(val)}
+              >
+                <SelectTrigger className="rounded-md bg-card border-input h-10">
+                  <SelectValue />
+                </SelectTrigger>
+                <SelectContent>
+                  {AGENT_PRESETS.map((p) => (
+                    <SelectItem key={p.id} value={p.id}>
+                      {p.name}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
+            <div className="flex flex-col gap-2 w-44">
+              <label className="font-medium text-foreground text-sm">
+                Autonomy
+              </label>
+              <Select
+                value={autonomyMode || "step_by_step"}
+                onValueChange={(val) => setAutonomyMode(val as AutonomyMode)}
+              >
+                <SelectTrigger className="rounded-md bg-card border-input h-10">
+                  <SelectValue />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="step_by_step">Step-by-Step</SelectItem>
+                  <SelectItem value="auto_reads">Auto-Run Reads</SelectItem>
+                  <SelectItem value="full_auto">Full Auto (Sandbox)</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
+            <div className="flex flex-col gap-2 w-48">
               <label className="font-medium text-foreground text-sm">
                 Model
               </label>
@@ -141,7 +185,7 @@ export const AgentsScreen: React.FC = () => {
               <div className="flex items-center gap-3">
                 <Globe2 className="text-muted-foreground size-4" />
                 <span className="font-mono text-muted-foreground text-sm">
-                  {currentStep?.toolArgs?.url || "http://localhost:3000"}
+                  {currentStep?.toolArgs?.url || currentStep?.toolArgs?.path || "workspace://local"}
                 </span>
               </div>
               <div className="flex items-center gap-2">
@@ -159,16 +203,17 @@ export const AgentsScreen: React.FC = () => {
             </div>
 
             <div className="bg-muted/30 flex p-8 justify-center items-center flex-1 relative overflow-hidden">
-              {/* Dynamic Viewport: Changes based on step context */}
-              {currentStep?.toolName?.includes("code") || currentStep?.toolName?.includes("bash") ? (
+              {currentStep?.toolName && !currentStep.toolName.includes("browser") && !currentStep.toolName.includes("mouse") && !currentStep.toolName.includes("dom") ? (
                 <div className="rounded-lg bg-zinc-950 text-zinc-100 border border-zinc-800 p-6 w-full max-w-xl font-mono text-xs space-y-2 shadow-lg">
                   <div className="flex items-center gap-2 text-zinc-400 pb-2 border-b border-zinc-800">
                     <Terminal className="size-3.5" />
-                    <span>sandboxed-environment: bash</span>
+                    <span>sanctum-tool-executor: {currentStep.toolName}</span>
                   </div>
-                  <div className="text-emerald-400">$ {currentStep?.toolArgs?.command || "node runner.js"}</div>
-                  <div className="text-zinc-300 leading-relaxed whitespace-pre-wrap">
-                    {currentStep?.result || "[Running compilation & verification loop...]"}
+                  <div className="text-emerald-400">
+                    $ {currentStep.toolName}({JSON.stringify(currentStep.toolArgs || {})})
+                  </div>
+                  <div className="text-zinc-300 leading-relaxed whitespace-pre-wrap max-h-48 overflow-y-auto">
+                    {currentStep?.result || "[Staged for execution...]"}
                   </div>
                 </div>
               ) : (
@@ -266,11 +311,33 @@ export const AgentsScreen: React.FC = () => {
                           >
                             {step.title}
                           </p>
-                          {step.executionTimeMs && (
-                            <span className="text-[10px] font-mono text-muted-foreground shrink-0">
-                              {step.executionTimeMs}ms
-                            </span>
-                          )}
+                          <div className="flex items-center gap-1.5 shrink-0">
+                            {step.executionTimeMs !== undefined && (
+                              <span className="text-[10px] font-mono text-muted-foreground">
+                                {step.executionTimeMs}ms
+                              </span>
+                            )}
+                            {isStepCurrent && !isAgentRunning && (
+                              <button
+                                type="button"
+                                onClick={() => skipStep(step.id)}
+                                className="text-[10px] px-1.5 py-0.5 rounded border border-border text-muted-foreground hover:text-foreground"
+                                title="Skip step"
+                              >
+                                Skip
+                              </button>
+                            )}
+                            {isStepDone && !isAgentRunning && (
+                              <button
+                                type="button"
+                                onClick={() => retryStep(step.id)}
+                                className="text-muted-foreground hover:text-foreground p-0.5"
+                                title="Re-run step"
+                              >
+                                <RotateCcw className="size-3" />
+                              </button>
+                            )}
+                          </div>
                         </div>
                         {step.description && (
                           <p className="text-xs text-muted-foreground mt-0.5">

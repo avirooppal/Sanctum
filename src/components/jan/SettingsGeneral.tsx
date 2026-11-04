@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useRef } from "react";
 import {
   IconCopy,
   IconCopyCheck,
@@ -11,12 +11,18 @@ import {
   IconTrash,
   IconTerminal2,
   IconX,
+  IconDownload,
+  IconUpload,
+  IconPlus,
 } from "@tabler/icons-react";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
 import { toast } from "sonner";
+import { useAppStore } from "@/store/useAppStore";
+import { globalMemoryStore, type MemoryFact } from "@core/ai/memory/memory_store.ts";
 
 export const SettingsGeneral: React.FC = () => {
+  const { resetAllData, exportPortableArchive, importPortableArchive } = useAppStore();
   const [autoUpdateCheck, setAutoUpdateCheck] = useState<boolean>(false);
   const [spellCheck, setSpellCheck] = useState<boolean>(true);
   const [language, setLanguage] = useState<string>("en");
@@ -30,12 +36,21 @@ export const SettingsGeneral: React.FC = () => {
   const [deleteModelsChecked, setDeleteModelsChecked] = useState<boolean>(false);
   const [deletePacksChecked, setDeletePacksChecked] = useState<boolean>(false);
 
+  // Memory Manager state
+  const [memoryEnabled, setMemoryEnabled] = useState<boolean>(true);
+  const [memoryFacts, setMemoryFacts] = useState<MemoryFact[]>([]);
+  const [newFactInput, setNewFactInput] = useState<string>("");
+  const importFileInputRef = useRef<HTMLInputElement | null>(null);
+
   const [dataFolderPath, setDataFolderPath] = useState<string>(
     "C:\\Users\\aviroop\\AppData\\Roaming\\Sanctum\\data"
   );
   const appVersion = "1.0.0+fd23990 (2026-10-26)";
 
   useEffect(() => {
+    setMemoryEnabled(globalMemoryStore.isEnabled());
+    setMemoryFacts(globalMemoryStore.listFacts());
+
     fetch("/api/settings")
       .then((r) => r.json())
       .then((data) => {
@@ -179,16 +194,72 @@ export const SettingsGeneral: React.FC = () => {
     }
   };
 
+  const handleToggleMemory = () => {
+    const next = !memoryEnabled;
+    setMemoryEnabled(next);
+    globalMemoryStore.setEnabled(next);
+    toast.success(`Persistent local memory ${next ? "enabled" : "disabled"}`);
+  };
+
+  const handleAddFact = () => {
+    if (!newFactInput.trim()) return;
+    try {
+      globalMemoryStore.saveFact({
+        content: newFactInput.trim(),
+        category: "fact",
+        pinned: true,
+      });
+      setMemoryFacts(globalMemoryStore.listFacts());
+      setNewFactInput("");
+      toast.success("Saved to Core Memory");
+    } catch {
+      toast.error("Could not save memory");
+    }
+  };
+
+  const handleDeleteFact = (id: string) => {
+    globalMemoryStore.deleteFact(id);
+    setMemoryFacts(globalMemoryStore.listFacts());
+    toast.success("Memory removed");
+  };
+
+  const handleExportArchive = () => {
+    try {
+      const json = exportPortableArchive();
+      const blob = new Blob([json], { type: "application/json" });
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement("a");
+      a.href = url;
+      a.download = `sanctum-backup-${new Date().toISOString().slice(0, 10)}.json`;
+      a.click();
+      URL.revokeObjectURL(url);
+      toast.success("Exported portable Sanctum backup archive");
+    } catch {
+      toast.error("Failed to export archive");
+    }
+  };
+
+  const handleImportArchiveFile = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    try {
+      const text = await file.text();
+      importPortableArchive(text);
+      setMemoryFacts(globalMemoryStore.listFacts());
+      toast.success("Imported Sanctum backup archive");
+    } catch {
+      toast.error("Invalid backup archive file");
+    } finally {
+      e.target.value = "";
+    }
+  };
+
   const handleResetSettings = async () => {
     try {
       await fetch("/api/settings", { method: "DELETE" });
     } catch {}
-    localStorage.clear();
-    toast.success("Settings restored to defaults. Preferences cleared.");
+    toast.success("Settings restored to default values.");
     setIsResetSettingsOpen(false);
-    setTimeout(() => {
-      window.location.reload();
-    }, 600);
   };
 
   const handleEraseAllData = async () => {
@@ -197,19 +268,30 @@ export const SettingsGeneral: React.FC = () => {
       return;
     }
     try {
-      await fetch("/api/settings", { method: "DELETE" });
+      await fetch("/api/reset", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          deleteModels: deleteModelsChecked,
+          deletePacks: deletePacksChecked,
+          deleteWorkspace: true,
+        }),
+      });
+      await fetch("/api/settings", { method: "DELETE" }).catch(() => {});
+      await fetch("/api/memory", { method: "DELETE" }).catch(() => {});
       await fetch("/api/threads", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: "[]",
-      });
+      }).catch(() => {});
     } catch {}
-    localStorage.clear();
+
+    resetAllData();
     toast.success("Sanctum data directory purged. Restarting initial setup...");
     setIsEraseAllOpen(false);
     setTimeout(() => {
       window.location.reload();
-    }, 800);
+    }, 500);
   };
 
   return (
@@ -219,7 +301,7 @@ export const SettingsGeneral: React.FC = () => {
           General Settings
         </h1>
         <p className="mt-1 text-xs text-muted-foreground">
-          Application configuration, update behavior, language, and local storage directories.
+          Application configuration, update behavior, language, local memory, and storage directories.
         </p>
       </div>
 
@@ -296,6 +378,83 @@ export const SettingsGeneral: React.FC = () => {
         </div>
       </section>
 
+      {/* Persistent Local Memory */}
+      <section className="space-y-4">
+        <h2 className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">
+          Persistent Local Memory
+        </h2>
+        <div className="rounded-2xl border border-border/70 bg-card p-5 space-y-4">
+          <div className="flex items-center justify-between">
+            <div>
+              <span className="text-xs font-medium text-foreground">Remember Across Conversations</span>
+              <p className="text-[11px] text-muted-foreground">
+                Store durable facts, preferences, and episodic summaries locally on-device.
+              </p>
+            </div>
+            <button
+              type="button"
+              role="switch"
+              aria-checked={memoryEnabled}
+              onClick={handleToggleMemory}
+              className={cn(
+                "relative inline-flex h-5 w-9 shrink-0 cursor-pointer rounded-full border-2 border-transparent transition-colors duration-200 focus:outline-none",
+                memoryEnabled ? "bg-primary" : "bg-muted"
+              )}
+            >
+              <span
+                className={cn(
+                  "pointer-events-none inline-block size-4 transform rounded-full bg-background shadow-lg transition duration-200",
+                  memoryEnabled ? "translate-x-4" : "translate-x-0"
+                )}
+              />
+            </button>
+          </div>
+
+          <div className="pt-3 border-t border-border/50 space-y-2.5">
+            <div className="flex gap-2">
+              <input
+                type="text"
+                value={newFactInput}
+                onChange={(e) => setNewFactInput(e.target.value)}
+                onKeyDown={(e) => e.key === "Enter" && handleAddFact()}
+                placeholder="Add a durable fact or preference (e.g. Always write TypeScript with strict types)"
+                className="flex-1 px-3 py-1.5 rounded-xl border border-border bg-background text-xs text-foreground"
+              />
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={handleAddFact}
+                className="rounded-xl text-xs h-8 flex items-center gap-1"
+              >
+                <IconPlus size={14} />
+                <span>Add Fact</span>
+              </Button>
+            </div>
+
+            {memoryFacts.length > 0 && (
+              <div className="space-y-1.5 max-h-40 overflow-y-auto pt-1">
+                {memoryFacts.map((fact) => (
+                  <div
+                    key={fact.id}
+                    className="flex items-center justify-between gap-2 rounded-lg border border-border/60 bg-background/60 px-3 py-1.5 text-xs"
+                  >
+                    <span className="truncate text-foreground">{fact.content}</span>
+                    <button
+                      type="button"
+                      onClick={() => handleDeleteFact(fact.id)}
+                      className="text-muted-foreground hover:text-destructive shrink-0"
+                      title="Delete memory"
+                    >
+                      <IconTrash size={13} />
+                    </button>
+                  </div>
+                ))}
+              </div>
+            )}
+          </div>
+        </div>
+      </section>
+
       {/* Data Folder & Logs */}
       <section className="space-y-4">
         <h2 className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">
@@ -358,6 +517,42 @@ export const SettingsGeneral: React.FC = () => {
               </Button>
             </div>
           </div>
+
+          <div className="flex items-center justify-between pt-3 border-t border-border/50">
+            <div>
+              <span className="text-xs font-medium text-foreground">Portable Backup Archive</span>
+              <p className="text-[11px] text-muted-foreground">
+                Export or restore all threads, projects, documents, and memories as a portable JSON archive.
+              </p>
+            </div>
+            <div className="flex items-center gap-2 shrink-0">
+              <input
+                ref={importFileInputRef}
+                type="file"
+                accept=".json"
+                onChange={handleImportArchiveFile}
+                className="hidden"
+              />
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={() => importFileInputRef.current?.click()}
+                className="rounded-xl text-xs h-8 flex items-center gap-1.5"
+              >
+                <IconUpload size={14} />
+                <span>Import</span>
+              </Button>
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={handleExportArchive}
+                className="rounded-xl text-xs h-8 flex items-center gap-1.5"
+              >
+                <IconDownload size={14} />
+                <span>Export</span>
+              </Button>
+            </div>
+          </div>
         </div>
       </section>
 
@@ -389,7 +584,7 @@ export const SettingsGeneral: React.FC = () => {
             <div>
               <span className="text-xs font-medium text-foreground">Reset settings</span>
               <p className="text-[11px] text-muted-foreground">
-                Restore application preferences to defaults. Chat history and downloaded models are kept.
+                Restore application preferences to initial values. Chat history and downloaded models are kept.
               </p>
             </div>
             <Button
@@ -407,7 +602,7 @@ export const SettingsGeneral: React.FC = () => {
             <div>
               <span className="text-xs font-medium text-destructive">Erase all Sanctum data</span>
               <p className="text-[11px] text-muted-foreground">
-                Purge all local chats, index caches, and configurations. Restarts into first-run setup.
+                Purge all local chats, memories, workspace files, index caches, and configurations. Restarts into first-run setup.
               </p>
             </div>
             <Button
@@ -518,13 +713,16 @@ export const SettingsGeneral: React.FC = () => {
               </button>
             </div>
             <p className="text-xs text-muted-foreground leading-relaxed">
-              Sanctum.exe supports direct command-line flags for headless loopback operation and health diagnostics:
+              Sanctum.exe supports direct command-line flags for headless loopback operation, factory reset, and health diagnostics:
             </p>
             <pre className="p-3.5 rounded-xl bg-background border border-border text-[11px] font-mono text-foreground overflow-x-auto">{`# Verify binary version and embedded engine
 Sanctum-Desktop.exe --version
 
 # Run JSON health probe
 Sanctum-Desktop.exe --health
+
+# Wipe all existing Sanctum data and start fresh
+Sanctum-Desktop.exe --reset
 
 # Start headless OpenAI-compatible server on port 1337
 Sanctum-Desktop.exe --headless --port 1337 --data-dir "${dataFolderPath}"`}</pre>
@@ -563,7 +761,7 @@ Sanctum-Desktop.exe --headless --port 1337 --data-dir "${dataFolderPath}"`}</pre
               <h3 className="text-base font-semibold">Confirm Reset Settings</h3>
             </div>
             <p className="text-xs leading-relaxed text-muted-foreground">
-              This resets your interface preferences, theme, and shortcuts to default values. Your conversation history, projects, and downloaded models will not be modified.
+              This resets your interface preferences, theme, and shortcuts to initial values. Your conversation history, projects, and downloaded models will not be modified.
             </p>
             <div className="flex items-center justify-end gap-2 pt-2">
               <Button
@@ -596,7 +794,7 @@ Sanctum-Desktop.exe --headless --port 1337 --data-dir "${dataFolderPath}"`}</pre
               <h3 className="text-base font-semibold">Erase All Sanctum Data</h3>
             </div>
             <p className="text-xs leading-relaxed text-muted-foreground">
-              This will permanently delete your Sanctum data directory, including all local conversations and indexes.
+              This will permanently delete your Sanctum data directory, including all local conversations, persistent memories, workspace files, and indexes.
             </p>
             <div className="space-y-2 py-1">
               <label className="flex items-center gap-2 text-xs text-foreground cursor-pointer">

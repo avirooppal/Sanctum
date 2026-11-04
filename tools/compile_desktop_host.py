@@ -221,6 +221,7 @@ namespace Sanctum {
             bool headless = false;
             bool healthCheck = false;
             bool versionCheck = false;
+            bool resetData = false;
             bool devTools = false;
             string customDataDir = null;
             string overrideToken = null;
@@ -230,6 +231,8 @@ namespace Sanctum {
                     versionCheck = true;
                 } else if (args[i] == "--health") {
                     healthCheck = true;
+                } else if (args[i] == "--reset") {
+                    resetData = true;
                 } else if (args[i] == "--headless") {
                     headless = true;
                 } else if (args[i] == "--devtools") {
@@ -290,6 +293,14 @@ namespace Sanctum {
             }
 
             InitDirectories(customDataDir);
+            if (resetData) {
+                WipeAppData(true, true);
+                InitDirectories(customDataDir);
+                if (headless) {
+                    Console.WriteLine("{\"status\":\"reset_complete\"}");
+                    return 0;
+                }
+            }
 
             string webRoot = Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "resources", "web");
             if (!Directory.Exists(webRoot)) {
@@ -941,7 +952,7 @@ namespace Sanctum {
 
             if (path.StartsWith("/api/engine/api/")) {
                 string enginePath = path.Substring("/api/engine".Length);
-                if (enginePath != "/api/tags" && enginePath != "/api/ps" && enginePath != "/api/show" && enginePath != "/api/chat" && enginePath != "/api/pull" && enginePath != "/api/generate") {
+                if (enginePath != "/api/tags" && enginePath != "/api/ps" && enginePath != "/api/show" && enginePath != "/api/chat" && enginePath != "/api/pull" && enginePath != "/api/generate" && enginePath != "/api/embed" && enginePath != "/api/embeddings") {
                     WriteJson(res, 404, new { error = "Unsupported engine operation" }); return;
                 }
                 ProxyRequest(req, res, EngineBase + enginePath); return;
@@ -996,6 +1007,21 @@ namespace Sanctum {
                 return;
             }
 
+            if (path == "/api/memory") {
+                HandleMemory(req, res);
+                return;
+            }
+
+            if (path == "/api/mcp") {
+                HandleMcp(req, res);
+                return;
+            }
+
+            if (path == "/api/reset" && method == "POST") {
+                HandleReset(req, res);
+                return;
+            }
+
             WriteJson(res, 404, new { error = "Unknown API route" });
         }
 
@@ -1040,9 +1066,36 @@ namespace Sanctum {
                     var args = request["arguments"] as System.Collections.Generic.Dictionary<string, object>;
                     if (args == null) throw new Exception("Invalid arguments.");
                     string action = ToolArg(args, "action", true);
-                    string relative = ToolArg(args, "path", true);
-                    string target = ToolPath(relative, action == "list");
+                    string relative = ToolArg(args, "path", action != "undo");
+                    if (string.IsNullOrEmpty(relative)) relative = ".";
                     object result;
+                    if (action == "undo") {
+                        string trashRoot = Path.Combine(_appDataDir, "tool-trash");
+                        if (!Directory.Exists(trashRoot)) throw new Exception("No trashed items to restore.");
+                        var dirs = new DirectoryInfo(trashRoot).GetDirectories();
+                        Array.Sort(dirs, (a, b) => b.LastWriteTimeUtc.CompareTo(a.LastWriteTimeUtc));
+                        string restoredRel = null;
+                        foreach (var d in dirs) {
+                            string metaPath = Path.Combine(d.FullName, "restore.json");
+                            if (File.Exists(metaPath)) {
+                                var meta = new JavaScriptSerializer().Deserialize<System.Collections.Generic.Dictionary<string, object>>(File.ReadAllText(metaPath, Encoding.UTF8));
+                                string orig = meta.ContainsKey("original") ? Convert.ToString(meta["original"]) : null;
+                                string sav = meta.ContainsKey("saved") ? Convert.ToString(meta["saved"]) : null;
+                                if (!string.IsNullOrEmpty(orig) && !string.IsNullOrEmpty(sav) && (File.Exists(sav) || Directory.Exists(sav))) {
+                                    Directory.CreateDirectory(Path.GetDirectoryName(orig));
+                                    if (Directory.Exists(sav)) Directory.Move(sav, orig); else File.Move(sav, orig);
+                                    try { Directory.Delete(d.FullName, true); } catch { }
+                                    restoredRel = orig;
+                                    break;
+                                }
+                            }
+                        }
+                        if (restoredRel == null) throw new Exception("No recoverable item found in tool-trash.");
+                        LogEvent("info", "tools", "undo completed");
+                        WriteJson(res, 200, new { restored = restoredRel });
+                        return;
+                    }
+                    string target = ToolPath(relative, action == "list" || action == "search");
                     if (action == "list") {
                         var entries = new System.Collections.Generic.List<object>();
                         foreach (string entry in Directory.EnumerateFileSystemEntries(target)) {
@@ -1054,13 +1107,49 @@ namespace Sanctum {
                     } else if (action == "read") {
                         if (new FileInfo(target).Length > 1048576) throw new Exception("Read limit is 1 MiB.");
                         result = new { content = File.ReadAllText(target, new UTF8Encoding(false, true)) };
+                    } else if (action == "read_range") {
+                        if (new FileInfo(target).Length > 2097152) throw new Exception("Read limit is 2 MiB.");
+                        string[] lines = File.ReadAllLines(target, new UTF8Encoding(false, true));
+                        int sLine = 1, eLine = Math.Min(lines.Length, 100);
+                        if (args.ContainsKey("start_line")) int.TryParse(Convert.ToString(args["start_line"]), out sLine);
+                        if (args.ContainsKey("end_line")) int.TryParse(Convert.ToString(args["end_line"]), out eLine);
+                        sLine = Math.Max(1, sLine);
+                        eLine = Math.Min(lines.Length, Math.Max(sLine, eLine));
+                        var slice = new System.Collections.Generic.List<string>();
+                        for (int idx = sLine - 1; idx < eLine && idx < lines.Length; idx++) slice.Add(lines[idx]);
+                        result = new { path = relative, start_line = sLine, end_line = eLine, total_lines = lines.Length, content = string.Join("\n", slice.ToArray()) };
+                    } else if (action == "search") {
+                        string query = ToolArg(args, "query", true);
+                        var matches = new System.Collections.Generic.List<object>();
+                        Regex rx = null;
+                        try { rx = new Regex(query, RegexOptions.IgnoreCase); } catch { rx = null; }
+                        string rootNorm = Path.GetFullPath(_toolWorkspace).TrimEnd(Path.DirectorySeparatorChar) + Path.DirectorySeparatorChar;
+                        foreach (string file in Directory.EnumerateFiles(target, "*", SearchOption.AllDirectories)) {
+                            if (matches.Count >= 100) break;
+                            if (file.IndexOf("\\.git\\", StringComparison.OrdinalIgnoreCase) >= 0 || file.IndexOf("\\node_modules\\", StringComparison.OrdinalIgnoreCase) >= 0) continue;
+                            try {
+                                var fi = new FileInfo(file);
+                                if (fi.Length > 524288 || (fi.Attributes & FileAttributes.ReparsePoint) != 0) continue;
+                                string[] fLines = File.ReadAllLines(file, Encoding.UTF8);
+                                string relFile = file.StartsWith(rootNorm, StringComparison.OrdinalIgnoreCase) ? file.Substring(rootNorm.Length).Replace('\\', '/') : Path.GetFileName(file);
+                                for (int li = 0; li < fLines.Length; li++) {
+                                    string ln = fLines[li];
+                                    bool hit = rx != null ? rx.IsMatch(ln) : ln.IndexOf(query, StringComparison.OrdinalIgnoreCase) >= 0;
+                                    if (hit) {
+                                        matches.Add(new { file = relFile, line = li + 1, text = ln.Length > 240 ? ln.Substring(0, 240) : ln });
+                                        if (matches.Count >= 100) break;
+                                    }
+                                }
+                            } catch { }
+                        }
+                        result = new { query = query, count = matches.Count, matches = matches };
                     } else if (action == "create") {
                         string content = ToolArg(args, "content", true);
                         if (Encoding.UTF8.GetByteCount(content) > 1048576) throw new Exception("Write limit is 1 MiB.");
                         using (var stream = new FileStream(target, FileMode.CreateNew, FileAccess.Write))
                         using (var writer = new StreamWriter(stream, new UTF8Encoding(false))) writer.Write(content);
                         result = new { created = relative };
-                    } else if (action == "edit") {
+                    } else if (action == "edit" || action == "patch") {
                         if (new FileInfo(target).Length > 1048576) throw new Exception("Edit limit is 1 MiB.");
                         string before = ToolArg(args, "old_text", true), after = ToolArg(args, "new_text", true);
                         string content = File.ReadAllText(target, new UTF8Encoding(false, true));
@@ -1337,9 +1426,131 @@ namespace Sanctum {
                     res.Close();
                     return;
                 }
+                if (req.HttpMethod == "DELETE") {
+                    File.WriteAllText(_settingsFile, "{}", Encoding.UTF8);
+                    WriteJson(res, 200, new { status = "reset_all" });
+                    return;
+                }
             }
             res.StatusCode = 405;
             res.Close();
+        }
+
+        private void HandleMemory(HttpListenerRequest req, HttpListenerResponse res) {
+            string memFile = Path.Combine(_appDataDir, "memory.json");
+            lock (_dataLock) {
+                if (req.HttpMethod == "GET") {
+                    string data = File.Exists(memFile) ? File.ReadAllText(memFile, Encoding.UTF8) : "{\"enabled\":true,\"facts\":[],\"episodes\":[]}";
+                    byte[] bytes = Encoding.UTF8.GetBytes(data);
+                    res.ContentType = "application/json";
+                    res.StatusCode = 200;
+                    res.OutputStream.Write(bytes, 0, bytes.Length);
+                    res.Close();
+                    return;
+                }
+                if (req.HttpMethod == "POST") {
+                    using (var r = new StreamReader(req.InputStream, req.ContentEncoding)) {
+                        string body = r.ReadToEnd();
+                        string tmp = memFile + ".tmp";
+                        File.WriteAllText(tmp, body, Encoding.UTF8);
+                        if (File.Exists(memFile)) File.Delete(memFile);
+                        File.Move(tmp, memFile);
+                    }
+                    WriteJson(res, 200, new { status = "saved" });
+                    return;
+                }
+                if (req.HttpMethod == "DELETE") {
+                    if (File.Exists(memFile)) File.Delete(memFile);
+                    WriteJson(res, 200, new { status = "cleared" });
+                    return;
+                }
+            }
+            res.StatusCode = 405;
+            res.Close();
+        }
+
+        private void HandleMcp(HttpListenerRequest req, HttpListenerResponse res) {
+            string mcpFile = Path.Combine(_appDataDir, "mcp_servers.json");
+            lock (_dataLock) {
+                if (req.HttpMethod == "GET") {
+                    object servers = null;
+                    if (File.Exists(mcpFile)) {
+                        try { servers = new JavaScriptSerializer().DeserializeObject(File.ReadAllText(mcpFile, Encoding.UTF8)); } catch { }
+                    }
+                    WriteJson(res, 200, new { servers = servers, plugins = new object[0] });
+                    return;
+                }
+                if (req.HttpMethod == "POST") {
+                    using (var r = new StreamReader(req.InputStream, req.ContentEncoding)) {
+                        string body = r.ReadToEnd();
+                        string tmp = mcpFile + ".tmp";
+                        File.WriteAllText(tmp, body, Encoding.UTF8);
+                        if (File.Exists(mcpFile)) File.Delete(mcpFile);
+                        File.Move(tmp, mcpFile);
+                    }
+                    WriteJson(res, 200, new { status = "saved" });
+                    return;
+                }
+            }
+            res.StatusCode = 405;
+            res.Close();
+        }
+
+        private static void WipeAppData(bool deleteModels, bool deleteWorkspace) {
+            lock (_dataLock) {
+                lock (_toolLock) {
+                    _cachedThreads = "[]";
+                    string[] files = new string[] {
+                        _settingsFile, _threadsFile, _profilesFile, _downloadLedgerFile,
+                        _windowStateFile, Path.Combine(_appDataDir, "memory.json"),
+                        Path.Combine(_appDataDir, "mcp_servers.json"),
+                        Path.Combine(_appDataDir, "tool_workspace.txt")
+                    };
+                    foreach (string f in files) {
+                        try { if (!string.IsNullOrEmpty(f) && File.Exists(f)) File.Delete(f); } catch { }
+                    }
+                    string[] dirs = new string[] {
+                        Path.Combine(_appDataDir, "logs"),
+                        Path.Combine(_appDataDir, "tool-trash"),
+                        deleteWorkspace ? Path.Combine(_appDataDir, "workspace") : null,
+                        deleteModels ? _modelsDir : null
+                    };
+                    foreach (string d in dirs) {
+                        try { if (!string.IsNullOrEmpty(d) && Directory.Exists(d)) Directory.Delete(d, true); } catch { }
+                    }
+                    _toolWorkspace = Path.Combine(_appDataDir, "workspace");
+                    _workspaceId = Guid.NewGuid().ToString("N");
+                    try {
+                        Directory.CreateDirectory(_toolWorkspace);
+                        Directory.CreateDirectory(_modelsDir);
+                        File.WriteAllText(_profilesFile, "[]", Encoding.UTF8);
+                        File.WriteAllText(_threadsFile, "[]", Encoding.UTF8);
+                        File.WriteAllText(_settingsFile, "{}", Encoding.UTF8);
+                        File.WriteAllText(_downloadLedgerFile, "[]", Encoding.UTF8);
+                    } catch { }
+                }
+            }
+        }
+
+        private void HandleReset(HttpListenerRequest req, HttpListenerResponse res) {
+            try {
+                string body = "";
+                using (var r = new StreamReader(req.InputStream, Encoding.UTF8)) body = r.ReadToEnd();
+                bool deleteModels = Regex.IsMatch(body, "\"deleteModels\"\\s*:\\s*true", RegexOptions.IgnoreCase);
+                bool deleteWorkspace = !Regex.IsMatch(body, "\"deleteWorkspace\"\\s*:\\s*false", RegexOptions.IgnoreCase);
+                WipeAppData(deleteModels, deleteWorkspace);
+                if (!IsDisposed && IsHandleCreated) {
+                    try {
+                        BeginInvoke((Action)(() => {
+                            try { if (_wvCore != null && _wvCore.Profile != null) _wvCore.Profile.ClearBrowsingDataAsync(); } catch { }
+                        }));
+                    } catch { }
+                }
+                LogEvent("info", "reset", "Sanctum factory reset completed");
+                WriteJson(res, 200, new { status = "reset_complete", deletedModels = deleteModels, deletedWorkspace = deleteWorkspace });
+            } catch (Exception ex) {
+                WriteJson(res, 500, new { error = ex.Message });
+            }
         }
 
         private void ServeStaticFile(HttpListenerRequest req, HttpListenerResponse res, string path) {

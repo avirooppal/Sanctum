@@ -2,6 +2,7 @@ import { streamWorkspaceChat } from "../../../core/ai/tools/workspace_chat.ts";
 import type { StateCreator } from "zustand";
 import type { ChatSession, ChatMessage, ChatProject, RequestStatusEvent } from "../../../contracts/types/index.ts";
 import { globalVectorStore } from "../../../core/ai/rag/vectorStore.ts";
+import { globalMemoryStore, LocalMemoryStore } from "../../../core/ai/memory/memory_store.ts";
 import { LocalEngineClient } from "../../../core/ai/inference/engine.ts";
 import { DEFAULT_OLLAMA_ENDPOINT } from "../../../contracts/constants/index.ts";
 import { RequestStatusTracker } from "../../../core/ai/request_status.ts";
@@ -19,7 +20,9 @@ export interface ChatSlice {
   activeProjectId: string | null;
   enableRagInChat: boolean;
   toolsEnabled: boolean;
+  thinkEnabled: boolean;
   setToolsEnabled: (enabled: boolean) => void;
+  setThinkEnabled: (enabled: boolean) => void;
   attachedImage: { src: string; name: string; width: number; height: number } | null;
   attachedDocuments: AttachedDoc[];
   activeTracker: RequestStatusTracker | null;
@@ -84,15 +87,26 @@ export const createChatSlice: StateCreator<any, [], [], ChatSlice> = (set, get) 
   activeProjectId: null,
   enableRagInChat: false,
   toolsEnabled: false,
+  thinkEnabled: false,
   setToolsEnabled: (enabled) => set({ toolsEnabled: enabled }),
+  setThinkEnabled: (enabled) => set({ thinkEnabled: enabled }),
   attachedImage: null,
   attachedDocuments: [],
   activeTracker: null,
   activeAbortController: null,
-  toggleMessageBookmark: (sessionId, messageId) => set((state: any) => ({
-    chatSessions: state.chatSessions.map((s: ChatSession) => s.id === sessionId
-      ? { ...s, messages: s.messages.map(m => m.id === messageId ? { ...m, bookmarked: !m.bookmarked } : m) } : s),
-  })),
+  toggleMessageBookmark: (sessionId, messageId) =>
+    set((state: any) => ({
+      chatSessions: state.chatSessions.map((s: ChatSession) =>
+        s.id === sessionId
+          ? {
+              ...s,
+              messages: s.messages.map((m) =>
+                m.id === messageId ? { ...m, bookmarked: !m.bookmarked } : m
+              ),
+            }
+          : s
+      ),
+    })),
 
   setActiveSessionId: (id) => {
     const session = get().chatSessions.find((s: ChatSession) => s.id === id);
@@ -267,7 +281,10 @@ export const createChatSlice: StateCreator<any, [], [], ChatSlice> = (set, get) 
         s.id === sessionId ? { ...s, ...params, updatedAt: "Just now" } : s
       );
       syncThreadsToBackend(updated);
-      return { chatSessions: updated, ...(sessionId === state.activeSessionId && params.modelId ? { activeModelId: params.modelId } : {}) };
+      return {
+        chatSessions: updated,
+        ...(sessionId === state.activeSessionId && params.modelId ? { activeModelId: params.modelId } : {}),
+      };
     }),
 
   createProject: (name, assistantId) =>
@@ -353,6 +370,20 @@ export const createChatSlice: StateCreator<any, [], [], ChatSlice> = (set, get) 
     const controller = new AbortController();
     set({ activeTracker: tracker, activeAbortController: controller });
 
+    // Auto-extract explicit memory instructions (e.g. "Remember that...", "Always use...")
+    const memoryScope = session.projectId || "default";
+    const candidateFact = LocalMemoryStore.extractCandidateFact(content);
+    if (candidateFact && globalMemoryStore.isEnabled()) {
+      try {
+        globalMemoryStore.saveFact({
+          content: candidateFact.content,
+          category: candidateFact.category,
+          workspaceId: memoryScope,
+          pinned: true,
+        });
+      } catch {}
+    }
+
     // Step 1: Optimistic render of user message + initial assistant message
     const userMsg: ChatMessage = {
       attachments: get().attachedDocuments || [],
@@ -399,18 +430,47 @@ export const createChatSlice: StateCreator<any, [], [], ChatSlice> = (set, get) 
 
     if (get().enableRagInChat) {
       tracker.transition("searching_documents", {
-        detail: "Searching local Vault embeddings...",
+        detail: "Searching local Vault via Hybrid (Dense + BM25 RRF) retriever...",
       });
-      const retrieved = globalVectorStore.search(content, 3, 0.2, new Set((get().documents || []).filter((d: any) => d.collectionId === get().activeCollectionId).map((d: any) => d.id)));
-      if (retrieved.length > 0) {
-        const vaultContext = retrieved
-          .map((r, i) => `[Vault Reference ${i + 1} (${r.docName})]:\n${r.content}`)
+      const allowedDocIds = new Set<string>(
+        (get().documents || [])
+          .filter((d: any) => d.collectionId === get().activeCollectionId)
+          .map((d: any) => String(d.id))
+      );
+      const hybridRetrieved = globalVectorStore.hybridSearch(
+        content,
+        4,
+        allowedDocIds,
+        get().activeCollectionId || "default"
+      );
+      if (hybridRetrieved.length > 0) {
+        const vaultContext = hybridRetrieved
+          .map(
+            (r, i) =>
+              `[Vault Reference ${i + 1} (${r.docName}, score=${r.score.toFixed(3)})]:\n${r.content}`
+          )
           .join("\n\n");
         ragContextSnippet = ragContextSnippet ? `${ragContextSnippet}\n\n${vaultContext}` : vaultContext;
         tracker.transition("searching_documents", {
-          detail: `Retrieved ${retrieved.length} relevant passages`,
-          progress: { current: retrieved.length, total: retrieved.length, unit: "docs" },
+          detail: `Retrieved ${hybridRetrieved.length} relevant passages`,
+          progress: { current: hybridRetrieved.length, total: hybridRetrieved.length, unit: "docs" },
         });
+      }
+    }
+
+    // Inject persistent 2-tier memory facts & relevant episodic recall into context
+    if (globalMemoryStore.isEnabled()) {
+      const coreMemories = globalMemoryStore.formatCoreMemoriesForPrompt(memoryScope);
+      const recalled = globalMemoryStore.recall(content, { workspaceId: memoryScope, topK: 2 });
+      const epLines = recalled.episodes
+        .filter((e) => e.score > 0.015)
+        .map((e) => `[Past Chat "${e.sessionTitle}"]: ${e.content.slice(0, 300)}`)
+        .join("\n");
+      const memBlock = [coreMemories, epLines ? `Recalled Past Conversations:\n${epLines}` : ""]
+        .filter(Boolean)
+        .join("\n\n");
+      if (memBlock) {
+        ragContextSnippet = ragContextSnippet ? `${ragContextSnippet}\n\n${memBlock}` : memBlock;
       }
     }
 
@@ -447,8 +507,18 @@ export const createChatSlice: StateCreator<any, [], [], ChatSlice> = (set, get) 
       return;
     }
 
-    set((state: any) => ({ chatSessions: state.chatSessions.map((s: ChatSession) => s.id === session.id
-      ? { ...s, messages: s.messages.map(m => m.id === assistantMsgId ? { ...m, modelId: activeModel.id } : m) } : s) }));
+    set((state: any) => ({
+      chatSessions: state.chatSessions.map((s: ChatSession) =>
+        s.id === session.id
+          ? {
+              ...s,
+              messages: s.messages.map((m) =>
+                m.id === assistantMsgId ? { ...m, modelId: activeModel.id } : m
+              ),
+            }
+          : s
+      ),
+    }));
 
     // Keep session synchronized with the answering model
     if (session.modelId !== activeModel.id) {
@@ -467,13 +537,25 @@ export const createChatSlice: StateCreator<any, [], [], ChatSlice> = (set, get) 
       const message = {
         role: m.role,
         ...(m.image?.src ? { images: [m.image.src.replace(/^data:image\/[^;]+;base64,/, "")] } : {}),
-        content: m.attachments?.length ? `${m.content}\n\n${m.attachments.map((d: AttachedDoc) => `[Attached Document: ${d.name}]\n${d.content}`).join("\n\n")}` : m.content,
+        content: m.attachments?.length
+          ? `${m.content}\n\n${m.attachments
+              .map((d: AttachedDoc) => `[Attached Document: ${d.name}]\n${d.content}`)
+              .join("\n\n")}`
+          : m.content,
       };
-      const activities = m.toolActivities?.filter(a => a.status !== "running") || [];
+      const activities = m.toolActivities?.filter((a) => a.status !== "running") || [];
       if (!get().toolsEnabled || !activities.length) return [message];
       return [
-        { role: "assistant", content: "", tool_calls: activities.map(a => ({ function: { name: a.name, arguments: a.arguments } })) },
-        ...activities.map(a => ({ role: "tool", tool_name: a.name, content: a.output || "No result recorded" })),
+        {
+          role: "assistant",
+          content: "",
+          tool_calls: activities.map((a) => ({ function: { name: a.name, arguments: a.arguments } })),
+        },
+        ...activities.map((a) => ({
+          role: "tool",
+          tool_name: a.name,
+          content: a.output || "No result recorded",
+        })),
         message,
       ];
     });
@@ -481,19 +563,45 @@ export const createChatSlice: StateCreator<any, [], [], ChatSlice> = (set, get) 
     historyPayload.push({ role: "user", content });
 
     const imageBase64 = get().attachedImage?.src;
+    let finalAssistantText = "";
 
     set({ attachedImage: null, attachedDocuments: [] });
     try {
-      const stream = get().toolsEnabled ? streamWorkspaceChat : LocalEngineClient.streamChat.bind(LocalEngineClient);
+      const stream = get().toolsEnabled
+        ? streamWorkspaceChat
+        : LocalEngineClient.streamChat.bind(LocalEngineClient);
       for await (const chunk of stream(activeModel.id, historyPayload, {
         endpoint: DEFAULT_OLLAMA_ENDPOINT,
         onActivity: (activity: import("../../../core/ai/tools/workspace_chat.ts").ToolActivity) => {
-          tracker.transition("using_tool", { detail: `${activity.arguments.action || activity.name}: ${activity.arguments.path || ""} (${activity.status})` });
-          set((state: any) => ({ chatSessions: state.chatSessions.map((s: ChatSession) => s.id === session.id
-            ? { ...s, messages: s.messages.map(m => m.id === assistantMsgId ? { ...m, toolActivities: [...(m.toolActivities || []).filter(a => a.id !== activity.id), activity] } : m) } : s) }));
+          tracker.transition("using_tool", {
+            detail: `${activity.arguments.action || activity.name}: ${
+              activity.arguments.path || activity.arguments.query || ""
+            } (${activity.status})`,
+          });
+          set((state: any) => ({
+            chatSessions: state.chatSessions.map((s: ChatSession) =>
+              s.id === session.id
+                ? {
+                    ...s,
+                    messages: s.messages.map((m) =>
+                      m.id === assistantMsgId
+                        ? {
+                            ...m,
+                            toolActivities: [
+                              ...(m.toolActivities || []).filter((a) => a.id !== activity.id),
+                              activity,
+                            ],
+                          }
+                        : m
+                    ),
+                  }
+                : s
+            ),
+          }));
         },
         temperature: session.temperature,
         topP: session.topP,
+        think: get().thinkEnabled,
         signal: controller.signal,
         contextSize: activeModel.config.contextSize,
         gpuLayers: activeModel.config.gpuLayers,
@@ -502,6 +610,7 @@ export const createChatSlice: StateCreator<any, [], [], ChatSlice> = (set, get) 
         imageAttached: imageBase64,
       })) {
         if (controller.signal.aborted) break;
+        finalAssistantText = chunk.text;
         if (tracker.getCurrentPhase() !== "writing_answer" && !chunk.isFinished) {
           tracker.transition("writing_answer", {
             detail: `Streaming response from ${activeModel.name}`,
@@ -552,14 +661,26 @@ export const createChatSlice: StateCreator<any, [], [], ChatSlice> = (set, get) 
           });
         }
       }
+
+      // Save turn to episodic cross-chat memory
+      if (finalAssistantText && globalMemoryStore.isEnabled()) {
+        globalMemoryStore.addEpisode({
+          sessionId: session.id,
+          sessionTitle: autoTitle,
+          role: "user",
+          content: `Q: ${content}\nA: ${finalAssistantText.slice(0, 600)}`,
+          workspaceId: memoryScope,
+        });
+      }
     } catch (err: any) {
-      if (!controller.signal.aborted) tracker.transition("error", {
-        error: {
-          code: "ENGINE_STREAM_ERROR",
-          message: err?.message || "Failed to communicate with local inference daemon",
-          recovery_actions: ["retry"],
-        },
-      });
+      if (!controller.signal.aborted)
+        tracker.transition("error", {
+          error: {
+            code: "ENGINE_STREAM_ERROR",
+            message: err?.message || "Failed to communicate with local inference daemon",
+            recovery_actions: ["retry"],
+          },
+        });
     } finally {
       tracker.destroy();
       if (get().activeAbortController === controller) {

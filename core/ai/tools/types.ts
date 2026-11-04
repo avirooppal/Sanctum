@@ -45,7 +45,7 @@ export interface ToolCallRequest {
   id: string; // normalized, unique per turn
   name: string;
   arguments: Record<string, any>;
-  index: number; // model's original order (0..N-1)
+  index?: number; // model's original order (0..N-1)
 }
 
 export interface ToolExecutionResult {

@@ -1,7 +1,11 @@
 /**
  * Client-Side In-Memory Vector Store & Semantic Chunking Engine (Core AI Layer)
- * Provides unit-normalized cosine similarity, recursive text chunking, and top-k retrieval.
+ * Provides unit-normalized cosine similarity, Ollama /api/embed integration,
+ * Hybrid Dense + BM25 RRF retrieval, recursive text chunking, and top-k retrieval.
  */
+
+import { HybridRetriever, type ScoredPassage } from "./retrieval.ts";
+import type { RagChunk } from "./ingest.ts";
 
 export interface VectorChunk {
   id: string;
@@ -18,6 +22,15 @@ export interface VectorChunk {
 export class InMemoryVectorStore {
   private chunks: Map<string, VectorChunk> = new Map();
   private readonly dimensions = 1024;
+  private embeddingModel: string = "nomic-embed-text";
+
+  public setEmbeddingModel(model: string): void {
+    if (model.trim()) this.embeddingModel = model.trim();
+  }
+
+  public getEmbeddingModel(): string {
+    return this.embeddingModel;
+  }
 
   /**
    * Deterministic semantic hash embedding generator (1024 dimensions)
@@ -69,6 +82,55 @@ export class InMemoryVectorStore {
     }
 
     return vector;
+  }
+
+  /**
+   * Real local open-source embedding via Ollama /api/embed (e.g. nomic-embed-text, bge-m3).
+   * Projects/pads to 1024 L2-normalized Float32Array and falls back seamlessly to generateEmbedding.
+   */
+  public async generateOllamaEmbedding(
+    text: string,
+    options?: { endpoint?: string; model?: string; signal?: AbortSignal }
+  ): Promise<Float32Array> {
+    if (!text.trim()) return new Float32Array(this.dimensions);
+    const endpoint = options?.endpoint || "http://127.0.0.1:11434";
+    const model = options?.model || this.embeddingModel;
+
+    try {
+      const res = await fetch(`${endpoint.replace(/\/$/, "")}/api/embed`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        signal: options?.signal,
+        body: JSON.stringify({ model, input: text }),
+      });
+
+      if (res.ok) {
+        const data = await res.json();
+        const raw: number[] | undefined =
+          Array.isArray(data?.embeddings?.[0])
+            ? data.embeddings[0]
+            : Array.isArray(data?.embedding)
+            ? data.embedding
+            : undefined;
+
+        if (raw && raw.length > 0) {
+          const vec = new Float32Array(this.dimensions);
+          for (let i = 0; i < raw.length; i++) {
+            vec[i % this.dimensions] += Number(raw[i]) || 0;
+          }
+          let sumSq = 0;
+          for (let i = 0; i < this.dimensions; i++) sumSq += vec[i] * vec[i];
+          const mag = Math.sqrt(sumSq);
+          if (mag > 0) {
+            for (let i = 0; i < this.dimensions; i++) vec[i] /= mag;
+          }
+          return vec;
+        }
+      }
+    } catch {
+      // Fallback to local deterministic hash embedding when Ollama or embedding model is offline
+    }
+    return this.generateEmbedding(text);
   }
 
   /**
@@ -200,6 +262,42 @@ export class InMemoryVectorStore {
     scoredChunks.sort((a, b) => (b.similarity || 0) - (a.similarity || 0));
 
     return scoredChunks.slice(0, topK);
+  }
+
+  /**
+   * Hybrid Dense + BM25 Lexical + Reciprocal Rank Fusion (RRF) search via HybridRetriever.
+   */
+  public hybridSearch(
+    query: string,
+    topK: number = 4,
+    documentIds?: ReadonlySet<string>,
+    workspaceId: string = "default"
+  ): ScoredPassage[] {
+    if (this.chunks.size === 0 || !query.trim()) return [];
+    const queryVector = this.generateEmbedding(query);
+    const candidates: RagChunk[] = [];
+
+    for (const ch of this.chunks.values()) {
+      if (documentIds && documentIds.size > 0 && !documentIds.has(ch.docId)) continue;
+      candidates.push({
+        id: ch.id,
+        docId: ch.docId,
+        workspaceId,
+        docName: ch.docName,
+        chunkIndex: ch.chunkIndex,
+        content: ch.content,
+        tokenCount: ch.tokenCount,
+        charStart: 0,
+        charEnd: ch.content.length,
+        vector: ch.vector,
+      });
+    }
+
+    return HybridRetriever.retrieve(
+      { query, workspaceId, topK, mode: "hybrid" },
+      candidates,
+      queryVector
+    ).filter((p) => p.denseScore >= 0.1 || p.lexicalScore > 0);
   }
 
   /**
