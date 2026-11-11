@@ -1,3 +1,4 @@
+import { CheckpointDrawer } from "@/components/checkpoints/CheckpointDrawer";
 "use client";
 
 import React, { useState } from "react";
@@ -9,12 +10,14 @@ import {
   Hand,
   MousePointer2,
   Terminal,
+  Folder,
   Play,
   Pause,
   Square,
   Sparkles,
   RotateCcw,
   ShieldCheck,
+  History,
 } from "lucide-react";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
@@ -53,6 +56,7 @@ export const AgentsScreen: React.FC = () => {
   } = useAppStore();
 
   const [isTechOpen, setIsTechOpen] = useState(false);
+  const [isCheckpointOpen, setIsCheckpointOpen] = useState(false);
 
   const activeRun =
     agentRuns.find((r) => r.id === activeRunId) || agentRuns[0];
@@ -267,9 +271,19 @@ export const AgentsScreen: React.FC = () => {
                   </p>
                 </div>
               </div>
-              <Badge variant="outline" className="text-[11px] font-mono">
-                {activeRun?.steps.filter((s) => s.status === "completed").length} / {activeRun?.steps.length || 0} steps
-              </Badge>
+              <div className="flex items-center gap-2">
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={() => setIsCheckpointOpen(true)}
+                  className="h-6 px-2 text-[11px] rounded-lg flex items-center gap-1 text-muted-foreground hover:text-foreground"
+                >
+                  <History size={12} /> Checkpoints
+                </Button>
+                <Badge variant="outline" className="text-[11px] font-mono">
+                  {activeRun?.steps.filter((s) => s.status === "completed").length} / {activeRun?.steps.length || 0} steps
+                </Badge>
+              </div>
             </div>
 
             <div className="flex mt-6 flex-col gap-4">
@@ -356,6 +370,33 @@ export const AgentsScreen: React.FC = () => {
             </div>
           </div>
 
+          {isAwaitingApproval && currentStep && (
+            <div className="rounded-xl border border-primary/40 bg-primary/5 p-3.5 space-y-2 text-xs">
+              <div className="flex items-center justify-between">
+                <span className="font-semibold text-foreground flex items-center gap-1.5">
+                  <Terminal className="size-4 text-primary" />
+                  Approval Required: {currentStep.toolName}
+                </span>
+                <span className="text-[10px] px-2 py-0.5 rounded-full bg-amber-500/20 text-amber-300 font-mono">
+                  ACTION PENDING
+                </span>
+              </div>
+              {currentStep.toolArgs?.command && (
+                <div className="space-y-1">
+                  <span className="text-[10px] text-muted-foreground uppercase tracking-wider font-mono">Command</span>
+                  <div className="p-2 rounded-lg bg-black/60 border border-border/80 font-mono text-[11px] text-emerald-300 break-all select-all">
+                    $ {String(currentStep.toolArgs.command)}
+                  </div>
+                </div>
+              )}
+              {currentStep.toolArgs?.cwd && (
+                <div className="flex items-center gap-1.5 text-[11px] text-muted-foreground font-mono">
+                  <Folder className="size-3 text-muted-foreground" />
+                  <span className="truncate">Directory: {String(currentStep.toolArgs.cwd)}</span>
+                </div>
+              )}
+            </div>
+          )}
           <div className="flex pt-6 flex-col gap-2.5">
             <button
               type="button"
@@ -439,6 +480,7 @@ export const AgentsScreen: React.FC = () => {
         <ShieldCheck className="size-4 text-emerald-500" />
         <span>Sovereign local sandbox: Human approval required before every active execution.</span>
       </footer>
+      <CheckpointDrawer isOpen={isCheckpointOpen} onClose={() => setIsCheckpointOpen(false)} />
     </main>
   );
 };

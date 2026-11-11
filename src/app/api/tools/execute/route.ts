@@ -2,11 +2,69 @@ import { NextRequest, NextResponse } from "next/server";
 import fs from "node:fs";
 import path from "node:path";
 import os from "node:os";
+import {
+  resolveScopedPath,
+  type AccessScope,
+  type OperationMode,
+} from "@core/infra/security/path_resolver.ts";
+import { createCheckpoint } from "@core/infra/checkpoints/checkpoint_manager.ts";
+import {
+  computeStructuredDiff,
+  applyAcceptedHunks,
+  type DiffHunk,
+} from "@core/infra/diff/diff_engine.ts";
+import { executePostEditHook } from "@core/infra/hooks/post_edit_hook.ts";
+
 function getSanctumDataDir(): string {
   const appData = process.env.APPDATA || path.join(os.homedir(), ".sanctum");
   const dir = path.join(appData, "Sanctum");
   fs.mkdirSync(dir, { recursive: true });
   return dir;
+}
+
+function getFileSettings(): {
+  scope: AccessScope;
+  allowedFolders: string[];
+  overrideHardBlocked: boolean;
+  enableCheckpoints: boolean;
+  postEditHook: string;
+  runPostEditHook: boolean;
+} {
+  const dataDir = getSanctumDataDir();
+  const settingsFile = path.join(dataDir, "settings.json");
+  let scope: AccessScope = "workspace_only";
+  let allowedFolders: string[] = [];
+  let overrideHardBlocked = false;
+  let enableCheckpoints = true;
+  let postEditHook = "";
+  let runPostEditHook = false;
+
+  try {
+    if (fs.existsSync(settingsFile)) {
+      const parsed = JSON.parse(fs.readFileSync(settingsFile, "utf-8"));
+      if (parsed["access.scope"]) scope = parsed["access.scope"];
+      if (parsed["agent.enableCheckpoints"] !== undefined) enableCheckpoints = Boolean(parsed["agent.enableCheckpoints"]);
+      if (parsed["agent.postEditHook"]) postEditHook = String(parsed["agent.postEditHook"]);
+      if (parsed["agent.runPostEditHook"] !== undefined) runPostEditHook = Boolean(parsed["agent.runPostEditHook"]);
+      if (parsed["access.allowedFolders"]) {
+        try {
+          allowedFolders = Array.isArray(parsed["access.allowedFolders"])
+            ? parsed["access.allowedFolders"]
+            : JSON.parse(parsed["access.allowedFolders"]);
+        } catch {
+          allowedFolders = String(parsed["access.allowedFolders"])
+            .split(",")
+            .map((s) => s.trim())
+            .filter(Boolean);
+        }
+      }
+      if (parsed["access.overrideHardBlocked"] !== undefined) {
+        overrideHardBlocked = Boolean(parsed["access.overrideHardBlocked"]);
+      }
+    }
+  } catch {}
+
+  return { scope, allowedFolders, overrideHardBlocked, enableCheckpoints, postEditHook, runPostEditHook };
 }
 
 function getWorkspaceState(): { root: string; id: string } {
@@ -27,50 +85,6 @@ function getWorkspaceState(): { root: string; id: string } {
   }
   const root = path.resolve(defaultRoot);
   return { root, id: Buffer.from(root.toLowerCase()).toString("hex").slice(0, 16) };
-}
-
-function resolveWorkspaceTarget(workspaceRoot: string, relative: string, allowRoot: boolean): string {
-  let rel = relative;
-  if (rel === "." && allowRoot) rel = "";
-  if (rel === null || rel === undefined || path.isAbsolute(rel) || rel.includes(":") || rel.includes("\0")) {
-    throw new Error("Use a relative workspace path.");
-  }
-  const root = path.resolve(workspaceRoot);
-  const full = path.resolve(root, rel);
-  const isSameAsRoot = full.toLowerCase() === root.toLowerCase();
-  const isInsideRoot = full.toLowerCase().startsWith((root + path.sep).toLowerCase());
-
-  if ((!allowRoot && isSameAsRoot) || (!isSameAsRoot && !isInsideRoot)) {
-    throw new Error("Path is outside the workspace or targets its root.");
-  }
-
-  for (const part of rel.replace(/\//g, "\\").split("\\")) {
-    if (!part) continue;
-    const stem = part.split(".")[0].toUpperCase();
-    if (
-      part.endsWith(" ") ||
-      part.endsWith(".") ||
-      ["CON", "PRN", "AUX", "NUL"].includes(stem) ||
-      /^(COM|LPT)[0-9]$/.test(stem)
-    ) {
-      throw new Error("Invalid Windows path segment.");
-    }
-  }
-
-  let cur = full;
-  while (cur && cur.length >= root.length) {
-    if (fs.existsSync(cur)) {
-      const st = fs.lstatSync(cur);
-      if (st.isSymbolicLink()) {
-        throw new Error("Symbolic links and junctions are not allowed in workspace tools.");
-      }
-    }
-    const parent = path.dirname(cur);
-    if (parent === cur) break;
-    cur = parent;
-  }
-
-  return full;
 }
 
 function searchFilesRecursive(
@@ -104,7 +118,7 @@ function searchFilesRecursive(
     } else if (entry.isFile()) {
       try {
         const stat = fs.statSync(full);
-        if (stat.size > 524288) continue; // skip > 512 KiB files in search
+        if (stat.size > 524288) continue;
         const text = fs.readFileSync(full, "utf-8");
         const lines = text.split(/\r?\n/);
         for (let i = 0; i < lines.length; i++) {
@@ -120,7 +134,7 @@ function searchFilesRecursive(
           }
         }
       } catch {
-        // ignore binary/unreadable files
+        // skip unreadable
       }
     }
   }
@@ -176,8 +190,35 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ error: "No recoverable item found in tool-trash." }, { status: 400 });
     }
 
+    const isWrite = ["create", "edit", "patch", "mkdir", "move", "delete"].includes(action);
+    const mode: OperationMode = isWrite ? "write" : "read";
     const allowRoot = action === "list" || action === "search";
-    const target = resolveWorkspaceTarget(ws.root, relative, allowRoot);
+
+    const settings = getFileSettings();
+    const resolution = resolveScopedPath({
+      rawPath: relative,
+      workspaceRoot: ws.root,
+      allowRoot,
+      mode,
+      scope: settings.scope,
+      allowedFolders: settings.allowedFolders,
+      overrideHardBlocked: settings.overrideHardBlocked,
+      toolName: "workspace_files",
+      actionName: action,
+    });
+    const target = resolution.resolvedPath;
+
+    // Snapshot checkpoint before modifying files
+    if (isWrite && settings.enableCheckpoints) {
+      try {
+        createCheckpoint({
+          workspaceId: ws.id,
+          workspaceRoot: ws.root,
+          affectedFilePaths: [target],
+          summary: `Auto-checkpoint before ${action} on ${relative}`,
+        });
+      } catch {}
+    }
 
     if (action === "list") {
       const entries = fs.readdirSync(target, { withFileTypes: true }).slice(0, 200).map((e) => ({
@@ -222,25 +263,67 @@ export async function POST(req: NextRequest) {
     if (action === "create") {
       const content = String(args.content ?? "");
       if (Buffer.byteLength(content, "utf-8") > 1048576) throw new Error("Write limit is 1 MiB.");
+
+      if (args.preview_diff) {
+        const diff = computeStructuredDiff(relative, "", content);
+        return NextResponse.json({ preview: true, diff });
+      }
+
       if (fs.existsSync(target)) throw new Error("File already exists.");
       fs.writeFileSync(target, content, { encoding: "utf-8", flag: "wx" });
-      return NextResponse.json({ created: relative });
+
+      const hookRes = await executePostEditHook({
+        workspaceRoot: ws.root,
+        filePath: relative,
+        hookCommand: settings.postEditHook,
+        enabled: settings.runPostEditHook,
+      });
+
+      return NextResponse.json({
+        created: relative,
+        postEditHook: hookRes.executed ? hookRes : undefined,
+        diagnostics: hookRes.diagnostics,
+      });
     }
 
     if (action === "edit" || action === "patch") {
       const stat = fs.statSync(target);
       if (stat.size > 1048576) throw new Error("Edit limit is 1 MiB.");
-      const before = String(args.old_text ?? "");
-      const after = String(args.new_text ?? "");
-      const content = fs.readFileSync(target, "utf-8");
-      const at = content.indexOf(before);
-      if (!before.length || at < 0 || content.indexOf(before, at + 1) >= 0) {
-        throw new Error("old_text must match exactly once. Read the file first.");
+      const currentContent = fs.readFileSync(target, "utf-8");
+      let updated: string;
+
+      if (args.hunks && Array.isArray(args.hunks)) {
+        updated = applyAcceptedHunks(currentContent, args.hunks as DiffHunk[]);
+      } else {
+        const before = String(args.old_text ?? "");
+        const after = String(args.new_text ?? "");
+        const at = currentContent.indexOf(before);
+        if (!before.length || at < 0 || currentContent.indexOf(before, at + 1) >= 0) {
+          throw new Error("old_text must match exactly once. Read the file first.");
+        }
+        updated = currentContent.slice(0, at) + after + currentContent.slice(at + before.length);
       }
-      const updated = content.slice(0, at) + after + content.slice(at + before.length);
+
+      if (args.preview_diff) {
+        const diff = computeStructuredDiff(relative, currentContent, updated);
+        return NextResponse.json({ preview: true, diff });
+      }
+
       if (Buffer.byteLength(updated, "utf-8") > 1048576) throw new Error("Edit limit is 1 MiB.");
       fs.writeFileSync(target, updated, "utf-8");
-      return NextResponse.json({ edited: relative });
+
+      const hookRes = await executePostEditHook({
+        workspaceRoot: ws.root,
+        filePath: relative,
+        hookCommand: settings.postEditHook,
+        enabled: settings.runPostEditHook,
+      });
+
+      return NextResponse.json({
+        edited: relative,
+        postEditHook: hookRes.executed ? hookRes : undefined,
+        diagnostics: hookRes.diagnostics,
+      });
     }
 
     if (action === "mkdir") {
@@ -250,7 +333,18 @@ export async function POST(req: NextRequest) {
 
     if (action === "move") {
       const destination = String(args.destination || "");
-      const dest = resolveWorkspaceTarget(ws.root, destination, false);
+      const destResolution = resolveScopedPath({
+        rawPath: destination,
+        workspaceRoot: ws.root,
+        allowRoot: false,
+        mode: "write",
+        scope: settings.scope,
+        allowedFolders: settings.allowedFolders,
+        overrideHardBlocked: settings.overrideHardBlocked,
+        toolName: "workspace_files",
+        actionName: "move_destination",
+      });
+      const dest = destResolution.resolvedPath;
       if (fs.existsSync(dest)) throw new Error("Destination already exists.");
       fs.renameSync(target, dest);
       return NextResponse.json({ moved: relative, destination });

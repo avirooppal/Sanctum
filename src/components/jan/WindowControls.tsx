@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState, useEffect, useCallback } from "react";
+import React, { useState, useEffect, useCallback, useRef } from "react";
 import { IconMinus, IconSquare, IconCopy, IconX } from "@tabler/icons-react";
 import { cn } from "@/lib/utils";
 
@@ -56,25 +56,35 @@ export const handleTitleBarDoubleClick = (e: React.MouseEvent<HTMLElement>) => {
 export const WindowControls: React.FC<WindowControlsProps> = ({ className }) => {
   const [isMaximized, setIsMaximized] = useState(false);
   const [hasDesktopHost, setHasDesktopHost] = useState(false);
+  const maxButtonRef = useRef<HTMLButtonElement>(null);
 
-  const checkInitialBounds = useCallback(() => {
-    if (typeof window !== "undefined" && window.screen) {
-      const isNearMax =
-        window.innerWidth >= window.screen.availWidth - 24 &&
-        window.innerHeight >= window.screen.availHeight - 48;
-      setIsMaximized(isNearMax);
+  const reportMaximizeRect = useCallback(() => {
+    if (!maxButtonRef.current) return;
+    const rect = maxButtonRef.current.getBoundingClientRect();
+    const dpr = window.devicePixelRatio || 1;
+    const msg = {
+      type: "setMaximizeBounds",
+      x: Math.round(rect.left * dpr),
+      y: Math.round(rect.top * dpr),
+      width: Math.round(rect.width * dpr),
+      height: Math.round(rect.height * dpr),
+    };
+    const wv = (window as unknown as { chrome?: { webview?: { postMessage: (m: string) => void } } }).chrome?.webview;
+    if (wv?.postMessage) {
+      wv.postMessage(JSON.stringify(msg));
     }
   }, []);
 
   useEffect(() => {
     setHasDesktopHost(Boolean((window as any).chrome?.webview));
-    checkInitialBounds();
+    reportMaximizeRect();
 
     const handleMessage = (event: MessageEvent) => {
       try {
         const data = typeof event.data === "string" ? JSON.parse(event.data) : event.data;
         if (data && data.type === "windowStateChanged" && typeof data.isMaximized === "boolean") {
           setIsMaximized(data.isMaximized);
+          setTimeout(reportMaximizeRect, 50);
         }
       } catch {}
     };
@@ -92,16 +102,19 @@ export const WindowControls: React.FC<WindowControlsProps> = ({ className }) => 
       wv.addEventListener("message", handleMessage);
     }
     window.addEventListener("message", handleMessage);
-    window.addEventListener("resize", checkInitialBounds);
+    window.addEventListener("resize", reportMaximizeRect);
+
+    const timer = setTimeout(reportMaximizeRect, 200);
 
     return () => {
+      clearTimeout(timer);
       if (wv?.removeEventListener) {
         wv.removeEventListener("message", handleMessage);
       }
       window.removeEventListener("message", handleMessage);
-      window.removeEventListener("resize", checkInitialBounds);
+      window.removeEventListener("resize", reportMaximizeRect);
     };
-  }, [checkInitialBounds]);
+  }, [reportMaximizeRect]);
 
   const handleMinimize = (e: React.MouseEvent) => {
     e.stopPropagation();
@@ -114,10 +127,8 @@ export const WindowControls: React.FC<WindowControlsProps> = ({ className }) => 
     e.preventDefault();
     if (isMaximized) {
       postHostWindowMessage("windowRestore");
-      setIsMaximized(false);
     } else {
       postHostWindowMessage("windowMaximize");
-      setIsMaximized(true);
     }
   };
 
@@ -151,6 +162,7 @@ export const WindowControls: React.FC<WindowControlsProps> = ({ className }) => 
       </button>
 
       <button
+        ref={maxButtonRef}
         type="button"
         onClick={handleToggleMaximize}
         onMouseDown={(e) => e.stopPropagation()}

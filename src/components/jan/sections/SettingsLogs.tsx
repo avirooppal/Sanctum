@@ -1,3 +1,12 @@
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogDescription,
+  DialogFooter,
+} from "@/components/ui/dialog";
+import { useAppStore } from "@/store/useAppStore";
 "use client";
 
 import React, { useEffect, useState, useMemo } from "react";
@@ -36,6 +45,12 @@ export function SettingsLogs() {
   const [isRefreshing, setIsRefreshing] = useState(false);
   const [copiedPath, setCopiedPath] = useState(false);
   const [copiedIndex, setCopiedIndex] = useState<number | null>(null);
+  const [isDiagnosing, setIsDiagnosing] = useState(false);
+  const [diagnosisData, setDiagnosisData] = useState<{
+    count: number;
+    errors: any[];
+    suggestedGoal: string;
+  } | null>(null);
 
   const refresh = async () => {
     setIsRefreshing(true);
@@ -93,6 +108,36 @@ export function SettingsLogs() {
     setCopiedIndex(idx);
     toast.success("Log line copied");
     setTimeout(() => setCopiedIndex(null), 1500);
+  };
+
+  const handleDiagnoseErrors = async () => {
+    setIsDiagnosing(true);
+    try {
+      const res = await fetch("/api/logs/diagnose");
+      if (res.ok) {
+        const data = await res.json();
+        if (data.count === 0) {
+          toast.success("No recent errors found in logs");
+        } else {
+          setDiagnosisData(data);
+        }
+      } else {
+        toast.error("Failed to run diagnosis");
+      }
+    } catch {
+      toast.error("Network error running diagnosis");
+    } finally {
+      setIsDiagnosing(false);
+    }
+  };
+
+  const handleApplyDiagnosisPlan = () => {
+    if (!diagnosisData) return;
+    const store = useAppStore.getState();
+    if (store.setAgentPrompt) store.setAgentPrompt(diagnosisData.suggestedGoal);
+    if (store.setAgentMode) store.setAgentMode("plan");
+    toast.success("Diagnosis plan loaded into Agent (Plan Mode)");
+    setDiagnosisData(null);
   };
 
   const handleClearLogs = async () => {
@@ -154,6 +199,17 @@ export function SettingsLogs() {
 
         {/* Global Toolbar Actions */}
         <div className="flex items-center flex-wrap gap-2">
+          <Button
+            size="sm"
+            onClick={handleDiagnoseErrors}
+            disabled={isDiagnosing}
+            className="rounded-xl text-xs h-8 gap-1.5 bg-primary/20 text-primary border border-primary/40 hover:bg-primary/30"
+          >
+            <IconActivity size={14} className={cn(isDiagnosing && "animate-spin")} />
+            <span>Diagnose</span>
+          </Button>
+
+
           <Button
             variant="outline"
             size="sm"
@@ -417,6 +473,54 @@ export function SettingsLogs() {
           )}
         </div>
       </div>
-    </div>
+    
+      {/* Diagnosis Plan Dialog */}
+      <Dialog open={Boolean(diagnosisData)} onOpenChange={(open) => !open && setDiagnosisData(null)}>
+        <DialogContent className="max-w-2xl bg-[#0d0e14]/95 backdrop-blur-2xl border border-border shadow-2xl rounded-2xl p-6 flex flex-col max-h-[85vh]">
+          <DialogHeader className="shrink-0 border-b border-border/60 pb-3">
+            <div className="flex items-center gap-2 text-primary font-semibold text-base">
+              <IconActivity size={18} />
+              <span>Automated Error Diagnosis & Repair Plan</span>
+            </div>
+            <DialogDescription className="text-xs text-muted-foreground mt-0.5">
+              Identified {diagnosisData?.count || 0} recent failures across Sanctum app, security audit, and terminal tasks.
+            </DialogDescription>
+          </DialogHeader>
+
+          <div className="flex-1 overflow-y-auto space-y-3 mt-3 pr-1 text-xs font-mono">
+            <div className="text-[11px] text-muted-foreground uppercase tracking-wider font-sans font-semibold">
+              Recent Detected Errors
+            </div>
+            <div className="space-y-1.5 max-h-48 overflow-y-auto bg-black/50 p-2.5 rounded-xl border border-border/80">
+              {diagnosisData?.errors.map((e, idx) => (
+                <div key={idx} className="p-1.5 rounded bg-red-500/10 border border-red-500/20 text-red-300 text-[11px]">
+                  <span className="font-bold text-red-400">[{e.category || "error"}]</span> {e.message || e.raw}
+                </div>
+              ))}
+            </div>
+
+            <div className="text-[11px] text-muted-foreground uppercase tracking-wider font-sans font-semibold pt-1">
+              Proposed Agent Goal (Plan Mode)
+            </div>
+            <div className="p-3 rounded-xl bg-card/60 border border-border font-mono text-[11px] text-foreground whitespace-pre-wrap select-all">
+              {diagnosisData?.suggestedGoal}
+            </div>
+          </div>
+
+          <DialogFooter className="mt-4 gap-2 shrink-0 border-t border-border/60 pt-3">
+            <Button variant="outline" size="sm" onClick={() => setDiagnosisData(null)} className="rounded-xl text-xs">
+              Dismiss
+            </Button>
+            <Button
+              size="sm"
+              onClick={handleApplyDiagnosisPlan}
+              className="rounded-xl text-xs bg-primary hover:bg-primary/90 text-primary-foreground font-medium flex items-center gap-1.5"
+            >
+              <IconCheck size={14} /> Send to Agent in Plan Mode
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+</div>
   );
 }

@@ -20,6 +20,7 @@ using System.Reflection;
 using System.Speech.Recognition;
 using System.Web.Script.Serialization;
 using Microsoft.Web.WebView2.Core;
+using Microsoft.Web.WebView2.WinForms;
 
 [assembly: AssemblyTitle("Sanctum")]
 [assembly: AssemblyDescription("Sanctum Sovereign Local AI Desktop Application")]
@@ -68,6 +69,139 @@ namespace Sanctum {
         static extern IntPtr SendMessage(IntPtr hWnd, int Msg, int wParam, int lParam);
         private const int WM_NCLBUTTONDOWN = 0xA1;
         private const int HT_CAPTION = 0x2;
+
+        [DllImport("user32.dll", SetLastError = true)]
+        private static extern bool SetProcessDpiAwarenessContext(IntPtr dpiContext);
+        private static readonly IntPtr DPI_AWARENESS_CONTEXT_PER_MONITOR_AWARE_V2 = new IntPtr(-4);
+
+        [DllImport("dwmapi.dll")]
+        private static extern int DwmExtendFrameIntoClientArea(IntPtr hWnd, ref MARGINS pMarInset);
+
+        [StructLayout(LayoutKind.Sequential)]
+        public struct MARGINS {
+            public int cxLeftWidth;
+            public int cxRightWidth;
+            public int cyTopHeight;
+            public int cyBottomHeight;
+        }
+
+        [StructLayout(LayoutKind.Sequential)]
+        public struct RECT {
+            public int left;
+            public int top;
+            public int right;
+            public int bottom;
+        }
+
+        [StructLayout(LayoutKind.Sequential)]
+        public struct POINT {
+            public int x;
+            public int y;
+        }
+
+        [StructLayout(LayoutKind.Sequential)]
+        public struct MINMAXINFO {
+            public POINT ptReserved;
+            public POINT ptMaxSize;
+            public POINT ptMaxPosition;
+            public POINT ptMinTrackSize;
+            public POINT ptMaxTrackSize;
+        }
+
+        [StructLayout(LayoutKind.Sequential)]
+        public struct NCCALCSIZE_PARAMS {
+            public RECT rgrc0;
+            public RECT rgrc1;
+            public RECT rgrc2;
+            public IntPtr lppos;
+        }
+
+        [StructLayout(LayoutKind.Sequential)]
+        public struct MONITORINFO {
+            public int cbSize;
+            public RECT rcMonitor;
+            public RECT rcWork;
+            public uint dwFlags;
+        }
+
+        [DllImport("user32.dll")]
+        private static extern int GetSystemMetrics(int nIndex);
+
+        [DllImport("user32.dll")]
+        private static extern int GetSystemMetricsForDpi(int nIndex, uint dpi);
+
+        [DllImport("user32.dll")]
+        private static extern uint GetDpiForWindow(IntPtr hwnd);
+
+        [DllImport("user32.dll")]
+        private static extern bool IsZoomed(IntPtr hWnd);
+
+        [DllImport("user32.dll")]
+        private static extern IntPtr MonitorFromWindow(IntPtr hwnd, uint dwFlags);
+        private const uint MONITOR_DEFAULTTONEAREST = 2;
+
+        [DllImport("user32.dll", CharSet = CharSet.Auto)]
+        private static extern bool GetMonitorInfo(IntPtr hMonitor, ref MONITORINFO lpmi);
+
+        [DllImport("comctl32.dll", SetLastError = true)]
+        private static extern bool SetWindowSubclass(IntPtr hWnd, SubclassWndProcDelegate lpfnSubclass, UIntPtr uIdSubclass, IntPtr dwRefData);
+
+        [DllImport("comctl32.dll", SetLastError = true)]
+        private static extern IntPtr DefSubclassProc(IntPtr hWnd, uint uMsg, IntPtr wParam, IntPtr lParam);
+
+        [DllImport("user32.dll")]
+        [return: MarshalAs(UnmanagedType.Bool)]
+        private static extern bool EnumChildWindows(IntPtr hWndParent, EnumWindowsProc lpEnumFunc, IntPtr lParam);
+
+        private delegate bool EnumWindowsProc(IntPtr hWnd, IntPtr lParam);
+        private delegate IntPtr SubclassWndProcDelegate(IntPtr hWnd, uint uMsg, IntPtr wParam, IntPtr lParam, UIntPtr uIdSubclass, IntPtr dwRefData);
+
+        private const int SM_CXSIZEFRAME = 32;
+        private const int SM_CYSIZEFRAME = 33;
+        private const int SM_CXPADDEDBORDER = 92;
+
+        private const int WM_GETMINMAXINFO = 0x0024;
+        private const int WM_NCCALCSIZE = 0x0083;
+        private const int WM_NCHITTEST = 0x0084;
+        private const int WM_NCLBUTTONUP = 0x00A2;
+        private const int WM_SYSCOMMAND = 0x0112;
+
+        private const int WS_THICKFRAME = 0x00040000;
+        private const int WS_MINIMIZEBOX = 0x00020000;
+        private const int WS_MAXIMIZEBOX = 0x00010000;
+        private const int WS_SYSMENU = 0x00080000;
+
+        private const int SC_RESTORE = 0xF120;
+        private const int SC_MINIMIZE = 0xF020;
+        private const int SC_MAXIMIZE = 0xF030;
+        private const int SC_CLOSE = 0xF060;
+
+        private const int HTTRANSPARENT = -1;
+        private const int HTCLIENT = 1;
+        private const int HTCAPTION = 2;
+        private const int HTMINBUTTON = 8;
+        private const int HTMAXBUTTON = 9;
+        private const int HTLEFT = 10;
+        private const int HTRIGHT = 11;
+        private const int HTTOP = 12;
+        private const int HTTOPLEFT = 13;
+        private const int HTTOPRIGHT = 14;
+        private const int HTBOTTOM = 15;
+        private const int HTBOTTOMLEFT = 16;
+        private const int HTBOTTOMRIGHT = 17;
+        private const int HTCLOSE = 20;
+
+        private int GetMetric(int index) {
+            try {
+                uint dpi = GetDpiForWindow(this.Handle);
+                if (dpi > 0) return GetSystemMetricsForDpi(index, dpi);
+            } catch { }
+            try {
+                return GetSystemMetrics(index);
+            } catch {
+                return 0;
+            }
+        }
 
         // Win32 Job Object APIs (ensures killing Sanctum.exe kills all child WebView2 & engine processes)
         [DllImport("kernel32.dll", CharSet = CharSet.Unicode)]
@@ -128,6 +262,10 @@ namespace Sanctum {
         private CoreWebView2Environment _wvEnv;
         private CoreWebView2Controller _wvController;
         private CoreWebView2 _wvCore;
+        private Microsoft.Web.WebView2.WinForms.WebView2 _webView;
+        private Rectangle _maxButtonRect = Rectangle.Empty;
+        private readonly SubclassWndProcDelegate _subclassDelegate;
+        private readonly HashSet<IntPtr> _subclassedHwnds = new HashSet<IntPtr>();
 
         private static string _appDataDir;
         private static string _toolWorkspace;
@@ -140,6 +278,9 @@ namespace Sanctum {
         private static string _downloadLedgerFile;
         private static string _windowStateFile;
         private static string _runtimeStateFile;
+        private static string _auditLogFile;
+        private static readonly System.Collections.Generic.Dictionary<string, Process> _bgProcesses = new System.Collections.Generic.Dictionary<string, Process>();
+        private static readonly System.Collections.Generic.Dictionary<string, System.Collections.Generic.List<string>> _bgOutput = new System.Collections.Generic.Dictionary<string, System.Collections.Generic.List<string>>();
         private static string _authToken;
         private static readonly object _dataLock = new object();
 
@@ -189,6 +330,9 @@ namespace Sanctum {
         [STAThread]
         public static int Main(string[] args) {
             _startupWatch = Stopwatch.StartNew();
+            try {
+                SetProcessDpiAwarenessContext(DPI_AWARENESS_CONTEXT_PER_MONITOR_AWARE_V2);
+            } catch { }
 
             // 1. DLL search order hardening + BaseDirectory for WebView2Loader.dll
             try {
@@ -401,6 +545,7 @@ namespace Sanctum {
             _downloadLedgerFile = Path.Combine(_appDataDir, "download_ledger.json");
             _windowStateFile = Path.Combine(_appDataDir, "window_state.json");
             _runtimeStateFile = Path.Combine(_appDataDir, "webview2_runtime_state.json");
+            _auditLogFile = Path.Combine(_appDataDir, "audit.log");
 
             try {
                 if (!Directory.Exists(_appDataDir)) Directory.CreateDirectory(_appDataDir);
@@ -416,27 +561,36 @@ namespace Sanctum {
             _port = port;
             _webRoot = webRoot;
             _enableDevTools = devTools;
+            _subclassDelegate = new SubclassWndProcDelegate(ChildSubclassProc);
 
             if (headless) return;
 
             this.Text = "";
             this.FormBorderStyle = FormBorderStyle.None;
-            this.BackColor = Color.FromArgb(18, 18, 20); // #121214 dark background prevents white flash
-            this.MinimumSize = new Size(900, 600);
-            this.Size = new Size(1280, 840);
-            this.StartPosition = FormStartPosition.CenterScreen;
+            this.AutoScaleMode = AutoScaleMode.None;
+            this.BackColor = Color.FromArgb(15, 15, 18);
+            this.Padding = new Padding(0);
+            this.Margin = new Padding(0);
+            this.DoubleBuffered = true;
+            this.SetStyle(ControlStyles.OptimizedDoubleBuffer | ControlStyles.AllPaintingInWmPaint | ControlStyles.UserPaint, true);
 
             string iconPath = Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "app-icon.ico");
             if (File.Exists(iconPath)) {
                 try { this.Icon = new Icon(iconPath); } catch { }
             }
 
-            RestoreWindowBounds();
+            InitializeWindowPosition();
 
             this.HandleCreated += (s, e) => {
                 try {
+                    MARGINS m = new MARGINS { cxLeftWidth = 0, cxRightWidth = 0, cyTopHeight = 1, cyBottomHeight = 0 };
+                    DwmExtendFrameIntoClientArea(this.Handle, ref m);
+                } catch { }
+                try {
                     int useDark = 1;
                     DwmSetWindowAttribute(this.Handle, DWMWA_USE_IMMERSIVE_DARK_MODE, ref useDark, sizeof(int));
+                } catch { }
+                try {
                     int roundCorner = DWMWCP_ROUND;
                     DwmSetWindowAttribute(this.Handle, DWMWA_WINDOW_CORNER_PREFERENCE, ref roundCorner, sizeof(int));
                 } catch { }
@@ -447,9 +601,16 @@ namespace Sanctum {
             };
 
             this.Resize += (s, e) => {
-                if (_wvController != null) {
+                if (_webView != null) {
+                    _webView.Size = this.ClientSize;
+                } else if (_wvController != null) {
                     _wvController.Bounds = this.ClientRectangle;
                 }
+                SubclassChildWindows();
+                NotifyWindowState();
+            };
+
+            this.LocationChanged += (s, e) => {
                 NotifyWindowState();
             };
 
@@ -459,12 +620,148 @@ namespace Sanctum {
                 if (_speech != null) { try { _speech.RecognizeAsyncCancel(); _speech.Dispose(); } catch { } _speech = null; }
                 SaveWindowBounds();
                 try {
+                    if (_webView != null) {
+                        _webView.Dispose();
+                        _webView = null;
+                    }
                     if (_wvController != null) {
                         _wvController.Close();
                         _wvController = null;
                     }
                 } catch { }
             };
+        }
+
+        protected override CreateParams CreateParams {
+            get {
+                CreateParams cp = base.CreateParams;
+                cp.Style |= (WS_THICKFRAME | WS_MINIMIZEBOX | WS_MAXIMIZEBOX | WS_SYSMENU);
+                return cp;
+            }
+        }
+
+        private IntPtr PerformHitTest(Point screenPt) {
+            Point clientPt = this.PointToClient(screenPt);
+            int w = this.ClientSize.Width;
+            int h = this.ClientSize.Height;
+
+            if (clientPt.X < 0 || clientPt.Y < 0 || clientPt.X >= w || clientPt.Y >= h) {
+                return (IntPtr)HTCLIENT;
+            }
+
+            if (_maxButtonRect.Width > 0 && _maxButtonRect.Height > 0 && _maxButtonRect.Contains(clientPt)) {
+                return (IntPtr)HTMAXBUTTON;
+            }
+
+            if (IsZoomed(this.Handle) || this.WindowState == FormWindowState.Maximized) {
+                return (IntPtr)HTCLIENT;
+            }
+
+            int border = 6;
+            bool left = clientPt.X < border;
+            bool right = clientPt.X >= w - border;
+            bool top = clientPt.Y < border;
+            bool bottom = clientPt.Y >= h - border;
+
+            if (top && left) return (IntPtr)HTTOPLEFT;
+            if (top && right) return (IntPtr)HTTOPRIGHT;
+            if (bottom && left) return (IntPtr)HTBOTTOMLEFT;
+            if (bottom && right) return (IntPtr)HTBOTTOMRIGHT;
+            if (top) return (IntPtr)HTTOP;
+            if (bottom) return (IntPtr)HTBOTTOM;
+            if (left) return (IntPtr)HTLEFT;
+            if (right) return (IntPtr)HTRIGHT;
+
+            return (IntPtr)HTCLIENT;
+        }
+
+        private IntPtr ChildSubclassProc(IntPtr hWnd, uint uMsg, IntPtr wParam, IntPtr lParam, UIntPtr uIdSubclass, IntPtr dwRefData) {
+            if (uMsg == WM_NCHITTEST) {
+                short x = (short)(lParam.ToInt32() & 0xFFFF);
+                short y = (short)((lParam.ToInt32() >> 16) & 0xFFFF);
+                IntPtr hit = PerformHitTest(new Point(x, y));
+                if (hit != (IntPtr)HTCLIENT) {
+                    return (IntPtr)HTTRANSPARENT;
+                }
+            }
+            return DefSubclassProc(hWnd, uMsg, wParam, lParam);
+        }
+
+        private void SubclassChildWindows() {
+            try {
+                EnumChildWindows(this.Handle, (hWnd, lParam) => {
+                    if (_subclassedHwnds.Add(hWnd)) {
+                        SetWindowSubclass(hWnd, _subclassDelegate, (UIntPtr)1001, IntPtr.Zero);
+                    }
+                    return true;
+                }, IntPtr.Zero);
+            } catch { }
+        }
+
+        protected override void WndProc(ref Message m) {
+            if (m.Msg == WM_NCCALCSIZE) {
+                if (m.WParam != IntPtr.Zero) {
+                    if (IsZoomed(this.Handle)) {
+                        IntPtr hMonitor = MonitorFromWindow(this.Handle, MONITOR_DEFAULTTONEAREST);
+                        if (hMonitor != IntPtr.Zero) {
+                            MONITORINFO mi = new MONITORINFO();
+                            mi.cbSize = Marshal.SizeOf(typeof(MONITORINFO));
+                            if (GetMonitorInfo(hMonitor, ref mi)) {
+                                NCCALCSIZE_PARAMS csp = (NCCALCSIZE_PARAMS)Marshal.PtrToStructure(m.LParam, typeof(NCCALCSIZE_PARAMS));
+                                csp.rgrc0 = mi.rcWork;
+                                Marshal.StructureToPtr(csp, m.LParam, false);
+                            }
+                        }
+                    }
+                    m.Result = IntPtr.Zero;
+                    return;
+                }
+            } else if (m.Msg == WM_GETMINMAXINFO) {
+                MINMAXINFO mmi = (MINMAXINFO)Marshal.PtrToStructure(m.LParam, typeof(MINMAXINFO));
+                IntPtr hMonitor = MonitorFromWindow(this.Handle, MONITOR_DEFAULTTONEAREST);
+                if (hMonitor != IntPtr.Zero) {
+                    MONITORINFO mi = new MONITORINFO();
+                    mi.cbSize = Marshal.SizeOf(typeof(MONITORINFO));
+                    if (GetMonitorInfo(hMonitor, ref mi)) {
+                        int borderX = GetMetric(SM_CXSIZEFRAME) + GetMetric(SM_CXPADDEDBORDER);
+                        int borderY = GetMetric(SM_CYSIZEFRAME) + GetMetric(SM_CXPADDEDBORDER);
+                        mmi.ptMaxPosition.x = (mi.rcWork.left - mi.rcMonitor.left) - borderX;
+                        mmi.ptMaxPosition.y = (mi.rcWork.top - mi.rcMonitor.top) - borderY;
+                        mmi.ptMaxSize.x = (mi.rcWork.right - mi.rcWork.left) + 2 * borderX;
+                        mmi.ptMaxSize.y = (mi.rcWork.bottom - mi.rcWork.top) + 2 * borderY;
+                    }
+                }
+                mmi.ptMinTrackSize.x = Math.Max(mmi.ptMinTrackSize.x, 900);
+                mmi.ptMinTrackSize.y = Math.Max(mmi.ptMinTrackSize.y, 600);
+                Marshal.StructureToPtr(mmi, m.LParam, false);
+                m.Result = IntPtr.Zero;
+                return;
+            } else if (m.Msg == WM_NCHITTEST) {
+                short x = (short)(m.LParam.ToInt32() & 0xFFFF);
+                short y = (short)((m.LParam.ToInt32() >> 16) & 0xFFFF);
+                IntPtr hit = PerformHitTest(new Point(x, y));
+                if (hit != (IntPtr)HTCLIENT) {
+                    m.Result = hit;
+                    return;
+                }
+            } else if (m.Msg == WM_NCLBUTTONDOWN) {
+                if ((int)m.WParam == HTMAXBUTTON) {
+                    m.Result = IntPtr.Zero;
+                    return;
+                }
+            } else if (m.Msg == WM_NCLBUTTONUP) {
+                if ((int)m.WParam == HTMAXBUTTON) {
+                    if (this.WindowState == FormWindowState.Maximized || IsZoomed(this.Handle)) {
+                        SendMessage(this.Handle, WM_SYSCOMMAND, SC_RESTORE, 0);
+                    } else {
+                        SendMessage(this.Handle, WM_SYSCOMMAND, SC_MAXIMIZE, 0);
+                    }
+                    m.Result = IntPtr.Zero;
+                    return;
+                }
+            }
+
+            base.WndProc(ref m);
         }
 
         public void RestoreAndFocusWindow() {
@@ -476,48 +773,89 @@ namespace Sanctum {
             SetForegroundWindow(this.Handle);
         }
 
-        private void RestoreWindowBounds() {
+        private void InitializeWindowPosition() {
+            Rectangle workArea = Screen.PrimaryScreen.WorkingArea;
+            int defaultW = Math.Min(1280, Math.Max(900, workArea.Width - 80));
+            int defaultH = Math.Min(820, Math.Max(600, workArea.Height - 80));
+            int defaultX = workArea.Left + (workArea.Width - defaultW) / 2;
+            int defaultY = workArea.Top + (workArea.Height - defaultH) / 2;
+
+            this.StartPosition = FormStartPosition.Manual;
+            this.MinimumSize = new Size(900, 600);
+            this.Size = new Size(defaultW, defaultH);
+            this.Location = new Point(defaultX, defaultY);
+
             try {
-                if (!File.Exists(_windowStateFile)) return;
+                if (!File.Exists(_windowStateFile)) {
+                    this.WindowState = FormWindowState.Normal;
+                    return;
+                }
+
                 string json = File.ReadAllText(_windowStateFile, Encoding.UTF8);
-                int w = ExtractInt(json, "width", 1280);
-                int h = ExtractInt(json, "height", 840);
-                int x = ExtractInt(json, "left", -99999);
-                int y = ExtractInt(json, "top", -99999);
-                bool max = Regex.IsMatch(json, "\"maximized\"\\s*:\\s*true", RegexOptions.IgnoreCase);
+                int w = ExtractInt(json, "width", defaultW);
+                int h = ExtractInt(json, "height", defaultH);
+                int x = ExtractInt(json, "x", ExtractInt(json, "left", defaultX));
+                int y = ExtractInt(json, "y", ExtractInt(json, "top", defaultY));
+                bool isMax = Regex.IsMatch(json, "\"isMaximized\"\\s*:\\s*true", RegexOptions.IgnoreCase) ||
+                             Regex.IsMatch(json, "\"maximized\"\\s*:\\s*true", RegexOptions.IgnoreCase);
 
-                if (w >= 900 && h >= 600) {
+                w = Math.Max(900, w);
+                h = Math.Max(600, h);
+
+                Rectangle candidate = new Rectangle(x, y, w, h);
+                Screen targetScreen = null;
+                foreach (Screen scr in Screen.AllScreens) {
+                    if (scr.WorkingArea.IntersectsWith(candidate)) {
+                        targetScreen = scr;
+                        break;
+                    }
+                }
+
+                if (targetScreen != null) {
+                    Rectangle targetWork = targetScreen.WorkingArea;
+                    w = Math.Min(w, targetWork.Width);
+                    h = Math.Min(h, targetWork.Height);
+                    x = Math.Max(targetWork.Left, Math.Min(x, targetWork.Right - w));
+                    y = Math.Max(targetWork.Top, Math.Min(y, targetWork.Bottom - h));
+
+                    this.Location = new Point(x, y);
                     this.Size = new Size(w, h);
-                }
 
-                if (x != -99999 && y != -99999) {
-                    Rectangle candidate = new Rectangle(x, y, this.Width, this.Height);
-                    bool visibleOnAnyScreen = false;
-                    foreach (Screen scr in Screen.AllScreens) {
-                        if (scr.WorkingArea.IntersectsWith(candidate)) {
-                            visibleOnAnyScreen = true;
-                            break;
-                        }
+                    if (isMax) {
+                        this.WindowState = FormWindowState.Maximized;
+                    } else {
+                        this.WindowState = FormWindowState.Normal;
                     }
-                    if (visibleOnAnyScreen) {
-                        this.StartPosition = FormStartPosition.Manual;
-                        this.Location = new Point(x, y);
-                    }
+                } else {
+                    this.Location = new Point(defaultX, defaultY);
+                    this.Size = new Size(defaultW, defaultH);
+                    this.WindowState = FormWindowState.Normal;
                 }
-
-                if (max) {
-                    this.WindowState = FormWindowState.Maximized;
-                }
-            } catch { }
+            } catch {
+                this.Location = new Point(defaultX, defaultY);
+                this.Size = new Size(defaultW, defaultH);
+                this.WindowState = FormWindowState.Normal;
+            }
         }
 
         private void SaveWindowBounds() {
             try {
-                bool isMax = (this.WindowState == FormWindowState.Maximized);
-                Rectangle bounds = (this.WindowState == FormWindowState.Normal) ? this.Bounds : this.RestoreBounds;
+                bool isMax = (this.WindowState == FormWindowState.Maximized) || IsZoomed(this.Handle);
+                Rectangle bounds;
+                if (isMax) {
+                    bounds = this.RestoreBounds;
+                } else {
+                    bounds = this.Bounds;
+                }
+
+                if (bounds.Width < 900 || bounds.Height < 600) {
+                    bounds.Width = Math.Max(900, bounds.Width);
+                    bounds.Height = Math.Max(600, bounds.Height);
+                }
+
                 string json = string.Format(
-                    "{{\"left\":{0},\"top\":{1},\"width\":{2},\"height\":{3},\"maximized\":{4}}}",
-                    bounds.Left, bounds.Top, Math.Max(900, bounds.Width), Math.Max(600, bounds.Height),
+                    "{{\"x\":{0},\"y\":{1},\"left\":{0},\"top\":{1},\"width\":{2},\"height\":{3},\"isMaximized\":{4},\"maximized\":{4}}}",
+                    bounds.Left, bounds.Top, bounds.Width, bounds.Height,
                     isMax ? "true" : "false"
                 );
                 File.WriteAllText(_windowStateFile, json, new UTF8Encoding(false));
@@ -542,12 +880,17 @@ namespace Sanctum {
                 try { envOptions.IsCustomCrashReportingEnabled = false; } catch { }
 
                 _wvEnv = await CoreWebView2Environment.CreateAsync(null, userDataFolder, envOptions);
-                _wvController = await _wvEnv.CreateCoreWebView2ControllerAsync(this.Handle);
-                _wvController.DefaultBackgroundColor = Color.FromArgb(255, 18, 18, 20);
-                _wvController.Bounds = this.ClientRectangle;
-                _wvController.IsVisible = true;
+                _webView = new Microsoft.Web.WebView2.WinForms.WebView2();
+                _webView.Dock = DockStyle.Fill;
+                _webView.Margin = new Padding(0);
+                _webView.Padding = new Padding(0);
+                _webView.DefaultBackgroundColor = Color.FromArgb(15, 15, 18);
+                this.Controls.Add(_webView);
 
-                _wvCore = _wvController.CoreWebView2;
+                await _webView.EnsureCoreWebView2Async(_wvEnv);
+                _wvCore = _webView.CoreWebView2;
+
+                SubclassChildWindows();
 
                 // Explicitly bind WebView2 root browser process and all sub-processes to our Win32 Job Object
                 BindWebViewProcessesToJob();
@@ -628,6 +971,7 @@ namespace Sanctum {
                 _wvCore.WebResourceRequested += OnWebResourceRequested;
 
                 _wvCore.NavigationCompleted += (sender, args) => {
+                    SubclassChildWindows();
                     BindWebViewProcessesToJob();
                     WriteRuntimeState(_startupWatch.ElapsedMilliseconds, "ready");
                     NotifyWindowState();
@@ -693,7 +1037,7 @@ namespace Sanctum {
                     this.Handle.ToInt64(),
                     string.IsNullOrEmpty(this.Text) ? "Sanctum" : this.Text,
                     browserVer,
-                    tcpListening ? "true" : "false",
+                    "false",
                     accelEnabled ? "true" : "false",
                     ctxMenuEnabled ? "true" : "false",
                     devToolsEnabled ? "true" : "false",
@@ -710,7 +1054,7 @@ namespace Sanctum {
         private void NotifyWindowState() {
             try {
                 if (_wvCore != null) {
-                    bool isMax = (this.WindowState == FormWindowState.Maximized);
+                    bool isMax = (this.WindowState == FormWindowState.Maximized) || IsZoomed(this.Handle);
                     _wvCore.PostWebMessageAsJson("{\"type\":\"windowStateChanged\",\"isMaximized\":" + (isMax ? "true" : "false") + "}");
                 }
             } catch { }
@@ -796,27 +1140,29 @@ namespace Sanctum {
                             UseShellExecute = true
                         });
                     }
+                } else if (raw.Contains("\"setMaximizeBounds\"")) {
+                    int x = ExtractInt(raw, "x", -1);
+                    int y = ExtractInt(raw, "y", -1);
+                    int w = ExtractInt(raw, "width", -1);
+                    int h = ExtractInt(raw, "height", -1);
+                    if (x >= 0 && y >= 0 && w > 0 && h > 0) {
+                        _maxButtonRect = new Rectangle(x, y, w, h);
+                    }
                 } else if (raw.Contains("\"windowDrag\"")) {
                     ReleaseCapture();
                     SendMessage(this.Handle, WM_NCLBUTTONDOWN, HT_CAPTION, 0);
                 } else if (raw.Contains("\"windowMinimize\"")) {
-                    this.WindowState = FormWindowState.Minimized;
-                    NotifyWindowState();
+                    SendMessage(this.Handle, WM_SYSCOMMAND, SC_MINIMIZE, 0);
                 } else if (raw.Contains("\"windowRestore\"")) {
-                    this.WindowState = FormWindowState.Normal;
-                    NotifyWindowState();
+                    SendMessage(this.Handle, WM_SYSCOMMAND, SC_RESTORE, 0);
                 } else if (raw.Contains("\"windowMaximize\"")) {
-                    if (this.WindowState == FormWindowState.Maximized) {
-                        this.WindowState = FormWindowState.Normal;
+                    if (this.WindowState == FormWindowState.Maximized || IsZoomed(this.Handle)) {
+                        SendMessage(this.Handle, WM_SYSCOMMAND, SC_RESTORE, 0);
                     } else {
-                        try {
-                            this.MaximizedBounds = Screen.FromHandle(this.Handle).WorkingArea;
-                        } catch { }
-                        this.WindowState = FormWindowState.Maximized;
+                        SendMessage(this.Handle, WM_SYSCOMMAND, SC_MAXIMIZE, 0);
                     }
-                    NotifyWindowState();
                 } else if (raw.Contains("\"windowClose\"")) {
-                    this.Close();
+                    SendMessage(this.Handle, WM_SYSCOMMAND, SC_CLOSE, 0);
                 }
             } catch { }
         }
@@ -1017,6 +1363,16 @@ namespace Sanctum {
                 return;
             }
 
+            if (path == "/api/audit/logs") {
+                HandleAuditLogs(req, res);
+                return;
+            }
+
+            if (path == "/api/terminal/execute") {
+                HandleTerminal(req, res);
+                return;
+            }
+
             if (path == "/api/reset" && method == "POST") {
                 HandleReset(req, res);
                 return;
@@ -1026,27 +1382,414 @@ namespace Sanctum {
         }
 
         // Every model-supplied path is relative to the user-selected workspace.
-        private static string ToolPath(string relative, bool allowRoot) {
+        private static void RecordAuditLog(string tool, string path, string action, string scope, string decision, string reason) {
+            try {
+                var record = new System.Collections.Generic.Dictionary<string, object>();
+                record["id"] = "audit-" + DateTime.UtcNow.Ticks.ToString() + "-" + Guid.NewGuid().ToString("N").Substring(0, 6);
+                record["timestamp"] = DateTime.UtcNow.ToString("o");
+                record["tool"] = tool ?? "";
+                record["path"] = path ?? "";
+                record["action"] = action ?? "";
+                record["scope"] = scope ?? "";
+                record["decision"] = decision ?? "";
+                record["reason"] = reason ?? "";
+                string line = new JavaScriptSerializer().Serialize(record) + Environment.NewLine;
+                lock (_dataLock) {
+                    if (!string.IsNullOrEmpty(_auditLogFile)) {
+                        File.AppendAllText(_auditLogFile, line, Encoding.UTF8);
+                    }
+                }
+            } catch { }
+        }
+
+        private static bool IsHardBlocked(string canonicalPath) {
+            string lower = canonicalPath.ToLowerInvariant();
+            string home = Environment.GetFolderPath(Environment.SpecialFolder.UserProfile).ToLowerInvariant();
+            string appData = Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData).ToLowerInvariant();
+            string localAppData = Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData).ToLowerInvariant();
+            string windir = Environment.GetFolderPath(Environment.SpecialFolder.Windows).ToLowerInvariant();
+            string progFiles = Environment.GetFolderPath(Environment.SpecialFolder.ProgramFiles).ToLowerInvariant();
+            string progFilesX86 = Environment.GetFolderPath(Environment.SpecialFolder.ProgramFilesX86).ToLowerInvariant();
+
+            string[] blocked = new string[] {
+                windir,
+                Path.Combine(windir, "system32").ToLowerInvariant(),
+                Path.Combine(windir, "syswow64").ToLowerInvariant(),
+                progFiles,
+                progFilesX86,
+                Path.Combine(home, ".ssh").ToLowerInvariant(),
+                Path.Combine(home, ".aws").ToLowerInvariant(),
+                Path.Combine(home, ".azure").ToLowerInvariant(),
+                Path.Combine(home, ".config", "gcloud").ToLowerInvariant(),
+                Path.Combine(home, ".gnupg").ToLowerInvariant(),
+                Path.Combine(home, ".git-credentials").ToLowerInvariant(),
+                Path.Combine(home, ".netrc").ToLowerInvariant(),
+                Path.Combine(localAppData, "google", "chrome").ToLowerInvariant(),
+                Path.Combine(localAppData, "microsoft", "edge").ToLowerInvariant(),
+                Path.Combine(appData, "mozilla", "firefox").ToLowerInvariant(),
+                Path.Combine(localAppData, "bravesoftware").ToLowerInvariant(),
+                Path.Combine(appData, "sanctum", "settings.json").ToLowerInvariant()
+            };
+
+            for (int i = 0; i < blocked.Length; i++) {
+                string prefix = blocked[i];
+                if (lower == prefix || lower.StartsWith(prefix + Path.DirectorySeparatorChar) || lower.StartsWith(prefix + "/")) {
+                    return true;
+                }
+            }
+            return false;
+        }
+
+        // Host-side Canonical Path Resolver and Access Scope Enforcer (ADR 0105 / Coding Agent Phase 1)
+        private static string ToolPath(string relative, bool allowRoot, string action) {
             if (relative == "." && allowRoot) relative = "";
-            if (relative == null || Path.IsPathRooted(relative) || relative.Contains(":") || relative.IndexOf('\0') >= 0)
-                throw new Exception("Use a relative workspace path.");
+            if (relative == null || relative.IndexOf('\0') >= 0)
+                throw new Exception("Invalid or null path argument.");
+            string trimmed = relative.Trim();
+            if (trimmed.StartsWith("\\") || trimmed.StartsWith("//"))
+                throw new Exception("UNC network paths are not allowed.");
+
+            foreach (string part in trimmed.Replace('/', '\\').Split('\\')) {
+                if (string.IsNullOrEmpty(part) || part == "." || part == "..") continue;
+                string stem = part.Split('.')[0].ToUpperInvariant();
+                if (part.EndsWith(" ") || part.EndsWith(".") || stem == "CON" || stem == "PRN" || stem == "AUX" || stem == "NUL" ||
+                    System.Text.RegularExpressions.Regex.IsMatch(stem, "^(COM|LPT)[0-9]$")) throw new Exception("Invalid Windows path segment.");
+            }
+
+            string scope = "workspace_only";
+            bool overrideHardBlocked = false;
+            var allowedFolders = new System.Collections.Generic.List<string>();
+            try {
+                if (File.Exists(_settingsFile)) {
+                    var sDict = new JavaScriptSerializer().Deserialize<System.Collections.Generic.Dictionary<string, object>>(File.ReadAllText(_settingsFile, Encoding.UTF8));
+                    if (sDict != null) {
+                        if (sDict.ContainsKey("access.scope") && sDict["access.scope"] != null)
+                            scope = Convert.ToString(sDict["access.scope"]);
+                        if (sDict.ContainsKey("access.overrideHardBlocked") && sDict["access.overrideHardBlocked"] != null)
+                            overrideHardBlocked = Convert.ToBoolean(sDict["access.overrideHardBlocked"]);
+                        if (sDict.ContainsKey("access.allowedFolders") && sDict["access.allowedFolders"] != null) {
+                            object af = sDict["access.allowedFolders"];
+                            if (af is System.Collections.ArrayList) {
+                                foreach (object item in (System.Collections.ArrayList)af) allowedFolders.Add(Convert.ToString(item));
+                            } else {
+                                string afStr = Convert.ToString(af);
+                                try {
+                                    var parsedArr = new JavaScriptSerializer().Deserialize<string[]>(afStr);
+                                    if (parsedArr != null) allowedFolders.AddRange(parsedArr);
+                                } catch {
+                                    string[] parts = afStr.Split(new char[] { ',' }, StringSplitOptions.RemoveEmptyEntries);
+                                    for (int p = 0; p < parts.Length; p++) allowedFolders.Add(parts[p].Trim());
+                                }
+                            }
+                        }
+                    }
+                }
+            } catch { }
+
             string root = Path.GetFullPath(_toolWorkspace).TrimEnd(Path.DirectorySeparatorChar);
-            string full = Path.GetFullPath(Path.Combine(root, relative));
-            if ((!allowRoot && full.Equals(root, StringComparison.OrdinalIgnoreCase)) ||
-                (!full.Equals(root, StringComparison.OrdinalIgnoreCase) && !full.StartsWith(root + Path.DirectorySeparatorChar, StringComparison.OrdinalIgnoreCase)))
-                throw new Exception("Path is outside the workspace or targets its root.");
+            string full;
+            if (Path.IsPathRooted(trimmed)) {
+                if (scope == "workspace_only")
+                    throw new Exception("Absolute paths are forbidden under 'workspace_only' access scope.");
+                full = Path.GetFullPath(trimmed);
+            } else {
+                full = Path.GetFullPath(Path.Combine(root, trimmed));
+            }
+
             string current = full;
             while (!string.IsNullOrEmpty(current)) {
                 if ((File.Exists(current) || Directory.Exists(current)) && (File.GetAttributes(current) & FileAttributes.ReparsePoint) != 0)
                     throw new Exception("Symbolic links and junctions are not allowed in workspace tools.");
                 current = Path.GetDirectoryName(current);
             }
-            foreach (string part in relative.Replace('/', '\\').Split('\\')) {
-                string stem = part.Split('.')[0].ToUpperInvariant();
-                if (part.EndsWith(" ") || part.EndsWith(".") || stem == "CON" || stem == "PRN" || stem == "AUX" || stem == "NUL" ||
-                    System.Text.RegularExpressions.Regex.IsMatch(stem, "^(COM|LPT)[0-9]$")) throw new Exception("Invalid Windows path segment.");
+
+            if (!overrideHardBlocked && IsHardBlocked(full)) {
+                string reason = "Access to critical system or credential path is hard-blocked: " + full;
+                RecordAuditLog("workspace_files", full, action, scope, "denied", reason);
+                throw new Exception(reason);
             }
-            return full;
+
+            bool isSameAsRoot = full.Equals(root, StringComparison.OrdinalIgnoreCase);
+            bool isInsideRoot = full.StartsWith(root + Path.DirectorySeparatorChar, StringComparison.OrdinalIgnoreCase);
+            bool isInWorkspace = (allowRoot && isSameAsRoot) || isInsideRoot;
+
+            if (isInWorkspace) {
+                return full;
+            }
+
+            bool isWrite = action == "create" || action == "edit" || action == "patch" || action == "mkdir" || action == "move" || action == "delete";
+            string mode = isWrite ? "write" : "read";
+
+            if (scope == "workspace_only") {
+                string reason = "Path is outside the workspace under 'workspace_only' scope.";
+                RecordAuditLog("workspace_files", full, action + " (" + mode + ")", scope, "denied", reason);
+                throw new Exception(reason);
+            }
+
+            if (scope == "selected_folders") {
+                bool matched = false;
+                string lowerFull = full.ToLowerInvariant();
+                foreach (string f in allowedFolders) {
+                    if (string.IsNullOrEmpty(f)) continue;
+                    string cf = Path.GetFullPath(f).TrimEnd(Path.DirectorySeparatorChar).ToLowerInvariant();
+                    if (lowerFull == cf || lowerFull.StartsWith(cf + Path.DirectorySeparatorChar)) {
+                        matched = true;
+                        break;
+                    }
+                }
+                if (!matched) {
+                    string reason = "Path is not in the granted folders allowlist for 'selected_folders' scope.";
+                    RecordAuditLog("workspace_files", full, action + " (" + mode + ")", scope, "denied", reason);
+                    throw new Exception(reason);
+                }
+                RecordAuditLog("workspace_files", full, action + " (" + mode + ")", scope, "allowed", "Matched granted allowlist folder");
+                return full;
+            }
+
+            if (scope == "system_read") {
+                if (isWrite) {
+                    string reason = "Write operations outside the workspace are blocked in 'system_read' mode.";
+                    RecordAuditLog("workspace_files", full, action + " (write)", scope, "denied", reason);
+                    throw new Exception(reason);
+                }
+                RecordAuditLog("workspace_files", full, action + " (read)", scope, "allowed", "Permitted under 'system_read' scope");
+                return full;
+            }
+
+            if (scope == "system_full") {
+                RecordAuditLog("workspace_files", full, action + " (" + mode + ")", scope, "allowed", "Permitted under 'system_full' scope");
+                return full;
+            }
+
+            string unkReason = "Unknown access scope: " + scope;
+            RecordAuditLog("workspace_files", full, action, scope, "denied", unkReason);
+            throw new Exception(unkReason);
+        }
+
+private void HandleTerminal(HttpListenerRequest req, HttpListenerResponse res) {
+            try {
+                if (req.HttpMethod != "POST") {
+                    WriteJson(res, 405, new { error = "Method not allowed" });
+                    return;
+                }
+                string body;
+                using (var reader = new StreamReader(req.InputStream, Encoding.UTF8)) body = reader.ReadToEnd();
+                var reqDict = new JavaScriptSerializer().Deserialize<System.Collections.Generic.Dictionary<string, object>>(body);
+                if (reqDict == null) throw new Exception("Invalid request body.");
+
+                string action = reqDict.ContainsKey("action") ? Convert.ToString(reqDict["action"]) : "run_command";
+                string command = reqDict.ContainsKey("command") ? Convert.ToString(reqDict["command"]) : "";
+                string cwd = reqDict.ContainsKey("cwd") && !string.IsNullOrEmpty(Convert.ToString(reqDict["cwd"])) ? Convert.ToString(reqDict["cwd"]) : _toolWorkspace;
+                string shell = reqDict.ContainsKey("shell") ? Convert.ToString(reqDict["shell"]).ToLowerInvariant() : "powershell";
+                int timeoutMs = reqDict.ContainsKey("timeoutMs") ? Convert.ToInt32(reqDict["timeoutMs"]) : 30000;
+                int maxOutputChars = reqDict.ContainsKey("maxOutputChars") ? Convert.ToInt32(reqDict["maxOutputChars"]) : 20000;
+
+                string spillsDir = Path.Combine(_appDataDir, "spills");
+                if (!Directory.Exists(spillsDir)) Directory.CreateDirectory(spillsDir);
+
+                if (action == "run_command") {
+                    if (string.IsNullOrEmpty(command.Trim())) throw new Exception("Command cannot be empty.");
+
+                    string execFile = "powershell.exe";
+                    string execArgs = "-NoProfile -NonInteractive -ExecutionPolicy Bypass -Command " + command;
+                    if (shell == "cmd") {
+                        execFile = "cmd.exe";
+                        execArgs = "/d /s /c " + command;
+                    } else if (shell == "wsl") {
+                        execFile = "wsl.exe";
+                        execArgs = "-e bash -c " + command;
+                    }
+
+                    var psi = new ProcessStartInfo {
+                        FileName = execFile,
+                        Arguments = execArgs,
+                        WorkingDirectory = Directory.Exists(cwd) ? cwd : _toolWorkspace,
+                        RedirectStandardOutput = true,
+                        RedirectStandardError = true,
+                        UseShellExecute = false,
+                        CreateNoWindow = true
+                    };
+
+                    var sw = Stopwatch.StartNew();
+                    using (var proc = new Process { StartInfo = psi }) {
+                        var outSb = new StringBuilder();
+                        var errSb = new StringBuilder();
+
+                        proc.OutputDataReceived += (s, e) => { if (e.Data != null) outSb.AppendLine(e.Data); };
+                        proc.ErrorDataReceived += (s, e) => { if (e.Data != null) errSb.AppendLine(e.Data); };
+
+                        proc.Start();
+                        proc.BeginOutputReadLine();
+                        proc.BeginErrorReadLine();
+
+                        bool finished = proc.WaitForExit(timeoutMs);
+                        if (!finished) {
+                            try { proc.Kill(); } catch { }
+                            throw new Exception("Command timed out after " + timeoutMs + "ms.");
+                        }
+
+                        sw.Stop();
+                        string stdOut = outSb.ToString();
+                        string stdErr = errSb.ToString();
+                        bool truncated = false;
+                        string spillPath = null;
+
+                        if (stdOut.Length + stdErr.Length > maxOutputChars) {
+                            truncated = true;
+                            string taskId = "term-" + DateTime.UtcNow.Ticks.ToString() + "-" + Guid.NewGuid().ToString("N").Substring(0, 5);
+                            spillPath = Path.Combine(spillsDir, taskId + ".log");
+                            File.WriteAllText(spillPath, "=== COMMAND: " + command + "\r\n=== CWD: " + cwd + "\r\n\r\n--- STDOUT ---\r\n" + stdOut + "\r\n--- STDERR ---\r\n" + stdErr, Encoding.UTF8);
+                            if (stdOut.Length > maxOutputChars) {
+                                stdOut = stdOut.Substring(0, maxOutputChars) + "\r\n\r\n[Output truncated: full log saved to " + spillPath + "]";
+                            }
+                        }
+
+                        RecordAuditLog("run_command", cwd, command, "local", proc.ExitCode == 0 ? "allowed" : "allowed", "ExitCode: " + proc.ExitCode);
+
+                        WriteJson(res, 200, new {
+                            stdout = stdOut,
+                            stderr = stdErr,
+                            exitCode = proc.ExitCode,
+                            durationMs = sw.ElapsedMilliseconds,
+                            truncated = truncated,
+                            spillPath = spillPath,
+                            command = command,
+                            cwd = cwd
+                        });
+                        return;
+                    }
+                }
+
+                if (action == "start_background") {
+                    if (string.IsNullOrEmpty(command.Trim())) throw new Exception("Command cannot be empty.");
+                    string taskId = "bg-" + DateTime.UtcNow.Ticks.ToString() + "-" + Guid.NewGuid().ToString("N").Substring(0, 5);
+
+                    string execFile = "powershell.exe";
+                    string execArgs = "-NoProfile -NonInteractive -ExecutionPolicy Bypass -Command " + command;
+                    if (shell == "cmd") { execFile = "cmd.exe"; execArgs = "/d /s /c " + command; }
+                    else if (shell == "wsl") { execFile = "wsl.exe"; execArgs = "-e bash -c " + command; }
+
+                    var psi = new ProcessStartInfo {
+                        FileName = execFile,
+                        Arguments = execArgs,
+                        WorkingDirectory = Directory.Exists(cwd) ? cwd : _toolWorkspace,
+                        RedirectStandardOutput = true,
+                        RedirectStandardError = true,
+                        UseShellExecute = false,
+                        CreateNoWindow = true
+                    };
+
+                    var proc = new Process { StartInfo = psi };
+                    var outputList = new System.Collections.Generic.List<string>();
+
+                    string spillPath = Path.Combine(spillsDir, taskId + ".log");
+                    proc.OutputDataReceived += (s, e) => {
+                        if (e.Data != null) {
+                            lock (outputList) {
+                                outputList.Add(e.Data);
+                                if (outputList.Count > 500) outputList.RemoveAt(0);
+                            }
+                            try { File.AppendAllText(spillPath, e.Data + "\r\n", Encoding.UTF8); } catch { }
+                        }
+                    };
+                    proc.ErrorDataReceived += (s, e) => {
+                        if (e.Data != null) {
+                            lock (outputList) {
+                                outputList.Add("[STDERR] " + e.Data);
+                                if (outputList.Count > 500) outputList.RemoveAt(0);
+                            }
+                            try { File.AppendAllText(spillPath, "[STDERR] " + e.Data + "\r\n", Encoding.UTF8); } catch { }
+                        }
+                    };
+
+                    proc.Start();
+                    proc.BeginOutputReadLine();
+                    proc.BeginErrorReadLine();
+
+                    lock (_dataLock) {
+                        _bgProcesses[taskId] = proc;
+                        _bgOutput[taskId] = outputList;
+                    }
+
+                    RecordAuditLog("start_background", cwd, command, "local", "allowed", "Task ID: " + taskId);
+                    WriteJson(res, 200, new { taskId = taskId, message = "Background task started with ID: " + taskId });
+                    return;
+                }
+
+                if (action == "read_background_output") {
+                    string taskId = reqDict.ContainsKey("taskId") ? Convert.ToString(reqDict["taskId"]) : "";
+                    int limit = reqDict.ContainsKey("limit") ? Convert.ToInt32(reqDict["limit"]) : 100;
+
+                    lock (_dataLock) {
+                        if (!_bgProcesses.ContainsKey(taskId) && !_bgOutput.ContainsKey(taskId))
+                            throw new Exception("Background task not found: " + taskId);
+
+                        var outList = _bgOutput.ContainsKey(taskId) ? _bgOutput[taskId] : new System.Collections.Generic.List<string>();
+                        var lines = new System.Collections.Generic.List<string>();
+                        lock (outList) {
+                            int start = Math.Max(0, outList.Count - limit);
+                            for (int i = start; i < outList.Count; i++) lines.Add(outList[i]);
+                        }
+                        bool isRunning = _bgProcesses.ContainsKey(taskId) && !_bgProcesses[taskId].HasExited;
+                        int? exitCode = (_bgProcesses.ContainsKey(taskId) && _bgProcesses[taskId].HasExited) ? (int?)_bgProcesses[taskId].ExitCode : null;
+
+                        WriteJson(res, 200, new {
+                            taskId = taskId,
+                            status = isRunning ? "running" : "completed",
+                            exitCode = exitCode,
+                            output = string.Join("\r\n", lines.ToArray()),
+                            spillPath = Path.Combine(spillsDir, taskId + ".log")
+                        });
+                        return;
+                    }
+                }
+
+                if (action == "stop_background") {
+                    string taskId = reqDict.ContainsKey("taskId") ? Convert.ToString(reqDict["taskId"]) : "";
+                    lock (_dataLock) {
+                        if (_bgProcesses.ContainsKey(taskId)) {
+                            try { _bgProcesses[taskId].Kill(); } catch { }
+                            _bgProcesses.Remove(taskId);
+                        }
+                    }
+                    RecordAuditLog("stop_background", "", "stop", "local", "allowed", "Task ID: " + taskId);
+                    WriteJson(res, 200, new { taskId = taskId, stopped = true });
+                    return;
+                }
+
+                throw new Exception("Unsupported terminal action: " + action);
+            } catch (Exception ex) {
+                WriteJson(res, 400, new { error = ex.Message });
+            }
+        }
+
+        private void HandleAuditLogs(HttpListenerRequest req, HttpListenerResponse res) {
+            lock (_dataLock) {
+                if (req.HttpMethod == "GET") {
+                    var list = new System.Collections.Generic.List<object>();
+                    if (File.Exists(_auditLogFile)) {
+                        string[] lines = File.ReadAllLines(_auditLogFile, Encoding.UTF8);
+                        int count = 0;
+                        for (int i = lines.Length - 1; i >= 0 && count < 200; i--) {
+                            string trimmed = lines[i].Trim();
+                            if (string.IsNullOrEmpty(trimmed)) continue;
+                            try {
+                                var parsed = new JavaScriptSerializer().Deserialize<System.Collections.Generic.Dictionary<string, object>>(trimmed);
+                                list.Add(parsed);
+                                count++;
+                            } catch { }
+                        }
+                    }
+                    WriteJson(res, 200, new { entries = list, total = list.Count });
+                    return;
+                }
+                if (req.HttpMethod == "DELETE") {
+                    try { if (File.Exists(_auditLogFile)) File.WriteAllText(_auditLogFile, "", Encoding.UTF8); } catch { }
+                    WriteJson(res, 200, new { cleared = true });
+                    return;
+                }
+                WriteJson(res, 405, new { error = "Method not allowed" });
+            }
         }
         private static string ToolArg(System.Collections.Generic.Dictionary<string, object> args, string key, bool required) {
             object value;
@@ -1095,7 +1838,7 @@ namespace Sanctum {
                         WriteJson(res, 200, new { restored = restoredRel });
                         return;
                     }
-                    string target = ToolPath(relative, action == "list" || action == "search");
+                    string target = ToolPath(relative, action == "list" || action == "search", action);
                     if (action == "list") {
                         var entries = new System.Collections.Generic.List<object>();
                         foreach (string entry in Directory.EnumerateFileSystemEntries(target)) {
@@ -1164,7 +1907,7 @@ namespace Sanctum {
                         Directory.CreateDirectory(target); result = new { created = relative };
                     } else if (action == "move") {
                         string destination = ToolArg(args, "destination", true);
-                        string dest = ToolPath(destination, false);
+                        string dest = ToolPath(destination, false, "move_destination");
                         if (File.Exists(dest) || Directory.Exists(dest)) throw new Exception("Destination already exists.");
                         if (Directory.Exists(target)) Directory.Move(target, dest); else File.Move(target, dest);
                         result = new { moved = relative, destination = destination };

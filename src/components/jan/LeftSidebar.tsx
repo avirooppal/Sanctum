@@ -28,7 +28,7 @@ import {
 import { DownloadPopover } from "./DownloadPopover";
 import { AddProjectDialog } from "./AddProjectDialog";
 import { SearchDialog } from "./SearchDialog";
-import { handleTitleBarMouseDown } from "./WindowControls";
+import { handleTitleBarMouseDown, handleTitleBarDoubleClick } from "./WindowControls";
 import { useAppStore } from "@/store/useAppStore";
 import { ChatSession } from "@/types";
 import { cn } from "@/lib/utils";
@@ -402,6 +402,7 @@ export const LeftSidebar: React.FC<LeftSidebarProps> = ({
             {/* Top Header (Draggable in-window titlebar strip, no redundant 'Sanctum' label) */}
             <div
               onMouseDown={handleTitleBarMouseDown}
+              onDoubleClick={handleTitleBarDoubleClick}
               className="flex items-center justify-end px-1 h-8 shrink-0"
             >
               <div className="flex items-center gap-1 ml-auto">

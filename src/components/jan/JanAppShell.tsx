@@ -22,7 +22,7 @@ import { SettingsLogs } from "@/components/jan/sections/SettingsLogs";
 import { SettingsMonitor } from "@/components/jan/sections/SettingsMonitor";
 import { SettingsDeveloper } from "@/components/jan/sections/SettingsDeveloper";
 import { ChatScreen } from "@/components/screens/ChatScreen";
-import { WindowControls, handleTitleBarMouseDown } from "@/components/jan/WindowControls";
+import { WindowControls, handleTitleBarMouseDown, handleTitleBarDoubleClick } from "@/components/jan/WindowControls";
 import { useAppStore } from "@/store/useAppStore";
 
 export const JanAppShell: React.FC = () => {
@@ -147,6 +147,7 @@ export const JanAppShell: React.FC = () => {
         {activeModule === "settings" && (
           <div
             onMouseDown={handleTitleBarMouseDown}
+            onDoubleClick={handleTitleBarDoubleClick}
             className="abs-drag-bar absolute top-0 left-0 right-28 h-10 z-30"
           />
         )}

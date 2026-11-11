@@ -30,7 +30,7 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { DownloadPopover } from "@/components/jan/DownloadPopover";
-import { handleTitleBarMouseDown } from "@/components/jan/WindowControls";
+import { handleTitleBarMouseDown, handleTitleBarDoubleClick } from "@/components/jan/WindowControls";
 import { useAppStore } from "@/store/useAppStore";
 import { ChatMessage } from "@/types";
 import { cn } from "@/lib/utils";
@@ -40,6 +40,9 @@ import { determineDocumentType } from "@core/domain/documents.ts";
 import { toast } from "sonner";
 import { WorkspaceTools } from "@/components/chat/WorkspaceTools";
 import { extractAttachmentText } from "@/lib/attachments";
+import { AccessScopeBadge } from "@/components/access/AccessScopeBadge";
+import { InteractiveTerminal } from "@/components/terminal/InteractiveTerminal";
+import { Terminal as TerminalIcon } from "lucide-react";
 
 interface ChatScreenProps {
   onNavigate?: (module: "chat" | "hub" | "settings") => void;
@@ -248,6 +251,7 @@ export const ChatScreen: React.FC<ChatScreenProps> = () => {
 
   const [prompt, setPrompt] = useState("");
   const [detailsOpen, setDetailsOpen] = useState(false);
+  const [isTerminalOpen, setIsTerminalOpen] = useState(false);
   const [bookmarksOnly, setBookmarksOnly] = useState(false);
   const [isRecording, setIsRecording] = useState(false);
   const [recordingSeconds, setRecordingSeconds] = useState(0);
@@ -501,6 +505,7 @@ export const ChatScreen: React.FC<ChatScreenProps> = () => {
         {/* Top In-Window Titlebar & Floating Model Selector Pill (Matches Screenshot 2026-10-25 190854.png) */}
         <div
           onMouseDown={handleTitleBarMouseDown}
+          onDoubleClick={handleTitleBarDoubleClick}
           className="flex items-center justify-between gap-2 px-4 pr-36 h-11 shrink-0"
         >
           <div className="flex items-center gap-1.5">
@@ -520,6 +525,7 @@ export const ChatScreen: React.FC<ChatScreenProps> = () => {
               </div>
             )}
 
+            <AccessScopeBadge />
             {/* Model Selector Pill */}
             <div className="flex items-center gap-1 rounded-xl bg-card/90 border border-border/60 px-2 py-0.5 shadow-xs">
               {models.length > 0 ? (
@@ -539,6 +545,18 @@ export const ChatScreen: React.FC<ChatScreenProps> = () => {
                 <span className="text-xs text-muted-foreground px-2 py-1">No model available</span>
               )}
 
+              <button
+                type="button"
+                onClick={() => setIsTerminalOpen((v) => !v)}
+                aria-label="Toggle terminal"
+                title="Toggle Interactive Terminal"
+                className={cn(
+                  "p-1 rounded-lg text-muted-foreground hover:text-foreground hover:bg-accent/60 transition-colors",
+                  isTerminalOpen && "bg-accent text-primary"
+                )}
+              >
+                <TerminalIcon className="size-3.5" />
+              </button>
               <button
                 type="button"
                 onClick={() => setDetailsOpen((v) => !v)}
@@ -924,6 +942,7 @@ export const ChatScreen: React.FC<ChatScreenProps> = () => {
           )}
         </aside>
       )}
+      <InteractiveTerminal isOpen={isTerminalOpen} onClose={() => setIsTerminalOpen(false)} />
     </main>
   );
 };

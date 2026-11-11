@@ -21,6 +21,13 @@ export const AGENT_PRESETS: AgentPreset[] = [
     allowedTools: Object.keys(operations),
   },
   {
+    id: "software_engineer",
+    name: "Software Engineer",
+    description: "Builds, debugs, executes tests, and runs local terminal workflows autonomously.",
+    systemPrompt: "You are a senior full-stack software engineer. Inspect codebase, edit files, and execute terminal commands to verify correctness.",
+    allowedTools: ["run_command", "start_background", "read_background_output", "stop_background", "list_directory", "search_files", "read_file", "read_file_range", "edit_file", "create_file", "apply_patch"],
+  },
+  {
     id: "researcher",
     name: "Deep Researcher",
     description: "Searches Knowledge Vault and workspace documents, cross-checks facts, and saves findings to memory.",
@@ -50,18 +57,22 @@ export const AGENT_PRESETS: AgentPreset[] = [
   },
 ];
 
+export type AgentOperationMode = "build" | "plan";
+
 export interface AgentSlice {
   agentRuns: AgentRun[];
   activeRunId: string;
   isAgentRunning: boolean;
   agentPrompt: string;
   autonomyMode: AutonomyMode;
+  agentMode: AgentOperationMode;
   activePresetId: string;
   maxStepBudget: number;
 
   setAgentPrompt: (prompt: string) => void;
   setActiveRunId: (id: string) => void;
   setAutonomyMode: (mode: AutonomyMode) => void;
+  setAgentMode: (mode: AgentOperationMode) => void;
   setActivePresetId: (presetId: string) => void;
   startAgentTask: (goal: string, modelId?: string) => Promise<void>;
   approveNextAction: () => Promise<void>;
@@ -259,12 +270,14 @@ export const createAgentSlice: StateCreator<any, [], [], AgentSlice> = (set, get
   isAgentRunning: false,
   agentPrompt: "Update the checkout button copy and verify the flow",
   autonomyMode: "step_by_step",
+  agentMode: "build",
   activePresetId: "general",
   maxStepBudget: 10,
 
   setAgentPrompt: (prompt) => set({ agentPrompt: prompt }),
   setActiveRunId: (id) => set({ activeRunId: id }),
   setAutonomyMode: (mode) => set({ autonomyMode: mode }),
+  setAgentMode: (mode) => set({ agentMode: mode }),
   setActivePresetId: (presetId) => set({ activePresetId: presetId }),
 
   startAgentTask: async (goal, modelId) => {
@@ -273,6 +286,7 @@ export const createAgentSlice: StateCreator<any, [], [], AgentSlice> = (set, get
     const chosenModel = modelId || get().activeModelId || get().models?.[0]?.id || "local-agent";
     const runId = `run-${Date.now()}`;
     const preset = AGENT_PRESETS.find((p) => p.id === get().activePresetId) || AGENT_PRESETS[0];
+    const isPlanMode = get().agentMode === "plan";
 
     let generatedSteps: AgentStep[] = buildFallbackSteps(goal, chosenModel);
 
@@ -281,6 +295,10 @@ export const createAgentSlice: StateCreator<any, [], [], AgentSlice> = (set, get
       try {
         const ac = new AbortController();
         const timer = setTimeout(() => ac.abort(), 3500);
+        const sysContent = isPlanMode
+          ? `${preset.systemPrompt}\nPLAN MODE: Strictly read-only analysis. Only use read_file, search_files, list_directory, vault_search. Formulate a step-by-step diagnostic plan for user review.\nReturn JSON with {"steps":[{"title":"...","description":"...","toolName":"list_directory|read_file|search_files|vault_search|memory_recall","toolArgs":{},"requiresApproval":false}]}. /no_think`
+          : `${preset.systemPrompt}\nReturn JSON with {"steps":[{"title":"...","description":"...","toolName":"list_directory|read_file|search_files|vault_search|memory_recall|memory_save|create_file|edit_file|run_command","toolArgs":{},"requiresApproval":true}]}. Always include at least 3 steps and mark mutating steps requiresApproval:true. /no_think`;
+
         const planRes = await fetch("/api/chat", {
           method: "POST",
           signal: ac.signal,
@@ -293,7 +311,7 @@ export const createAgentSlice: StateCreator<any, [], [], AgentSlice> = (set, get
             messages: [
               {
                 role: "system",
-                content: `${preset.systemPrompt}\nReturn JSON with {"steps":[{"title":"...","description":"...","toolName":"list_directory|read_file|search_files|vault_search|memory_recall|memory_save|create_file|edit_file","toolArgs":{},"requiresApproval":true}]}. Always include at least 3 steps and mark mutating steps requiresApproval:true. /no_think`,
+                content: sysContent,
               },
               { role: "user", content: `Plan steps for goal: ${goal}` },
             ],

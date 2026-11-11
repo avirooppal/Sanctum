@@ -193,6 +193,45 @@ export const operations: Record<string, WorkspaceOperation> = {
       };
     },
   },
+  run_command: {
+    action: "run_command",
+    description: "Execute a shell command with real-time output, exit code, working directory, and timeout budget.",
+    required: ["command"],
+    optional: ["cwd", "timeout_ms"],
+    safety: "write",
+    parallelSafe: false,
+  },
+  start_background: {
+    action: "start_background",
+    description: "Start a long-running background command or server (e.g. dev server, file watcher), returning a taskId.",
+    required: ["command"],
+    optional: ["cwd"],
+    safety: "write",
+    parallelSafe: false,
+  },
+  read_background_output: {
+    action: "read_background_output",
+    description: "Read recent stdout and stderr lines from an active background task by taskId.",
+    required: ["taskId"],
+    optional: ["limit"],
+    safety: "read",
+    parallelSafe: true,
+  },
+  stop_background: {
+    action: "stop_background",
+    description: "Terminate and kill an active background task by taskId.",
+    required: ["taskId"],
+    safety: "write",
+    parallelSafe: false,
+  },
+  read_logs: {
+    action: "read_logs",
+    description: "Read, tail, and regex filter log entries from Sanctum logs, security audit logs, terminal output, or workspace log files.",
+    required: [],
+    optional: ["source", "path", "tail", "regex", "time_start", "time_end"],
+    safety: "read",
+    parallelSafe: true,
+  },
 };
 
 const properties: Record<string, { type: string; description: string }> = {
@@ -206,6 +245,15 @@ const properties: Record<string, { type: string; description: string }> = {
   end_line: { type: "string", description: "1-based end line number" },
   category: { type: "string", description: "Memory category: user, preference, project, or fact" },
   expression: { type: "string", description: "Arithmetic expression to evaluate" },
+  command: { type: "string", description: "Shell command string to execute" },
+  cwd: { type: "string", description: "Working directory (defaults to current workspace)" },
+  timeout_ms: { type: "number", description: "Execution timeout in milliseconds" },
+  taskId: { type: "string", description: "Unique task ID of the background process" },
+  limit: { type: "number", description: "Maximum lines of background output to read" },
+  source: { type: "string", description: "Log source: 'sanctum', 'audit', 'terminal', or 'file'" },
+  tail: { type: "number", description: "Number of most recent log lines to read (default 100)" },
+  time_start: { type: "string", description: "ISO timestamp start filter" },
+  time_end: { type: "string", description: "ISO timestamp end filter" },
 };
 
 export const workspaceTools = Object.entries(operations).map(([name, operation]) => {
@@ -294,6 +342,41 @@ export async function executeWorkspaceToolCall(
       ok = Boolean(localResult && !localResult.error);
       parsedResult = localResult;
       output = JSON.stringify(localResult);
+      onActivity({ ...activity, status: ok ? "success" : "error", output });
+      return { toolName: activity.name, id, output, ok, result: parsedResult };
+    }
+
+    if (["run_command", "start_background", "read_background_output", "stop_background"].includes(activity.name)) {
+      const termRes = await fetch("/api/terminal/execute", {
+        method: "POST",
+        signal,
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          action: op.action,
+          ...activity.arguments,
+        }),
+      });
+      const termBody = await termRes.json();
+      ok = termRes.ok;
+      parsedResult = termBody;
+      output = termBody.stdout !== undefined
+        ? (termBody.stderr ? termBody.stdout + "\n[STDERR]: " + termBody.stderr : termBody.stdout)
+        : JSON.stringify(termBody);
+      onActivity({ ...activity, status: ok ? "success" : "error", output });
+      return { toolName: activity.name, id, output, ok, result: parsedResult };
+    }
+
+    if (activity.name === "read_logs") {
+      const logRes = await fetch("/api/logs/query", {
+        method: "POST",
+        signal,
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(activity.arguments),
+      });
+      const logBody = await logRes.json();
+      ok = logRes.ok;
+      parsedResult = logBody;
+      output = JSON.stringify(logBody);
       onActivity({ ...activity, status: ok ? "success" : "error", output });
       return { toolName: activity.name, id, output, ok, result: parsedResult };
     }
