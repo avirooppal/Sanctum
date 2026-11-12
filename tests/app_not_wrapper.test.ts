@@ -6,7 +6,7 @@ import path from "node:path";
 const ROOT = process.cwd();
 
 describe("Standalone Desktop App (Not a Browser Wrapper) Gate", () => {
-  const hostPy = fs.readFileSync(path.join(ROOT, "tools", "compile_desktop_host.py"), "utf-8");
+  const hostPy = fs.readFileSync(path.join(ROOT, "tools", "native", "DesktopHost.cs"), "utf-8");
   const tauriConf = JSON.parse(fs.readFileSync(path.join(ROOT, "src-tauri", "tauri.conf.json"), "utf-8"));
   const tauriCap = JSON.parse(fs.readFileSync(path.join(ROOT, "src-tauri", "capabilities", "default.json"), "utf-8"));
   const appNotWrapperDoc = fs.readFileSync(path.join(ROOT, "docs", "APP_NOT_WRAPPER.md"), "utf-8");
@@ -55,10 +55,10 @@ describe("Standalone Desktop App (Not a Browser Wrapper) Gate", () => {
     assert.ok(!hostPy.includes("Local inference loopback active. Ready for instructions."));
   });
 
-  it("4. Native Window Behavior: dark #121214 background, DWM dark mode, persistent window bounds, single-instance lock", () => {
-    assert.ok(hostPy.includes("Color.FromArgb(18, 18, 20)"), "Must set dark #121214 background to prevent white flash");
+  it("4. Native Window Behavior: dark #0f0f12 background, DWM dark mode, persistent window bounds, single-instance lock", () => {
+    assert.ok(hostPy.includes("Color.FromArgb(15, 15, 18)"), "Must set dark #0f0f12 background to prevent white flash");
     assert.ok(hostPy.includes("DWMWA_USE_IMMERSIVE_DARK_MODE"), "Must enable DWM dark title bar");
-    assert.ok(hostPy.includes("RestoreWindowBounds()"), "Must restore window bounds across restarts");
+    assert.ok(hostPy.includes("InitializeWindowPosition()"), "Must restore window bounds across restarts");
     assert.ok(hostPy.includes("SaveWindowBounds()"), "Must save window bounds on exit");
     assert.ok(hostPy.includes("SanctumDesktopSingleInstanceMutex"), "Must enforce single-instance mutex");
   });

@@ -19,7 +19,22 @@ test("Multi-Tool V2: Architecture & Execution Guarantees", async (t) => {
   // 1. Parallel execution of independent read tools
   await t.test("Parallel Execution: independent reads run concurrently", async () => {
     const scheduler = new ToolScheduler({ concurrency: 4 });
-    const delay = (ms: number) => new Promise((resolve) => setTimeout(resolve, ms));
+    let activeCount = 0;
+    let maxConcurrent = 0;
+    let releaseBoth!: () => void;
+    const bothEntered = new Promise<void>((resolve) => {
+      releaseBoth = resolve;
+    });
+    const enterAndWait = async () => {
+      activeCount++;
+      if (activeCount > maxConcurrent) maxConcurrent = activeCount;
+      if (activeCount === 2) releaseBoth();
+      await Promise.race([
+        bothEntered,
+        new Promise((_, reject) => setTimeout(() => reject(new Error("Reads did not run concurrently")), 500)),
+      ]);
+      activeCount--;
+    };
 
     const specs = new Map<string, ToolSpec>();
     specs.set("read_a", {
@@ -28,7 +43,7 @@ test("Multi-Tool V2: Architecture & Execution Guarantees", async (t) => {
       parallelSafe: true,
       resources: () => ["file:a.txt"],
       run: async () => {
-        await delay(30);
+        await enterAndWait();
         return "content-a";
       },
     });
@@ -38,7 +53,7 @@ test("Multi-Tool V2: Architecture & Execution Guarantees", async (t) => {
       parallelSafe: true,
       resources: () => ["file:b.txt"],
       run: async () => {
-        await delay(30);
+        await enterAndWait();
         return "content-b";
       },
     });
@@ -48,7 +63,6 @@ test("Multi-Tool V2: Architecture & Execution Guarantees", async (t) => {
       { id: "c2", name: "read_b", arguments: { path: "b.txt" }, index: 1 },
     ];
 
-    const t0 = Date.now();
     const results = await scheduler.scheduleAndRun(calls, specs, async (call, spec) => {
       const out = await spec!.run(call.arguments, { signal: new AbortController().signal });
       return {
@@ -58,18 +72,16 @@ test("Multi-Tool V2: Architecture & Execution Guarantees", async (t) => {
         status: "completed",
         output: out,
         exitCode: 0,
-        durationMs: 30,
+        durationMs: 1,
       };
     });
 
-    const duration = Date.now() - t0;
     assert.equal(results.length, 2);
     assert.equal(results[0].id, "c1");
     assert.equal(results[0].output, "content-a");
     assert.equal(results[1].id, "c2");
     assert.equal(results[1].output, "content-b");
-    // Should run concurrently in ~30-50ms instead of serial ~60ms+
-    assert.ok(duration < 55, `Expected concurrent execution, took ${duration}ms`);
+    assert.ok(maxConcurrent >= 2, `Expected maxConcurrent >= 2, got ${maxConcurrent}`);
   });
 
   // 2. Conflict-aware serialization: edits on the same file serialize
