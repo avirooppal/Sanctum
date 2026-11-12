@@ -71,6 +71,31 @@ const syncThreadsToBackend = (sessions: ChatSession[]) => {
   }).catch(() => {});
 };
 
+const requestHostApprovalToken = (toolName: string): Promise<string | undefined> => {
+  if (typeof window === "undefined") return Promise.resolve(undefined);
+  const wv = (window as any).chrome?.webview;
+  if (!wv?.postMessage || !wv?.addEventListener) return Promise.resolve(undefined);
+  return new Promise((resolve) => {
+    const requestId = `tok-${crypto.randomUUID()}`;
+    const timer = setTimeout(() => {
+      wv.removeEventListener("message", onMsg);
+      resolve(undefined);
+    }, 2000);
+    const onMsg = (event: { data: unknown }) => {
+      try {
+        const msg = typeof event.data === "string" ? JSON.parse(event.data) : (event.data as any);
+        if (msg?.type === "approvalTokenIssued" && msg.requestId === requestId) {
+          clearTimeout(timer);
+          wv.removeEventListener("message", onMsg);
+          resolve(typeof msg.token === "string" ? msg.token : undefined);
+        }
+      } catch {}
+    };
+    wv.addEventListener("message", onMsg);
+    wv.postMessage(JSON.stringify({ type: "requestApprovalToken", requestId, toolName }));
+  });
+};
+
 export const createChatSlice: StateCreator<any, [], [], ChatSlice> = (set, get) => ({
   chatSessions: [
     {
@@ -108,6 +133,12 @@ export const createChatSlice: StateCreator<any, [], [], ChatSlice> = (set, get) 
     const pending = get().pendingToolApproval;
     if (!pending) return;
     set({ pendingToolApproval: null });
+    if (decision === "approved" && !approvalToken) {
+      void requestHostApprovalToken(pending.toolName).then((tok) => {
+        pending.resolve({ decision, scope, approvalToken: tok });
+      });
+      return;
+    }
     pending.resolve({ decision, scope, approvalToken });
   },
   toggleMessageBookmark: (sessionId, messageId) =>
@@ -601,6 +632,7 @@ export const createChatSlice: StateCreator<any, [], [], ChatSlice> = (set, get) 
               },
             });
           }),
+        getApprovalToken: (toolName: string) => requestHostApprovalToken(toolName),
         onActivity: (activity: import("../../../core/ai/tools/workspace_chat.ts").ToolActivity) => {
           tracker.transition("using_tool", {
             detail: `${activity.arguments.action || activity.name}: ${

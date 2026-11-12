@@ -321,6 +321,7 @@ export async function executeWorkspaceToolCall(
   options?: {
     sessionId?: string;
     onApprovalRequest?: (promptData: ToolApprovalRequest) => Promise<ToolApprovalResponse>;
+    getApprovalToken?: (toolName: string) => Promise<string | undefined>;
   }
 ): Promise<{ toolName: string; id: string; output: string; ok: boolean; result?: any }> {
   signal.throwIfAborted();
@@ -379,6 +380,8 @@ export async function executeWorkspaceToolCall(
       if (choice.scope === "session") {
         globalPermissionGate.grantSessionApproval(activity.name, sessionId);
       }
+    } else if (op.safety === "write" && options?.getApprovalToken) {
+      approvalToken = await options.getApprovalToken(activity.name);
     }
 
     const requestHeaders: Record<string, string> = { "Content-Type": "application/json" };
@@ -482,6 +485,7 @@ export async function* streamWorkspaceChat(
     imageAttached?: string;
     onActivity: (activity: ToolActivity) => void;
     onApprovalRequest?: (promptData: ToolApprovalRequest) => Promise<ToolApprovalResponse>;
+    getApprovalToken?: (toolName: string) => Promise<string | undefined>;
   }
 ): AsyncGenerator<StreamChunkEvent> {
   const workspaceResponse = await fetch("/api/workspace", { signal: options.signal });
@@ -666,7 +670,7 @@ export async function* streamWorkspaceChat(
           workspace,
           options.signal,
           options.onActivity,
-          { sessionId: workspace.id || "default", onApprovalRequest: options.onApprovalRequest }
+          { sessionId: workspace.id || "default", onApprovalRequest: options.onApprovalRequest, getApprovalToken: options.getApprovalToken }
         );
         results[idx] = res;
       });
@@ -681,7 +685,7 @@ export async function* streamWorkspaceChat(
           workspace,
           options.signal,
           options.onActivity,
-          { sessionId: workspace.id || "default", onApprovalRequest: options.onApprovalRequest }
+          { sessionId: workspace.id || "default", onApprovalRequest: options.onApprovalRequest, getApprovalToken: options.getApprovalToken }
         );
         results[idx] = res;
       }

@@ -411,6 +411,45 @@ namespace Sanctum {
         private static readonly System.Collections.Generic.Dictionary<string, System.Collections.Generic.List<string>> _bgOutput = new System.Collections.Generic.Dictionary<string, System.Collections.Generic.List<string>>();
         private static string _authToken;
         private static readonly object _dataLock = new object();
+        private class ApprovalTokenEntry {
+            public string Tool;
+            public DateTime ExpiresAtUtc;
+        }
+        private static readonly Dictionary<string, ApprovalTokenEntry> _approvalTokens = new Dictionary<string, ApprovalTokenEntry>();
+        private static readonly object _approvalLock = new object();
+
+        private static string MintApprovalToken(string toolName, string explicitToken = null) {
+            string token = explicitToken;
+            if (string.IsNullOrEmpty(token)) {
+                byte[] bytes = new byte[16];
+                using (var rng = new RNGCryptoServiceProvider()) rng.GetBytes(bytes);
+                token = BitConverter.ToString(bytes).Replace("-", "").ToLowerInvariant();
+            }
+            lock (_approvalLock) {
+                DateTime now = DateTime.UtcNow;
+                var expired = new List<string>();
+                foreach (var kv in _approvalTokens) {
+                    if (kv.Value.ExpiresAtUtc <= now) expired.Add(kv.Key);
+                }
+                foreach (string k in expired) _approvalTokens.Remove(k);
+                _approvalTokens[token] = new ApprovalTokenEntry {
+                    Tool = toolName ?? "*",
+                    ExpiresAtUtc = now.AddSeconds(120)
+                };
+            }
+            return token;
+        }
+
+        private static bool ConsumeApprovalToken(string token, string expectedTool) {
+            if (string.IsNullOrEmpty(token)) return false;
+            lock (_approvalLock) {
+                ApprovalTokenEntry entry;
+                if (!_approvalTokens.TryGetValue(token, out entry)) return false;
+                _approvalTokens.Remove(token);
+                if (entry.ExpiresAtUtc <= DateTime.UtcNow) return false;
+                return entry.Tool == "*" || string.Equals(entry.Tool, expectedTool, StringComparison.OrdinalIgnoreCase);
+            }
+        }
 
         // Verified WebView2 background-network suppression flags (ADR 0104)
         public const string WEBVIEW2_SILENCE_FLAGS =
@@ -497,6 +536,7 @@ namespace Sanctum {
             bool devTools = false;
             string customDataDir = null;
             string overrideToken = null;
+            string seedApprovalToken = null;
 
             for (int i = 0; i < args.Length; i++) {
                 if (args[i] == "--version" || args[i] == "-v") {
@@ -519,7 +559,13 @@ namespace Sanctum {
                     _enginePort = candidate;
                 } else if (args[i] == "--auth-token" && i + 1 < args.Length) {
                     overrideToken = args[++i];
+                } else if (args[i] == "--seed-approval-token" && i + 1 < args.Length) {
+                    seedApprovalToken = args[++i];
                 }
+            }
+
+            if (headless && !string.IsNullOrEmpty(seedApprovalToken)) {
+                MintApprovalToken("*", seedApprovalToken);
             }
 
             if (versionCheck) {
@@ -1610,6 +1656,13 @@ namespace Sanctum {
                     ResizePty(cols, rows);
                 } else if (raw.Contains("\"ptyStop\"")) {
                     StopPtySession();
+                } else if (raw.Contains("\"requestApprovalToken\"")) {
+                    var payload = new JavaScriptSerializer().Deserialize<System.Collections.Generic.Dictionary<string, object>>(raw);
+                    string reqId = payload != null && payload.ContainsKey("requestId") ? Convert.ToString(payload["requestId"]) : "";
+                    string toolName = payload != null && payload.ContainsKey("toolName") ? Convert.ToString(payload["toolName"]) : "*";
+                    string tok = MintApprovalToken(toolName);
+                    string resp = new JavaScriptSerializer().Serialize(new { type = "approvalTokenIssued", requestId = reqId, token = tok });
+                    if (_wvCore != null) _wvCore.PostWebMessageAsJson(resp);
                 } else if (raw.Contains("\"windowDrag\"")) {
                     if ((GetAsyncKeyState(VK_LBUTTON) & 0x8000) != 0) {
                         Point pt = Cursor.Position;
@@ -1730,7 +1783,7 @@ namespace Sanctum {
             if (origin == "https://sanctum.app" || origin == "http://127.0.0.1:" + _port) res.Headers.Add("Access-Control-Allow-Origin", origin);
             res.Headers.Add("Vary", "Origin");
             res.Headers.Add("Access-Control-Allow-Methods", "GET, POST, PUT, DELETE, OPTIONS");
-            res.Headers.Add("Access-Control-Allow-Headers", "Content-Type, Authorization, X-Sanctum-Auth, Range");
+            res.Headers.Add("Access-Control-Allow-Headers", "Content-Type, Authorization, X-Sanctum-Auth, X-Sanctum-Approval, Range");
             res.Headers.Add("Access-Control-Expose-Headers", "Content-Range, Accept-Ranges, Content-Length");
 
             if (req.HttpMethod == "OPTIONS") {
@@ -2036,6 +2089,84 @@ namespace Sanctum {
             throw new Exception(unkReason);
         }
 
+        private static bool EvaluateCommandRule(string command, out string action, out string reason) {
+            string trimmed = (command ?? "").Trim();
+            if (string.IsNullOrEmpty(trimmed)) {
+                action = "deny";
+                reason = "Empty command string.";
+                return false;
+            }
+
+            string[] denyPatterns = new string[] {
+                @".*(format\s+[a-zA-Z]:|diskpart|bcdedit|vssadmin|mkfs).*",
+                @".*(rmdir\s+/[sS]\s+/[qQ]\s+[c-zC-Z]:\\|del\s+/[fF]\s+/[sS]\s+/[qQ]\s+[c-zC-Z]:\\).*",
+                @".*(rm\s+-(rf|fr|r)\s+(/|/\*|[a-zA-Z]:\\)).*",
+                @".*Remove-Item\s+.*([a-zA-Z]:\\).*",
+                @".*(:\(\)\s*\{.*:\|:&|:\|:&).*"
+            };
+            foreach (string pat in denyPatterns) {
+                if (Regex.IsMatch(trimmed, pat, RegexOptions.IgnoreCase)) {
+                    action = "deny";
+                    reason = "Command blocked by security policy: " + pat;
+                    return false;
+                }
+            }
+
+            bool hasChaining = trimmed.IndexOf("&&", StringComparison.Ordinal) >= 0 ||
+                trimmed.IndexOf("||", StringComparison.Ordinal) >= 0 ||
+                trimmed.IndexOf(';') >= 0 ||
+                trimmed.IndexOf('|') >= 0 ||
+                trimmed.IndexOf('`') >= 0 ||
+                trimmed.IndexOf("$(", StringComparison.Ordinal) >= 0 ||
+                trimmed.IndexOf('>') >= 0;
+
+            if (!hasChaining) {
+                string[] allowPatterns = new string[] {
+                    @"^git\s+(status|diff|log|branch|show|rev-parse|tag|remote|describe)(\s+.*)?$",
+                    @"^(dir|ls|pwd|echo|type|cat|head|tail|where|which)(\s+.*)?$",
+                    @"^(node\s+-v|npm\s+-v|python\s+--version|git\s+--version|tsc\s+-v|dotnet\s+--version|cargo\s+--version|rustc\s+--version|go\s+version)(\s+.*)?$"
+                };
+                foreach (string pat in allowPatterns) {
+                    if (Regex.IsMatch(trimmed, pat, RegexOptions.IgnoreCase)) {
+                        action = "allow";
+                        reason = "Command matches pre-approved read-only pattern.";
+                        return true;
+                    }
+                }
+            }
+
+            action = "ask";
+            reason = "Standard command execution requires user approval.";
+            return false;
+        }
+
+        private static bool IsExecutionPolicyBypassEnabled() {
+            try {
+                if (File.Exists(_settingsFile)) {
+                    var sDict = new JavaScriptSerializer().Deserialize<System.Collections.Generic.Dictionary<string, object>>(File.ReadAllText(_settingsFile, Encoding.UTF8));
+                    if (sDict != null && sDict.ContainsKey("terminal.allowExecutionPolicyBypass") && sDict["terminal.allowExecutionPolicyBypass"] != null) {
+                        return Convert.ToBoolean(sDict["terminal.allowExecutionPolicyBypass"]);
+                    }
+                }
+            } catch { }
+            return false;
+        }
+
+        private static void BuildShellProcessArgs(string shell, string command, out string execFile, out string execArgs) {
+            if (shell == "cmd") {
+                execFile = "cmd.exe";
+                execArgs = "/d /s /c \"" + command + "\"";
+            } else if (shell == "wsl") {
+                execFile = "wsl.exe";
+                execArgs = "-e bash -c \"" + command.Replace("\\", "\\\\").Replace("\"", "\\\"") + "\"";
+            } else {
+                execFile = "powershell.exe";
+                string b64 = Convert.ToBase64String(Encoding.Unicode.GetBytes(command));
+                string bypass = IsExecutionPolicyBypassEnabled() ? "-ExecutionPolicy Bypass " : "";
+                execArgs = "-NoProfile -NonInteractive " + bypass + "-EncodedCommand " + b64;
+            }
+        }
+
 private void HandleTerminal(HttpListenerRequest req, HttpListenerResponse res) {
             try {
                 if (req.HttpMethod != "POST") {
@@ -2049,7 +2180,7 @@ private void HandleTerminal(HttpListenerRequest req, HttpListenerResponse res) {
 
                 string action = reqDict.ContainsKey("action") ? Convert.ToString(reqDict["action"]) : "run_command";
                 string command = reqDict.ContainsKey("command") ? Convert.ToString(reqDict["command"]) : "";
-                string cwd = reqDict.ContainsKey("cwd") && !string.IsNullOrEmpty(Convert.ToString(reqDict["cwd"])) ? Convert.ToString(reqDict["cwd"]) : _toolWorkspace;
+                string rawCwd = reqDict.ContainsKey("cwd") && !string.IsNullOrEmpty(Convert.ToString(reqDict["cwd"])) ? Convert.ToString(reqDict["cwd"]) : ".";
                 string shell = reqDict.ContainsKey("shell") ? Convert.ToString(reqDict["shell"]).ToLowerInvariant() : "powershell";
                 int timeoutMs = reqDict.ContainsKey("timeoutMs") ? Convert.ToInt32(reqDict["timeoutMs"]) : 30000;
                 int maxOutputChars = reqDict.ContainsKey("maxOutputChars") ? Convert.ToInt32(reqDict["maxOutputChars"]) : 20000;
@@ -2060,20 +2191,42 @@ private void HandleTerminal(HttpListenerRequest req, HttpListenerResponse res) {
                 if (action == "run_command") {
                     if (string.IsNullOrEmpty(command.Trim())) throw new Exception("Command cannot be empty.");
 
-                    string execFile = "powershell.exe";
-                    string execArgs = "-NoProfile -NonInteractive -ExecutionPolicy Bypass -Command " + command;
-                    if (shell == "cmd") {
-                        execFile = "cmd.exe";
-                        execArgs = "/d /s /c " + command;
-                    } else if (shell == "wsl") {
-                        execFile = "wsl.exe";
-                        execArgs = "-e bash -c " + command;
+                    string cwd;
+                    try {
+                        cwd = ToolPath(rawCwd, true, "terminal_cwd");
+                    } catch (Exception ex) {
+                        RecordAuditLog("run_command", rawCwd, command, "terminal", "denied", ex.Message);
+                        WriteJson(res, 403, new { error = ex.Message });
+                        return;
                     }
+                    if (!Directory.Exists(cwd)) {
+                        WriteJson(res, 400, new { error = "Working directory does not exist: " + cwd });
+                        return;
+                    }
+
+                    string ruleAction, ruleReason;
+                    EvaluateCommandRule(command, out ruleAction, out ruleReason);
+                    if (ruleAction == "deny") {
+                        RecordAuditLog("run_command", cwd, command, "terminal", "denied", ruleReason);
+                        WriteJson(res, 403, new { error = ruleReason });
+                        return;
+                    }
+                    if (ruleAction == "ask") {
+                        string approvalToken = req.Headers["X-Sanctum-Approval"];
+                        if (!ConsumeApprovalToken(approvalToken, "run_command")) {
+                            RecordAuditLog("run_command", cwd, command, "terminal", "denied", "Missing or invalid single-use approval token.");
+                            WriteJson(res, 403, new { error = "User approval token required for non-allowlisted command." });
+                            return;
+                        }
+                    }
+
+                    string execFile, execArgs;
+                    BuildShellProcessArgs(shell, command, out execFile, out execArgs);
 
                     var psi = new ProcessStartInfo {
                         FileName = execFile,
                         Arguments = execArgs,
-                        WorkingDirectory = Directory.Exists(cwd) ? cwd : _toolWorkspace,
+                        WorkingDirectory = cwd,
                         RedirectStandardOutput = true,
                         RedirectStandardError = true,
                         UseShellExecute = false,
@@ -2132,17 +2285,45 @@ private void HandleTerminal(HttpListenerRequest req, HttpListenerResponse res) {
 
                 if (action == "start_background") {
                     if (string.IsNullOrEmpty(command.Trim())) throw new Exception("Command cannot be empty.");
+
+                    string cwd;
+                    try {
+                        cwd = ToolPath(rawCwd, true, "terminal_cwd");
+                    } catch (Exception ex) {
+                        RecordAuditLog("start_background", rawCwd, command, "terminal", "denied", ex.Message);
+                        WriteJson(res, 403, new { error = ex.Message });
+                        return;
+                    }
+                    if (!Directory.Exists(cwd)) {
+                        WriteJson(res, 400, new { error = "Working directory does not exist: " + cwd });
+                        return;
+                    }
+
+                    string ruleAction, ruleReason;
+                    EvaluateCommandRule(command, out ruleAction, out ruleReason);
+                    if (ruleAction == "deny") {
+                        RecordAuditLog("start_background", cwd, command, "terminal", "denied", ruleReason);
+                        WriteJson(res, 403, new { error = ruleReason });
+                        return;
+                    }
+                    if (ruleAction == "ask") {
+                        string approvalToken = req.Headers["X-Sanctum-Approval"];
+                        if (!ConsumeApprovalToken(approvalToken, "start_background")) {
+                            RecordAuditLog("start_background", cwd, command, "terminal", "denied", "Missing or invalid single-use approval token.");
+                            WriteJson(res, 403, new { error = "User approval token required for background command." });
+                            return;
+                        }
+                    }
+
                     string taskId = "bg-" + DateTime.UtcNow.Ticks.ToString() + "-" + Guid.NewGuid().ToString("N").Substring(0, 5);
 
-                    string execFile = "powershell.exe";
-                    string execArgs = "-NoProfile -NonInteractive -ExecutionPolicy Bypass -Command " + command;
-                    if (shell == "cmd") { execFile = "cmd.exe"; execArgs = "/d /s /c " + command; }
-                    else if (shell == "wsl") { execFile = "wsl.exe"; execArgs = "-e bash -c " + command; }
+                    string execFile, execArgs;
+                    BuildShellProcessArgs(shell, command, out execFile, out execArgs);
 
                     var psi = new ProcessStartInfo {
                         FileName = execFile,
                         Arguments = execArgs,
-                        WorkingDirectory = Directory.Exists(cwd) ? cwd : _toolWorkspace,
+                        WorkingDirectory = cwd,
                         RedirectStandardOutput = true,
                         RedirectStandardError = true,
                         UseShellExecute = false,
