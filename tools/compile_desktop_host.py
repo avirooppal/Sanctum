@@ -1583,6 +1583,7 @@ namespace Sanctum {
                 reader.IsBackground = true;
                 reader.Start();
                 _ptyReadThread = reader;
+                PtyPost(new { type = "ptyStarted", gen = gen });
             } catch (Exception ex) {
                 PtyPost(new { type = "ptyOutput", gen = gen, data = "\r\n\x1b[31m[Terminal error: " + ex.Message + "]\x1b[0m\r\n" });
                 PtyPost(new { type = "ptyExit", gen = gen, exitCode = 1 });

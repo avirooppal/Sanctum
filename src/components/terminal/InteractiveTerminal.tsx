@@ -57,6 +57,8 @@ export const InteractiveTerminal: React.FC<InteractiveTerminalProps> = ({
   const isRunningRef = useRef<boolean>(false);
   const currentLineRef = useRef<string>("");
   const abortCtrlRef = useRef<AbortController | null>(null);
+  const activeGenRef = useRef<number | null>(null);
+  const initializedRef = useRef<boolean>(false);
 
   useEffect(() => {
     fetch("/api/workspace")
@@ -157,7 +159,19 @@ export const InteractiveTerminal: React.FC<InteractiveTerminalProps> = ({
   );
 
   useEffect(() => {
-    if (!isOpen || !containerRef.current) return;
+    if (!isOpen) return;
+    if (initializedRef.current) {
+      if (!isPtyAlive && getWebViewBridge()?.postMessage) {
+        startPty(shellRef.current);
+      }
+      setTimeout(() => {
+        try { fitAddonRef.current?.fit(); } catch {}
+        termInstanceRef.current?.focus();
+      }, 30);
+      return;
+    }
+    if (!containerRef.current) return;
+    initializedRef.current = true;
 
     let disposed = false;
     let resizeObserver: ResizeObserver | null = null;
@@ -169,6 +183,15 @@ export const InteractiveTerminal: React.FC<InteractiveTerminalProps> = ({
         const msg = typeof event.data === "string" ? JSON.parse(event.data) : event.data;
         const term = termInstanceRef.current;
         if (!msg || !term) return;
+        if (msg.type === "ptyStarted" && typeof msg.gen === "number") {
+          activeGenRef.current = msg.gen;
+          setIsPtyAlive(true);
+          return;
+        }
+        if (typeof msg.gen === "number") {
+          if (activeGenRef.current === null) activeGenRef.current = msg.gen;
+          if (msg.gen !== activeGenRef.current) return;
+        }
         if (msg.type === "ptyOutput" && typeof msg.data === "string") {
           term.write(msg.data);
         } else if (msg.type === "ptyExit") {
@@ -295,23 +318,28 @@ export const InteractiveTerminal: React.FC<InteractiveTerminalProps> = ({
     );
 
     return () => {
-      disposed = true;
-      resizeObserver?.disconnect();
-      if (hasPty) {
-        if (wv?.removeEventListener) {
-          wv.removeEventListener("message", handlePtyMessage);
-        }
-        postPty({ type: "ptyStop" });
-        setIsPtyAlive(false);
-      }
-      if (termInstanceRef.current) {
-        try {
-          termInstanceRef.current.dispose();
-        } catch {}
-        termInstanceRef.current = null;
-      }
+      // Keep ConPTY alive when hiding the drawer; only clean up on unmount
     };
   }, [isOpen, postPty, startPty, promptFallback, executeFallbackCommand]);
+
+  useEffect(() => {
+    const wv = getWebViewBridge();
+    const stopOnUnload = () => {
+      if (initializedRef.current && wv?.postMessage) {
+        wv.postMessage(JSON.stringify({ type: "ptyStop" }));
+      }
+    };
+    window.addEventListener("beforeunload", stopOnUnload);
+    return () => {
+      window.removeEventListener("beforeunload", stopOnUnload);
+      stopOnUnload();
+      if (termInstanceRef.current) {
+        try { termInstanceRef.current.dispose(); } catch {}
+        termInstanceRef.current = null;
+      }
+      initializedRef.current = false;
+    };
+  }, []);
 
   const handleResizeDrag = (e: React.MouseEvent<HTMLDivElement>) => {
     e.preventDefault();
@@ -370,7 +398,12 @@ export const InteractiveTerminal: React.FC<InteractiveTerminalProps> = ({
     }
   };
 
-  if (!isOpen) return null;
+  const handleKillSession = () => {
+    postPty({ type: "ptyStop" });
+    setIsPtyAlive(false);
+    activeGenRef.current = null;
+    onClose();
+  };
 
   const hasWebView = Boolean(getWebViewBridge()?.postMessage);
 
@@ -380,6 +413,7 @@ export const InteractiveTerminal: React.FC<InteractiveTerminalProps> = ({
       className={cn(
         "flex flex-col border-t border-border/80 bg-[#0c0d12] overflow-hidden z-30",
         isMaximized ? "absolute inset-0 top-11 z-40" : "shrink-0 w-full",
+        !isOpen && "hidden",
         className
       )}
     >
@@ -473,9 +507,9 @@ export const InteractiveTerminal: React.FC<InteractiveTerminalProps> = ({
 
           <button
             type="button"
-            onClick={onClose}
-            className="p-1 rounded text-muted-foreground hover:text-foreground hover:bg-muted/40 transition-colors"
-            title="Close Terminal"
+            onClick={handleKillSession}
+            className="p-1 rounded text-muted-foreground hover:text-destructive hover:bg-muted/40 transition-colors"
+            title="Close and terminate terminal session"
           >
             <X size={13} />
           </button>
