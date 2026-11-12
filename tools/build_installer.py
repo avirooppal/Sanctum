@@ -164,9 +164,14 @@ public class SetupProgram {
     }
 
     private static void ExtractZip(string zipPath, string targetDir) {
+        string rootFull = Path.GetFullPath(targetDir).TrimEnd(Path.DirectorySeparatorChar) + Path.DirectorySeparatorChar;
         using (ZipArchive archive = ZipFile.OpenRead(zipPath)) {
             foreach (ZipArchiveEntry entry in archive.Entries) {
-                string destPath = Path.Combine(targetDir, entry.FullName);
+                string destPath = Path.GetFullPath(Path.Combine(rootFull, entry.FullName));
+                if (!destPath.StartsWith(rootFull, StringComparison.OrdinalIgnoreCase) &&
+                    !destPath.TrimEnd(Path.DirectorySeparatorChar).Equals(rootFull.TrimEnd(Path.DirectorySeparatorChar), StringComparison.OrdinalIgnoreCase)) {
+                    throw new InvalidDataException("Blocked Zip Slip entry: " + entry.FullName);
+                }
                 if (string.IsNullOrEmpty(entry.Name)) {
                     Directory.CreateDirectory(destPath);
                 } else {
@@ -185,15 +190,19 @@ public class SetupProgram {
         Directory.CreateDirectory(sanctumMenu);
 
         string ps = "$ws = New-Object -ComObject WScript.Shell; " +
-            "$s1 = $ws.CreateShortcut('" + Path.Combine(desktop, "Sanctum.lnk") + "'); $s1.TargetPath = '" + exe + "'; $s1.Save(); " +
-            "$s2 = $ws.CreateShortcut('" + Path.Combine(sanctumMenu, "Sanctum.lnk") + "'); $s2.TargetPath = '" + exe + "'; $s2.Save();";
+            "$s1 = $ws.CreateShortcut($env:SANCTUM_LNK_1); $s1.TargetPath = $env:SANCTUM_TARGET_EXE; $s1.Save(); " +
+            "$s2 = $ws.CreateShortcut($env:SANCTUM_LNK_2); $s2.TargetPath = $env:SANCTUM_TARGET_EXE; $s2.Save();";
+        string encoded = Convert.ToBase64String(Encoding.Unicode.GetBytes(ps));
 
         ProcessStartInfo psi = new ProcessStartInfo {
             FileName = "powershell.exe",
-            Arguments = "-NoProfile -Command \"" + ps + "\"",
+            Arguments = "-NoProfile -NonInteractive -EncodedCommand " + encoded,
             CreateNoWindow = true,
             UseShellExecute = false
         };
+        psi.EnvironmentVariables["SANCTUM_LNK_1"] = Path.Combine(desktop, "Sanctum.lnk");
+        psi.EnvironmentVariables["SANCTUM_LNK_2"] = Path.Combine(sanctumMenu, "Sanctum.lnk");
+        psi.EnvironmentVariables["SANCTUM_TARGET_EXE"] = exe;
         using (Process p = Process.Start(psi)) {
             p.WaitForExit();
         }
@@ -285,23 +294,37 @@ public class SanctumLauncher {
         }
 
         if (needsUnpack) {
+            string tempZip = Path.Combine(Path.GetTempPath(), "sanctum_unpack_" + Guid.NewGuid().ToString("N") + ".zip");
             try {
                 foreach (Process oldProc in Process.GetProcessesByName("Sanctum-Desktop")) {
                     try {
                         if (!string.Equals(oldProc.MainModule.FileName, exe, StringComparison.OrdinalIgnoreCase)) continue;
                     } catch { continue; }
-                    if (!oldProc.CloseMainWindow() || !oldProc.WaitForExit(10000)) {
-                        System.Windows.Forms.MessageBox.Show("Please close Sanctum, then run this launcher again. Your workspace has been preserved.", "Sanctum update");
-                        return 1;
+                    if (!oldProc.CloseMainWindow() || !oldProc.WaitForExit(5000)) {
+                        var choice = System.Windows.Forms.MessageBox.Show(
+                            "Sanctum is still running (possibly minimized to the system tray). Close it automatically to complete the update?",
+                            "Sanctum Update",
+                            System.Windows.Forms.MessageBoxButtons.YesNo,
+                            System.Windows.Forms.MessageBoxIcon.Question
+                        );
+                        if (choice == System.Windows.Forms.DialogResult.Yes) {
+                            try { oldProc.Kill(); oldProc.WaitForExit(5000); } catch { }
+                        } else {
+                            return 1;
+                        }
                     }
                 }
                 Directory.CreateDirectory(appDir);
-                string tempZip = Path.Combine(Path.GetTempPath(), "sanctum_unpack_" + Guid.NewGuid().ToString("N") + ".zip");
                 byte[] zipData = Convert.FromBase64String("__PAYLOAD_B64__");
                 File.WriteAllBytes(tempZip, zipData);
+                string rootFull = Path.GetFullPath(appDir).TrimEnd(Path.DirectorySeparatorChar) + Path.DirectorySeparatorChar;
                 using (ZipArchive archive = ZipFile.OpenRead(tempZip)) {
                     foreach (ZipArchiveEntry entry in archive.Entries) {
-                        string destPath = Path.Combine(appDir, entry.FullName);
+                        string destPath = Path.GetFullPath(Path.Combine(rootFull, entry.FullName));
+                        if (!destPath.StartsWith(rootFull, StringComparison.OrdinalIgnoreCase) &&
+                            !destPath.TrimEnd(Path.DirectorySeparatorChar).Equals(rootFull.TrimEnd(Path.DirectorySeparatorChar), StringComparison.OrdinalIgnoreCase)) {
+                            throw new InvalidDataException("Blocked Zip Slip entry: " + entry.FullName);
+                        }
                         if (string.IsNullOrEmpty(entry.Name)) {
                             Directory.CreateDirectory(destPath);
                         } else {
@@ -311,10 +334,11 @@ public class SanctumLauncher {
                     }
                 }
                 File.WriteAllText(stampFile, expectedStamp);
-                try { File.Delete(tempZip); } catch { }
             } catch (Exception error) {
                 System.Windows.Forms.MessageBox.Show("Could not update Sanctum: " + error.Message, "Sanctum update failed");
                 return 1;
+            } finally {
+                try { if (File.Exists(tempZip)) File.Delete(tempZip); } catch { }
             }
         }
 

@@ -32,6 +32,20 @@ public class Uninstaller {
         }
 
         string installDir = AppDomain.CurrentDomain.BaseDirectory;
+        string targetExe = Path.GetFullPath(Path.Combine(installDir, "Sanctum-Desktop.exe"));
+
+        foreach (Process p in Process.GetProcessesByName("Sanctum-Desktop")) {
+            try {
+                if (!string.Equals(p.MainModule.FileName, targetExe, StringComparison.OrdinalIgnoreCase)) continue;
+            } catch { continue; }
+            if (!p.CloseMainWindow() || !p.WaitForExit(5000)) {
+                if (!silent) {
+                    DialogResult killDr = MessageBox.Show("Sanctum is currently running. Close it now to continue uninstalling?", "Uninstall Sanctum", MessageBoxButtons.YesNo, MessageBoxIcon.Warning);
+                    if (killDr != DialogResult.Yes) return 1;
+                }
+                try { p.Kill(); p.WaitForExit(5000); } catch { }
+            }
+        }
 
         // 1. Remove Desktop & Start Menu Shortcuts
         try {
