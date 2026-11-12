@@ -2794,34 +2794,107 @@ private void HandleTerminal(HttpListenerRequest req, HttpListenerResponse res) {
             res.Close();
         }
 
+        private static readonly HashSet<string> _knownSettingKeys = new HashSet<string>(StringComparer.Ordinal) {
+            "general.language", "general.autoUpdateCheck", "general.spellCheck", "general.dataFolder",
+            "appearance.theme", "appearance.fontSize", "appearance.showTokenSpeed", "appearance.coloredUserBubble",
+            "assistants.defaultModel", "assistants.systemPrompt", "assistants.temperature", "assistants.topP",
+            "assistants.maxTokens", "assistants.sttMode", "assistants.sttModel", "assistants.sttEndpoint",
+            "attachments.enable", "attachments.maxFileSizeMB", "attachments.chunkSize", "attachments.chunkOverlap", "attachments.topK",
+            "localApi.enable", "localApi.host", "localApi.port", "localApi.apiKeyRequired", "localApi.corsEnabled",
+            "httpsProxy.enable", "httpsProxy.url", "httpsProxy.bypass",
+            "webSearch.enable", "webSearch.provider", "webSearch.endpoint",
+            "shortcuts.newChat", "shortcuts.newProject", "shortcuts.search",
+            "hardware.cpuThreads", "hardware.gpuLayers", "hardware.contextLength",
+            "access.scope", "access.allowedFolders", "access.overrideHardBlocked",
+            "terminal.shell", "terminal.timeoutMs", "terminal.maxOutputChars", "terminal.rules", "terminal.allowExecutionPolicyBypass",
+            "agent.mode", "agent.requireHunkApproval", "agent.enableCheckpoints", "agent.postEditHook", "agent.runPostEditHook",
+            "privacy.diagnosticOptIn", "privacy.strictConsentPrompt",
+            "developer.inspectRequests", "developer.traceContentCapture", "developer.traceRetention"
+        };
+
+        private static void ValidateSetting(string key, object val) {
+            if (!_knownSettingKeys.Contains(key)) {
+                throw new Exception("Unknown setting key: " + key);
+            }
+            if (key == "access.scope") {
+                string s = Convert.ToString(val);
+                if (s != "workspace_only" && s != "selected_folders" && s != "system_read" && s != "system_full") {
+                    throw new Exception("Invalid access.scope value: " + s);
+                }
+            }
+        }
+
+        private static void WriteAtomicText(string targetPath, string content) {
+            string dir = Path.GetDirectoryName(targetPath);
+            if (!string.IsNullOrEmpty(dir) && !Directory.Exists(dir)) Directory.CreateDirectory(dir);
+            string tempFile = targetPath + ".tmp";
+            File.WriteAllText(tempFile, content, new UTF8Encoding(false));
+            if (File.Exists(targetPath)) {
+                File.Replace(tempFile, targetPath, targetPath + ".bak", true);
+            } else {
+                File.Move(tempFile, targetPath);
+            }
+        }
+
         private void HandleSettings(HttpListenerRequest req, HttpListenerResponse res) {
             lock (_dataLock) {
+                var serializer = new JavaScriptSerializer();
+                var current = new Dictionary<string, object>();
+                if (File.Exists(_settingsFile)) {
+                    try {
+                        var parsed = serializer.Deserialize<Dictionary<string, object>>(File.ReadAllText(_settingsFile, Encoding.UTF8));
+                        if (parsed != null) current = parsed;
+                    } catch { current = new Dictionary<string, object>(); }
+                }
+
                 if (req.HttpMethod == "GET") {
-                    string data = File.Exists(_settingsFile) ? File.ReadAllText(_settingsFile, Encoding.UTF8) : "{}";
-                    byte[] bytes = Encoding.UTF8.GetBytes(data);
-                    res.ContentType = "application/json";
-                    res.StatusCode = 200;
-                    res.OutputStream.Write(bytes, 0, bytes.Length);
-                    res.Close();
+                    string key = req.QueryString["key"];
+                    if (!string.IsNullOrEmpty(key)) {
+                        object val = current.ContainsKey(key) ? current[key] : null;
+                        WriteJson(res, 200, new { key = key, value = val });
+                        return;
+                    }
+                    WriteJson(res, 200, new { status = "success", settings = current });
                     return;
                 }
                 if (req.HttpMethod == "POST") {
-                    using (var r = new StreamReader(req.InputStream, req.ContentEncoding)) {
-                        string body = r.ReadToEnd();
-                        string tempFile = _settingsFile + ".tmp";
-                        File.WriteAllText(tempFile, body, Encoding.UTF8);
-                        if (File.Exists(_settingsFile)) File.Delete(_settingsFile);
-                        File.Move(tempFile, _settingsFile);
+                    try {
+                        string body;
+                        using (var r = new StreamReader(req.InputStream, Encoding.UTF8)) body = r.ReadToEnd();
+                        var payload = serializer.Deserialize<Dictionary<string, object>>(body);
+                        if (payload == null) throw new Exception("Invalid settings JSON.");
+
+                        if (payload.ContainsKey("key") && payload.ContainsKey("value")) {
+                            string k = Convert.ToString(payload["key"]);
+                            object v = payload["value"];
+                            ValidateSetting(k, v);
+                            current[k] = v;
+                        } else {
+                            foreach (var kv in payload) {
+                                if (kv.Key.StartsWith("_")) continue;
+                                ValidateSetting(kv.Key, kv.Value);
+                                current[kv.Key] = kv.Value;
+                            }
+                        }
+                        current["_version"] = 2;
+                        current["_updatedAt"] = DateTime.UtcNow.ToString("o");
+                        WriteAtomicText(_settingsFile, serializer.Serialize(current));
+                        WriteJson(res, 200, new { status = "updated" });
+                        return;
+                    } catch (Exception ex) {
+                        WriteJson(res, 422, new { error = ex.Message });
+                        return;
                     }
-                    byte[] ok = Encoding.UTF8.GetBytes("{\"status\":\"updated\"}");
-                    res.ContentType = "application/json";
-                    res.StatusCode = 200;
-                    res.OutputStream.Write(ok, 0, ok.Length);
-                    res.Close();
-                    return;
                 }
                 if (req.HttpMethod == "DELETE") {
-                    File.WriteAllText(_settingsFile, "{}", Encoding.UTF8);
+                    string key = req.QueryString["key"];
+                    if (!string.IsNullOrEmpty(key)) {
+                        current.Remove(key);
+                        WriteAtomicText(_settingsFile, serializer.Serialize(current));
+                        WriteJson(res, 200, new { status = "reset", key = key });
+                        return;
+                    }
+                    WriteAtomicText(_settingsFile, "{}");
                     WriteJson(res, 200, new { status = "reset_all" });
                     return;
                 }

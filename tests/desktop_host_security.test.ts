@@ -149,3 +149,58 @@ test("SEC-01: C# HandleTerminal enforces command rules, cwd ToolPath, and single
     assert.equal(res2.status, 403);
   });
 });
+
+test("SEC-02: C# HandleSettings merges POST keys, validates known keys, and returns { status, settings } on GET", async (t) => {
+  if (!fs.existsSync(HOST_EXE)) {
+    t.skip(`Desktop host not built at ${HOST_EXE}`);
+    return;
+  }
+
+  const host = await startHeadlessHost();
+  t.after(() => host.stop());
+
+  const headers = {
+    "Content-Type": "application/json",
+    "X-Sanctum-Auth": host.token,
+  };
+
+  await t.test("1. POST merges {access.scope} and subsequent {general.language} without wiping", async () => {
+    const r1 = await fetch(`${host.baseUrl}/api/settings`, {
+      method: "POST",
+      headers,
+      body: JSON.stringify({ "access.scope": "selected_folders", "access.allowedFolders": JSON.stringify(["C:\\Projects"]) }),
+    });
+    assert.equal(r1.status, 200);
+
+    const r2 = await fetch(`${host.baseUrl}/api/settings`, {
+      method: "POST",
+      headers,
+      body: JSON.stringify({ key: "general.language", value: "fr" }),
+    });
+    assert.equal(r2.status, 200);
+
+    const getRes = await fetch(`${host.baseUrl}/api/settings`, { headers });
+    assert.equal(getRes.status, 200);
+    const data = await getRes.json();
+    assert.equal(data.status, "success");
+    assert.ok(data.settings && typeof data.settings === "object");
+    assert.equal(data.settings["access.scope"], "selected_folders");
+    assert.equal(data.settings["general.language"], "fr");
+  });
+
+  await t.test("2. Unknown setting key or invalid access.scope is rejected (422)", async () => {
+    const rBadKey = await fetch(`${host.baseUrl}/api/settings`, {
+      method: "POST",
+      headers,
+      body: JSON.stringify({ "evil.unknownKey": true }),
+    });
+    assert.equal(rBadKey.status, 422);
+
+    const rBadScope = await fetch(`${host.baseUrl}/api/settings`, {
+      method: "POST",
+      headers,
+      body: JSON.stringify({ "access.scope": "god_mode" }),
+    });
+    assert.equal(rBadScope.status, 422);
+  });
+});
