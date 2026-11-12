@@ -22,7 +22,7 @@ import { SettingsLogs } from "@/components/jan/sections/SettingsLogs";
 import { SettingsMonitor } from "@/components/jan/sections/SettingsMonitor";
 import { SettingsDeveloper } from "@/components/jan/sections/SettingsDeveloper";
 import { ChatScreen } from "@/components/screens/ChatScreen";
-import { WindowControls, handleTitleBarMouseDown, handleTitleBarDoubleClick } from "@/components/jan/WindowControls";
+import { WindowControls, handleTitleBarMouseDown, handleTitleBarDoubleClick, handleTitleBarContextMenu } from "@/components/jan/WindowControls";
 import { useAppStore } from "@/store/useAppStore";
 
 export const JanAppShell: React.FC = () => {
@@ -42,7 +42,13 @@ export const JanAppShell: React.FC = () => {
 
   React.useEffect(() => {
     Promise.resolve(useAppStore.persist.rehydrate()).finally(() => setHydrated(true));
-    if (window.matchMedia("(max-width: 640px)").matches) useAppStore.setState({ isExplorerCollapsed: true });
+    const mq = window.matchMedia("(max-width: 780px)");
+    if (mq.matches) useAppStore.setState({ isExplorerCollapsed: true });
+    const onMqChange = (e: MediaQueryListEvent) => {
+      if (e.matches) useAppStore.setState({ isExplorerCollapsed: true });
+    };
+    mq.addEventListener("change", onMqChange);
+    return () => mq.removeEventListener("change", onMqChange);
   }, [initModels]);
 
   React.useEffect(() => {
@@ -104,6 +110,12 @@ export const JanAppShell: React.FC = () => {
       <div className="relative flex h-screen w-screen overflow-hidden bg-background text-foreground select-none font-sans">
         {/* In-window drag bar + top-right window controls */}
         <div
+          onMouseDown={handleTitleBarMouseDown}
+          onDoubleClick={handleTitleBarDoubleClick}
+          onContextMenu={handleTitleBarContextMenu}
+          className="abs-drag-bar fixed top-0 left-0 right-32 h-10 z-30"
+        />
+        <div
           className="fixed top-0 right-0 h-10 z-40 flex items-center justify-end px-2 pointer-events-auto"
         >
           <WindowControls />
@@ -148,7 +160,8 @@ export const JanAppShell: React.FC = () => {
           <div
             onMouseDown={handleTitleBarMouseDown}
             onDoubleClick={handleTitleBarDoubleClick}
-            className="abs-drag-bar absolute top-0 left-0 right-28 h-10 z-30"
+            onContextMenu={handleTitleBarContextMenu}
+            className="abs-drag-bar absolute top-0 left-0 right-32 h-10 z-30"
           />
         )}
 

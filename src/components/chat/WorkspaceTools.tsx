@@ -59,13 +59,13 @@ export function WorkspaceTools() {
 
   if (!root) return null;
   return (
-    <div className="flex items-center gap-2 border-b border-border px-3 py-2 text-xs" data-no-drag>
+    <div className="flex flex-wrap items-center gap-1.5 border-b border-border px-3 py-2 text-xs" data-no-drag>
       <button
         type="button"
         aria-pressed={toolsEnabled}
         disabled={!!activeTracker}
         onClick={() => setToolsEnabled(!toolsEnabled)}
-        className="rounded border px-2 py-1 font-medium"
+        className="rounded border px-2 py-1 font-medium whitespace-nowrap shrink-0"
       >
         Tools {toolsEnabled ? "on" : "off"}
       </button>
@@ -74,12 +74,12 @@ export function WorkspaceTools() {
         aria-pressed={Boolean(thinkEnabled)}
         disabled={!!activeTracker}
         onClick={() => setThinkEnabled?.(!thinkEnabled)}
-        className="rounded border px-2 py-1"
+        className="rounded border px-2 py-1 whitespace-nowrap shrink-0"
         title="Toggle model reasoning step"
       >
         Reasoning {thinkEnabled ? "on" : "off"}
       </button>
-      <span className="min-w-0 flex-1 truncate text-muted-foreground" title={root}>
+      <span className="min-w-[80px] flex-1 truncate text-muted-foreground" title={root}>
         {root}
       </span>
       {toolsEnabled && (
@@ -87,7 +87,7 @@ export function WorkspaceTools() {
           type="button"
           disabled={!!activeTracker || undoBusy}
           onClick={handleUndoTrash}
-          className="rounded border px-2 py-1 text-muted-foreground hover:text-foreground"
+          className="rounded border px-2 py-1 text-muted-foreground hover:text-foreground whitespace-nowrap shrink-0"
           title="Restore most recently trashed file from tool-trash"
         >
           Undo trash
@@ -101,14 +101,14 @@ export function WorkspaceTools() {
             JSON.stringify({ type: "selectToolWorkspace" })
           )
         }
-        className="rounded border px-2 py-1"
+        className="rounded border px-2 py-1 whitespace-nowrap shrink-0"
       >
         Choose folder
       </button>
       {toolsEnabled && (
         <span
           title="Read, search, create, edit, move, trash, and remember facts in this folder. Tool-capable model required."
-          className="text-muted-foreground"
+          className="text-muted-foreground whitespace-nowrap"
         >
           File access enabled
         </span>

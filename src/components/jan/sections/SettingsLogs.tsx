@@ -1,3 +1,5 @@
+"use client";
+
 import {
   Dialog,
   DialogContent,
@@ -7,7 +9,6 @@ import {
   DialogFooter,
 } from "@/components/ui/dialog";
 import { useAppStore } from "@/store/useAppStore";
-"use client";
 
 import React, { useEffect, useState, useMemo } from "react";
 import {

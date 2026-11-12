@@ -19,6 +19,7 @@ using System.Security.Cryptography;
 using System.Reflection;
 using System.Speech.Recognition;
 using System.Web.Script.Serialization;
+using Microsoft.Win32.SafeHandles;
 using Microsoft.Web.WebView2.Core;
 using Microsoft.Web.WebView2.WinForms;
 
@@ -67,8 +68,33 @@ namespace Sanctum {
 
         [DllImport("user32.dll")]
         static extern IntPtr SendMessage(IntPtr hWnd, int Msg, int wParam, int lParam);
+
+        [DllImport("user32.dll", EntryPoint = "SendMessage")]
+        static extern IntPtr SendMessagePtr(IntPtr hWnd, int Msg, IntPtr wParam, IntPtr lParam);
+
+        [DllImport("user32.dll")]
+        static extern bool PostMessage(IntPtr hWnd, int Msg, IntPtr wParam, IntPtr lParam);
+
+        [DllImport("user32.dll")]
+        static extern IntPtr GetSystemMenu(IntPtr hWnd, bool bRevert);
+
+        [DllImport("user32.dll")]
+        static extern bool EnableMenuItem(IntPtr hMenu, uint uIDEnableItem, uint uEnable);
+
+        [DllImport("user32.dll")]
+        static extern int TrackPopupMenu(IntPtr hMenu, uint uFlags, int x, int y, int nReserved, IntPtr hWnd, IntPtr prcRect);
+
+        [DllImport("user32.dll")]
+        static extern short GetAsyncKeyState(int vKey);
+
+        private const int VK_LBUTTON = 0x01;
         private const int WM_NCLBUTTONDOWN = 0xA1;
         private const int HT_CAPTION = 0x2;
+        private const uint MF_BYCOMMAND = 0x00000000;
+        private const uint MF_ENABLED = 0x00000000;
+        private const uint MF_GRAYED = 0x00000001;
+        private const uint TPM_RETURNCMD = 0x0100;
+        private const uint TPM_RIGHTBUTTON = 0x0002;
 
         [DllImport("user32.dll", SetLastError = true)]
         private static extern bool SetProcessDpiAwarenessContext(IntPtr dpiContext);
@@ -160,17 +186,22 @@ namespace Sanctum {
         private const int SM_CYSIZEFRAME = 33;
         private const int SM_CXPADDEDBORDER = 92;
 
+        private const int WM_SIZE = 0x0005;
         private const int WM_GETMINMAXINFO = 0x0024;
+        private const int WM_WINDOWPOSCHANGED = 0x0047;
         private const int WM_NCCALCSIZE = 0x0083;
         private const int WM_NCHITTEST = 0x0084;
         private const int WM_NCLBUTTONUP = 0x00A2;
         private const int WM_SYSCOMMAND = 0x0112;
 
+        private const int WS_CAPTION = 0x00C00000;
         private const int WS_THICKFRAME = 0x00040000;
         private const int WS_MINIMIZEBOX = 0x00020000;
         private const int WS_MAXIMIZEBOX = 0x00010000;
         private const int WS_SYSMENU = 0x00080000;
 
+        private const int SC_SIZE = 0xF000;
+        private const int SC_MOVE = 0xF010;
         private const int SC_RESTORE = 0xF120;
         private const int SC_MINIMIZE = 0xF020;
         private const int SC_MAXIMIZE = 0xF030;
@@ -249,6 +280,101 @@ namespace Sanctum {
         private const int JobObjectExtendedLimitInformation = 9;
         private const uint JOB_OBJECT_LIMIT_KILL_ON_JOB_CLOSE = 0x00002000;
 
+        // Win32 ConPTY (PseudoConsole) APIs for genuine interactive terminal
+        [StructLayout(LayoutKind.Sequential)]
+        struct COORD {
+            public short X;
+            public short Y;
+        }
+
+        [StructLayout(LayoutKind.Sequential)]
+        struct SECURITY_ATTRIBUTES {
+            public int nLength;
+            public IntPtr lpSecurityDescriptor;
+            public int bInheritHandle;
+        }
+
+        [StructLayout(LayoutKind.Sequential, CharSet = CharSet.Unicode)]
+        struct STARTUPINFO {
+            public int cb;
+            public string lpReserved;
+            public string lpDesktop;
+            public string lpTitle;
+            public int dwX;
+            public int dwY;
+            public int dwXSize;
+            public int dwYSize;
+            public int dwXCountChars;
+            public int dwYCountChars;
+            public int dwFillAttribute;
+            public int dwFlags;
+            public short wShowWindow;
+            public short cbReserved2;
+            public IntPtr lpReserved2;
+            public IntPtr hStdInput;
+            public IntPtr hStdOutput;
+            public IntPtr hStdError;
+        }
+
+        [StructLayout(LayoutKind.Sequential, CharSet = CharSet.Unicode)]
+        struct STARTUPINFOEX {
+            public STARTUPINFO StartupInfo;
+            public IntPtr lpAttributeList;
+        }
+
+        [StructLayout(LayoutKind.Sequential)]
+        struct PROCESS_INFORMATION {
+            public IntPtr hProcess;
+            public IntPtr hThread;
+            public int dwProcessId;
+            public int dwThreadId;
+        }
+
+        [DllImport("kernel32.dll", SetLastError = true)]
+        static extern bool CreatePipe(out SafeFileHandle hReadPipe, out SafeFileHandle hWritePipe, ref SECURITY_ATTRIBUTES lpPipeAttributes, int nSize);
+
+        [DllImport("kernel32.dll", SetLastError = true)]
+        static extern int CreatePseudoConsole(COORD size, SafeFileHandle hInput, SafeFileHandle hOutput, uint dwFlags, out IntPtr phPC);
+
+        [DllImport("kernel32.dll", SetLastError = true)]
+        static extern int ResizePseudoConsole(IntPtr hPC, COORD size);
+
+        [DllImport("kernel32.dll", SetLastError = true)]
+        static extern void ClosePseudoConsole(IntPtr hPC);
+
+        [DllImport("kernel32.dll", SetLastError = true)]
+        static extern bool InitializeProcThreadAttributeList(IntPtr lpAttributeList, int dwAttributeCount, int dwFlags, ref IntPtr lpSize);
+
+        [DllImport("kernel32.dll", SetLastError = true)]
+        static extern bool UpdateProcThreadAttribute(IntPtr lpAttributeList, uint dwFlags, IntPtr Attribute, IntPtr lpValue, IntPtr cbSize, IntPtr lpPreviousValue, IntPtr lpReturnSize);
+
+        [DllImport("kernel32.dll", SetLastError = true)]
+        static extern void DeleteProcThreadAttributeList(IntPtr lpAttributeList);
+
+        [DllImport("kernel32.dll", SetLastError = true, CharSet = CharSet.Unicode)]
+        static extern bool CreateProcessW(string lpApplicationName, string lpCommandLine, IntPtr lpProcessAttributes, IntPtr lpThreadAttributes, bool bInheritHandles, uint dwCreationFlags, IntPtr lpEnvironment, string lpCurrentDirectory, ref STARTUPINFOEX lpStartupInfo, out PROCESS_INFORMATION lpProcessInformation);
+
+        [DllImport("kernel32.dll", SetLastError = true)]
+        static extern bool CloseHandle(IntPtr hObject);
+
+        [DllImport("kernel32.dll", SetLastError = true)]
+        static extern bool TerminateProcess(IntPtr hProcess, uint uExitCode);
+
+        [DllImport("kernel32.dll", SetLastError = true)]
+        static extern bool GetExitCodeProcess(IntPtr hProcess, out uint lpExitCode);
+
+        private const uint EXTENDED_STARTUPINFO_PRESENT = 0x00080000;
+        private static readonly IntPtr PROC_THREAD_ATTRIBUTE_PSEUDOCONSOLE = new IntPtr(0x00020016);
+
+        private IntPtr _ptyHandle = IntPtr.Zero;
+        private IntPtr _ptyProcess = IntPtr.Zero;
+        private SafeFileHandle _ptyInputWrite;
+        private SafeFileHandle _ptyOutputRead;
+        private FileStream _ptyInputStream;
+        private Thread _ptyReadThread;
+        private readonly object _ptyLock = new object();
+        private int _ptySessionGen = 0;
+
         private static IntPtr _jobHandle = IntPtr.Zero;
         private static Mutex _singleInstanceMutex;
         private static Stopwatch _startupWatch;
@@ -264,6 +390,8 @@ namespace Sanctum {
         private CoreWebView2 _wvCore;
         private Microsoft.Web.WebView2.WinForms.WebView2 _webView;
         private Rectangle _maxButtonRect = Rectangle.Empty;
+        private int _suppressWinFormsRestoreDepth = 0;
+        private bool _wasZoomed = false;
         private readonly SubclassWndProcDelegate _subclassDelegate;
         private readonly HashSet<IntPtr> _subclassedHwnds = new HashSet<IntPtr>();
 
@@ -448,8 +576,11 @@ namespace Sanctum {
 
             string webRoot = Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "resources", "web");
             if (!Directory.Exists(webRoot)) {
+                string payloadWeb = Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "deploy", "installer", "build_payload", "resources", "web");
                 string devWeb = Path.GetFullPath(Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "..", "..", "apps", "web", "dist"));
-                if (Directory.Exists(devWeb)) {
+                if (Directory.Exists(payloadWeb)) {
+                    webRoot = payloadWeb;
+                } else if (Directory.Exists(devWeb)) {
                     webRoot = devWeb;
                 }
             }
@@ -565,11 +696,11 @@ namespace Sanctum {
 
             if (headless) return;
 
-            this.Text = "";
+            this.Text = "Sanctum";
             this.FormBorderStyle = FormBorderStyle.None;
             this.AutoScaleMode = AutoScaleMode.None;
             this.BackColor = Color.FromArgb(15, 15, 18);
-            this.Padding = new Padding(0);
+            this.Padding = new Padding(0, 4, 0, 0);
             this.Margin = new Padding(0);
             this.DoubleBuffered = true;
             this.SetStyle(ControlStyles.OptimizedDoubleBuffer | ControlStyles.AllPaintingInWmPaint | ControlStyles.UserPaint, true);
@@ -594,6 +725,7 @@ namespace Sanctum {
                     int roundCorner = DWMWCP_ROUND;
                     DwmSetWindowAttribute(this.Handle, DWMWA_WINDOW_CORNER_PREFERENCE, ref roundCorner, sizeof(int));
                 } catch { }
+                SyncWindowChromeState();
             };
 
             this.Load += async (s, e) => {
@@ -601,13 +733,11 @@ namespace Sanctum {
             };
 
             this.Resize += (s, e) => {
-                if (_webView != null) {
-                    _webView.Size = this.ClientSize;
-                } else if (_wvController != null) {
-                    _wvController.Bounds = this.ClientRectangle;
+                SyncWindowChromeState();
+                if (_wvController != null) {
+                    _wvController.Bounds = this.DisplayRectangle;
                 }
                 SubclassChildWindows();
-                NotifyWindowState();
             };
 
             this.LocationChanged += (s, e) => {
@@ -618,6 +748,7 @@ namespace Sanctum {
                 if (_installerRunning && MessageBox.Show(this, "A runtime installer is running. Close Sanctum and interrupt setup?", "Installation in progress", MessageBoxButtons.YesNo, MessageBoxIcon.Warning) != DialogResult.Yes) { e.Cancel = true; return; }
                 if (_setupCancellation != null) _setupCancellation.Cancel();
                 if (_speech != null) { try { _speech.RecognizeAsyncCancel(); _speech.Dispose(); } catch { } _speech = null; }
+                StopPtySession();
                 SaveWindowBounds();
                 try {
                     if (_webView != null) {
@@ -635,9 +766,54 @@ namespace Sanctum {
         protected override CreateParams CreateParams {
             get {
                 CreateParams cp = base.CreateParams;
-                cp.Style |= (WS_THICKFRAME | WS_MINIMIZEBOX | WS_MAXIMIZEBOX | WS_SYSMENU);
+                cp.Style |= (WS_CAPTION | WS_THICKFRAME | WS_MINIMIZEBOX | WS_MAXIMIZEBOX | WS_SYSMENU);
                 return cp;
             }
+        }
+
+        private int ScaleForDpi(int px) {
+            try {
+                uint dpi = GetDpiForWindow(this.Handle);
+                if (dpi > 0) return Math.Max(px, (int)Math.Round(px * dpi / 96.0));
+            } catch { }
+            return px;
+        }
+
+        private void SyncWindowChromeState() {
+            if (!IsHandleCreated) return;
+            bool isMax = IsZoomed(this.Handle) || this.WindowState == FormWindowState.Maximized;
+            int targetTop = isMax ? 0 : ScaleForDpi(4);
+            if (this.Padding.Top != targetTop) {
+                this.Padding = new Padding(0, targetTop, 0, 0);
+            }
+            NotifyWindowState();
+        }
+
+        private void ShowSystemMenu(Point screenPt) {
+            try {
+                IntPtr hMenu = GetSystemMenu(this.Handle, false);
+                if (hMenu == IntPtr.Zero) return;
+                bool isMax = IsZoomed(this.Handle) || this.WindowState == FormWindowState.Maximized;
+                EnableMenuItem(hMenu, (uint)SC_RESTORE, MF_BYCOMMAND | (isMax ? MF_ENABLED : MF_GRAYED));
+                EnableMenuItem(hMenu, (uint)SC_MOVE, MF_BYCOMMAND | (isMax ? MF_GRAYED : MF_ENABLED));
+                EnableMenuItem(hMenu, (uint)SC_SIZE, MF_BYCOMMAND | (isMax ? MF_GRAYED : MF_ENABLED));
+                EnableMenuItem(hMenu, (uint)SC_MINIMIZE, MF_BYCOMMAND | MF_ENABLED);
+                EnableMenuItem(hMenu, (uint)SC_MAXIMIZE, MF_BYCOMMAND | (isMax ? MF_GRAYED : MF_ENABLED));
+                EnableMenuItem(hMenu, (uint)SC_CLOSE, MF_BYCOMMAND | MF_ENABLED);
+
+                int cmd = TrackPopupMenu(hMenu, TPM_RETURNCMD | TPM_RIGHTBUTTON, screenPt.X, screenPt.Y, 0, this.Handle, IntPtr.Zero);
+                if (cmd != 0) {
+                    PostMessage(this.Handle, WM_SYSCOMMAND, (IntPtr)cmd, IntPtr.Zero);
+                }
+            } catch { }
+        }
+
+        protected override bool ProcessCmdKey(ref Message msg, Keys keyData) {
+            if (keyData == (Keys.Alt | Keys.Space)) {
+                ShowSystemMenu(this.PointToScreen(new Point(ScaleForDpi(8), ScaleForDpi(36))));
+                return true;
+            }
+            return base.ProcessCmdKey(ref msg, keyData);
         }
 
         private IntPtr PerformHitTest(Point screenPt) {
@@ -657,7 +833,8 @@ namespace Sanctum {
                 return (IntPtr)HTCLIENT;
             }
 
-            int border = 6;
+            int border = ScaleForDpi(6);
+            int corner = ScaleForDpi(12);
             bool left = clientPt.X < border;
             bool right = clientPt.X >= w - border;
             bool top = clientPt.Y < border;
@@ -667,7 +844,11 @@ namespace Sanctum {
             if (top && right) return (IntPtr)HTTOPRIGHT;
             if (bottom && left) return (IntPtr)HTBOTTOMLEFT;
             if (bottom && right) return (IntPtr)HTBOTTOMRIGHT;
-            if (top) return (IntPtr)HTTOP;
+            if (top) {
+                if (clientPt.X < corner) return (IntPtr)HTTOPLEFT;
+                if (clientPt.X >= w - corner) return (IntPtr)HTTOPRIGHT;
+                return (IntPtr)HTTOP;
+            }
             if (bottom) return (IntPtr)HTBOTTOM;
             if (left) return (IntPtr)HTLEFT;
             if (right) return (IntPtr)HTRIGHT;
@@ -677,8 +858,9 @@ namespace Sanctum {
 
         private IntPtr ChildSubclassProc(IntPtr hWnd, uint uMsg, IntPtr wParam, IntPtr lParam, UIntPtr uIdSubclass, IntPtr dwRefData) {
             if (uMsg == WM_NCHITTEST) {
-                short x = (short)(lParam.ToInt32() & 0xFFFF);
-                short y = (short)((lParam.ToInt32() >> 16) & 0xFFFF);
+                int lp = unchecked((int)lParam.ToInt64());
+                short x = (short)(lp & 0xFFFF);
+                short y = (short)((lp >> 16) & 0xFFFF);
                 IntPtr hit = PerformHitTest(new Point(x, y));
                 if (hit != (IntPtr)HTCLIENT) {
                     return (IntPtr)HTTRANSPARENT;
@@ -698,21 +880,41 @@ namespace Sanctum {
             } catch { }
         }
 
+        protected override void SetBoundsCore(int x, int y, int width, int height, BoundsSpecified specified) {
+            // Suppress WinForms' RestoreWindowBoundsIfNecessary height inflation (+CaptionHeight)
+            // when WM_NCCALCSIZE intentionally removes the native caption bar.
+            if (_suppressWinFormsRestoreDepth > 0) {
+                return;
+            }
+            base.SetBoundsCore(x, y, width, height, specified);
+        }
+
         protected override void WndProc(ref Message m) {
             if (m.Msg == WM_NCCALCSIZE) {
                 if (m.WParam != IntPtr.Zero) {
+                    NCCALCSIZE_PARAMS csp = (NCCALCSIZE_PARAMS)Marshal.PtrToStructure(m.LParam, typeof(NCCALCSIZE_PARAMS));
                     if (IsZoomed(this.Handle)) {
                         IntPtr hMonitor = MonitorFromWindow(this.Handle, MONITOR_DEFAULTTONEAREST);
                         if (hMonitor != IntPtr.Zero) {
                             MONITORINFO mi = new MONITORINFO();
                             mi.cbSize = Marshal.SizeOf(typeof(MONITORINFO));
                             if (GetMonitorInfo(hMonitor, ref mi)) {
-                                NCCALCSIZE_PARAMS csp = (NCCALCSIZE_PARAMS)Marshal.PtrToStructure(m.LParam, typeof(NCCALCSIZE_PARAMS));
-                                csp.rgrc0 = mi.rcWork;
-                                Marshal.StructureToPtr(csp, m.LParam, false);
+                                RECT work = mi.rcWork;
+                                if (work.left == mi.rcMonitor.left && work.top == mi.rcMonitor.top &&
+                                    work.right == mi.rcMonitor.right && work.bottom == mi.rcMonitor.bottom) {
+                                    work.bottom -= 1;
+                                }
+                                csp.rgrc0 = work;
                             }
                         }
+                    } else {
+                        int borderX = GetMetric(SM_CXSIZEFRAME) + GetMetric(SM_CXPADDEDBORDER);
+                        int borderY = GetMetric(SM_CYSIZEFRAME) + GetMetric(SM_CXPADDEDBORDER);
+                        csp.rgrc0.left += borderX;
+                        csp.rgrc0.right -= borderX;
+                        csp.rgrc0.bottom -= borderY;
                     }
+                    Marshal.StructureToPtr(csp, m.LParam, false);
                     m.Result = IntPtr.Zero;
                     return;
                 }
@@ -731,19 +933,23 @@ namespace Sanctum {
                         mmi.ptMaxSize.y = (mi.rcWork.bottom - mi.rcWork.top) + 2 * borderY;
                     }
                 }
-                mmi.ptMinTrackSize.x = Math.Max(mmi.ptMinTrackSize.x, 900);
-                mmi.ptMinTrackSize.y = Math.Max(mmi.ptMinTrackSize.y, 600);
+                mmi.ptMinTrackSize.x = Math.Max(mmi.ptMinTrackSize.x, 420);
+                mmi.ptMinTrackSize.y = Math.Max(mmi.ptMinTrackSize.y, 320);
                 Marshal.StructureToPtr(mmi, m.LParam, false);
                 m.Result = IntPtr.Zero;
                 return;
             } else if (m.Msg == WM_NCHITTEST) {
-                short x = (short)(m.LParam.ToInt32() & 0xFFFF);
-                short y = (short)((m.LParam.ToInt32() >> 16) & 0xFFFF);
-                IntPtr hit = PerformHitTest(new Point(x, y));
-                if (hit != (IntPtr)HTCLIENT) {
-                    m.Result = hit;
-                    return;
+                base.WndProc(ref m);
+                if (m.Result == (IntPtr)HTCLIENT) {
+                    int lp = unchecked((int)m.LParam.ToInt64());
+                    short x = (short)(lp & 0xFFFF);
+                    short y = (short)((lp >> 16) & 0xFFFF);
+                    IntPtr hit = PerformHitTest(new Point(x, y));
+                    if (hit != (IntPtr)HTCLIENT) {
+                        m.Result = hit;
+                    }
                 }
+                return;
             } else if (m.Msg == WM_NCLBUTTONDOWN) {
                 if ((int)m.WParam == HTMAXBUTTON) {
                     m.Result = IntPtr.Zero;
@@ -759,6 +965,28 @@ namespace Sanctum {
                     m.Result = IntPtr.Zero;
                     return;
                 }
+            } else if (m.Msg == WM_WINDOWPOSCHANGED) {
+                bool nowZoomed = IsHandleCreated && IsZoomed(this.Handle);
+                bool restoringFromMax = _wasZoomed && !nowZoomed;
+                _wasZoomed = nowZoomed;
+                if (restoringFromMax) {
+                    _suppressWinFormsRestoreDepth++;
+                    try {
+                        base.WndProc(ref m);
+                    } finally {
+                        _suppressWinFormsRestoreDepth--;
+                    }
+                    return;
+                }
+            } else if ((m.Msg == WM_SYSCOMMAND && ((int)m.WParam & 0xFFF0) == SC_RESTORE) ||
+                       m.Msg == WM_SIZE) {
+                _suppressWinFormsRestoreDepth++;
+                try {
+                    base.WndProc(ref m);
+                } finally {
+                    _suppressWinFormsRestoreDepth--;
+                }
+                return;
             }
 
             base.WndProc(ref m);
@@ -781,7 +1009,7 @@ namespace Sanctum {
             int defaultY = workArea.Top + (workArea.Height - defaultH) / 2;
 
             this.StartPosition = FormStartPosition.Manual;
-            this.MinimumSize = new Size(900, 600);
+            this.MinimumSize = new Size(420, 320);
             this.Size = new Size(defaultW, defaultH);
             this.Location = new Point(defaultX, defaultY);
 
@@ -799,8 +1027,8 @@ namespace Sanctum {
                 bool isMax = Regex.IsMatch(json, "\"isMaximized\"\\s*:\\s*true", RegexOptions.IgnoreCase) ||
                              Regex.IsMatch(json, "\"maximized\"\\s*:\\s*true", RegexOptions.IgnoreCase);
 
-                w = Math.Max(900, w);
-                h = Math.Max(600, h);
+                w = Math.Max(420, w);
+                h = Math.Max(320, h);
 
                 Rectangle candidate = new Rectangle(x, y, w, h);
                 Screen targetScreen = null;
@@ -813,10 +1041,10 @@ namespace Sanctum {
 
                 if (targetScreen != null) {
                     Rectangle targetWork = targetScreen.WorkingArea;
-                    w = Math.Min(w, targetWork.Width);
-                    h = Math.Min(h, targetWork.Height);
-                    x = Math.Max(targetWork.Left, Math.Min(x, targetWork.Right - w));
-                    y = Math.Max(targetWork.Top, Math.Min(y, targetWork.Bottom - h));
+                    w = Math.Min(w, targetWork.Width + 32);
+                    h = Math.Min(h, targetWork.Height + 16);
+                    x = Math.Max(targetWork.Left - 16, Math.Min(x, targetWork.Right - w + 16));
+                    y = Math.Max(targetWork.Top, Math.Min(y, targetWork.Bottom - h + 16));
 
                     this.Location = new Point(x, y);
                     this.Size = new Size(w, h);
@@ -848,9 +1076,9 @@ namespace Sanctum {
                     bounds = this.Bounds;
                 }
 
-                if (bounds.Width < 900 || bounds.Height < 600) {
-                    bounds.Width = Math.Max(900, bounds.Width);
-                    bounds.Height = Math.Max(600, bounds.Height);
+                if (bounds.Width < 420 || bounds.Height < 320) {
+                    bounds.Width = Math.Max(420, bounds.Width);
+                    bounds.Height = Math.Max(320, bounds.Height);
                 }
 
                 string json = string.Format(
@@ -914,11 +1142,14 @@ namespace Sanctum {
                     args.Handled = true;
                 };
 
+                bool hasBundledWeb = !string.IsNullOrEmpty(_webRoot) && File.Exists(Path.Combine(_webRoot, "index.html"));
+
                 // Block navigation to external origins
                 _wvCore.NavigationStarting += (sender, args) => {
                     if (args.Uri != null &&
                         !args.Uri.StartsWith("https://sanctum.app", StringComparison.OrdinalIgnoreCase) &&
-                        !args.Uri.StartsWith("about:blank", StringComparison.OrdinalIgnoreCase)) {
+                        !args.Uri.StartsWith("about:blank", StringComparison.OrdinalIgnoreCase) &&
+                        !( !hasBundledWeb && args.Uri.StartsWith("data:text/html", StringComparison.OrdinalIgnoreCase) )) {
                         args.Cancel = true;
                     }
                 };
@@ -1085,6 +1316,219 @@ namespace Sanctum {
             }
         }
 
+        private void PtyPost(object payload) {
+            if (IsDisposed || !IsHandleCreated) return;
+            try {
+                string json = new JavaScriptSerializer().Serialize(payload);
+                BeginInvoke((Action)(() => {
+                    try {
+                        if (_wvCore != null) _wvCore.PostWebMessageAsJson(json);
+                    } catch { }
+                }));
+            } catch { }
+        }
+
+        private void StartPtySession(string shell, string cwd, int cols, int rows) {
+            StopPtySession();
+            int gen;
+            lock (_ptyLock) {
+                gen = ++_ptySessionGen;
+            }
+
+            try {
+                short c = (short)Math.Max(20, Math.Min(400, cols));
+                short r = (short)Math.Max(5, Math.Min(150, rows));
+
+                string workDir = (!string.IsNullOrEmpty(cwd) && Directory.Exists(cwd)) ? cwd : _toolWorkspace;
+                if (string.IsNullOrEmpty(workDir) || !Directory.Exists(workDir)) {
+                    workDir = Environment.GetFolderPath(Environment.SpecialFolder.UserProfile);
+                }
+
+                string cmdLine = "powershell.exe -NoLogo";
+                if (string.Equals(shell, "cmd", StringComparison.OrdinalIgnoreCase)) {
+                    cmdLine = "cmd.exe";
+                } else if (string.Equals(shell, "wsl", StringComparison.OrdinalIgnoreCase)) {
+                    cmdLine = "wsl.exe";
+                }
+
+                SECURITY_ATTRIBUTES sa = new SECURITY_ATTRIBUTES {
+                    nLength = Marshal.SizeOf(typeof(SECURITY_ATTRIBUTES)),
+                    bInheritHandle = 0
+                };
+                SafeFileHandle inRead, inWrite, outRead, outWrite;
+                if (!CreatePipe(out inRead, out inWrite, ref sa, 0) ||
+                    !CreatePipe(out outRead, out outWrite, ref sa, 0)) {
+                    throw new Exception("CreatePipe failed");
+                }
+
+                IntPtr hPC;
+                int hr = CreatePseudoConsole(new COORD { X = c, Y = r }, inRead, outWrite, 0, out hPC);
+                inRead.Dispose();
+                outWrite.Dispose();
+                if (hr != 0 || hPC == IntPtr.Zero) {
+                    inWrite.Dispose();
+                    outRead.Dispose();
+                    throw new Exception("CreatePseudoConsole failed: 0x" + hr.ToString("X"));
+                }
+
+                IntPtr attrSize = IntPtr.Zero;
+                InitializeProcThreadAttributeList(IntPtr.Zero, 1, 0, ref attrSize);
+                IntPtr attrList = Marshal.AllocHGlobal(attrSize);
+                PROCESS_INFORMATION pi = new PROCESS_INFORMATION();
+                bool started = false;
+
+                try {
+                    if (!InitializeProcThreadAttributeList(attrList, 1, 0, ref attrSize)) {
+                        throw new Exception("InitializeProcThreadAttributeList failed");
+                    }
+                    if (!UpdateProcThreadAttribute(attrList, 0, PROC_THREAD_ATTRIBUTE_PSEUDOCONSOLE, hPC, (IntPtr)IntPtr.Size, IntPtr.Zero, IntPtr.Zero)) {
+                        throw new Exception("UpdateProcThreadAttribute failed");
+                    }
+
+                    STARTUPINFOEX si = new STARTUPINFOEX();
+                    si.StartupInfo.cb = Marshal.SizeOf(typeof(STARTUPINFOEX));
+                    si.lpAttributeList = attrList;
+
+                    started = CreateProcessW(
+                        null,
+                        cmdLine,
+                        IntPtr.Zero,
+                        IntPtr.Zero,
+                        false,
+                        EXTENDED_STARTUPINFO_PRESENT,
+                        IntPtr.Zero,
+                        workDir,
+                        ref si,
+                        out pi
+                    );
+                } finally {
+                    DeleteProcThreadAttributeList(attrList);
+                    Marshal.FreeHGlobal(attrList);
+                }
+
+                if (!started) {
+                    int err = Marshal.GetLastWin32Error();
+                    ClosePseudoConsole(hPC);
+                    inWrite.Dispose();
+                    outRead.Dispose();
+                    throw new Exception("CreateProcessW failed: " + err);
+                }
+
+                if (pi.hThread != IntPtr.Zero) CloseHandle(pi.hThread);
+                if (_jobHandle != IntPtr.Zero && pi.hProcess != IntPtr.Zero) {
+                    try { AssignProcessToJobObject(_jobHandle, pi.hProcess); } catch { }
+                }
+
+                FileStream inputStream = new FileStream(inWrite, FileAccess.Write, 4096, false);
+                FileStream outputStream = new FileStream(outRead, FileAccess.Read, 4096, false);
+
+                lock (_ptyLock) {
+                    if (gen != _ptySessionGen) {
+                        try { inputStream.Dispose(); } catch { }
+                        try { outputStream.Dispose(); } catch { }
+                        ClosePseudoConsole(hPC);
+                        if (pi.hProcess != IntPtr.Zero) {
+                            try { TerminateProcess(pi.hProcess, 1); CloseHandle(pi.hProcess); } catch { }
+                        }
+                        return;
+                    }
+                    _ptyHandle = hPC;
+                    _ptyProcess = pi.hProcess;
+                    _ptyInputWrite = inWrite;
+                    _ptyOutputRead = outRead;
+                    _ptyInputStream = inputStream;
+                }
+
+                Thread reader = new Thread(() => {
+                    byte[] buf = new byte[4096];
+                    char[] chars = new char[4096];
+                    Decoder dec = Encoding.UTF8.GetDecoder();
+                    try {
+                        while (true) {
+                            int n = outputStream.Read(buf, 0, buf.Length);
+                            if (n <= 0) break;
+                            int charCount = dec.GetChars(buf, 0, n, chars, 0, false);
+                            if (charCount > 0) {
+                                string chunk = new string(chars, 0, charCount);
+                                PtyPost(new { type = "ptyOutput", gen = gen, data = chunk });
+                            }
+                        }
+                    } catch {
+                    } finally {
+                        try { outputStream.Dispose(); } catch { }
+                        uint exitCode = 0;
+                        IntPtr procCopy = IntPtr.Zero;
+                        lock (_ptyLock) {
+                            if (gen == _ptySessionGen) {
+                                procCopy = _ptyProcess;
+                            }
+                        }
+                        if (procCopy != IntPtr.Zero) {
+                            try { GetExitCodeProcess(procCopy, out exitCode); } catch { }
+                        }
+                        PtyPost(new { type = "ptyExit", gen = gen, exitCode = (int)exitCode });
+                    }
+                });
+                reader.IsBackground = true;
+                reader.Start();
+                _ptyReadThread = reader;
+            } catch (Exception ex) {
+                PtyPost(new { type = "ptyOutput", gen = gen, data = "\r\n\x1b[31m[Terminal error: " + ex.Message + "]\x1b[0m\r\n" });
+                PtyPost(new { type = "ptyExit", gen = gen, exitCode = 1 });
+            }
+        }
+
+        private void WritePtyInput(string data) {
+            if (string.IsNullOrEmpty(data)) return;
+            lock (_ptyLock) {
+                if (_ptyInputStream == null) return;
+                try {
+                    byte[] bytes = Encoding.UTF8.GetBytes(data);
+                    _ptyInputStream.Write(bytes, 0, bytes.Length);
+                    _ptyInputStream.Flush();
+                } catch { }
+            }
+        }
+
+        private void ResizePty(int cols, int rows) {
+            lock (_ptyLock) {
+                if (_ptyHandle == IntPtr.Zero) return;
+                try {
+                    short c = (short)Math.Max(20, Math.Min(400, cols));
+                    short r = (short)Math.Max(5, Math.Min(150, rows));
+                    ResizePseudoConsole(_ptyHandle, new COORD { X = c, Y = r });
+                } catch { }
+            }
+        }
+
+        private void StopPtySession() {
+            lock (_ptyLock) {
+                _ptySessionGen++;
+                if (_ptyInputStream != null) {
+                    try { _ptyInputStream.Dispose(); } catch { }
+                    _ptyInputStream = null;
+                }
+                if (_ptyInputWrite != null) {
+                    try { _ptyInputWrite.Dispose(); } catch { }
+                    _ptyInputWrite = null;
+                }
+                if (_ptyHandle != IntPtr.Zero) {
+                    try { ClosePseudoConsole(_ptyHandle); } catch { }
+                    _ptyHandle = IntPtr.Zero;
+                }
+                if (_ptyOutputRead != null) {
+                    try { _ptyOutputRead.Dispose(); } catch { }
+                    _ptyOutputRead = null;
+                }
+                if (_ptyProcess != IntPtr.Zero) {
+                    try { TerminateProcess(_ptyProcess, 0); } catch { }
+                    try { CloseHandle(_ptyProcess); } catch { }
+                    _ptyProcess = IntPtr.Zero;
+                }
+                _ptyReadThread = null;
+            }
+        }
+
         private void OnWebMessageReceived(object sender, CoreWebView2WebMessageReceivedEventArgs e) {
             try {
                 string raw = e.TryGetWebMessageAsString();
@@ -1148,9 +1592,35 @@ namespace Sanctum {
                     if (x >= 0 && y >= 0 && w > 0 && h > 0) {
                         _maxButtonRect = new Rectangle(x, y, w, h);
                     }
+                } else if (raw.Contains("\"ptyStart\"")) {
+                    var payload = new JavaScriptSerializer().Deserialize<System.Collections.Generic.Dictionary<string, object>>(raw);
+                    string ptyShell = payload.ContainsKey("shell") ? Convert.ToString(payload["shell"]) : "powershell";
+                    string ptyCwd = payload.ContainsKey("cwd") ? Convert.ToString(payload["cwd"]) : "";
+                    int cols = payload.ContainsKey("cols") ? Convert.ToInt32(payload["cols"]) : 80;
+                    int rows = payload.ContainsKey("rows") ? Convert.ToInt32(payload["rows"]) : 24;
+                    StartPtySession(ptyShell, ptyCwd, cols, rows);
+                } else if (raw.Contains("\"ptyInput\"")) {
+                    var payload = new JavaScriptSerializer().Deserialize<System.Collections.Generic.Dictionary<string, object>>(raw);
+                    string inputData = payload.ContainsKey("data") ? Convert.ToString(payload["data"]) : "";
+                    WritePtyInput(inputData);
+                } else if (raw.Contains("\"ptyResize\"")) {
+                    var payload = new JavaScriptSerializer().Deserialize<System.Collections.Generic.Dictionary<string, object>>(raw);
+                    int cols = payload.ContainsKey("cols") ? Convert.ToInt32(payload["cols"]) : 80;
+                    int rows = payload.ContainsKey("rows") ? Convert.ToInt32(payload["rows"]) : 24;
+                    ResizePty(cols, rows);
+                } else if (raw.Contains("\"ptyStop\"")) {
+                    StopPtySession();
                 } else if (raw.Contains("\"windowDrag\"")) {
-                    ReleaseCapture();
-                    SendMessage(this.Handle, WM_NCLBUTTONDOWN, HT_CAPTION, 0);
+                    if ((GetAsyncKeyState(VK_LBUTTON) & 0x8000) != 0) {
+                        Point pt = Cursor.Position;
+                        IntPtr lParam = (IntPtr)unchecked(((pt.Y & 0xFFFF) << 16) | (pt.X & 0xFFFF));
+                        ReleaseCapture();
+                        SendMessagePtr(this.Handle, WM_NCLBUTTONDOWN, (IntPtr)HT_CAPTION, lParam);
+                    }
+                } else if (raw.Contains("\"windowSystemMenuAtOrigin\"")) {
+                    ShowSystemMenu(this.PointToScreen(new Point(ScaleForDpi(8), ScaleForDpi(36))));
+                } else if (raw.Contains("\"windowSystemMenu\"")) {
+                    ShowSystemMenu(Cursor.Position);
                 } else if (raw.Contains("\"windowMinimize\"")) {
                     SendMessage(this.Handle, WM_SYSCOMMAND, SC_MINIMIZE, 0);
                 } else if (raw.Contains("\"windowRestore\"")) {

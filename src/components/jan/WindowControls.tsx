@@ -9,7 +9,14 @@ interface WindowControlsProps {
 }
 
 export const postHostWindowMessage = (
-  action: "windowDrag" | "windowMinimize" | "windowMaximize" | "windowRestore" | "windowClose"
+  action:
+    | "windowDrag"
+    | "windowMinimize"
+    | "windowMaximize"
+    | "windowRestore"
+    | "windowClose"
+    | "windowSystemMenu"
+    | "windowSystemMenuAtOrigin"
 ) => {
   if (typeof window !== "undefined") {
     const wv = (window as unknown as { chrome?: { webview?: { postMessage: (msg: string) => void } } }).chrome?.webview;
@@ -19,38 +26,62 @@ export const postHostWindowMessage = (
   }
 };
 
-export const handleTitleBarMouseDown = (e: React.MouseEvent<HTMLElement>) => {
-  if (e.button !== 0) return;
-  const target = e.target as HTMLElement;
-  if (
+const isInteractiveTitleBarTarget = (target: HTMLElement | null): boolean => {
+  if (!target) return false;
+  return Boolean(
     target.closest("button") ||
-    target.closest("input") ||
-    target.closest("select") ||
-    target.closest("a") ||
-    target.closest("[role='button']") ||
-    target.closest("[role='combobox']") ||
-    target.closest("[data-no-drag]")
-  ) {
-    return;
-  }
-  postHostWindowMessage("windowDrag");
+      target.closest("input") ||
+      target.closest("select") ||
+      target.closest("a") ||
+      target.closest("[role='button']") ||
+      target.closest("[role='combobox']") ||
+      target.closest("[data-no-drag]")
+  );
+};
+
+export const handleTitleBarMouseDown = (e: React.MouseEvent<HTMLElement>) => {
+  if (e.button !== 0 || e.detail >= 2) return;
+  if (isInteractiveTitleBarTarget(e.target as HTMLElement)) return;
+
+  const startX = e.clientX;
+  const startY = e.clientY;
+  const threshold = 4;
+
+  const cleanup = () => {
+    window.removeEventListener("mousemove", onMove, true);
+    window.removeEventListener("mouseup", cleanup, true);
+    window.removeEventListener("blur", cleanup);
+  };
+
+  const onMove = (moveEvent: MouseEvent) => {
+    if ((moveEvent.buttons & 1) === 0) {
+      cleanup();
+      return;
+    }
+    if (
+      Math.abs(moveEvent.clientX - startX) >= threshold ||
+      Math.abs(moveEvent.clientY - startY) >= threshold
+    ) {
+      cleanup();
+      postHostWindowMessage("windowDrag");
+    }
+  };
+
+  window.addEventListener("mousemove", onMove, true);
+  window.addEventListener("mouseup", cleanup, true);
+  window.addEventListener("blur", cleanup);
 };
 
 export const handleTitleBarDoubleClick = (e: React.MouseEvent<HTMLElement>) => {
   if (e.button !== 0) return;
-  const target = e.target as HTMLElement;
-  if (
-    target.closest("button") ||
-    target.closest("input") ||
-    target.closest("select") ||
-    target.closest("a") ||
-    target.closest("[role='button']") ||
-    target.closest("[role='combobox']") ||
-    target.closest("[data-no-drag]")
-  ) {
-    return;
-  }
+  if (isInteractiveTitleBarTarget(e.target as HTMLElement)) return;
   postHostWindowMessage("windowMaximize");
+};
+
+export const handleTitleBarContextMenu = (e: React.MouseEvent<HTMLElement>) => {
+  if (isInteractiveTitleBarTarget(e.target as HTMLElement)) return;
+  e.preventDefault();
+  postHostWindowMessage("windowSystemMenu");
 };
 
 export const WindowControls: React.FC<WindowControlsProps> = ({ className }) => {
@@ -98,11 +129,19 @@ export const WindowControls: React.FC<WindowControlsProps> = ({ className }) => 
       };
     }).chrome?.webview;
 
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if (e.altKey && !e.ctrlKey && !e.metaKey && (e.code === "Space" || e.key === " ")) {
+        e.preventDefault();
+        postHostWindowMessage("windowSystemMenuAtOrigin");
+      }
+    };
+
     if (wv?.addEventListener) {
       wv.addEventListener("message", handleMessage);
     }
     window.addEventListener("message", handleMessage);
     window.addEventListener("resize", reportMaximizeRect);
+    window.addEventListener("keydown", handleKeyDown, true);
 
     const timer = setTimeout(reportMaximizeRect, 200);
 
@@ -113,6 +152,7 @@ export const WindowControls: React.FC<WindowControlsProps> = ({ className }) => 
       }
       window.removeEventListener("message", handleMessage);
       window.removeEventListener("resize", reportMaximizeRect);
+      window.removeEventListener("keydown", handleKeyDown, true);
     };
   }, [reportMaximizeRect]);
 

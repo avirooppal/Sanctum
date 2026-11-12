@@ -203,8 +203,8 @@ export const AccessScopeBadge: React.FC = () => {
         </PopoverTrigger>
 
         <PopoverContent
-          align="end"
-          className="w-84 p-4 bg-popover/95 backdrop-blur-xl border-border/80 shadow-2xl rounded-2xl space-y-3.5 z-50 text-xs"
+          align="start"
+          className="w-80 max-w-[calc(100vw-24px)] max-h-[min(78vh,34rem)] overflow-y-auto p-4 bg-popover/95 backdrop-blur-xl border-border/80 shadow-2xl rounded-2xl space-y-3.5 z-50 text-xs"
         >
           <div className="flex items-center justify-between border-b border-border/50 pb-2.5">
             <div>
@@ -360,7 +360,7 @@ export const AccessScopeBadge: React.FC = () => {
             </div>
           )}
 
-          <div className="pt-2 border-t border-border/40 flex items-center justify-between text-[10px] text-muted-foreground">
+          <div className="pt-2 border-t border-border/40 flex flex-wrap items-center justify-between gap-2 text-[10px] text-muted-foreground">
             <span>Hard-blocked: C:\Windows, SSH, Chrome</span>
             <button
               type="button"
@@ -368,7 +368,7 @@ export const AccessScopeBadge: React.FC = () => {
                 fetchAuditLogs();
                 setIsAuditOpen(true);
               }}
-              className="text-primary hover:underline flex items-center gap-1 font-medium"
+              className="text-primary hover:underline flex items-center gap-1 font-medium whitespace-nowrap shrink-0"
             >
               <ExternalLink size={10} /> View Audit Log
             </button>

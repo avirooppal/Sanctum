@@ -14,7 +14,7 @@ import {
 import { useAppStore } from "@/store/useAppStore";
 import { JAN_STYLE_DOWNLOAD_CATALOG, CuratedModel } from "@/lib/constants";
 import { ConsentModal } from "@/components/hub/ConsentModal";
-import { handleTitleBarMouseDown, handleTitleBarDoubleClick } from "@/components/jan/WindowControls";
+import { handleTitleBarMouseDown, handleTitleBarDoubleClick, handleTitleBarContextMenu } from "@/components/jan/WindowControls";
 import { cn } from "@/lib/utils";
 import { toast } from "sonner";
 
@@ -98,6 +98,7 @@ export const HubView: React.FC = () => {
       <div
         onMouseDown={handleTitleBarMouseDown}
         onDoubleClick={handleTitleBarDoubleClick}
+        onContextMenu={handleTitleBarContextMenu}
         className="px-6 pr-36 h-12 border-b border-border/50 shrink-0 flex items-center justify-between gap-4"
       >
         {/* Inline Search Input */}

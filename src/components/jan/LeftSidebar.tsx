@@ -28,7 +28,7 @@ import {
 import { DownloadPopover } from "./DownloadPopover";
 import { AddProjectDialog } from "./AddProjectDialog";
 import { SearchDialog } from "./SearchDialog";
-import { handleTitleBarMouseDown, handleTitleBarDoubleClick } from "./WindowControls";
+import { handleTitleBarMouseDown, handleTitleBarDoubleClick, handleTitleBarContextMenu } from "./WindowControls";
 import { useAppStore } from "@/store/useAppStore";
 import { ChatSession } from "@/types";
 import { cn } from "@/lib/utils";
@@ -403,6 +403,7 @@ export const LeftSidebar: React.FC<LeftSidebarProps> = ({
             <div
               onMouseDown={handleTitleBarMouseDown}
               onDoubleClick={handleTitleBarDoubleClick}
+              onContextMenu={handleTitleBarContextMenu}
               className="flex items-center justify-end px-1 h-8 shrink-0"
             >
               <div className="flex items-center gap-1 ml-auto">

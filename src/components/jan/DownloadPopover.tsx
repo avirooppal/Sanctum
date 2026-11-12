@@ -59,7 +59,7 @@ export const DownloadPopover: React.FC = () => {
       <PopoverContent
         align="start"
         side="right"
-        className="w-84 rounded-xl border border-border/80 bg-popover/95 p-3 shadow-2xl backdrop-blur-xl"
+        className="w-80 max-w-[calc(100vw-24px)] max-h-[min(70vh,28rem)] overflow-y-auto rounded-xl border border-border/80 bg-popover/95 p-3 shadow-2xl backdrop-blur-xl"
       >
         <div className="flex items-center justify-between pb-2 border-b border-border/50">
           <span className="text-xs font-semibold text-foreground">Downloads</span>

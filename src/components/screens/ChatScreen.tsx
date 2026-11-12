@@ -30,7 +30,7 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { DownloadPopover } from "@/components/jan/DownloadPopover";
-import { handleTitleBarMouseDown, handleTitleBarDoubleClick } from "@/components/jan/WindowControls";
+import { handleTitleBarMouseDown, handleTitleBarDoubleClick, handleTitleBarContextMenu } from "@/components/jan/WindowControls";
 import { useAppStore } from "@/store/useAppStore";
 import { ChatMessage } from "@/types";
 import { cn } from "@/lib/utils";
@@ -501,17 +501,18 @@ export const ChatScreen: React.FC<ChatScreenProps> = () => {
 
   return (
     <main className="relative flex flex-1 min-h-0 w-full overflow-hidden bg-background">
-      <section className="flex flex-col flex-1 min-w-0">
+      <section className="relative flex flex-col flex-1 min-w-0 min-h-0">
         {/* Top In-Window Titlebar & Floating Model Selector Pill (Matches Screenshot 2026-10-25 190854.png) */}
         <div
           onMouseDown={handleTitleBarMouseDown}
           onDoubleClick={handleTitleBarDoubleClick}
-          className="flex items-center justify-between gap-2 px-4 pr-36 h-11 shrink-0"
+          onContextMenu={handleTitleBarContextMenu}
+          className="flex items-center justify-between gap-2 px-3 sm:px-4 pr-32 sm:pr-36 h-11 shrink-0"
         >
-          <div className="flex items-center gap-1.5">
+          <div className="flex items-center gap-1.5 min-w-0 flex-1">
             {/* When sidebar is collapsed, show the floating pill [DownloadPopover] [Expand Sidebar] */}
             {isExplorerCollapsed && (
-              <div className="flex items-center gap-0.5 rounded-xl bg-card/90 border border-border/60 px-1.5 py-0.5 shadow-xs">
+              <div className="flex items-center gap-0.5 rounded-xl bg-card/90 border border-border/60 px-1.5 py-0.5 shadow-xs shrink-0">
                 <DownloadPopover />
                 <button
                   type="button"
@@ -527,10 +528,10 @@ export const ChatScreen: React.FC<ChatScreenProps> = () => {
 
             <AccessScopeBadge />
             {/* Model Selector Pill */}
-            <div className="flex items-center gap-1 rounded-xl bg-card/90 border border-border/60 px-2 py-0.5 shadow-xs">
+            <div className="flex items-center gap-1 min-w-0 shrink rounded-xl bg-card/90 border border-border/60 px-2 py-0.5 shadow-xs">
               {models.length > 0 ? (
-                <Select className="w-auto" value={model?.id} onValueChange={setActiveModelId}>
-                  <SelectTrigger aria-label="Select model" disabled={!!activeTracker} className="h-7 w-auto max-w-[260px] gap-1.5 border-0 bg-transparent shadow-none px-1.5 text-xs font-medium hover:bg-accent/60 rounded-lg">
+                <Select className="w-auto min-w-0" value={model?.id} onValueChange={setActiveModelId}>
+                  <SelectTrigger aria-label="Select model" disabled={!!activeTracker} className="h-7 w-auto min-w-0 max-w-[140px] sm:max-w-[240px] gap-1.5 border-0 bg-transparent shadow-none px-1.5 text-xs font-medium hover:bg-accent/60 rounded-lg truncate">
                     <SelectValue />
                   </SelectTrigger>
                   <SelectContent className="w-72">
@@ -625,7 +626,7 @@ export const ChatScreen: React.FC<ChatScreenProps> = () => {
         </div>
 
         {/* Composer (Matches Screenshot 2026-10-25 190854.png) */}
-        <div className="px-2 sm:px-6 pb-5 pt-2 shrink-0">
+        <div className={cn("px-2 sm:px-6 pt-2 shrink-0", isTerminalOpen ? "pb-3" : "pb-5")}>
           {/* Hidden File Input */}
           <input
             type="file"
@@ -744,8 +745,8 @@ export const ChatScreen: React.FC<ChatScreenProps> = () => {
               className="block w-full resize-none bg-transparent px-4 pt-3.5 pb-1.5 text-sm outline-none placeholder:text-muted-foreground/70 disabled:opacity-50"
             />
 
-            <div className="flex items-center justify-between px-2.5 pb-2.5 pt-1">
-              <div className="flex items-center gap-1">
+            <div className="flex flex-wrap items-center justify-between gap-2 px-2.5 pb-2.5 pt-1">
+              <div className="flex flex-wrap items-center gap-1 min-w-0">
                 {/* + Attach Button */}
                 <button
                   type="button"
@@ -851,6 +852,8 @@ export const ChatScreen: React.FC<ChatScreenProps> = () => {
             </div>
           </div>
         </div>
+
+        <InteractiveTerminal isOpen={isTerminalOpen} onClose={() => setIsTerminalOpen(false)} />
       </section>
 
       {/* On-demand Model & Session Parameters slide-over */}
@@ -942,7 +945,6 @@ export const ChatScreen: React.FC<ChatScreenProps> = () => {
           )}
         </aside>
       )}
-      <InteractiveTerminal isOpen={isTerminalOpen} onClose={() => setIsTerminalOpen(false)} />
     </main>
   );
 };
