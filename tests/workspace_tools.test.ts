@@ -1,6 +1,8 @@
 import assert from 'node:assert/strict';
 import { test } from 'node:test';
 import { streamWorkspaceChat, executeWorkspaceToolCall, globalPermissionGate } from '../core/ai/tools/workspace_chat.ts';
+import { parseModelToolCalls } from '../core/ai/tools/parse_calls.ts';
+import { ToolScheduler } from '../core/ai/tools/scheduler.ts';
 import { RequestStatusTracker } from '../core/ai/request_status.ts';
 
 function records(items: unknown[]) {
@@ -158,5 +160,20 @@ test('SEC-06: denied tool returns refusal to model without executing; approve on
   } finally {
     globalPermissionGate.clearSession('sec06-ws');
     globalThis.fetch = original;
+  }
+});
+
+test('BUG-03: parseModelToolCalls maps shell aliases to run_command and ToolScheduler extracts proc:shell', () => {
+  for (const alias of ['execute_command', 'run_shell', 'shell', 'runcommand', 'run_command']) {
+    const calls = parseModelToolCalls({
+      tool_calls: [{ function: { name: alias, arguments: { command: 'git status' } } }],
+    });
+    assert.equal(calls.length, 1);
+    assert.equal(calls[0].name, 'run_command', `Alias ${alias} must normalize to run_command`);
+  }
+
+  for (const name of ['run_command', 'start_background', 'stop_background']) {
+    const resources = ToolScheduler.extractResources({ id: '1', name, arguments: { command: 'echo 1' } });
+    assert.ok(resources.includes('proc:shell'), `${name} must extract proc:shell resource`);
   }
 });

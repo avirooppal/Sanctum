@@ -64,7 +64,13 @@ export class ToolScheduler {
       res.push(`file:${normDest}`);
     }
 
-    if (call.name === "shell" || spec?.safety === "exec") {
+    if (
+      call.name === "shell" ||
+      call.name === "run_command" ||
+      call.name === "start_background" ||
+      call.name === "stop_background" ||
+      spec?.safety === "exec"
+    ) {
       res.push("proc:shell");
     }
 

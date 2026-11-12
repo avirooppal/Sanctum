@@ -62,9 +62,13 @@ export const TOOL_NAME_ALIASES: Record<string, string> = {
   calculator: "calculator",
   datetime: "datetime",
   get_time: "datetime",
-  execute_command: "shell",
-  run_shell: "shell",
-  shell: "shell",
+  executecommand: "run_command",
+  execute_command: "run_command",
+  runshell: "run_command",
+  run_shell: "run_command",
+  shell: "run_command",
+  runcommand: "run_command",
+  run_command: "run_command",
 };
 
 /**
