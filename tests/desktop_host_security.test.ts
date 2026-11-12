@@ -567,7 +567,7 @@ test("REL-01: undo re-validates original path against current workspace and Tool
 });
 
 test("SEC-05: WebView2 egress barrier returns 403, filters ws/wss, and restricts loopback ports", () => {
-  const hostPy = fs.readFileSync(path.resolve("tools/compile_desktop_host.py"), "utf-8");
+  const hostPy = fs.readFileSync(path.resolve("tools/native/DesktopHost.cs"), "utf-8");
   assert.ok(hostPy.includes('AddWebResourceRequestedFilter("ws://*"'), "Must filter ws://*");
   assert.ok(hostPy.includes('AddWebResourceRequestedFilter("wss://*"'), "Must filter wss://*");
   assert.ok(hostPy.includes('403, "Forbidden"'), "Blocked egress must return 403, not 204");
