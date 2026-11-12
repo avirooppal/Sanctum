@@ -177,3 +177,15 @@ test('BUG-03: parseModelToolCalls maps shell aliases to run_command and ToolSche
     assert.ok(resources.includes('proc:shell'), `${name} must extract proc:shell resource`);
   }
 });
+
+test('SEC-07: safeMathEval evaluates arithmetic without Function/eval and rejects code', async () => {
+  const { safeMathEval } = await import('../core/ai/tools/workspace_chat.ts');
+  assert.equal(safeMathEval('2 + 3 * 4'), 14);
+  assert.equal(safeMathEval('(2 + 3) * 4'), 20);
+  assert.equal(safeMathEval('2 ^ 3 ^ 2'), 512);
+  assert.equal(safeMathEval('-5 + 10 % 3'), -4);
+  assert.equal(safeMathEval('1.5 * 2'), 3);
+  assert.throws(() => safeMathEval('process.exit(1)'));
+  assert.throws(() => safeMathEval('1 / 0'));
+  assert.throws(() => safeMathEval('(1 + 2'));
+});

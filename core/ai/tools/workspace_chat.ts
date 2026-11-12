@@ -18,13 +18,110 @@ export interface WorkspaceOperation {
   localHandler?: (args: Record<string, any>, workspaceId: string) => Promise<Record<string, any>>;
 }
 
-function safeMathEval(expr: string): number {
-  const sanitized = String(expr || "").replace(/[^0-9+\-*/().%\s^]/g, "").trim();
-  if (!sanitized) throw new Error("Empty math expression");
-  const normalized = sanitized.replace(/\^/g, "**");
-  // Safe arithmetic evaluation on strictly whitelisted numeric/operator characters
-  const fn = new Function(`"use strict"; return (${normalized});`);
-  const val = Number(fn());
+export function safeMathEval(expr: string): number {
+  const raw = String(expr || "").trim();
+  if (!raw) throw new Error("Empty math expression");
+  if (/[^0-9+\-*/().%\s^]/.test(raw)) {
+    throw new Error("Disallowed characters in math expression");
+  }
+
+  let pos = 0;
+  const skipWs = () => {
+    while (pos < raw.length && /\s/.test(raw[pos])) pos++;
+  };
+
+  const parseExpr = (depth: number): number => {
+    if (depth > 64) throw new Error("Expression nesting too deep");
+    let left = parseTerm(depth + 1);
+    for (;;) {
+      skipWs();
+      const ch = raw[pos];
+      if (ch === "+" || ch === "-") {
+        pos++;
+        const right = parseTerm(depth + 1);
+        left = ch === "+" ? left + right : left - right;
+      } else {
+        break;
+      }
+    }
+    return left;
+  };
+
+  const parseTerm = (depth: number): number => {
+    let left = parseUnary(depth + 1);
+    for (;;) {
+      skipWs();
+      const ch = raw[pos];
+      if (ch === "*" || ch === "/" || ch === "%") {
+        pos++;
+        const right = parseUnary(depth + 1);
+        if (ch === "*") left *= right;
+        else if (ch === "/") left /= right;
+        else left %= right;
+      } else {
+        break;
+      }
+    }
+    return left;
+  };
+
+  const parseUnary = (depth: number): number => {
+    if (depth > 64) throw new Error("Expression nesting too deep");
+    skipWs();
+    if (raw[pos] === "+") {
+      pos++;
+      return parseUnary(depth + 1);
+    }
+    if (raw[pos] === "-") {
+      pos++;
+      return -parseUnary(depth + 1);
+    }
+    return parsePower(depth + 1);
+  };
+
+  const parsePower = (depth: number): number => {
+    const base = parsePrimary(depth + 1);
+    skipWs();
+    if (raw[pos] === "^") {
+      pos++;
+      const exp = parseUnary(depth + 1);
+      return Math.pow(base, exp);
+    }
+    return base;
+  };
+
+  const parsePrimary = (depth: number): number => {
+    skipWs();
+    if (raw[pos] === "(") {
+      pos++;
+      const val = parseExpr(depth + 1);
+      skipWs();
+      if (raw[pos] !== ")") throw new Error("Mismatched parentheses");
+      pos++;
+      return val;
+    }
+    const start = pos;
+    let sawDigit = false;
+    let sawDot = false;
+    while (pos < raw.length) {
+      const c = raw[pos];
+      if (c >= "0" && c <= "9") {
+        sawDigit = true;
+        pos++;
+      } else if (c === "." && !sawDot) {
+        sawDot = true;
+        pos++;
+      } else {
+        break;
+      }
+    }
+    if (!sawDigit) throw new Error(`Unexpected token at position ${pos}`);
+    return Number(raw.slice(start, pos));
+  };
+
+  const val = parseExpr(0);
+  skipWs();
+  if (pos < raw.length) throw new Error(`Unexpected trailing character at position ${pos}`);
   if (!Number.isFinite(val)) throw new Error("Expression did not evaluate to a finite number");
   return val;
 }
