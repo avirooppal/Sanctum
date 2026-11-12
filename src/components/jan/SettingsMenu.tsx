@@ -65,14 +65,17 @@ export const SettingsMenu: React.FC<SettingsMenuProps> = ({
   onSelectProvider,
   onAddProvider,
 }) => {
-  const sections: { id: SettingsSection; label: string; icon: React.ReactNode }[] = [
+  const isDesktopHost =
+    typeof window !== "undefined" && Boolean((window as unknown as { chrome?: { webview?: unknown } }).chrome?.webview);
+
+  const allSections: { id: SettingsSection; label: string; icon: React.ReactNode; devOnly?: boolean }[] = [
     { id: "general", label: "General", icon: <IconAdjustmentsHorizontal size={16} /> },
     { id: "appearance", label: "Appearance", icon: <IconPalette size={16} /> },
     { id: "assistants", label: "Assistants", icon: <IconFeather size={16} /> },
     { id: "attachments", label: "Attachments", icon: <IconPaperclip size={16} /> },
-    { id: "local-api-server", label: "Local API Server", icon: <IconTopologyStar3 size={16} /> },
-    { id: "https-proxy", label: "HTTPS Proxy", icon: <IconWorld size={16} /> },
-    { id: "web-search", label: "Web Search", icon: <IconWorldSearch size={16} /> },
+    { id: "local-api-server", label: "Local API Server", icon: <IconTopologyStar3 size={16} />, devOnly: true },
+    { id: "https-proxy", label: "HTTPS Proxy", icon: <IconWorld size={16} />, devOnly: true },
+    { id: "web-search", label: "Web Search", icon: <IconWorldSearch size={16} />, devOnly: true },
     { id: "shortcuts", label: "Shortcuts", icon: <IconCommand size={16} /> },
     { id: "monitor", label: "System monitor", icon: <IconCpu size={16} /> },
     { id: "logs", label: "Logs", icon: <IconCode size={16} /> },
@@ -80,6 +83,7 @@ export const SettingsMenu: React.FC<SettingsMenuProps> = ({
     { id: "privacy", label: "Privacy", icon: <IconLock size={16} /> },
     { id: "developer", label: "Developer", icon: <IconCode size={16} /> },
   ];
+  const sections = isDesktopHost ? allSections.filter((s) => !s.devOnly) : allSections;
 
   const handleChooseProvider = (providerId: string) => {
     if (onSelectProvider) onSelectProvider(providerId);
@@ -139,19 +143,21 @@ export const SettingsMenu: React.FC<SettingsMenuProps> = ({
               <span>MCP Servers</span>
             </button>
           )}
-          <button
-            type="button"
-            onClick={() => onSelectSection("claude-code")}
-            className={cn(
-              "w-full flex items-center gap-2.5 px-3 py-1.5 rounded-xl text-xs font-medium transition-colors text-left",
-              activeSection === "claude-code"
-                ? "bg-accent text-foreground font-semibold"
-                : "text-muted-foreground hover:bg-muted/50 hover:text-foreground"
-            )}
-          >
-            <IconFolderCode size={16} className={cn(activeSection === "claude-code" ? "text-primary" : "text-muted-foreground")} />
-            <span>Claude Code</span>
-          </button>
+          {!isDesktopHost && (
+            <button
+              type="button"
+              onClick={() => onSelectSection("claude-code")}
+              className={cn(
+                "w-full flex items-center gap-2.5 px-3 py-1.5 rounded-xl text-xs font-medium transition-colors text-left",
+                activeSection === "claude-code"
+                  ? "bg-accent text-foreground font-semibold"
+                  : "text-muted-foreground hover:bg-muted/50 hover:text-foreground"
+              )}
+            >
+              <IconFolderCode size={16} className={cn(activeSection === "claude-code" ? "text-primary" : "text-muted-foreground")} />
+              <span>Claude Code</span>
+            </button>
+          )}
         </div>
       </div>
 

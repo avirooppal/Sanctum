@@ -14,6 +14,7 @@ export interface SettingDefinition<T = any> {
   restartRequired: boolean;
   isSecret?: boolean;
   affectsNetworking?: boolean;
+  implementedInHost?: boolean;
   options?: { label: string; value: string | number }[];
   validation?: {
     min?: number;
@@ -598,6 +599,18 @@ export const SETTINGS_SCHEMA: SettingDefinition[] = [
     scope: "global",
     risk: "high",
     restartRequired: false,
+  },
+  {
+    key: "terminal.allowExecutionPolicyBypass",
+    section: "terminal",
+    label: "Allow PowerShell ExecutionPolicy Bypass",
+    description: "Pass -ExecutionPolicy Bypass when executing PowerShell scripts (disabled by default)",
+    type: "boolean",
+    default: false,
+    scope: "global",
+    risk: "high",
+    restartRequired: false,
+    implementedInHost: true,
   },
 
   // --- AGENT MODE & FILE EDITING ---

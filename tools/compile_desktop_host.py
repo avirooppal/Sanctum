@@ -755,16 +755,6 @@ namespace Sanctum {
             return 0;
         }
 
-        private static bool IsLocalApiEnabledInSettings() {
-            try {
-                if (File.Exists(_settingsFile)) {
-                    string json = File.ReadAllText(_settingsFile, Encoding.UTF8);
-                    return Regex.IsMatch(json, "\"localApi\\.enable\"\\s*:\\s*true", RegexOptions.IgnoreCase);
-                }
-            } catch { }
-            return false;
-        }
-
         private static void InitDirectories(string customDataDir) {
             if (!string.IsNullOrEmpty(customDataDir)) {
                 _appDataDir = Path.GetFullPath(customDataDir);
