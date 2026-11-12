@@ -1,6 +1,7 @@
 import { streamWorkspaceChat, type ToolApprovalResponse } from "../../../core/ai/tools/workspace_chat.ts";
 import type { StateCreator } from "zustand";
 import type { ChatSession, ChatMessage, ChatProject, RequestStatusEvent } from "../../../contracts/types/index.ts";
+import { reconcileThreadSnapshots } from "../../../core/domain/threads.ts";
 import { globalVectorStore } from "../../../core/ai/rag/vectorStore.ts";
 import { globalMemoryStore, LocalMemoryStore } from "../../../core/ai/memory/memory_store.ts";
 import { LocalEngineClient } from "../../../core/ai/inference/engine.ts";
@@ -22,6 +23,8 @@ export interface AttachedDoc {
 
 export interface ChatSlice {
   chatSessions: ChatSession[];
+  threadsRevision: number;
+  threadsUpdatedAt: number;
   activeSessionId: string;
   projects: ChatProject[];
   activeProjectId: string | null;
@@ -60,14 +63,15 @@ export interface ChatSlice {
   sendMessage: (content: string) => Promise<void>;
   stopInference: () => void;
   regenerateLastMessage: () => void;
+  syncThreadsFromHost: () => Promise<void>;
 }
 
-const syncThreadsToBackend = (sessions: ChatSession[]) => {
+const syncThreadsToBackend = (sessions: ChatSession[], revision: number = 1, updatedAt: number = Date.now()) => {
   if (typeof window === "undefined" || !(window as any).chrome?.webview) return;
   fetch("/api/threads", {
     method: "POST",
     headers: { "Content-Type": "application/json" },
-    body: JSON.stringify(sessions),
+    body: JSON.stringify({ revision, updatedAt, sessions }),
   }).catch(() => {});
 };
 
@@ -110,6 +114,8 @@ export const createChatSlice: StateCreator<any, [], [], ChatSlice> = (set, get) 
       messages: [],
     },
   ],
+  threadsRevision: 0,
+  threadsUpdatedAt: 0,
   activeSessionId: "chat-default",
   projects: [
     {
@@ -748,8 +754,48 @@ export const createChatSlice: StateCreator<any, [], [], ChatSlice> = (set, get) 
       if (get().activeAbortController === controller) {
         set({ activeTracker: null, activeAbortController: null, pendingToolApproval: null });
       }
-      syncThreadsToBackend(get().chatSessions);
+      const nextRev = (get().threadsRevision || 0) + 1;
+      const nextTs = Date.now();
+      set({ threadsRevision: nextRev, threadsUpdatedAt: nextTs });
+      syncThreadsToBackend(get().chatSessions, nextRev, nextTs);
     }
+  },
+
+  syncThreadsFromHost: async () => {
+    if (typeof window === "undefined" || !(window as any).chrome?.webview) return;
+    try {
+      const res = await fetch("/api/threads");
+      if (!res.ok) return;
+      const hostRaw = await res.json();
+      let alreadyMigrated = false;
+      try { alreadyMigrated = localStorage.getItem("sanctum-threads-migrated-v1") === "1"; } catch {}
+      const result = reconcileThreadSnapshots(
+        hostRaw,
+        {
+          revision: get().threadsRevision || 0,
+          updatedAt: get().threadsUpdatedAt || 0,
+          sessions: get().chatSessions || [],
+        },
+        alreadyMigrated
+      );
+      try { localStorage.setItem("sanctum-threads-migrated-v1", "1"); } catch {}
+      if (result.winner === "host" && result.snapshot.sessions.length > 0) {
+        const currentActive = get().activeSessionId;
+        const activeExists = result.snapshot.sessions.some((s) => s.id === currentActive);
+        set({
+          chatSessions: result.snapshot.sessions,
+          threadsRevision: result.snapshot.revision,
+          threadsUpdatedAt: result.snapshot.updatedAt,
+          activeSessionId: activeExists ? currentActive : result.snapshot.sessions[0].id,
+        });
+      } else if (result.shouldPushToHost) {
+        set({
+          threadsRevision: result.snapshot.revision,
+          threadsUpdatedAt: result.snapshot.updatedAt,
+        });
+        syncThreadsToBackend(result.snapshot.sessions, result.snapshot.revision, result.snapshot.updatedAt);
+      }
+    } catch {}
   },
 
   regenerateLastMessage: () => {

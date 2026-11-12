@@ -24,6 +24,7 @@ import { SettingsDeveloper } from "@/components/jan/sections/SettingsDeveloper";
 import { ChatScreen } from "@/components/screens/ChatScreen";
 import { WindowControls, handleTitleBarMouseDown, handleTitleBarDoubleClick, handleTitleBarContextMenu } from "@/components/jan/WindowControls";
 import { useAppStore } from "@/store/useAppStore";
+import { globalMemoryStore } from "@core/ai/memory/memory_store.ts";
 
 export const JanAppShell: React.FC = () => {
   const {
@@ -41,7 +42,14 @@ export const JanAppShell: React.FC = () => {
   const [isSearchDialogOpen, setIsSearchDialogOpen] = useState(false);
 
   React.useEffect(() => {
-    Promise.resolve(useAppStore.persist.rehydrate()).finally(() => setHydrated(true));
+    Promise.resolve(useAppStore.persist.rehydrate())
+      .then(async () => {
+        await Promise.all([
+          useAppStore.getState().syncThreadsFromHost?.(),
+          globalMemoryStore.syncFromHost(),
+        ]);
+      })
+      .finally(() => setHydrated(true));
     const mq = window.matchMedia("(max-width: 780px)");
     if (mq.matches) useAppStore.setState({ isExplorerCollapsed: true });
     const onMqChange = (e: MediaQueryListEvent) => {

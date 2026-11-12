@@ -56,7 +56,10 @@ export class LocalMemoryStore {
   private facts: Map<string, MemoryFact> = new Map();
   private episodes: Map<string, EpisodicMemory> = new Map();
   private storageKey = "sanctum-memory-store-v1";
+  private migratedKey = "sanctum-memory-migrated-v1";
   private enabled = true;
+  private revision = 0;
+  private updatedAt = 0;
 
   constructor() {
     this.loadFromLocalStorage();
@@ -299,11 +302,15 @@ export class LocalMemoryStore {
 
   public exportData(): {
     enabled: boolean;
+    revision: number;
+    updatedAt: number;
     facts: MemoryFact[];
     episodes: EpisodicMemory[];
   } {
     return {
       enabled: this.enabled,
+      revision: this.revision,
+      updatedAt: this.updatedAt,
       facts: Array.from(this.facts.values()),
       episodes: Array.from(this.episodes.values()),
     };
@@ -311,10 +318,14 @@ export class LocalMemoryStore {
 
   public importData(data: {
     enabled?: boolean;
+    revision?: number;
+    updatedAt?: number;
     facts?: MemoryFact[];
     episodes?: EpisodicMemory[];
   }): void {
     if (typeof data.enabled === "boolean") this.enabled = data.enabled;
+    if (typeof data.revision === "number") this.revision = data.revision;
+    if (typeof data.updatedAt === "number") this.updatedAt = data.updatedAt;
     if (Array.isArray(data.facts)) {
       this.facts.clear();
       for (const f of data.facts) {
@@ -348,6 +359,8 @@ export class LocalMemoryStore {
       if (!raw) return;
       const parsed = JSON.parse(raw);
       if (typeof parsed.enabled === "boolean") this.enabled = parsed.enabled;
+      if (typeof parsed.revision === "number") this.revision = parsed.revision;
+      if (typeof parsed.updatedAt === "number") this.updatedAt = parsed.updatedAt;
       if (Array.isArray(parsed.facts)) {
         for (const f of parsed.facts) {
           if (f && f.id && f.content) this.facts.set(f.id, f);
@@ -361,13 +374,66 @@ export class LocalMemoryStore {
     } catch {}
   }
 
-  private persist(): void {
+  private persist(bumpRevision: boolean = true): void {
+    if (bumpRevision) {
+      this.revision += 1;
+      this.updatedAt = Date.now();
+    }
     if (typeof window === "undefined") return;
     try {
       const payload = JSON.stringify(this.exportData());
       localStorage.setItem(this.storageKey, payload);
     } catch {}
     this.syncToBackend();
+  }
+
+  public async syncFromHost(): Promise<"host" | "local" | "none"> {
+    if (typeof window === "undefined" || !(window as any).chrome?.webview) return "none";
+    try {
+      const res = await fetch("/api/memory");
+      if (!res.ok) return "none";
+      const hostData = await res.json();
+      const hostRev = typeof hostData?.revision === "number" ? hostData.revision : 0;
+      const hostUpdated = typeof hostData?.updatedAt === "number" ? hostData.updatedAt : 0;
+      const hostFacts = Array.isArray(hostData?.facts) ? hostData.facts : [];
+      const hostEpisodes = Array.isArray(hostData?.episodes) ? hostData.episodes : [];
+      const hostHasData = hostFacts.length > 0 || hostEpisodes.length > 0 || hostRev > 0;
+      const localHasData = this.facts.size > 0 || this.episodes.size > 0 || this.revision > 0;
+      let alreadyMigrated = false;
+      try { alreadyMigrated = localStorage.getItem(this.migratedKey) === "1"; } catch {}
+
+      if (!hostHasData && localHasData && !alreadyMigrated) {
+        this.revision = Math.max(1, this.revision);
+        this.updatedAt = this.updatedAt || Date.now();
+        try { localStorage.setItem(this.migratedKey, "1"); } catch {}
+        this.persist(false);
+        return "local";
+      }
+
+      if (hostHasData) {
+        try { localStorage.setItem(this.migratedKey, "1"); } catch {}
+        if (this.revision > hostRev || (this.revision === hostRev && this.updatedAt > hostUpdated)) {
+          this.syncToBackend();
+          return "local";
+        }
+        this.enabled = typeof hostData.enabled === "boolean" ? hostData.enabled : this.enabled;
+        this.revision = hostRev;
+        this.updatedAt = hostUpdated;
+        this.facts.clear();
+        for (const f of hostFacts) {
+          if (f && f.id && f.content) this.facts.set(f.id, f);
+        }
+        this.episodes.clear();
+        for (const e of hostEpisodes) {
+          if (e && e.id && e.content) this.episodes.set(e.id, e);
+        }
+        try { localStorage.setItem(this.storageKey, JSON.stringify(this.exportData())); } catch {}
+        return "host";
+      }
+      return "none";
+    } catch {
+      return "none";
+    }
   }
 
   private syncToBackend(): void {

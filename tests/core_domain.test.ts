@@ -1,6 +1,6 @@
 import { test, describe } from "node:test";
 import assert from "node:assert/strict";
-import { createNewThread, createMessage } from "../core/domain/threads.ts";
+import { createNewThread, createMessage, reconcileThreadSnapshots } from "../core/domain/threads.ts";
 import { categorizeModel, determineArchitecture } from "../core/domain/models.ts";
 import { determineDocumentType } from "../core/domain/documents.ts";
 
@@ -42,5 +42,38 @@ describe("Core Domain Layer Tests (R4)", () => {
     assert.equal(determineDocumentType("data.csv"), "csv");
     assert.equal(determineDocumentType("app.tsx"), "code");
     assert.equal(determineDocumentType("plain.txt"), "txt");
+  });
+
+  test("REL-02: reconcileThreadSnapshots resolves host newer vs localStorage newer and migrates once", () => {
+    const tHost = createNewThread("s-host", "m", "From Host");
+    tHost.messages.push(createMessage("user", "host msg"));
+    const tLocal = createNewThread("s-local", "m", "From Local");
+    tLocal.messages.push(createMessage("user", "local msg"));
+
+    // 1. Host missing, local has data, not migrated -> local migrates to host
+    const mig = reconcileThreadSnapshots([], { revision: 0, updatedAt: 100, sessions: [tLocal] }, false);
+    assert.equal(mig.winner, "local");
+    assert.equal(mig.shouldPushToHost, true);
+    assert.equal(mig.snapshot.sessions[0].id, "s-local");
+
+    // 2. Host newer revision wins over older local
+    const hostNewer = reconcileThreadSnapshots(
+      { revision: 5, updatedAt: 500, sessions: [tHost] },
+      { revision: 2, updatedAt: 200, sessions: [tLocal] },
+      true
+    );
+    assert.equal(hostNewer.winner, "host");
+    assert.equal(hostNewer.shouldPushToHost, false);
+    assert.equal(hostNewer.snapshot.sessions[0].id, "s-host");
+
+    // 3. Local newer revision wins and pushes to host
+    const localNewer = reconcileThreadSnapshots(
+      { revision: 2, updatedAt: 200, sessions: [tHost] },
+      { revision: 6, updatedAt: 600, sessions: [tLocal] },
+      true
+    );
+    assert.equal(localNewer.winner, "local");
+    assert.equal(localNewer.shouldPushToHost, true);
+    assert.equal(localNewer.snapshot.sessions[0].id, "s-local");
   });
 });

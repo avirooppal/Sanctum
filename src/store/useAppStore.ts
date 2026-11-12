@@ -169,6 +169,8 @@ export const useAppStore = create<AppState>()(
         activeModule: state.activeModule,
         isExplorerCollapsed: state.isExplorerCollapsed,
         chatSessions: state.chatSessions,
+        threadsRevision: state.threadsRevision,
+        threadsUpdatedAt: state.threadsUpdatedAt,
         activeSessionId: state.activeSessionId,
         projects: state.projects,
         activeProjectId: state.activeProjectId,
