@@ -29,6 +29,7 @@ import {
 } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
+import { fetchWithApproval } from "@/lib/hostBridge";
 import { toast } from "sonner";
 
 export type AccessScopeType = "workspace_only" | "selected_folders" | "system_read" | "system_full";
@@ -70,14 +71,14 @@ export const AccessScopeBadge: React.FC = () => {
 
   const saveScope = async (newScope: AccessScopeType, folders: string[] = allowedFolders) => {
     try {
-      const res = await fetch("/api/settings", {
+      const res = await fetchWithApproval("/api/settings", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
           "access.scope": newScope,
           "access.allowedFolders": JSON.stringify(folders),
         }),
-      });
+      }, "settings_write");
       if (res.ok) {
         setScope(newScope);
         setAllowedFolders(folders);

@@ -1,6 +1,7 @@
 "use client";
 import { useEffect, useState } from "react";
 import { useAppStore } from "@/store/useAppStore";
+import { fetchWithApproval } from "@/lib/hostBridge";
 import { toast } from "sonner";
 
 export function WorkspaceTools() {
@@ -35,7 +36,7 @@ export function WorkspaceTools() {
     try {
       const wsRes = await fetch("/api/workspace");
       const ws = wsRes.ok ? await wsRes.json() : { id: "default" };
-      const res = await fetch("/api/tools/execute", {
+      const res = await fetchWithApproval("/api/tools/execute", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
@@ -43,7 +44,7 @@ export function WorkspaceTools() {
           workspaceId: ws.id,
           arguments: { action: "undo", path: "." },
         }),
-      });
+      }, "undo_last_action");
       const data = await res.json();
       if (res.ok && data.restored) {
         toast.success(`Restored ${data.restored} from tool-trash`);

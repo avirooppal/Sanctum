@@ -596,7 +596,8 @@ namespace Sanctum {
             bool devTools = false;
             string customDataDir = null;
             string overrideToken = null;
-            string seedApprovalToken = null;
+            bool printToken = false;
+            var seedApprovalTokens = new List<string>();
 
             for (int i = 0; i < args.Length; i++) {
                 if (args[i] == "--version" || args[i] == "-v") {
@@ -609,6 +610,8 @@ namespace Sanctum {
                     headless = true;
                 } else if (args[i] == "--devtools") {
                     devTools = true;
+                } else if (args[i] == "--print-token") {
+                    printToken = true;
                 } else if (args[i] == "--port" && i + 1 < args.Length) {
                     if (int.TryParse(args[++i], out port)) explicitPort = true;
                 } else if (args[i] == "--data-dir" && i + 1 < args.Length) {
@@ -620,12 +623,14 @@ namespace Sanctum {
                 } else if (args[i] == "--auth-token" && i + 1 < args.Length) {
                     overrideToken = args[++i];
                 } else if (args[i] == "--seed-approval-token" && i + 1 < args.Length) {
-                    seedApprovalToken = args[++i];
+                    seedApprovalTokens.Add(args[++i]);
                 }
             }
 
-            if (headless && !string.IsNullOrEmpty(seedApprovalToken)) {
-                MintApprovalToken("*", seedApprovalToken);
+            if (headless && seedApprovalTokens.Count > 0) {
+                foreach (string sat in seedApprovalTokens) {
+                    if (!string.IsNullOrEmpty(sat)) MintApprovalToken("*", sat);
+                }
             }
 
             if (versionCheck) {
@@ -703,7 +708,7 @@ namespace Sanctum {
             Task.Run(() => EnsureEngineStarted());
 
             if (headless) {
-                Console.WriteLine("Sanctum running in headless mode on http://127.0.0.1:" + app._port + " with auth token " + _authToken);
+                Console.WriteLine("Sanctum running in headless mode on http://127.0.0.1:" + app._port + (printToken ? " with auth token " + _authToken : ""));
                 var waitHandle = new ManualResetEvent(false);
                 AppDomain.CurrentDomain.ProcessExit += (s, e) => {
                     app.StopHttpServer();
@@ -2544,6 +2549,25 @@ private void HandleTerminal(HttpListenerRequest req, HttpListenerResponse res) {
                     string action = ToolArg(args, "action", true);
                     string relative = ToolArg(args, "path", action != "undo");
                     if (string.IsNullOrEmpty(relative)) relative = ".";
+
+                    string expectedApprovalTool = null;
+                    if (action == "create") expectedApprovalTool = "create_file";
+                    else if (action == "edit") expectedApprovalTool = "edit_file";
+                    else if (action == "patch") expectedApprovalTool = "apply_patch";
+                    else if (action == "mkdir") expectedApprovalTool = "create_directory";
+                    else if (action == "move") expectedApprovalTool = "move_path";
+                    else if (action == "delete") expectedApprovalTool = "delete_path";
+                    else if (action == "undo") expectedApprovalTool = "undo_last_action";
+
+                    if (expectedApprovalTool != null) {
+                        string approvalToken = req.Headers["X-Sanctum-Approval"];
+                        if (!ConsumeApprovalToken(approvalToken, expectedApprovalTool)) {
+                            RecordAuditLog("workspace_files", relative, action, "approval", "denied", "Missing or invalid single-use approval token.");
+                            WriteJson(res, 403, new { error = "User approval token required for mutating workspace operation." });
+                            return;
+                        }
+                    }
+
                     object result;
                     if (action == "undo") {
                         string trashRoot = Path.Combine(_appDataDir, "tool-trash");
@@ -2940,6 +2964,10 @@ private void HandleTerminal(HttpListenerRequest req, HttpListenerResponse res) {
                     return;
                 }
                 if (req.HttpMethod == "POST") {
+                    if (!ConsumeApprovalToken(req.Headers["X-Sanctum-Approval"], "settings_write")) {
+                        WriteJson(res, 403, new { error = "User approval token required to modify settings." });
+                        return;
+                    }
                     try {
                         string body;
                         using (var r = new StreamReader(req.InputStream, Encoding.UTF8)) body = r.ReadToEnd();
@@ -2969,6 +2997,10 @@ private void HandleTerminal(HttpListenerRequest req, HttpListenerResponse res) {
                     }
                 }
                 if (req.HttpMethod == "DELETE") {
+                    if (!ConsumeApprovalToken(req.Headers["X-Sanctum-Approval"], "settings_write")) {
+                        WriteJson(res, 403, new { error = "User approval token required to reset settings." });
+                        return;
+                    }
                     string key = req.QueryString["key"];
                     if (!string.IsNullOrEmpty(key)) {
                         current.Remove(key);

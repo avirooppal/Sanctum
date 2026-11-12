@@ -19,6 +19,7 @@ import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
 import { toast } from "sonner";
 import { useAppStore } from "@/store/useAppStore";
+import { fetchWithApproval } from "@/lib/hostBridge";
 import { globalMemoryStore, type MemoryFact } from "@core/ai/memory/memory_store.ts";
 
 export const SettingsGeneral: React.FC = () => {
@@ -101,11 +102,11 @@ export const SettingsGeneral: React.FC = () => {
   }, []);
 
   const saveSetting = (key: string, value: any, toastMessage?: string) => {
-    fetch("/api/settings", {
+    fetchWithApproval("/api/settings", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ [key]: value }),
-    })
+    }, "settings_write")
       .then((r) => {
         if (r.ok) {
           window.dispatchEvent(
@@ -256,7 +257,7 @@ export const SettingsGeneral: React.FC = () => {
 
   const handleResetSettings = async () => {
     try {
-      await fetch("/api/settings", { method: "DELETE" });
+      await fetchWithApproval("/api/settings", { method: "DELETE" }, "settings_write");
     } catch {}
     toast.success("Settings restored to default values.");
     setIsResetSettingsOpen(false);
@@ -277,7 +278,7 @@ export const SettingsGeneral: React.FC = () => {
           deleteWorkspace: true,
         }),
       });
-      await fetch("/api/settings", { method: "DELETE" }).catch(() => {});
+      await fetchWithApproval("/api/settings", { method: "DELETE" }, "settings_write").catch(() => {});
       await fetch("/api/memory", { method: "DELETE" }).catch(() => {});
       await fetch("/api/threads", {
         method: "POST",

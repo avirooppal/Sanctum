@@ -156,7 +156,12 @@ test("SEC-02: C# HandleSettings merges POST keys, validates known keys, and retu
     return;
   }
 
-  const host = await startHeadlessHost();
+  const host = await startHeadlessHost([
+    "--seed-approval-token", "sec02-t1",
+    "--seed-approval-token", "sec02-t2",
+    "--seed-approval-token", "sec02-t3",
+    "--seed-approval-token", "sec02-t4",
+  ]);
   t.after(() => host.stop());
 
   const headers = {
@@ -167,14 +172,14 @@ test("SEC-02: C# HandleSettings merges POST keys, validates known keys, and retu
   await t.test("1. POST merges {access.scope} and subsequent {general.language} without wiping", async () => {
     const r1 = await fetch(`${host.baseUrl}/api/settings`, {
       method: "POST",
-      headers,
+      headers: { ...headers, "X-Sanctum-Approval": "sec02-t1" },
       body: JSON.stringify({ "access.scope": "selected_folders", "access.allowedFolders": JSON.stringify(["C:\\Projects"]) }),
     });
     assert.equal(r1.status, 200);
 
     const r2 = await fetch(`${host.baseUrl}/api/settings`, {
       method: "POST",
-      headers,
+      headers: { ...headers, "X-Sanctum-Approval": "sec02-t2" },
       body: JSON.stringify({ key: "general.language", value: "fr" }),
     });
     assert.equal(r2.status, 200);
@@ -191,14 +196,14 @@ test("SEC-02: C# HandleSettings merges POST keys, validates known keys, and retu
   await t.test("2. Unknown setting key or invalid access.scope is rejected (422)", async () => {
     const rBadKey = await fetch(`${host.baseUrl}/api/settings`, {
       method: "POST",
-      headers,
+      headers: { ...headers, "X-Sanctum-Approval": "sec02-t3" },
       body: JSON.stringify({ "evil.unknownKey": true }),
     });
     assert.equal(rBadKey.status, 422);
 
     const rBadScope = await fetch(`${host.baseUrl}/api/settings`, {
       method: "POST",
-      headers,
+      headers: { ...headers, "X-Sanctum-Approval": "sec02-t4" },
       body: JSON.stringify({ "access.scope": "god_mode" }),
     });
     assert.equal(rBadScope.status, 422);
@@ -211,7 +216,11 @@ test("SEC-03: C# ToolPath blocks 8.3 short names, junctions, ..\\ traversal, UNC
     return;
   }
 
-  const host = await startHeadlessHost();
+  const host = await startHeadlessHost([
+    "--seed-approval-token", "sec03-t1",
+    "--seed-approval-token", "sec03-t2",
+    "--seed-approval-token", "sec03-t3",
+  ]);
   t.after(() => host.stop());
 
   const headers = {
@@ -225,7 +234,7 @@ test("SEC-03: C# ToolPath blocks 8.3 short names, junctions, ..\\ traversal, UNC
   // Elevate to system_full so only hard-blocks and canonicalization protect these paths
   await fetch(`${host.baseUrl}/api/settings`, {
     method: "POST",
-    headers,
+    headers: { ...headers, "X-Sanctum-Approval": "sec03-t1" },
     body: JSON.stringify({ "access.scope": "system_full" }),
   });
 
@@ -279,7 +288,7 @@ test("SEC-03: C# ToolPath blocks 8.3 short names, junctions, ..\\ traversal, UNC
   await t.test("3. Rejects ..\\ traversal under workspace_only", async () => {
     await fetch(`${host.baseUrl}/api/settings`, {
       method: "POST",
-      headers,
+      headers: { ...headers, "X-Sanctum-Approval": "sec03-t2" },
       body: JSON.stringify({ "access.scope": "workspace_only" }),
     });
     const r = await callRead("..\\settings.json");
@@ -287,7 +296,7 @@ test("SEC-03: C# ToolPath blocks 8.3 short names, junctions, ..\\ traversal, UNC
     assert.match(r.body.error, /outside|hard-blocked|forbidden/i);
     await fetch(`${host.baseUrl}/api/settings`, {
       method: "POST",
-      headers,
+      headers: { ...headers, "X-Sanctum-Approval": "sec03-t3" },
       body: JSON.stringify({ "access.scope": "system_full" }),
     });
   });
@@ -307,5 +316,88 @@ test("SEC-03: C# ToolPath blocks 8.3 short names, junctions, ..\\ traversal, UNC
       assert.equal(r.status, 400, `${file} must be hard-blocked`);
       assert.match(r.body.error, /hard-blocked/i);
     }
+  });
+});
+
+test("SEC-04: headless hides auth token unless --print-token, and privileged endpoints require X-Sanctum-Approval", async (t) => {
+  if (!fs.existsSync(HOST_EXE)) {
+    t.skip(`Desktop host not built at ${HOST_EXE}`);
+    return;
+  }
+
+  await t.test("1. Headless stdout omits auth token without --print-token, includes with --print-token", async () => {
+    const port1 = await getFreePort();
+    const tok1 = "secret-tok-no-print";
+    const dir1 = fs.mkdtempSync(path.join(os.tmpdir(), "sanctum-sec04-1-"));
+    let out1 = "";
+    const p1 = spawn(HOST_EXE, ["--headless", "--port", String(port1), "--data-dir", dir1, "--auth-token", tok1], {
+      windowsHide: true,
+      stdio: ["ignore", "pipe", "pipe"],
+    });
+    p1.stdout?.on("data", (d) => { out1 += d.toString(); });
+    await new Promise((r) => setTimeout(r, 700));
+    try { p1.kill(); } catch {}
+    try { fs.rmSync(dir1, { recursive: true, force: true }); } catch {}
+    assert.ok(!out1.includes(tok1), "Auth token must NOT be printed to stdout without --print-token");
+
+    const port2 = await getFreePort();
+    const tok2 = "secret-tok-with-print";
+    const dir2 = fs.mkdtempSync(path.join(os.tmpdir(), "sanctum-sec04-2-"));
+    let out2 = "";
+    const p2 = spawn(HOST_EXE, ["--headless", "--port", String(port2), "--data-dir", dir2, "--auth-token", tok2, "--print-token"], {
+      windowsHide: true,
+      stdio: ["ignore", "pipe", "pipe"],
+    });
+    p2.stdout?.on("data", (d) => { out2 += d.toString(); });
+    await new Promise((r) => setTimeout(r, 700));
+    try { p2.kill(); } catch {}
+    try { fs.rmSync(dir2, { recursive: true, force: true }); } catch {}
+    assert.ok(out2.includes(tok2), "Auth token MUST be printed when --print-token is set");
+  });
+
+  await t.test("2. Privileged file write/delete and settings POST/DELETE require X-Sanctum-Approval", async () => {
+    const seed1 = "sec04-seed-1";
+    const seed2 = "sec04-seed-2";
+    const host = await startHeadlessHost(["--seed-approval-token", seed1, "--seed-approval-token", seed2]);
+    t.after(() => host.stop());
+
+    const headers = { "Content-Type": "application/json", "X-Sanctum-Auth": host.token };
+    const ws = await (await fetch(`${host.baseUrl}/api/workspace`, { headers })).json();
+
+    const rSetNoTok = await fetch(`${host.baseUrl}/api/settings`, {
+      method: "POST",
+      headers,
+      body: JSON.stringify({ "general.language": "es" }),
+    });
+    assert.equal(rSetNoTok.status, 403);
+
+    const rSetWithTok = await fetch(`${host.baseUrl}/api/settings`, {
+      method: "POST",
+      headers: { ...headers, "X-Sanctum-Approval": seed1 },
+      body: JSON.stringify({ "general.language": "es" }),
+    });
+    assert.equal(rSetWithTok.status, 200);
+
+    const rWriteNoTok = await fetch(`${host.baseUrl}/api/tools/execute`, {
+      method: "POST",
+      headers,
+      body: JSON.stringify({
+        workspaceId: ws.id,
+        name: "workspace_files",
+        arguments: { action: "create", path: "unapproved.txt", content: "x" },
+      }),
+    });
+    assert.equal(rWriteNoTok.status, 403);
+
+    const rWriteWithTok = await fetch(`${host.baseUrl}/api/tools/execute`, {
+      method: "POST",
+      headers: { ...headers, "X-Sanctum-Approval": seed2 },
+      body: JSON.stringify({
+        workspaceId: ws.id,
+        name: "workspace_files",
+        arguments: { action: "create", path: "approved.txt", content: "ok" },
+      }),
+    });
+    assert.equal(rWriteWithTok.status, 200);
   });
 });

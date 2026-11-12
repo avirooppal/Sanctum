@@ -1,6 +1,7 @@
 "use client";
 
 import React, { useEffect, useState } from "react";
+import { fetchWithApproval } from "@/lib/hostBridge";
 import {
   IconMicrophone,
   IconCpu,
@@ -134,7 +135,7 @@ export const SetupScreen = ({
 
   const saveSttSettings = async () => {
     try {
-      await fetch("/api/settings", {
+      await fetchWithApproval("/api/settings", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
@@ -142,7 +143,7 @@ export const SetupScreen = ({
           "assistants.sttModel": sttMode === "custom" ? customModel : "whisper-base",
           "assistants.sttEndpoint": sttMode === "custom" ? customEndpoint : "http://127.0.0.1:8000",
         }),
-      });
+      }, "settings_write");
       localStorage.setItem("sanctum.sttMode", sttMode);
       localStorage.setItem(
         "sanctum.sttEndpoint",
