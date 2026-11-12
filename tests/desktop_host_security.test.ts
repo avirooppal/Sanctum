@@ -565,3 +565,79 @@ test("REL-01: undo re-validates original path against current workspace and Tool
   });
   assert.equal(undoBlocked.status, 400);
 });
+
+test("SEC-05: WebView2 egress barrier returns 403, filters ws/wss, and restricts loopback ports", () => {
+  const hostPy = fs.readFileSync(path.resolve("tools/compile_desktop_host.py"), "utf-8");
+  assert.ok(hostPy.includes('AddWebResourceRequestedFilter("ws://*"'), "Must filter ws://*");
+  assert.ok(hostPy.includes('AddWebResourceRequestedFilter("wss://*"'), "Must filter wss://*");
+  assert.ok(hostPy.includes('403, "Forbidden"'), "Blocked egress must return 403, not 204");
+  assert.ok(hostPy.includes("uri.Port == _port || uri.Port == _enginePort || uri.Port == 8000"), "Loopback passthrough must be restricted to host, engine, and speech ports");
+});
+
+test("CONTRACT: Node core/infra and C# host agree on settings, workspace, terminal rules, and tools/execute", async (t) => {
+  if (!fs.existsSync(HOST_EXE)) {
+    t.skip(`Desktop host not built at ${HOST_EXE}`);
+    return;
+  }
+
+  const { SettingsStore } = await import("../core/infra/storage/settings_store.ts");
+  const { matchCommandRule } = await import("../core/infra/security/command_matcher.ts");
+  const { resolveScopedPath } = await import("../core/infra/security/path_resolver.ts");
+
+  const host = await startHeadlessHost([
+    "--seed-approval-token", "contract-set-1",
+    "--seed-approval-token", "contract-tool-1",
+  ]);
+  t.after(() => host.stop());
+  const headers = { "Content-Type": "application/json", "X-Sanctum-Auth": host.token };
+
+  // 1. Settings parity
+  const nodeStore = new SettingsStore(path.join(host.dataDir, "node_settings.json"));
+  nodeStore.set("general.language", "de");
+  await fetch(`${host.baseUrl}/api/settings`, {
+    method: "POST",
+    headers: { ...headers, "X-Sanctum-Approval": "contract-set-1" },
+    body: JSON.stringify({ key: "general.language", value: "de" }),
+  });
+  const csharpSettings = await (await fetch(`${host.baseUrl}/api/settings`, { headers })).json();
+  assert.equal(csharpSettings.status, "success");
+  assert.equal(csharpSettings.settings["general.language"], nodeStore.get("general.language"));
+
+  // 2. Workspace parity
+  const ws = await (await fetch(`${host.baseUrl}/api/workspace`, { headers })).json();
+  assert.equal(typeof ws.root, "string");
+  assert.equal(typeof ws.id, "string");
+
+  // 3. Terminal command rules parity
+  assert.equal(matchCommandRule("format C:").action, "deny");
+  const termDeny = await fetch(`${host.baseUrl}/api/terminal/execute`, {
+    method: "POST",
+    headers,
+    body: JSON.stringify({ action: "run_command", command: "format C:" }),
+  });
+  assert.equal(termDeny.status, 403);
+
+  assert.equal(matchCommandRule("echo contract_ok").action, "allow");
+  const termAllow = await fetch(`${host.baseUrl}/api/terminal/execute`, {
+    method: "POST",
+    headers,
+    body: JSON.stringify({ action: "run_command", command: "echo contract_ok" }),
+  });
+  assert.equal(termAllow.status, 200);
+
+  // 4. Tools/execute path-jail parity
+  assert.throws(() => resolveScopedPath({ rawPath: "../escape.txt", workspaceRoot: ws.root, scope: "workspace_only", mode: "read" }));
+  const toolDeny = await fetch(`${host.baseUrl}/api/tools/execute`, {
+    method: "POST",
+    headers,
+    body: JSON.stringify({ workspaceId: ws.id, name: "workspace_files", arguments: { action: "read", path: "../escape.txt" } }),
+  });
+  assert.equal(toolDeny.status, 400);
+
+  const toolCreate = await fetch(`${host.baseUrl}/api/tools/execute`, {
+    method: "POST",
+    headers: { ...headers, "X-Sanctum-Approval": "contract-tool-1" },
+    body: JSON.stringify({ workspaceId: ws.id, name: "workspace_files", arguments: { action: "create", path: "contract.txt", content: "ok" } }),
+  });
+  assert.equal(toolCreate.status, 200);
+});

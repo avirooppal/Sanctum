@@ -1310,6 +1310,8 @@ namespace Sanctum {
                 _wvCore.AddWebResourceRequestedFilter("https://sanctum.app/health", CoreWebView2WebResourceContext.All);
                 _wvCore.AddWebResourceRequestedFilter("http://*", CoreWebView2WebResourceContext.All);
                 _wvCore.AddWebResourceRequestedFilter("https://*", CoreWebView2WebResourceContext.All);
+                _wvCore.AddWebResourceRequestedFilter("ws://*", CoreWebView2WebResourceContext.All);
+                _wvCore.AddWebResourceRequestedFilter("wss://*", CoreWebView2WebResourceContext.All);
                 _wvCore.WebResourceRequested += OnWebResourceRequested;
 
                 _wvCore.NavigationCompleted += (sender, args) => {
@@ -1765,17 +1767,16 @@ namespace Sanctum {
             try {
                 Uri uri = new Uri(e.Request.Uri);
 
-                // Allow direct loopback to local inference daemons (e.g. Ollama 11434, llama-server 18080) for real SSE streaming
+                // Allow direct loopback only to our host API (_port), local inference engine (_enginePort), and speech server (8000)
                 if ((uri.Host.Equals("127.0.0.1", StringComparison.OrdinalIgnoreCase) ||
                      uri.Host.Equals("localhost", StringComparison.OrdinalIgnoreCase)) &&
-                    uri.Port != 80 && uri.Port != 443) {
+                    (uri.Scheme.Equals("http", StringComparison.OrdinalIgnoreCase) || uri.Scheme.Equals("https", StringComparison.OrdinalIgnoreCase)) &&
+                    (uri.Port == _port || uri.Port == _enginePort || uri.Port == 8000)) {
                     return; // Pass through to local daemon
                 }
 
-                if (!uri.Host.Equals("sanctum.app", StringComparison.OrdinalIgnoreCase) &&
-                    !uri.Host.Equals("127.0.0.1", StringComparison.OrdinalIgnoreCase) &&
-                    !uri.Host.Equals("localhost", StringComparison.OrdinalIgnoreCase)) {
-                    e.Response = _wvEnv.CreateWebResourceResponse(new MemoryStream(), 204, "Blocked External Egress", "Content-Type: text/plain");
+                if (!uri.Host.Equals("sanctum.app", StringComparison.OrdinalIgnoreCase)) {
+                    e.Response = _wvEnv.CreateWebResourceResponse(new MemoryStream(Encoding.UTF8.GetBytes("Blocked External Egress")), 403, "Forbidden", "Content-Type: text/plain");
                     return;
                 }
                 string path = uri.AbsolutePath;
