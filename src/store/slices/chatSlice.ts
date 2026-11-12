@@ -2,6 +2,7 @@ import { streamWorkspaceChat, type ToolApprovalResponse } from "../../../core/ai
 import type { StateCreator } from "zustand";
 import type { ChatSession, ChatMessage, ChatProject, RequestStatusEvent } from "../../../contracts/types/index.ts";
 import { reconcileThreadSnapshots } from "../../../core/domain/threads.ts";
+import { saveImageToVaultDb } from "../../lib/vaultStorage.ts";
 import { globalVectorStore } from "../../../core/ai/rag/vectorStore.ts";
 import { globalMemoryStore, LocalMemoryStore } from "../../../core/ai/memory/memory_store.ts";
 import { LocalEngineClient } from "../../../core/ai/inference/engine.ts";
@@ -440,9 +441,19 @@ export const createChatSlice: StateCreator<any, [], [], ChatSlice> = (set, get) 
     }
 
     // Step 1: Optimistic render of user message + initial assistant message
+    const attachedImg = get().attachedImage;
+    if (attachedImg?.src && attachedImg.src.startsWith("data:")) {
+      void saveImageToVaultDb({
+        id: `idb:${userMsgId}`,
+        src: attachedImg.src,
+        name: attachedImg.name,
+        width: attachedImg.width,
+        height: attachedImg.height,
+      });
+    }
     const userMsg: ChatMessage = {
       attachments: get().attachedDocuments || [],
-      image: get().attachedImage || undefined,
+      image: attachedImg || undefined,
       id: userMsgId,
       role: "user",
       content,

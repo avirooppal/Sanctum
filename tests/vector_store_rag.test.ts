@@ -1,6 +1,7 @@
 import { test, describe } from "node:test";
 import assert from "node:assert/strict";
 import { InMemoryVectorStore } from "../src/lib/vectorStore.ts";
+import { stripHeavyPayloadsForLocalStorage } from "../src/lib/vaultStorage.ts";
 
 describe("VectorStore & RAG Ingestion Characterization", () => {
   test("generates 1024-dimensional normalized embeddings", () => {
@@ -59,6 +60,51 @@ describe("VectorStore & RAG Ingestion Characterization", () => {
     const chunks = store.chunkText(sampleText, 50, 10);
     assert.ok(chunks.length >= 1);
     assert.ok(chunks[0].content.length > 0);
+  });
+
+  test("PERF-01: stripHeavyPayloadsForLocalStorage removes document chunks and inline base64 images", () => {
+    const bigText = "word ".repeat(20000);
+    const docs = [
+      {
+        id: "d1",
+        collectionId: "col-default",
+        name: "huge.pdf",
+        sizeBytes: bigText.length,
+        type: "pdf" as const,
+        status: "indexed" as const,
+        chunkCount: 1,
+        indexedAt: "Just now",
+        chunks: [{ id: "c1", docId: "d1", chunkIndex: 0, content: bigText, tokenCount: 20000, embeddingDimensions: 1024 }],
+      },
+    ];
+    const sessions = [
+      {
+        id: "s1",
+        title: "Chat",
+        modelId: "m1",
+        createdAt: "now",
+        updatedAt: "now",
+        systemPrompt: "",
+        temperature: 0.7,
+        topP: 0.9,
+        messages: [
+          {
+            id: "m1",
+            role: "user" as const,
+            content: "look",
+            timestamp: "12:00",
+            image: { src: "data:image/png;base64," + "A".repeat(50000), name: "pic.png", width: 100, height: 100 },
+          },
+        ],
+      },
+    ];
+    const beforeBytes = JSON.stringify({ docs, sessions }).length;
+    const stripped = stripHeavyPayloadsForLocalStorage(docs, sessions);
+    const afterBytes = JSON.stringify(stripped).length;
+
+    assert.equal(stripped.documents[0].chunks.length, 0);
+    assert.equal(stripped.chatSessions[0].messages[0].image?.src, "idb:m1");
+    assert.ok(afterBytes < beforeBytes * 0.05, `Expected >95% reduction, got ${beforeBytes} -> ${afterBytes}`);
   });
 });
 

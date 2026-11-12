@@ -1,6 +1,7 @@
 import type { StateCreator } from "zustand";
 import type { DocumentCollection, IngestedDocument } from "../../../contracts/types/index.ts";
 import { globalVectorStore, type VectorChunk } from "../../../core/ai/rag/vectorStore.ts";
+import { deleteDocChunksFromVaultDb, saveChunksToVaultDb } from "../../lib/vaultStorage.ts";
 
 export interface RagSlice {
   collections: DocumentCollection[];
@@ -80,6 +81,7 @@ export const createRagSlice: StateCreator<any, [], [], RagSlice> = (set, get) =>
       configuredChunkSize,
       configuredOverlap
     );
+    void saveChunksToVaultDb(vectorChunks, globalVectorStore.getEmbeddingModel());
 
     const newDoc: IngestedDocument = {
       id: newDocId,
@@ -118,6 +120,7 @@ export const createRagSlice: StateCreator<any, [], [], RagSlice> = (set, get) =>
 
   deleteDocument: (docId) => {
     globalVectorStore.removeDocument(docId);
+    void deleteDocChunksFromVaultDb(docId);
     set((state: any) => {
       const doc = state.documents.find((d: IngestedDocument) => d.id === docId);
       if (!doc) return state;

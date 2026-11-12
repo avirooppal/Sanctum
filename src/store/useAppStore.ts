@@ -11,6 +11,11 @@ import { TelemetrySlice, createTelemetrySlice } from "./slices/telemetrySlice";
 import { AgentSlice, createAgentSlice } from "./slices/agentSlice";
 import { globalVectorStore } from "@/lib/vectorStore";
 import { globalMemoryStore } from "../../core/ai/memory/memory_store.ts";
+import {
+  clearVaultDb,
+  hydrateVectorStoreFromVaultDb,
+  stripHeavyPayloadsForLocalStorage,
+} from "@/lib/vaultStorage";
 
 export type AppState = NavigationSlice &
   ModelsSlice &
@@ -45,6 +50,7 @@ export const useAppStore = create<AppState>()(
           get().stopAgent?.();
           globalVectorStore.clear();
           globalMemoryStore.clear();
+          void clearVaultDb();
         } catch {}
 
         set({
@@ -164,11 +170,13 @@ export const useAppStore = create<AppState>()(
       })),
       // Hydrate manually after mount so the first client render matches SSR (no hydration mismatch)
       skipHydration: true,
-      partialize: (state) => ({
+      partialize: (state) => {
+        const stripped = stripHeavyPayloadsForLocalStorage(state.documents, state.chatSessions);
+        return {
         hasCompletedOnboarding: state.hasCompletedOnboarding,
         activeModule: state.activeModule,
         isExplorerCollapsed: state.isExplorerCollapsed,
-        chatSessions: state.chatSessions,
+        chatSessions: stripped.chatSessions,
         threadsRevision: state.threadsRevision,
         threadsUpdatedAt: state.threadsUpdatedAt,
         activeSessionId: state.activeSessionId,
@@ -186,7 +194,7 @@ export const useAppStore = create<AppState>()(
         activeDossierId: state.activeDossierId,
         collections: state.collections,
         activeCollectionId: state.activeCollectionId,
-        documents: state.documents,
+        documents: stripped.documents,
         chunkSize: state.chunkSize,
         overlap: state.overlap,
         agentRuns: state.agentRuns,
@@ -194,27 +202,15 @@ export const useAppStore = create<AppState>()(
         agentPrompt: state.agentPrompt,
         autonomyMode: state.autonomyMode,
         activePresetId: state.activePresetId,
-      }),
+      };
+      },
       onRehydrateStorage: () => (state) => {
-        if (state && state.documents && state.documents.length > 0) {
-          globalVectorStore.clear();
-          state.documents.forEach((doc) => {
-            if (doc.chunks && doc.chunks.length > 0) {
-              doc.chunks.forEach((c) => {
-                globalVectorStore.addRawChunk({
-                  id: c.id,
-                  docId: c.docId,
-                  docName: doc.name,
-                  chunkIndex: c.chunkIndex,
-                  content: c.content,
-                  tokenCount: c.tokenCount,
-                  vector: globalVectorStore.generateEmbedding(c.content),
-                });
-              });
-            }
-          });
-        }
         if (state) {
+          const docsWithLegacyChunks = (state.documents || []).filter((d) => d.chunks && d.chunks.length > 0);
+          globalVectorStore.clear();
+          setTimeout(() => {
+            void hydrateVectorStoreFromVaultDb(docsWithLegacyChunks);
+          }, 0);
           for (const session of state.chatSessions) {
             for (const message of session.messages) {
               if (
