@@ -272,14 +272,16 @@ export const AgentsScreen: React.FC = () => {
                 </div>
               </div>
               <div className="flex items-center gap-2">
-                <Button
-                  variant="outline"
-                  size="sm"
-                  onClick={() => setIsCheckpointOpen(true)}
-                  className="h-6 px-2 text-[11px] rounded-lg flex items-center gap-1 text-muted-foreground hover:text-foreground"
-                >
-                  <History size={12} /> Checkpoints
-                </Button>
+                {!(typeof window !== "undefined" && Boolean((window as any).chrome?.webview)) && (
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    onClick={() => setIsCheckpointOpen(true)}
+                    className="h-6 px-2 text-[11px] rounded-lg flex items-center gap-1 text-muted-foreground hover:text-foreground"
+                  >
+                    <History size={12} /> Checkpoints
+                  </Button>
+                )}
                 <Badge variant="outline" className="text-[11px] font-mono">
                   {activeRun?.steps.filter((s) => s.status === "completed").length} / {activeRun?.steps.length || 0} steps
                 </Badge>
@@ -480,7 +482,9 @@ export const AgentsScreen: React.FC = () => {
         <ShieldCheck className="size-4 text-emerald-500" />
         <span>Sovereign local sandbox: Human approval required before every active execution.</span>
       </footer>
-      <CheckpointDrawer isOpen={isCheckpointOpen} onClose={() => setIsCheckpointOpen(false)} />
+      {!(typeof window !== "undefined" && Boolean((window as any).chrome?.webview)) && (
+        <CheckpointDrawer isOpen={isCheckpointOpen} onClose={() => setIsCheckpointOpen(false)} />
+      )}
     </main>
   );
 };

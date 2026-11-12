@@ -207,68 +207,10 @@ function buildFallbackSteps(goal: string, chosenModel: string): AgentStep[] {
 }
 
 export const createAgentSlice: StateCreator<any, [], [], AgentSlice> = (set, get) => ({
-  agentRuns: [
-    {
-      id: "run-initial",
-      goal: "Update the checkout button copy and verify the flow",
-      modelId: "llama3.2",
-      status: "waiting_approval",
-      currentStepIndex: 3,
-      createdAt: "Today at 12:00 PM",
-      updatedAt: "Just now",
-      logs: [
-        "[00:00.12] Agent initialized. Target sandbox: localhost:3000",
-        "[00:00.45] Step 1 complete: Connected to target DOM tree.",
-        "[00:01.10] Step 2 complete: Located Checkout button node (#submit-order).",
-        "[00:01.85] Step 3 complete: Read form labels and input bindings.",
-        "[00:02.40] Step 4 staged: Awaiting human authorization to click #submit-order.",
-      ],
-      steps: [
-        {
-          id: "step-1",
-          title: "Opened localhost:3000",
-          description: "Navigated headless browser to local target viewport.",
-          toolName: "browser_navigate",
-          toolArgs: { url: "http://localhost:3000", viewport: "1280x800" },
-          status: "completed",
-          result: "HTTP 200 OK - DOMContentLoaded in 310ms",
-          executionTimeMs: 310,
-        },
-        {
-          id: "step-2",
-          title: "Clicked Checkout",
-          description: "Simulated mouse pointer navigation and button focus.",
-          toolName: "mouse_click",
-          toolArgs: { selector: "button#checkout", x: 380, y: 245 },
-          status: "completed",
-          result: "Navigation to checkout modal succeeded",
-          executionTimeMs: 140,
-        },
-        {
-          id: "step-3",
-          title: "Read the form labels",
-          description: "Extracted accessible labels and interactive elements.",
-          toolName: "dom_query",
-          toolArgs: { query: "form label, form input" },
-          status: "completed",
-          result: "Found 4 fields: Full Name, Address, Card Details, Submit",
-          executionTimeMs: 85,
-        },
-        {
-          id: "step-4",
-          title: "Submit order flow verification",
-          description: "Execute order confirmation and assert response status.",
-          toolName: "browser_click",
-          toolArgs: { selector: "button#submit-order", timeoutMs: 5000 },
-          status: "waiting_approval",
-          requiresApproval: true,
-        },
-      ],
-    },
-  ],
-  activeRunId: "run-initial",
+  agentRuns: [],
+  activeRunId: "",
   isAgentRunning: false,
-  agentPrompt: "Update the checkout button copy and verify the flow",
+  agentPrompt: "",
   autonomyMode: "step_by_step",
   agentMode: "build",
   activePresetId: "general",
@@ -494,24 +436,9 @@ export const createAgentSlice: StateCreator<any, [], [], AgentSlice> = (set, get
 
       if (!isComplete) {
         const nextStep = updatedSteps[nextPendingIndex];
-        const nextOp = nextStep.toolName ? operations[nextStep.toolName] : undefined;
-        const canAutoRun =
-          state.autonomyMode === "full_auto" ||
-          (state.autonomyMode === "auto_reads" && nextOp?.safety === "read" && !nextStep.requiresApproval);
-
         updatedSteps[nextPendingIndex] = {
           ...nextStep,
-          status: canAutoRun
-            ? "completed"
-            : nextStep.requiresApproval
-            ? "waiting_approval"
-            : "completed",
-          ...(canAutoRun || !nextStep.requiresApproval
-            ? {
-                result: `Verified step [${nextStep.toolName || "check"}] automatically`,
-                executionTimeMs: 45,
-              }
-            : {}),
+          status: nextStep.requiresApproval ? "waiting_approval" : "pending",
         };
       }
 

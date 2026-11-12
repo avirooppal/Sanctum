@@ -124,19 +124,21 @@ export const SettingsMenu: React.FC<SettingsMenuProps> = ({
           Integrations (Experimental)
         </span>
         <div className="mt-1 space-y-0.5">
-          <button
-            type="button"
-            onClick={() => onSelectSection("mcp-servers")}
-            className={cn(
-              "w-full flex items-center gap-2.5 px-3 py-1.5 rounded-xl text-xs font-medium transition-colors text-left",
-              activeSection === "mcp-servers"
-                ? "bg-accent text-foreground font-semibold"
-                : "text-muted-foreground hover:bg-muted/50 hover:text-foreground"
-            )}
-          >
-            <IconCircles size={16} className={cn(activeSection === "mcp-servers" ? "text-primary" : "text-muted-foreground")} />
-            <span>MCP Servers</span>
-          </button>
+          {!(typeof window !== "undefined" && Boolean((window as any).chrome?.webview)) && (
+            <button
+              type="button"
+              onClick={() => onSelectSection("mcp-servers")}
+              className={cn(
+                "w-full flex items-center gap-2.5 px-3 py-1.5 rounded-xl text-xs font-medium transition-colors text-left",
+                activeSection === "mcp-servers"
+                  ? "bg-accent text-foreground font-semibold"
+                  : "text-muted-foreground hover:bg-muted/50 hover:text-foreground"
+              )}
+            >
+              <IconCircles size={16} className={cn(activeSection === "mcp-servers" ? "text-primary" : "text-muted-foreground")} />
+              <span>MCP Servers</span>
+            </button>
+          )}
           <button
             type="button"
             onClick={() => onSelectSection("claude-code")}

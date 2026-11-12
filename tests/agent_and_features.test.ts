@@ -19,7 +19,7 @@ test("Autonomous Agent & Features Validation", async (t) => {
     state = { ...slice, activeModelId: "llama3.2", models: [{ id: "llama3.2", name: "Llama 3.2" }] };
 
     assert.ok(Array.isArray(state.agentRuns), "agentRuns must be an array");
-    assert.ok(state.agentRuns.length > 0, "agentRuns has default run");
+    assert.equal(state.agentRuns.length, 0, "agentRuns starts empty without fake mock run");
     assert.equal(typeof state.startAgentTask, "function");
     assert.equal(typeof state.approveNextAction, "function");
     assert.equal(typeof state.skipStep, "function");
