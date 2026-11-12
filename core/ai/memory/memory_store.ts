@@ -55,6 +55,7 @@ export function redactSecrets(input: string): string {
 export class LocalMemoryStore {
   private facts: Map<string, MemoryFact> = new Map();
   private episodes: Map<string, EpisodicMemory> = new Map();
+  private embeddingCache: Map<string, { text: string; vector: Float32Array }> = new Map();
   private storageKey = "sanctum-memory-store-v1";
   private migratedKey = "sanctum-memory-migrated-v1";
   private enabled = true;
@@ -63,6 +64,16 @@ export class LocalMemoryStore {
 
   constructor() {
     this.loadFromLocalStorage();
+  }
+
+  private getCachedEmbedding(id: string, content: string): Float32Array {
+    const cached = this.embeddingCache.get(id);
+    if (cached && cached.text === content) {
+      return cached.vector;
+    }
+    const vector = globalVectorStore.generateEmbedding(content);
+    this.embeddingCache.set(id, { text: content, vector });
+    return vector;
   }
 
   public isEnabled(): boolean {
@@ -113,6 +124,7 @@ export class LocalMemoryStore {
     };
 
     this.facts.set(fact.id, fact);
+    this.getCachedEmbedding(fact.id, fact.content);
     this.persist();
     return fact;
   }
@@ -125,6 +137,7 @@ export class LocalMemoryStore {
     if (!existing) return null;
     if (patch.content !== undefined) {
       existing.content = redactSecrets(patch.content.trim());
+      this.getCachedEmbedding(id, existing.content);
     }
     if (patch.category !== undefined) existing.category = patch.category;
     if (patch.pinned !== undefined) existing.pinned = patch.pinned;
@@ -135,6 +148,7 @@ export class LocalMemoryStore {
 
   public deleteFact(id: string): boolean {
     const deleted = this.facts.delete(id);
+    this.embeddingCache.delete(id);
     if (deleted) this.persist();
     return deleted;
   }
@@ -168,10 +182,14 @@ export class LocalMemoryStore {
     };
 
     this.episodes.set(id, ep);
+    this.getCachedEmbedding(id, ep.content);
     // Cap episodic store at 500 entries to stay lightweight
     if (this.episodes.size > 500) {
       const oldestKey = this.episodes.keys().next().value;
-      if (oldestKey) this.episodes.delete(oldestKey);
+      if (oldestKey) {
+        this.episodes.delete(oldestKey);
+        this.embeddingCache.delete(oldestKey);
+      }
     }
     this.persist();
     return ep;
@@ -211,7 +229,7 @@ export class LocalMemoryStore {
       tokenCount: Math.ceil(f.content.split(/\s+/).length * 1.3),
       charStart: 0,
       charEnd: f.content.length,
-      vector: globalVectorStore.generateEmbedding(f.content),
+      vector: this.getCachedEmbedding(f.id, f.content),
     }));
 
     const scoredFactPassages = HybridRetriever.retrieve(
@@ -239,7 +257,7 @@ export class LocalMemoryStore {
       tokenCount: Math.ceil(e.content.split(/\s+/).length * 1.3),
       charStart: 0,
       charEnd: e.content.length,
-      vector: globalVectorStore.generateEmbedding(e.content),
+      vector: this.getCachedEmbedding(e.id, e.content),
     }));
 
     const scoredEpPassages = HybridRetriever.retrieve(
@@ -344,6 +362,7 @@ export class LocalMemoryStore {
   public clear(): void {
     this.facts.clear();
     this.episodes.clear();
+    this.embeddingCache.clear();
     if (typeof window !== "undefined") {
       try {
         localStorage.removeItem(this.storageKey);

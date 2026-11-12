@@ -141,4 +141,26 @@ test("Autonomous Agent & Features Validation", async (t) => {
     globalMemoryStore.clear();
     assert.equal(globalMemoryStore.listFacts().length, 0, "Memory store wiped cleanly");
   });
+
+  await t.test("PERF-02: LocalMemoryStore caches embeddings and does not recompute in recall()", async () => {
+    const { globalVectorStore } = await import("../core/ai/rag/vectorStore.ts");
+    globalMemoryStore.clear();
+    globalMemoryStore.saveFact({ content: "Always use strict TypeScript interfaces", category: "preference" });
+    globalMemoryStore.addEpisode({ sessionId: "s1", sessionTitle: "Test", role: "user", content: "Discuss TypeScript performance optimization" });
+
+    const origGen = globalVectorStore.generateEmbedding.bind(globalVectorStore);
+    let calls = 0;
+    globalVectorStore.generateEmbedding = (txt: string) => {
+      calls++;
+      return origGen(txt);
+    };
+    try {
+      const r = globalMemoryStore.recall("TypeScript");
+      assert.ok(r.facts.length >= 1);
+      assert.equal(calls, 1, "recall() should only embed the query, not cached facts/episodes");
+    } finally {
+      globalVectorStore.generateEmbedding = origGen;
+      globalMemoryStore.clear();
+    }
+  });
 });
