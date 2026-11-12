@@ -354,6 +354,66 @@ namespace Sanctum {
         [DllImport("kernel32.dll", SetLastError = true, CharSet = CharSet.Unicode)]
         static extern bool CreateProcessW(string lpApplicationName, string lpCommandLine, IntPtr lpProcessAttributes, IntPtr lpThreadAttributes, bool bInheritHandles, uint dwCreationFlags, IntPtr lpEnvironment, string lpCurrentDirectory, ref STARTUPINFOEX lpStartupInfo, out PROCESS_INFORMATION lpProcessInformation);
 
+        [DllImport("kernel32.dll", SetLastError = true, CharSet = CharSet.Unicode)]
+        static extern uint GetLongPathNameW(string lpszShortPath, StringBuilder lpszLongPath, uint cchBuffer);
+
+        [DllImport("kernel32.dll", SetLastError = true, CharSet = CharSet.Unicode)]
+        static extern SafeFileHandle CreateFileW(string lpFileName, uint dwDesiredAccess, uint dwShareMode, IntPtr lpSecurityAttributes, uint dwCreationDisposition, uint dwFlagsAndAttributes, IntPtr hTemplateFile);
+
+        [DllImport("kernel32.dll", SetLastError = true, CharSet = CharSet.Unicode)]
+        static extern uint GetFinalPathNameByHandleW(SafeFileHandle hFile, StringBuilder lpszFilePath, uint cchFilePath, uint dwFlags);
+
+        private const uint FILE_SHARE_ALL = 0x00000007;
+        private const uint OPEN_EXISTING = 3;
+        private const uint FILE_FLAG_BACKUP_SEMANTICS = 0x02000000;
+
+        private static string ResolveRealExistingPath(string existingPath) {
+            using (SafeFileHandle handle = CreateFileW(existingPath, 0, FILE_SHARE_ALL, IntPtr.Zero, OPEN_EXISTING, FILE_FLAG_BACKUP_SEMANTICS, IntPtr.Zero)) {
+                if (!handle.IsInvalid) {
+                    var sb = new StringBuilder(32768);
+                    uint len = GetFinalPathNameByHandleW(handle, sb, (uint)sb.Capacity, 0);
+                    if (len > 0 && len < sb.Capacity) {
+                        string finalPath = sb.ToString();
+                        if (finalPath.StartsWith(@"\\?\UNC\", StringComparison.OrdinalIgnoreCase)) {
+                            throw new Exception("UNC network paths are not allowed.");
+                        }
+                        if (finalPath.StartsWith(@"\\?\", StringComparison.Ordinal)) {
+                            finalPath = finalPath.Substring(4);
+                        }
+                        return Path.GetFullPath(finalPath);
+                    }
+                }
+            }
+            var longSb = new StringBuilder(32768);
+            uint longLen = GetLongPathNameW(existingPath, longSb, (uint)longSb.Capacity);
+            if (longLen > 0 && longLen < longSb.Capacity) {
+                return Path.GetFullPath(longSb.ToString());
+            }
+            return Path.GetFullPath(existingPath);
+        }
+
+        private static string ResolveCanonicalRealPath(string rawFullPath) {
+            string cur = Path.GetFullPath(rawFullPath);
+            if (File.Exists(cur) || Directory.Exists(cur)) {
+                return ResolveRealExistingPath(cur);
+            }
+            var trailing = new Stack<string>();
+            while (!string.IsNullOrEmpty(cur) && !File.Exists(cur) && !Directory.Exists(cur)) {
+                string name = Path.GetFileName(cur);
+                string parent = Path.GetDirectoryName(cur);
+                if (string.IsNullOrEmpty(parent) || parent == cur) break;
+                if (!string.IsNullOrEmpty(name)) trailing.Push(name);
+                cur = parent;
+            }
+            string resolved = (!string.IsNullOrEmpty(cur) && (File.Exists(cur) || Directory.Exists(cur)))
+                ? ResolveRealExistingPath(cur)
+                : Path.GetFullPath(rawFullPath);
+            while (trailing.Count > 0) {
+                resolved = Path.Combine(resolved, trailing.Pop());
+            }
+            return Path.GetFullPath(resolved);
+        }
+
         [DllImport("kernel32.dll", SetLastError = true)]
         static extern bool CloseHandle(IntPtr hObject);
 
@@ -1596,8 +1656,13 @@ namespace Sanctum {
                         dlg.Description = "Choose the workspace Sanctum can read and edit";
                         dlg.SelectedPath = _toolWorkspace;
                         if (dlg.ShowDialog(this) == DialogResult.OK) {
+                            string candidate = ResolveCanonicalRealPath(dlg.SelectedPath);
+                            if (IsHardBlocked(candidate)) {
+                                MessageBox.Show(this, "That folder cannot be used as a workspace because it is a protected system or Sanctum internal directory.", "Restricted Folder", MessageBoxButtons.OK, MessageBoxIcon.Warning);
+                                return;
+                            }
                             lock (_toolLock) {
-                                _toolWorkspace = Path.GetFullPath(dlg.SelectedPath);
+                                _toolWorkspace = candidate;
                                 _workspaceId = Guid.NewGuid().ToString("N");
                                 File.WriteAllText(Path.Combine(_appDataDir, "tool_workspace.txt"), _toolWorkspace);
                             }
@@ -1926,13 +1991,29 @@ namespace Sanctum {
         }
 
         private static bool IsHardBlocked(string canonicalPath) {
-            string lower = canonicalPath.ToLowerInvariant();
-            string home = Environment.GetFolderPath(Environment.SpecialFolder.UserProfile).ToLowerInvariant();
-            string appData = Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData).ToLowerInvariant();
-            string localAppData = Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData).ToLowerInvariant();
-            string windir = Environment.GetFolderPath(Environment.SpecialFolder.Windows).ToLowerInvariant();
-            string progFiles = Environment.GetFolderPath(Environment.SpecialFolder.ProgramFiles).ToLowerInvariant();
-            string progFilesX86 = Environment.GetFolderPath(Environment.SpecialFolder.ProgramFilesX86).ToLowerInvariant();
+            string resolved = ResolveCanonicalRealPath(canonicalPath);
+            string lower = resolved.TrimEnd(Path.DirectorySeparatorChar).ToLowerInvariant();
+            string home = ResolveCanonicalRealPath(Environment.GetFolderPath(Environment.SpecialFolder.UserProfile)).TrimEnd(Path.DirectorySeparatorChar).ToLowerInvariant();
+            string appData = ResolveCanonicalRealPath(Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData)).TrimEnd(Path.DirectorySeparatorChar).ToLowerInvariant();
+            string localAppData = ResolveCanonicalRealPath(Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData)).TrimEnd(Path.DirectorySeparatorChar).ToLowerInvariant();
+            string windir = ResolveCanonicalRealPath(Environment.GetFolderPath(Environment.SpecialFolder.Windows)).TrimEnd(Path.DirectorySeparatorChar).ToLowerInvariant();
+            string progFiles = ResolveCanonicalRealPath(Environment.GetFolderPath(Environment.SpecialFolder.ProgramFiles)).TrimEnd(Path.DirectorySeparatorChar).ToLowerInvariant();
+            string progFilesX86 = ResolveCanonicalRealPath(Environment.GetFolderPath(Environment.SpecialFolder.ProgramFilesX86)).TrimEnd(Path.DirectorySeparatorChar).ToLowerInvariant();
+
+            string defaultSanctumDir = Path.Combine(appData, "sanctum");
+            string activeDataDir = !string.IsNullOrEmpty(_appDataDir)
+                ? ResolveCanonicalRealPath(_appDataDir).TrimEnd(Path.DirectorySeparatorChar).ToLowerInvariant()
+                : defaultSanctumDir;
+
+            string[] sanctumDirs = new string[] { defaultSanctumDir, activeDataDir };
+            foreach (string sDir in sanctumDirs) {
+                if (string.IsNullOrEmpty(sDir)) continue;
+                string safeWs = Path.Combine(sDir, "workspace");
+                bool insideSafeWs = lower == safeWs || lower.StartsWith(safeWs + Path.DirectorySeparatorChar);
+                if (!insideSafeWs && (lower == sDir || lower.StartsWith(sDir + Path.DirectorySeparatorChar))) {
+                    return true;
+                }
+            }
 
             string[] blocked = new string[] {
                 windir,
@@ -1950,8 +2031,7 @@ namespace Sanctum {
                 Path.Combine(localAppData, "google", "chrome").ToLowerInvariant(),
                 Path.Combine(localAppData, "microsoft", "edge").ToLowerInvariant(),
                 Path.Combine(appData, "mozilla", "firefox").ToLowerInvariant(),
-                Path.Combine(localAppData, "bravesoftware").ToLowerInvariant(),
-                Path.Combine(appData, "sanctum", "settings.json").ToLowerInvariant()
+                Path.Combine(localAppData, "bravesoftware").ToLowerInvariant()
             };
 
             for (int i = 0; i < blocked.Length; i++) {
@@ -2009,7 +2089,7 @@ namespace Sanctum {
                 }
             } catch { }
 
-            string root = Path.GetFullPath(_toolWorkspace).TrimEnd(Path.DirectorySeparatorChar);
+            string root = ResolveCanonicalRealPath(_toolWorkspace).TrimEnd(Path.DirectorySeparatorChar);
             string full;
             if (Path.IsPathRooted(trimmed)) {
                 if (scope == "workspace_only")
@@ -2025,6 +2105,8 @@ namespace Sanctum {
                     throw new Exception("Symbolic links and junctions are not allowed in workspace tools.");
                 current = Path.GetDirectoryName(current);
             }
+
+            full = ResolveCanonicalRealPath(full);
 
             if (!overrideHardBlocked && IsHardBlocked(full)) {
                 string reason = "Access to critical system or credential path is hard-blocked: " + full;
@@ -2054,7 +2136,7 @@ namespace Sanctum {
                 string lowerFull = full.ToLowerInvariant();
                 foreach (string f in allowedFolders) {
                     if (string.IsNullOrEmpty(f)) continue;
-                    string cf = Path.GetFullPath(f).TrimEnd(Path.DirectorySeparatorChar).ToLowerInvariant();
+                    string cf = ResolveCanonicalRealPath(f).TrimEnd(Path.DirectorySeparatorChar).ToLowerInvariant();
                     if (lowerFull == cf || lowerFull.StartsWith(cf + Path.DirectorySeparatorChar)) {
                         matched = true;
                         break;

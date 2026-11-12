@@ -204,3 +204,108 @@ test("SEC-02: C# HandleSettings merges POST keys, validates known keys, and retu
     assert.equal(rBadScope.status, 422);
   });
 });
+
+test("SEC-03: C# ToolPath blocks 8.3 short names, junctions, ..\\ traversal, UNC, \\\\?\\, mixed-case, and %APPDATA%\\Sanctum", async (t) => {
+  if (!fs.existsSync(HOST_EXE)) {
+    t.skip(`Desktop host not built at ${HOST_EXE}`);
+    return;
+  }
+
+  const host = await startHeadlessHost();
+  t.after(() => host.stop());
+
+  const headers = {
+    "Content-Type": "application/json",
+    "X-Sanctum-Auth": host.token,
+  };
+
+  const wsRes = await fetch(`${host.baseUrl}/api/workspace`, { headers });
+  const ws = await wsRes.json();
+
+  // Elevate to system_full so only hard-blocks and canonicalization protect these paths
+  await fetch(`${host.baseUrl}/api/settings`, {
+    method: "POST",
+    headers,
+    body: JSON.stringify({ "access.scope": "system_full" }),
+  });
+
+  const callRead = async (targetPath: string) => {
+    const res = await fetch(`${host.baseUrl}/api/tools/execute`, {
+      method: "POST",
+      headers,
+      body: JSON.stringify({
+        workspaceId: ws.id,
+        name: "workspace_files",
+        arguments: { action: "read", path: targetPath },
+      }),
+    });
+    return { status: res.status, body: await res.json() };
+  };
+
+  await t.test("1. Rejects 8.3 short names (C:\\WINDO~1\\..., C:\\PROGRA~1\\...)", async () => {
+    if (fs.existsSync("C:\\WINDO~1\\System32\\drivers\\etc\\hosts")) {
+      const r1 = await callRead("C:\\WINDO~1\\System32\\drivers\\etc\\hosts");
+      assert.equal(r1.status, 400);
+      assert.match(r1.body.error, /hard-blocked|denied|forbidden/i);
+    }
+    const r2 = await fetch(`${host.baseUrl}/api/tools/execute`, {
+      method: "POST",
+      headers,
+      body: JSON.stringify({
+        workspaceId: ws.id,
+        name: "workspace_files",
+        arguments: { action: "list", path: "C:\\PROGRA~1" },
+      }),
+    });
+    assert.equal(r2.status, 400);
+    const d2 = await r2.json();
+    assert.match(d2.error, /hard-blocked|denied|forbidden/i);
+  });
+
+  await t.test("2. Rejects junction inside workspace pointing to C:\\Windows\\System32", async () => {
+    const junctionPath = path.join(ws.root, "sys_junc");
+    try {
+      const { execSync } = await import("node:child_process");
+      execSync(`cmd /c mklink /J "${junctionPath}" "C:\\Windows\\System32"`, { stdio: "ignore" });
+    } catch {
+      t.skip("Could not create NTFS junction");
+      return;
+    }
+    const r = await callRead("sys_junc\\drivers\\etc\\hosts");
+    assert.equal(r.status, 400);
+    assert.match(r.body.error, /junction|symbolic|hard-blocked/i);
+  });
+
+  await t.test("3. Rejects ..\\ traversal under workspace_only", async () => {
+    await fetch(`${host.baseUrl}/api/settings`, {
+      method: "POST",
+      headers,
+      body: JSON.stringify({ "access.scope": "workspace_only" }),
+    });
+    const r = await callRead("..\\settings.json");
+    assert.equal(r.status, 400);
+    assert.match(r.body.error, /outside|hard-blocked|forbidden/i);
+    await fetch(`${host.baseUrl}/api/settings`, {
+      method: "POST",
+      headers,
+      body: JSON.stringify({ "access.scope": "system_full" }),
+    });
+  });
+
+  await t.test("4. Rejects UNC, \\\\?\\ prefix, and mixed-case system paths", async () => {
+    const rUnc = await callRead("\\\\127.0.0.1\\c$\\Windows\\System32\\drivers\\etc\\hosts");
+    assert.equal(rUnc.status, 400);
+    const rExt = await callRead("\\\\?\\C:\\Windows\\System32\\drivers\\etc\\hosts");
+    assert.equal(rExt.status, 400);
+    const rMix = await callRead("c:\\wInDoWs\\sYsTeM32\\drivers\\etc\\hosts");
+    assert.equal(rMix.status, 400);
+  });
+
+  await t.test("5. Hard-blocks all %APPDATA%\\Sanctum internal files (threads.json, memory.json, audit.log)", async () => {
+    for (const file of ["settings.json", "threads.json", "memory.json", "audit.log"]) {
+      const r = await callRead(path.join(host.dataDir, file));
+      assert.equal(r.status, 400, `${file} must be hard-blocked`);
+      assert.match(r.body.error, /hard-blocked/i);
+    }
+  });
+});
