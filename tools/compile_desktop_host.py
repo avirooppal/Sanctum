@@ -2851,53 +2851,38 @@ private void HandleTerminal(HttpListenerRequest req, HttpListenerResponse res) {
 
         private static string _cachedThreads = null;
         private void HandleThreads(HttpListenerRequest req, HttpListenerResponse res) {
-            lock (_dataLock) {
+            try {
                 if (req.HttpMethod == "GET") {
-                    string data = _cachedThreads ?? (File.Exists(_threadsFile) ? File.ReadAllText(_threadsFile, Encoding.UTF8) : "[]");
+                    string data;
+                    lock (_dataLock) {
+                        data = _cachedThreads ?? (File.Exists(_threadsFile) ? File.ReadAllText(_threadsFile, Encoding.UTF8) : "[]");
+                    }
                     byte[] bytes = Encoding.UTF8.GetBytes(data);
-                    res.ContentType = "application/json";
+                    res.ContentType = "application/json; charset=utf-8";
                     res.StatusCode = 200;
                     res.OutputStream.Write(bytes, 0, bytes.Length);
                     res.Close();
                     return;
                 }
                 if (req.HttpMethod == "POST") {
-                    string body;
-                    if (req.ContentLength64 > 0) {
-                        byte[] buffer = new byte[req.ContentLength64];
-                        int totalRead = 0;
-                        while (totalRead < buffer.Length) {
-                            int read = req.InputStream.Read(buffer, totalRead, buffer.Length - totalRead);
-                            if (read <= 0) break;
-                            totalRead += read;
-                        }
-                        body = req.ContentEncoding.GetString(buffer, 0, totalRead);
-                    } else {
-                        using (var r = new StreamReader(req.InputStream, req.ContentEncoding)) {
-                            body = r.ReadToEnd();
-                        }
+                    string body = ReadRequestBodyUtf8(req);
+                    EnqueueAtomicWrite(_threadsFile, body);
+                    lock (_dataLock) {
+                        _cachedThreads = body;
                     }
-                    _cachedThreads = body;
-                    ThreadPool.QueueUserWorkItem((state) => {
-                        lock (_dataLock) {
-                            try {
-                                string tempFile = _threadsFile + ".tmp";
-                                File.WriteAllText(tempFile, (string)state, Encoding.UTF8);
-                                if (File.Exists(_threadsFile)) File.Delete(_threadsFile);
-                                File.Move(tempFile, _threadsFile);
-                            } catch { }
-                        }
-                    }, body);
-                    byte[] ok = Encoding.UTF8.GetBytes("{\"status\":\"saved\"}");
-                    res.ContentType = "application/json";
-                    res.StatusCode = 200;
-                    res.OutputStream.Write(ok, 0, ok.Length);
-                    res.Close();
+                    WriteJson(res, 200, new { status = "saved" });
                     return;
                 }
+                res.StatusCode = 405;
+                res.Close();
+            } catch (Exception ex) {
+                if (ex.Message == "PAYLOAD_TOO_LARGE") {
+                    WriteJson(res, 413, new { error = "Request payload exceeds 16 MiB limit." });
+                } else {
+                    LogEvent("error", "threads", ex.Message);
+                    WriteJson(res, 500, new { error = ex.Message });
+                }
             }
-            res.StatusCode = 405;
-            res.Close();
         }
 
         private static readonly HashSet<string> _knownSettingKeys = new HashSet<string>(StringComparer.Ordinal) {
@@ -2927,6 +2912,68 @@ private void HandleTerminal(HttpListenerRequest req, HttpListenerResponse res) {
                 if (s != "workspace_only" && s != "selected_folders" && s != "system_read" && s != "system_full") {
                     throw new Exception("Invalid access.scope value: " + s);
                 }
+            }
+        }
+
+        private static string ReadRequestBodyUtf8(HttpListenerRequest req, int maxBytes = 16777216) {
+            if (req.ContentLength64 > maxBytes) {
+                throw new InvalidOperationException("PAYLOAD_TOO_LARGE");
+            }
+            using (var ms = new MemoryStream()) {
+                byte[] buf = new byte[8192];
+                int read;
+                long total = 0;
+                while ((read = req.InputStream.Read(buf, 0, buf.Length)) > 0) {
+                    total += read;
+                    if (total > maxBytes) throw new InvalidOperationException("PAYLOAD_TOO_LARGE");
+                    ms.Write(buf, 0, read);
+                }
+                return Encoding.UTF8.GetString(ms.ToArray());
+            }
+        }
+
+        private static readonly Queue<Action> _writeQueue = new Queue<Action>();
+        private static readonly object _writeQueueLock = new object();
+        private static Thread _writeThread;
+
+        private static void EnsureWriteWorker() {
+            lock (_writeQueueLock) {
+                if (_writeThread != null && _writeThread.IsAlive) return;
+                _writeThread = new Thread(() => {
+                    while (true) {
+                        Action job = null;
+                        lock (_writeQueueLock) {
+                            while (_writeQueue.Count == 0) Monitor.Wait(_writeQueueLock);
+                            job = _writeQueue.Dequeue();
+                        }
+                        try { job(); } catch { }
+                    }
+                }) { IsBackground = true, Name = "SanctumSingleWriter" };
+                _writeThread.Start();
+            }
+        }
+
+        private static void EnqueueAtomicWrite(string targetPath, string content) {
+            EnsureWriteWorker();
+            Exception writeErr = null;
+            using (var done = new ManualResetEventSlim(false)) {
+                lock (_writeQueueLock) {
+                    _writeQueue.Enqueue(() => {
+                        try {
+                            WriteAtomicText(targetPath, content);
+                        } catch (Exception ex) {
+                            writeErr = ex;
+                        } finally {
+                            done.Set();
+                        }
+                    });
+                    Monitor.Pulse(_writeQueueLock);
+                }
+                done.Wait();
+            }
+            if (writeErr != null) {
+                LogEvent("error", "persistence", "Write failed for " + targetPath + ": " + writeErr.Message);
+                throw writeErr;
             }
         }
 
@@ -3019,62 +3066,71 @@ private void HandleTerminal(HttpListenerRequest req, HttpListenerResponse res) {
 
         private void HandleMemory(HttpListenerRequest req, HttpListenerResponse res) {
             string memFile = Path.Combine(_appDataDir, "memory.json");
-            lock (_dataLock) {
+            try {
                 if (req.HttpMethod == "GET") {
-                    string data = File.Exists(memFile) ? File.ReadAllText(memFile, Encoding.UTF8) : "{\"enabled\":true,\"facts\":[],\"episodes\":[]}";
+                    string data;
+                    lock (_dataLock) {
+                        data = File.Exists(memFile) ? File.ReadAllText(memFile, Encoding.UTF8) : "{\"enabled\":true,\"facts\":[],\"episodes\":[]}";
+                    }
                     byte[] bytes = Encoding.UTF8.GetBytes(data);
-                    res.ContentType = "application/json";
+                    res.ContentType = "application/json; charset=utf-8";
                     res.StatusCode = 200;
                     res.OutputStream.Write(bytes, 0, bytes.Length);
                     res.Close();
                     return;
                 }
                 if (req.HttpMethod == "POST") {
-                    using (var r = new StreamReader(req.InputStream, req.ContentEncoding)) {
-                        string body = r.ReadToEnd();
-                        string tmp = memFile + ".tmp";
-                        File.WriteAllText(tmp, body, Encoding.UTF8);
-                        if (File.Exists(memFile)) File.Delete(memFile);
-                        File.Move(tmp, memFile);
-                    }
+                    string body = ReadRequestBodyUtf8(req);
+                    EnqueueAtomicWrite(memFile, body);
                     WriteJson(res, 200, new { status = "saved" });
                     return;
                 }
                 if (req.HttpMethod == "DELETE") {
-                    if (File.Exists(memFile)) File.Delete(memFile);
+                    EnqueueAtomicWrite(memFile, "{\"enabled\":true,\"facts\":[],\"episodes\":[]}");
                     WriteJson(res, 200, new { status = "cleared" });
                     return;
                 }
+                res.StatusCode = 405;
+                res.Close();
+            } catch (Exception ex) {
+                if (ex.Message == "PAYLOAD_TOO_LARGE") {
+                    WriteJson(res, 413, new { error = "Request payload exceeds 16 MiB limit." });
+                } else {
+                    LogEvent("error", "memory", ex.Message);
+                    WriteJson(res, 500, new { error = ex.Message });
+                }
             }
-            res.StatusCode = 405;
-            res.Close();
         }
 
         private void HandleMcp(HttpListenerRequest req, HttpListenerResponse res) {
             string mcpFile = Path.Combine(_appDataDir, "mcp_servers.json");
-            lock (_dataLock) {
+            try {
                 if (req.HttpMethod == "GET") {
                     object servers = null;
-                    if (File.Exists(mcpFile)) {
-                        try { servers = new JavaScriptSerializer().DeserializeObject(File.ReadAllText(mcpFile, Encoding.UTF8)); } catch { }
+                    lock (_dataLock) {
+                        if (File.Exists(mcpFile)) {
+                            try { servers = new JavaScriptSerializer().DeserializeObject(File.ReadAllText(mcpFile, Encoding.UTF8)); } catch { }
+                        }
                     }
                     WriteJson(res, 200, new { servers = servers, plugins = new object[0] });
                     return;
                 }
                 if (req.HttpMethod == "POST") {
-                    using (var r = new StreamReader(req.InputStream, req.ContentEncoding)) {
-                        string body = r.ReadToEnd();
-                        string tmp = mcpFile + ".tmp";
-                        File.WriteAllText(tmp, body, Encoding.UTF8);
-                        if (File.Exists(mcpFile)) File.Delete(mcpFile);
-                        File.Move(tmp, mcpFile);
-                    }
+                    string body = ReadRequestBodyUtf8(req);
+                    EnqueueAtomicWrite(mcpFile, body);
                     WriteJson(res, 200, new { status = "saved" });
                     return;
                 }
+                res.StatusCode = 405;
+                res.Close();
+            } catch (Exception ex) {
+                if (ex.Message == "PAYLOAD_TOO_LARGE") {
+                    WriteJson(res, 413, new { error = "Request payload exceeds 16 MiB limit." });
+                } else {
+                    LogEvent("error", "mcp", ex.Message);
+                    WriteJson(res, 500, new { error = ex.Message });
+                }
             }
-            res.StatusCode = 405;
-            res.Close();
         }
 
         private static void WipeAppData(bool deleteModels, bool deleteWorkspace) {

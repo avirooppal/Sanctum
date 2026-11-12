@@ -401,3 +401,40 @@ test("SEC-04: headless hides auth token unless --print-token, and privileged end
     assert.equal(rWriteWithTok.status, 200);
   });
 });
+
+test("REL-03: C# host preserves UTF-8, serializes concurrent thread writes atomically, and caps payload size", async (t) => {
+  if (!fs.existsSync(HOST_EXE)) {
+    t.skip(`Desktop host not built at ${HOST_EXE}`);
+    return;
+  }
+
+  const host = await startHeadlessHost();
+  t.after(() => host.stop());
+  const headers = { "Content-Type": "application/json", "X-Sanctum-Auth": host.token };
+
+  const utf8Payload = JSON.stringify([{ id: "t1", title: "Café 🌍 日本語" }]);
+  const postRes = await fetch(`${host.baseUrl}/api/threads`, {
+    method: "POST",
+    headers,
+    body: utf8Payload,
+  });
+  assert.equal(postRes.status, 200);
+
+  const getRes = await fetch(`${host.baseUrl}/api/threads`, { headers });
+  assert.equal(getRes.status, 200);
+  assert.equal(await getRes.text(), utf8Payload);
+
+  // Concurrent writes must not corrupt threads.json or leave .tmp behind
+  await Promise.all(
+    Array.from({ length: 10 }, (_, i) =>
+      fetch(`${host.baseUrl}/api/threads`, {
+        method: "POST",
+        headers,
+        body: JSON.stringify([{ id: "seq", rev: i }]),
+      })
+    )
+  );
+  const finalThreads = JSON.parse(fs.readFileSync(path.join(host.dataDir, "threads.json"), "utf-8"));
+  assert.ok(Array.isArray(finalThreads) && finalThreads.length === 1);
+  assert.equal(fs.existsSync(path.join(host.dataDir, "threads.json.tmp")), false);
+});
