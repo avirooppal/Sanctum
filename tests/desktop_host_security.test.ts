@@ -518,3 +518,50 @@ test("BUG-01: HandleProfiles escapes quotes, backslashes, and newlines via JavaS
   assert.equal(list.data[0].id, trickyId);
   assert.equal(list.data[0].name, trickyName);
 });
+
+test("REL-01: undo re-validates original path against current workspace and ToolPath", async (t) => {
+  if (!fs.existsSync(HOST_EXE)) {
+    t.skip(`Desktop host not built at ${HOST_EXE}`);
+    return;
+  }
+
+  const ws2 = fs.mkdtempSync(path.join(os.tmpdir(), "sanctum-rel01-ws2-"));
+  const host = await startHeadlessHost([
+    "--seed-approval-token", "rel01-create",
+    "--seed-approval-token", "rel01-del",
+    "--seed-approval-token", "rel01-switch",
+    "--seed-approval-token", "rel01-undo-bad",
+    "--seed-approval-token", "rel01-undo-ok",
+  ]);
+  t.after(async () => {
+    await host.stop();
+    try { fs.rmSync(ws2, { recursive: true, force: true }); } catch {}
+  });
+  const headers = { "Content-Type": "application/json", "X-Sanctum-Auth": host.token };
+  const ws1 = await (await fetch(`${host.baseUrl}/api/workspace`, { headers })).json();
+
+  // Create & delete in ws1
+  await fetch(`${host.baseUrl}/api/tools/execute`, {
+    method: "POST",
+    headers: { ...headers, "X-Sanctum-Approval": "rel01-create" },
+    body: JSON.stringify({ workspaceId: ws1.id, name: "workspace_files", arguments: { action: "create", path: "temp.txt", content: "v1" } }),
+  });
+  await fetch(`${host.baseUrl}/api/tools/execute`, {
+    method: "POST",
+    headers: { ...headers, "X-Sanctum-Approval": "rel01-del" },
+    body: JSON.stringify({ workspaceId: ws1.id, name: "workspace_files", arguments: { action: "delete", path: "temp.txt" } }),
+  });
+
+  // Switch workspace to ws2 under workspace_only -> undo of ws1 file MUST be rejected!
+  const sw = await (await fetch(`${host.baseUrl}/api/workspace`, {
+    method: "POST",
+    headers: { ...headers, "X-Sanctum-Approval": "rel01-switch" },
+    body: JSON.stringify({ root: ws2 }),
+  })).json();
+  const undoBlocked = await fetch(`${host.baseUrl}/api/tools/execute`, {
+    method: "POST",
+    headers: { ...headers, "X-Sanctum-Approval": "rel01-undo-bad" },
+    body: JSON.stringify({ workspaceId: sw.id, name: "workspace_files", arguments: { action: "undo", path: "." } }),
+  });
+  assert.equal(undoBlocked.status, 400);
+});

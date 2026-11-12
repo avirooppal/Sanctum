@@ -2575,6 +2575,31 @@ private void HandleTerminal(HttpListenerRequest req, HttpListenerResponse res) {
                 WriteJson(res, 405, new { error = "Method not allowed" });
             }
         }
+        private static void CopyDirectoryRecursive(string srcDir, string dstDir) {
+            Directory.CreateDirectory(dstDir);
+            foreach (string file in Directory.GetFiles(srcDir)) {
+                File.Copy(file, Path.Combine(dstDir, Path.GetFileName(file)), false);
+            }
+            foreach (string sub in Directory.GetDirectories(srcDir)) {
+                CopyDirectoryRecursive(sub, Path.Combine(dstDir, Path.GetFileName(sub)));
+            }
+        }
+
+        private static void MovePathSafe(string src, string dst) {
+            try {
+                if (Directory.Exists(src)) Directory.Move(src, dst);
+                else File.Move(src, dst);
+            } catch (IOException) {
+                if (Directory.Exists(src)) {
+                    CopyDirectoryRecursive(src, dst);
+                    Directory.Delete(src, true);
+                } else {
+                    File.Copy(src, dst, false);
+                    File.Delete(src);
+                }
+            }
+        }
+
         private static string ToolArg(System.Collections.Generic.Dictionary<string, object> args, string key, bool required) {
             object value;
             if (!args.TryGetValue(key, out value)) { if (required) throw new Exception("Missing argument: " + key); return ""; }
@@ -2628,10 +2653,16 @@ private void HandleTerminal(HttpListenerRequest req, HttpListenerResponse res) {
                                 string orig = meta.ContainsKey("original") ? Convert.ToString(meta["original"]) : null;
                                 string sav = meta.ContainsKey("saved") ? Convert.ToString(meta["saved"]) : null;
                                 if (!string.IsNullOrEmpty(orig) && !string.IsNullOrEmpty(sav) && (File.Exists(sav) || Directory.Exists(sav))) {
-                                    Directory.CreateDirectory(Path.GetDirectoryName(orig));
-                                    if (Directory.Exists(sav)) Directory.Move(sav, orig); else File.Move(sav, orig);
+                                    string rootCheck = ResolveCanonicalRealPath(_toolWorkspace).TrimEnd(Path.DirectorySeparatorChar) + Path.DirectorySeparatorChar;
+                                    string origResolved = ResolveCanonicalRealPath(orig);
+                                    string checkArg = origResolved.StartsWith(rootCheck, StringComparison.OrdinalIgnoreCase)
+                                        ? origResolved.Substring(rootCheck.Length)
+                                        : origResolved;
+                                    string validatedOrig = ToolPath(checkArg, false, "create");
+                                    Directory.CreateDirectory(Path.GetDirectoryName(validatedOrig));
+                                    MovePathSafe(sav, validatedOrig);
                                     try { Directory.Delete(d.FullName, true); } catch { }
-                                    restoredRel = orig;
+                                    restoredRel = validatedOrig;
                                     break;
                                 }
                             }
@@ -2712,14 +2743,14 @@ private void HandleTerminal(HttpListenerRequest req, HttpListenerResponse res) {
                         string destination = ToolArg(args, "destination", true);
                         string dest = ToolPath(destination, false, "move_destination");
                         if (File.Exists(dest) || Directory.Exists(dest)) throw new Exception("Destination already exists.");
-                        if (Directory.Exists(target)) Directory.Move(target, dest); else File.Move(target, dest);
+                        MovePathSafe(target, dest);
                         result = new { moved = relative, destination = destination };
                     } else if (action == "delete") {
                         // Reversible deletion: move to private trash, never recursively erase.
                         string trash = Path.Combine(_appDataDir, "tool-trash", Guid.NewGuid().ToString("N"));
                         Directory.CreateDirectory(trash);
                         string saved = Path.Combine(trash, Path.GetFileName(target));
-                        if (Directory.Exists(target)) Directory.Move(target, saved); else File.Move(target, saved);
+                        MovePathSafe(target, saved);
                         File.WriteAllText(Path.Combine(trash, "restore.json"), new JavaScriptSerializer().Serialize(new { original = target, saved = saved }));
                         result = new { deleted = relative, recoverableAt = saved };
                     } else throw new Exception("Unsupported file action.");
