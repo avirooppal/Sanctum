@@ -32,6 +32,7 @@ import {
 import { DownloadPopover } from "@/components/jan/DownloadPopover";
 import { handleTitleBarMouseDown, handleTitleBarDoubleClick, handleTitleBarContextMenu } from "@/components/jan/WindowControls";
 import { useAppStore } from "@/store/useAppStore";
+import { useShallow } from "zustand/react/shallow";
 import { ChatMessage } from "@/types";
 import { cn } from "@/lib/utils";
 import { splitThinking, PromptTemplates } from "@core/ai/index.ts";
@@ -56,7 +57,7 @@ const MessageRow: React.FC<{
   onRetry?: () => void;
   onDelete?: () => void;
   onBookmark?: () => void;
-}> = ({ msg, modelName, onStop, onRetry, onDelete, onBookmark }) => {
+}> = React.memo(({ msg, modelName, onStop, onRetry, onDelete, onBookmark }) => {
   const [showThinking, setShowThinking] = useState(false);
   const [copied, setCopied] = useState(false);
   const bookmarked = Boolean(msg.bookmarked);
@@ -220,7 +221,8 @@ const MessageRow: React.FC<{
       </div>
     </div>
   );
-};
+});
+MessageRow.displayName = "MessageRow";
 
 export const ChatScreen: React.FC<ChatScreenProps> = () => {
   const {
@@ -248,9 +250,37 @@ export const ChatScreen: React.FC<ChatScreenProps> = () => {
     removeAttachedDocument,
     isExplorerCollapsed,
     toggleExplorer,
-  } = useAppStore();
+  } = useAppStore(
+    useShallow((s) => ({
+      chatSessions: s.chatSessions,
+      activeSessionId: s.activeSessionId,
+      models: s.models,
+      activeModelId: s.activeModelId,
+      setActiveModelId: s.setActiveModelId,
+      sendMessage: s.sendMessage,
+      stopInference: s.stopInference,
+      regenerateLastMessage: s.regenerateLastMessage,
+      deleteChatMessage: s.deleteChatMessage,
+      toggleMessageBookmark: s.toggleMessageBookmark,
+      activeTracker: s.activeTracker,
+      updateSessionParams: s.updateSessionParams,
+      enableRagInChat: s.enableRagInChat,
+      setEnableRagInChat: s.setEnableRagInChat,
+      documents: s.documents,
+      activeCollectionId: s.activeCollectionId,
+      uploadDocument: s.uploadDocument,
+      attachedImage: s.attachedImage,
+      setAttachedImage: s.setAttachedImage,
+      attachedDocuments: s.attachedDocuments,
+      addAttachedDocument: s.addAttachedDocument,
+      removeAttachedDocument: s.removeAttachedDocument,
+      isExplorerCollapsed: s.isExplorerCollapsed,
+      toggleExplorer: s.toggleExplorer,
+    }))
+  );
 
   const [prompt, setPrompt] = useState("");
+  const [visibleLimit, setVisibleLimit] = useState(80);
   const [detailsOpen, setDetailsOpen] = useState(false);
   const [isTerminalOpen, setIsTerminalOpen] = useState(false);
   const [bookmarksOnly, setBookmarksOnly] = useState(false);
@@ -608,19 +638,37 @@ export const ChatScreen: React.FC<ChatScreenProps> = () => {
                   </p>
                 </div>
               </div>
-            ) : (
-              messages.filter(m => !bookmarksOnly || m.bookmarked).map((m) => (
-                <MessageRow
-                  key={m.id}
-                  msg={m}
-                  modelName={m.modelId || model?.name}
-                  onStop={stopInference}
-                  onRetry={!isStreaming && m.id === messages.at(-1)?.id ? regenerateLastMessage : undefined}
-                  onDelete={!isStreaming && session ? () => deleteChatMessage(session.id, m.id) : undefined}
-                  onBookmark={session ? () => toggleMessageBookmark(session.id, m.id) : undefined}
-                />
-              ))
-            )}
+            ) : (() => {
+              const filtered = messages.filter(m => !bookmarksOnly || m.bookmarked);
+              const hiddenCount = Math.max(0, filtered.length - visibleLimit);
+              const visibleMessages = hiddenCount > 0 ? filtered.slice(hiddenCount) : filtered;
+              return (
+                <>
+                  {hiddenCount > 0 && (
+                    <div className="flex justify-center">
+                      <button
+                        type="button"
+                        onClick={() => setVisibleLimit((v) => v + 80)}
+                        className="rounded-full border border-border/70 bg-muted/40 px-3 py-1 text-xs text-muted-foreground hover:text-foreground"
+                      >
+                        Show earlier messages ({hiddenCount} hidden)
+                      </button>
+                    </div>
+                  )}
+                  {visibleMessages.map((m) => (
+                    <MessageRow
+                      key={m.id}
+                      msg={m}
+                      modelName={m.modelId || model?.name}
+                      onStop={stopInference}
+                      onRetry={!isStreaming && m.id === messages.at(-1)?.id ? regenerateLastMessage : undefined}
+                      onDelete={!isStreaming && session ? () => deleteChatMessage(session.id, m.id) : undefined}
+                      onBookmark={session ? () => toggleMessageBookmark(session.id, m.id) : undefined}
+                    />
+                  ))}
+                </>
+              );
+            })()}
             {bookmarksOnly && !messages.some(m => m.bookmarked) && <p className="text-sm text-muted-foreground py-6">No bookmarked responses in this chat. Save a response using its bookmark button.</p>}
             <div ref={endRef} />
           </div>

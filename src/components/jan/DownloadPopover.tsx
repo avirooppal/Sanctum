@@ -14,12 +14,19 @@ import {
   IconTrash,
 } from "@tabler/icons-react";
 import { useAppStore } from "@/store/useAppStore";
+import { useShallow } from "zustand/react/shallow";
 import { JAN_STYLE_DOWNLOAD_CATALOG } from "@/lib/constants";
 import { cn } from "@/lib/utils";
 
 export const DownloadPopover: React.FC = () => {
   const [isOpen, setIsPopoverOpen] = useState(false);
-  const { downloadProgressMap, cancelModelDownload, clearDownloadEntry } = useAppStore();
+  const { downloadProgressMap, cancelModelDownload, clearDownloadEntry } = useAppStore(
+    useShallow((s) => ({
+      downloadProgressMap: s.downloadProgressMap,
+      cancelModelDownload: s.cancelModelDownload,
+      clearDownloadEntry: s.clearDownloadEntry,
+    }))
+  );
 
   const entries = Object.entries(downloadProgressMap || {});
   const activeEntries = entries.filter(([_, p]) => {

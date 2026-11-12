@@ -14,6 +14,7 @@ import {
   IconCornerDownLeft,
 } from "@tabler/icons-react";
 import { useAppStore } from "@/store/useAppStore";
+import { useShallow } from "zustand/react/shallow";
 import { cn } from "@/lib/utils";
 
 interface SearchDialogProps {
@@ -27,7 +28,13 @@ export const SearchDialog: React.FC<SearchDialogProps> = ({ open, onOpenChange, 
   const [selectedIndex, setSelectedIndex] = useState(0);
   const inputRef = useRef<HTMLInputElement>(null);
 
-  const { chatSessions, setActiveSessionId, createNewChatSession } = useAppStore();
+  const { chatSessions, setActiveSessionId, createNewChatSession } = useAppStore(
+    useShallow((s) => ({
+      chatSessions: s.chatSessions,
+      setActiveSessionId: s.setActiveSessionId,
+      createNewChatSession: s.createNewChatSession,
+    }))
+  );
 
   useEffect(() => {
     if (open) {

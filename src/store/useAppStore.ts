@@ -31,6 +31,31 @@ export type AppState = NavigationSlice &
   };
 
 let storageReadable = true;
+let pendingPersistTimer: ReturnType<typeof setTimeout> | null = null;
+let pendingPersistEntry: { key: string; value: string } | null = null;
+
+function flushPendingPersist() {
+  if (pendingPersistTimer) {
+    clearTimeout(pendingPersistTimer);
+    pendingPersistTimer = null;
+  }
+  if (!pendingPersistEntry || typeof window === "undefined" || !storageReadable) return;
+  const { key, value } = pendingPersistEntry;
+  pendingPersistEntry = null;
+  try {
+    localStorage.setItem(key, value);
+    toast.dismiss("storage-error");
+  } catch {
+    toast.error(
+      "Workspace changes could not be saved. Export your chats before closing this tab, and free browser storage.",
+      { id: "storage-error", duration: Infinity }
+    );
+  }
+}
+
+if (typeof window !== "undefined") {
+  window.addEventListener("beforeunload", flushPendingPersist);
+}
 
 export const useAppStore = create<AppState>()(
   persist(
@@ -154,15 +179,9 @@ export const useAppStore = create<AppState>()(
         setItem: (key, value) => {
           if (typeof window === "undefined") return;
           if (!storageReadable) return;
-          try {
-            localStorage.setItem(key, value);
-            toast.dismiss("storage-error");
-          } catch {
-            toast.error(
-              "Workspace changes could not be saved. Export your chats before closing this tab, and free browser storage.",
-              { id: "storage-error", duration: Infinity }
-            );
-          }
+          pendingPersistEntry = { key, value };
+          if (pendingPersistTimer) clearTimeout(pendingPersistTimer);
+          pendingPersistTimer = setTimeout(flushPendingPersist, 500);
         },
         removeItem: (key) => {
           if (typeof window !== "undefined") localStorage.removeItem(key);

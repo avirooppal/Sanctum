@@ -17,6 +17,7 @@ import {
 } from "@tabler/icons-react";
 import { Button } from "@/components/ui/button";
 import { useAppStore } from "@/store/useAppStore";
+import { useShallow } from "zustand/react/shallow";
 import { cn } from "@/lib/utils";
 import { toast } from "sonner";
 
@@ -44,7 +45,13 @@ export const SetupScreen = ({
   });
   const [error, setError] = useState("");
   const [starting, setStarting] = useState(false);
-  const { initModels, setActiveModelId, completeOnboarding } = useAppStore();
+  const { initModels, setActiveModelId, completeOnboarding } = useAppStore(
+    useShallow((s) => ({
+      initModels: s.initModels,
+      setActiveModelId: s.setActiveModelId,
+      completeOnboarding: s.completeOnboarding,
+    }))
+  );
 
   // STT Configuration State
   const [sttMode, setSttMode] = useState<STTMode>("recommended");

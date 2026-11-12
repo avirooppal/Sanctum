@@ -30,6 +30,7 @@ import { AddProjectDialog } from "./AddProjectDialog";
 import { SearchDialog } from "./SearchDialog";
 import { handleTitleBarMouseDown, handleTitleBarDoubleClick, handleTitleBarContextMenu } from "./WindowControls";
 import { useAppStore } from "@/store/useAppStore";
+import { useShallow } from "zustand/react/shallow";
 import { ChatSession } from "@/types";
 import { cn } from "@/lib/utils";
 import { toast } from "sonner";
@@ -70,7 +71,28 @@ export const LeftSidebar: React.FC<LeftSidebarProps> = ({
     deleteProject,
     isExplorerCollapsed,
     toggleExplorer,
-  } = useAppStore();
+  } = useAppStore(
+    useShallow((s) => ({
+      chatSessions: s.chatSessions,
+      activeSessionId: s.activeSessionId,
+      setActiveSessionId: s.setActiveSessionId,
+      createNewChatSession: s.createNewChatSession,
+      deleteChatSession: s.deleteChatSession,
+      renameChatSession: s.renameChatSession,
+      togglePinChatSession: s.togglePinChatSession,
+      moveChatToProject: s.moveChatToProject,
+      duplicateChatSession: s.duplicateChatSession,
+      deleteAllChatSessions: s.deleteAllChatSessions,
+      projects: s.projects,
+      activeProjectId: s.activeProjectId,
+      setActiveProjectId: s.setActiveProjectId,
+      createProject: s.createProject,
+      renameProject: s.renameProject,
+      deleteProject: s.deleteProject,
+      isExplorerCollapsed: s.isExplorerCollapsed,
+      toggleExplorer: s.toggleExplorer,
+    }))
+  );
 
   const [internalProjectOpen, setInternalProjectOpen] = useState(false);
   const [internalSearchOpen, setInternalSearchOpen] = useState(false);

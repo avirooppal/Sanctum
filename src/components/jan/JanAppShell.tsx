@@ -24,6 +24,7 @@ import { SettingsDeveloper } from "@/components/jan/sections/SettingsDeveloper";
 import { ChatScreen } from "@/components/screens/ChatScreen";
 import { WindowControls, handleTitleBarMouseDown, handleTitleBarDoubleClick, handleTitleBarContextMenu } from "@/components/jan/WindowControls";
 import { useAppStore } from "@/store/useAppStore";
+import { useShallow } from "zustand/react/shallow";
 import { globalMemoryStore } from "@core/ai/memory/memory_store.ts";
 
 export const JanAppShell: React.FC = () => {
@@ -32,7 +33,14 @@ export const JanAppShell: React.FC = () => {
     createNewChatSession,
     toggleExplorer,
     initModels,
-  } = useAppStore();
+  } = useAppStore(
+    useShallow((s) => ({
+      hasCompletedOnboarding: s.hasCompletedOnboarding,
+      createNewChatSession: s.createNewChatSession,
+      toggleExplorer: s.toggleExplorer,
+      initModels: s.initModels,
+    }))
+  );
   const [hydrated, setHydrated] = useState(false);
   const [activeModule, setActiveModule] = useState<"chat" | "hub" | "settings">("chat");
   const [activeSettingsSection, setActiveSettingsSection] = useState<SettingsSection>("general");

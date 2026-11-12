@@ -1,11 +1,20 @@
 "use client";
 import { useEffect, useState } from "react";
 import { useAppStore } from "@/store/useAppStore";
+import { useShallow } from "zustand/react/shallow";
 import { fetchWithApproval } from "@/lib/hostBridge";
 import { toast } from "sonner";
 
 export function WorkspaceTools() {
-  const { toolsEnabled, setToolsEnabled, thinkEnabled, setThinkEnabled, activeTracker } = useAppStore();
+  const { toolsEnabled, setToolsEnabled, thinkEnabled, setThinkEnabled, activeTracker } = useAppStore(
+    useShallow((s) => ({
+      toolsEnabled: s.toolsEnabled,
+      setToolsEnabled: s.setToolsEnabled,
+      thinkEnabled: s.thinkEnabled,
+      setThinkEnabled: s.setThinkEnabled,
+      activeTracker: s.activeTracker,
+    }))
+  );
   const [root, setRoot] = useState("");
   const [undoBusy, setUndoBusy] = useState(false);
 

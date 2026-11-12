@@ -19,11 +19,18 @@ import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
 import { toast } from "sonner";
 import { useAppStore } from "@/store/useAppStore";
+import { useShallow } from "zustand/react/shallow";
 import { fetchWithApproval } from "@/lib/hostBridge";
 import { globalMemoryStore, type MemoryFact } from "@core/ai/memory/memory_store.ts";
 
 export const SettingsGeneral: React.FC = () => {
-  const { resetAllData, exportPortableArchive, importPortableArchive } = useAppStore();
+  const { resetAllData, exportPortableArchive, importPortableArchive } = useAppStore(
+    useShallow((s) => ({
+      resetAllData: s.resetAllData,
+      exportPortableArchive: s.exportPortableArchive,
+      importPortableArchive: s.importPortableArchive,
+    }))
+  );
   const [autoUpdateCheck, setAutoUpdateCheck] = useState<boolean>(false);
   const [spellCheck, setSpellCheck] = useState<boolean>(true);
   const [language, setLanguage] = useState<string>("en");
