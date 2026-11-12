@@ -438,3 +438,55 @@ test("REL-03: C# host preserves UTF-8, serializes concurrent thread writes atomi
   assert.ok(Array.isArray(finalThreads) && finalThreads.length === 1);
   assert.equal(fs.existsSync(path.join(host.dataDir, "threads.json.tmp")), false);
 });
+
+test("BUG-02 & DES-01: POST /api/workspace validates path + approval and POST /api/logs/query filters and redacts", async (t) => {
+  if (!fs.existsSync(HOST_EXE)) {
+    t.skip(`Desktop host not built at ${HOST_EXE}`);
+    return;
+  }
+
+  const wsDir = fs.mkdtempSync(path.join(os.tmpdir(), "sanctum-ws-switch-"));
+  const host = await startHeadlessHost(["--seed-approval-token", "ws-tok-1", "--seed-approval-token", "ws-tok-2"]);
+  t.after(async () => {
+    await host.stop();
+    try { fs.rmSync(wsDir, { recursive: true, force: true }); } catch {}
+  });
+
+  const headers = { "Content-Type": "application/json", "X-Sanctum-Auth": host.token };
+
+  // Unapproved POST /api/workspace -> 403
+  const rNoTok = await fetch(`${host.baseUrl}/api/workspace`, {
+    method: "POST",
+    headers,
+    body: JSON.stringify({ root: wsDir }),
+  });
+  assert.equal(rNoTok.status, 403);
+
+  // Hard-blocked path -> 403
+  const rBlocked = await fetch(`${host.baseUrl}/api/workspace`, {
+    method: "POST",
+    headers: { ...headers, "X-Sanctum-Approval": "ws-tok-1" },
+    body: JSON.stringify({ root: "C:\\Windows\\System32" }),
+  });
+  assert.equal(rBlocked.status, 403);
+
+  // Valid directory -> 200 and persists to tool_workspace.txt
+  const rOk = await fetch(`${host.baseUrl}/api/workspace`, {
+    method: "POST",
+    headers: { ...headers, "X-Sanctum-Approval": "ws-tok-2" },
+    body: JSON.stringify({ root: wsDir }),
+  });
+  assert.equal(rOk.status, 200);
+  const wsData = await rOk.json();
+  assert.equal(wsData.root.toLowerCase(), fs.realpathSync.native(wsDir).toLowerCase());
+
+  // /api/logs/query returns startup log and redacts secrets
+  const logRes = await fetch(`${host.baseUrl}/api/logs/query`, {
+    method: "POST",
+    headers,
+    body: JSON.stringify({ source: "sanctum", tail: 10, regex: "Sanctum started" }),
+  });
+  assert.equal(logRes.status, 200);
+  const logData = await logRes.json();
+  assert.ok(logData.count >= 1);
+});

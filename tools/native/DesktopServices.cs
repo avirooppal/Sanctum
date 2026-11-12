@@ -331,6 +331,58 @@ namespace Sanctum {
                 lock (LogLock) { if (File.Exists(LogPath)) File.Delete(LogPath); if (File.Exists(LogPath + ".1")) File.Delete(LogPath + ".1"); }
                 WriteJson(res, 200, new { cleared = true }); return true;
             }
+            if (path == "/api/logs/query" && method == "POST") {
+                string body = ReadRequestBodyUtf8(req, 65536);
+                var serializer = new JavaScriptSerializer();
+                var q = serializer.Deserialize<Dictionary<string, object>>(body) ?? new Dictionary<string, object>();
+                string source = q.ContainsKey("source") ? Convert.ToString(q["source"]) : "sanctum";
+                int tail = q.ContainsKey("tail") ? Math.Max(1, Math.Min(500, Convert.ToInt32(q["tail"]))) : 100;
+                string regexPattern = q.ContainsKey("regex") && q["regex"] != null ? Convert.ToString(q["regex"]) : "";
+                string timeStartStr = q.ContainsKey("time_start") && q["time_start"] != null ? Convert.ToString(q["time_start"]) : "";
+                string timeEndStr = q.ContainsKey("time_end") && q["time_end"] != null ? Convert.ToString(q["time_end"]) : "";
+
+                System.Text.RegularExpressions.Regex rx = null;
+                if (!string.IsNullOrEmpty(regexPattern)) {
+                    try { rx = new System.Text.RegularExpressions.Regex(regexPattern, System.Text.RegularExpressions.RegexOptions.IgnoreCase); }
+                    catch (Exception ex) { WriteJson(res, 400, new { error = "Invalid regex: " + ex.Message }); return true; }
+                }
+                DateTime tStart = DateTime.MinValue, tEnd = DateTime.MaxValue;
+                if (!string.IsNullOrEmpty(timeStartStr)) DateTime.TryParse(timeStartStr, null, System.Globalization.DateTimeStyles.RoundtripKind, out tStart);
+                if (!string.IsNullOrEmpty(timeEndStr)) DateTime.TryParse(timeEndStr, null, System.Globalization.DateTimeStyles.RoundtripKind, out tEnd);
+
+                string targetFile = source == "audit" ? _auditLogFile : LogPath;
+                var matched = new List<string>();
+                if (!string.IsNullOrEmpty(targetFile) && File.Exists(targetFile)) {
+                    string[] lines;
+                    lock (LogLock) lock (_dataLock) {
+                        lines = File.ReadAllLines(targetFile, Encoding.UTF8);
+                    }
+                    int totalChars = 0;
+                    for (int i = lines.Length - 1; i >= 0 && matched.Count < tail; i--) {
+                        string line = lines[i].Trim();
+                        if (string.IsNullOrEmpty(line)) continue;
+                        if (rx != null && !rx.IsMatch(line)) continue;
+                        if (tStart > DateTime.MinValue || tEnd < DateTime.MaxValue) {
+                            try {
+                                var obj = serializer.Deserialize<Dictionary<string, object>>(line);
+                                string ts = obj != null && obj.ContainsKey("time") ? Convert.ToString(obj["time"]) : (obj != null && obj.ContainsKey("timestamp") ? Convert.ToString(obj["timestamp"]) : "");
+                                DateTime dt;
+                                if (DateTime.TryParse(ts, null, System.Globalization.DateTimeStyles.RoundtripKind, out dt)) {
+                                    if (dt < tStart || dt > tEnd) continue;
+                                }
+                            } catch { }
+                        }
+                        line = System.Text.RegularExpressions.Regex.Replace(line, @"\b(sk-[A-Za-z0-9_-]{20,}|gh[pousr]_[A-Za-z0-9]{20,}|AIza[0-9A-Za-z_-]{35}|AKIA[0-9A-Z]{16})\b", "[REDACTED_SECRET]");
+                        line = System.Text.RegularExpressions.Regex.Replace(line, @"(Bearer\s+)[A-Za-z0-9._~+/=-]{20,}", "$1[REDACTED_SECRET]", System.Text.RegularExpressions.RegexOptions.IgnoreCase);
+                        if (totalChars + line.Length > 32768) break;
+                        totalChars += line.Length;
+                        matched.Add(line);
+                    }
+                    matched.Reverse();
+                }
+                WriteJson(res, 200, new { source = source, count = matched.Count, entries = matched });
+                return true;
+            }
             return false;
         }
         private void ExportLogs() {

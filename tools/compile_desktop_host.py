@@ -1885,6 +1885,51 @@ namespace Sanctum {
                 lock (_toolLock) WriteJson(res, 200, new { root = _toolWorkspace, id = _workspaceId });
                 return;
             }
+            if (path == "/api/workspace" && method == "POST") {
+                if (!ConsumeApprovalToken(req.Headers["X-Sanctum-Approval"], "workspace_change")) {
+                    WriteJson(res, 403, new { error = "User approval token required to change workspace." });
+                    return;
+                }
+                try {
+                    string body = ReadRequestBodyUtf8(req, 65536);
+                    var payload = new JavaScriptSerializer().Deserialize<Dictionary<string, object>>(body);
+                    string nextRoot = payload != null && payload.ContainsKey("root") ? Convert.ToString(payload["root"]).Trim() : "";
+                    if (string.IsNullOrEmpty(nextRoot)) {
+                        WriteJson(res, 400, new { error = "Missing root path" });
+                        return;
+                    }
+                    if (nextRoot.IndexOf('\0') >= 0 || nextRoot.StartsWith("\\\\") || nextRoot.StartsWith("//")) {
+                        WriteJson(res, 403, new { error = "Invalid or UNC workspace path." });
+                        return;
+                    }
+                    if (!Directory.Exists(nextRoot)) {
+                        WriteJson(res, 400, new { error = "Workspace directory does not exist." });
+                        return;
+                    }
+                    string curCheck = Path.GetFullPath(nextRoot);
+                    while (!string.IsNullOrEmpty(curCheck)) {
+                        if (Directory.Exists(curCheck) && (File.GetAttributes(curCheck) & FileAttributes.ReparsePoint) != 0) {
+                            WriteJson(res, 403, new { error = "Symbolic links and junctions are not allowed as workspace root." });
+                            return;
+                        }
+                        curCheck = Path.GetDirectoryName(curCheck);
+                    }
+                    string resolved = ResolveCanonicalRealPath(nextRoot);
+                    if (IsHardBlocked(resolved)) {
+                        WriteJson(res, 403, new { error = "Protected system or Sanctum internal directory cannot be used as workspace." });
+                        return;
+                    }
+                    lock (_toolLock) {
+                        _toolWorkspace = resolved;
+                        _workspaceId = Guid.NewGuid().ToString("N");
+                        EnqueueAtomicWrite(Path.Combine(_appDataDir, "tool_workspace.txt"), _toolWorkspace);
+                        WriteJson(res, 200, new { root = _toolWorkspace, id = _workspaceId });
+                    }
+                } catch (Exception ex) {
+                    WriteJson(res, 400, new { error = ex.Message });
+                }
+                return;
+            }
             if (path == "/api/tools/execute" && method == "POST") {
                 HandleWorkspaceTool(req, res); return;
             }
