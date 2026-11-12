@@ -21,7 +21,7 @@ const INITIAL_MCP: McpServerConfig[] = [
     name: "Filesystem Explorer",
     type: "stdio",
     command: "npx",
-    args: "-y @modelcontextprotocol/server-filesystem C:\\Users\\aviroop\\Desktop",
+    args: "-y @modelcontextprotocol/server-filesystem <workspace>",
     enabled: true,
   },
   {

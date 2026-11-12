@@ -5,6 +5,7 @@
  */
 
 import { readStreamRecords } from "./stream.ts";
+import { globalEgressBroker } from "../cloud/egress_broker.ts";
 
 import type { LocalModel } from "../../../contracts/types/index.ts";
 
@@ -366,11 +367,11 @@ export class LocalEngineClient {
    * Search Wikipedia via public API (Zero API key required)
    */
   public static async searchWikipedia(query: string, limit: number = 4): Promise<WikipediaSearchResult[]> {
+    const url = `https://en.wikipedia.org/w/api.php?action=query&list=search&srsearch=${encodeURIComponent(
+      query
+    )}&format=json&origin=*&srlimit=${limit}`;
+    globalEgressBroker.assertEgressAllowed(url);
     try {
-      const url = `https://en.wikipedia.org/w/api.php?action=query&list=search&srsearch=${encodeURIComponent(
-        query
-      )}&format=json&origin=*&srlimit=${limit}`;
-
       const res = await fetch(url);
       if (!res.ok) return [];
 
@@ -392,8 +393,9 @@ export class LocalEngineClient {
    * Fetch full article summary from Wikipedia
    */
   public static async fetchWikipediaSummary(title: string): Promise<string> {
+    const url = `https://en.wikipedia.org/api/rest_v1/page/summary/${encodeURIComponent(title)}`;
+    globalEgressBroker.assertEgressAllowed(url);
     try {
-      const url = `https://en.wikipedia.org/api/rest_v1/page/summary/${encodeURIComponent(title)}`;
       const res = await fetch(url);
       if (!res.ok) return "";
       const data = await res.json();

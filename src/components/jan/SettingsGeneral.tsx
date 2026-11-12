@@ -51,7 +51,7 @@ export const SettingsGeneral: React.FC = () => {
   const importFileInputRef = useRef<HTMLInputElement | null>(null);
 
   const [dataFolderPath, setDataFolderPath] = useState<string>(
-    "C:\\Users\\aviroop\\AppData\\Roaming\\Sanctum\\data"
+    "%APPDATA%\\Sanctum\\data"
   );
   const appVersion = "1.0.0+fd23990 (2026-10-26)";
 

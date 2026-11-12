@@ -11,6 +11,7 @@ import type { AddressInfo } from "node:net";
 import { CloudCredentialsManager, CloudCredentialError } from "../core/ai/cloud/credentials.ts";
 import { CloudEgressBroker, CloudEgressBlockedError } from "../core/ai/cloud/egress_broker.ts";
 import { OpenAICloudAdapter, AnthropicCloudAdapter } from "../core/ai/cloud/adapters.ts";
+import { LocalEngineClient } from "../core/ai/inference/engine.ts";
 import { CallCounters } from "../core/ai/observability/counters.ts";
 
 test("P9 / P11 Cloud Path and Egress Privacy Barrier Verification", async (t) => {
@@ -256,6 +257,20 @@ test("P9 / P11 Cloud Path and Egress Privacy Barrier Verification", async (t) =>
       },
       CloudEgressBlockedError,
       "Must throw CloudEgressBlockedError without initiating connection"
+    );
+  });
+
+  // PRIV-01: Wikipedia outbound fetch must pass through globalEgressBroker
+  await t.test("PRIV-01: searchWikipedia and fetchWikipediaSummary are blocked by globalEgressBroker by default", async () => {
+    await assert.rejects(
+      () => LocalEngineClient.searchWikipedia("quantum computing"),
+      CloudEgressBlockedError,
+      "searchWikipedia must be blocked when global egress is disabled"
+    );
+    await assert.rejects(
+      () => LocalEngineClient.fetchWikipediaSummary("Quantum_computing"),
+      CloudEgressBlockedError,
+      "fetchWikipediaSummary must be blocked when global egress is disabled"
     );
   });
 
