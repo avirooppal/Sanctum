@@ -490,3 +490,31 @@ test("BUG-02 & DES-01: POST /api/workspace validates path + approval and POST /a
   const logData = await logRes.json();
   assert.ok(logData.count >= 1);
 });
+
+test("BUG-01: HandleProfiles escapes quotes, backslashes, and newlines via JavaScriptSerializer", async (t) => {
+  if (!fs.existsSync(HOST_EXE)) {
+    t.skip(`Desktop host not built at ${HOST_EXE}`);
+    return;
+  }
+
+  const host = await startHeadlessHost();
+  t.after(() => host.stop());
+  const headers = { "Content-Type": "application/json", "X-Sanctum-Auth": host.token };
+
+  const trickyName = 'Bot "Alpha" \\ C:\\test\nLine2';
+  const trickyId = 'id-"1"\\x';
+  const postRes = await fetch(`${host.baseUrl}/api/profiles`, {
+    method: "POST",
+    headers,
+    body: JSON.stringify({ id: trickyId, name: trickyName }),
+  });
+  assert.equal(postRes.status, 200);
+  const created = await postRes.json();
+  assert.equal(created.id, trickyId);
+
+  const getRes = await fetch(`${host.baseUrl}/api/profiles`, { headers });
+  assert.equal(getRes.status, 200);
+  const list = await getRes.json();
+  assert.equal(list.data[0].id, trickyId);
+  assert.equal(list.data[0].name, trickyName);
+});

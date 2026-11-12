@@ -2825,13 +2825,16 @@ private void HandleTerminal(HttpListenerRequest req, HttpListenerResponse res) {
         private static void RecordDownloadLedger(string name, string url, string localPath) {
             lock (_dataLock) {
                 try {
-                    string existing = File.Exists(_downloadLedgerFile) ? File.ReadAllText(_downloadLedgerFile, Encoding.UTF8).Trim() : "[]";
-                    string entry = "{\"timestamp\":\"" + DateTime.UtcNow.ToString("o") + "\",\"model\":\"" + name + "\",\"url\":\"" + url + "\",\"status\":\"verified\"}";
-                    if (existing == "[]" || string.IsNullOrEmpty(existing)) {
-                        File.WriteAllText(_downloadLedgerFile, "[" + entry + "]", Encoding.UTF8);
-                    } else if (existing.EndsWith("]")) {
-                        File.WriteAllText(_downloadLedgerFile, existing.Substring(0, existing.Length - 1) + "," + entry + "]", Encoding.UTF8);
+                    var serializer = new JavaScriptSerializer();
+                    var entries = new List<object>();
+                    if (File.Exists(_downloadLedgerFile)) {
+                        try {
+                            var existing = serializer.Deserialize<List<object>>(File.ReadAllText(_downloadLedgerFile, Encoding.UTF8));
+                            if (existing != null) entries = existing;
+                        } catch { }
                     }
+                    entries.Add(new { timestamp = DateTime.UtcNow.ToString("o"), model = name ?? "", url = url ?? "", status = "verified" });
+                    EnqueueAtomicWrite(_downloadLedgerFile, serializer.Serialize(entries));
                 } catch { }
             }
         }
@@ -2842,56 +2845,59 @@ private void HandleTerminal(HttpListenerRequest req, HttpListenerResponse res) {
 
         private void HandleProfiles(HttpListenerRequest req, HttpListenerResponse res) {
             try {
+                var serializer = new JavaScriptSerializer();
                 string method = req.HttpMethod.ToUpperInvariant();
                 if (method == "GET") {
-                    string content = File.Exists(_profilesFile) ? File.ReadAllText(_profilesFile, Encoding.UTF8) : "[]";
-                    if (string.IsNullOrWhiteSpace(content)) content = "[]";
-                    byte[] bytes = Encoding.UTF8.GetBytes("{\"data\":" + content + "}");
-                    res.ContentType = "application/json";
-                    res.StatusCode = 200;
-                    res.OutputStream.Write(bytes, 0, bytes.Length);
-                    res.Close();
+                    object data = new object[0];
+                    lock (_dataLock) {
+                        if (File.Exists(_profilesFile)) {
+                            try {
+                                var parsed = serializer.DeserializeObject(File.ReadAllText(_profilesFile, Encoding.UTF8));
+                                if (parsed != null) data = parsed;
+                            } catch { }
+                        }
+                    }
+                    WriteJson(res, 200, new { data = data });
                     return;
                 }
 
                 if (method == "POST") {
-                    string body = "";
-                    using (var r = new StreamReader(req.InputStream, req.ContentEncoding)) {
-                        body = r.ReadToEnd();
-                    }
+                    string body = ReadRequestBodyUtf8(req, 1048576);
+                    var payload = serializer.Deserialize<Dictionary<string, object>>(body) ?? new Dictionary<string, object>();
+                    string profId = payload.ContainsKey("id") && !string.IsNullOrEmpty(Convert.ToString(payload["id"]))
+                        ? Convert.ToString(payload["id"])
+                        : "prof-" + (DateTime.UtcNow.Ticks / 10000);
+                    string profName = payload.ContainsKey("name") && payload["name"] != null
+                        ? Convert.ToString(payload["name"])
+                        : "Assistant";
 
-                    string profId = "prof-" + (DateTime.UtcNow.Ticks / 10000);
-                    Match m = Regex.Match(body, "\"id\"\\s*:\\s*\"([^\"]+)\"");
-                    if (m.Success && !string.IsNullOrEmpty(m.Groups[1].Value)) profId = m.Groups[1].Value;
+                    var newEntry = new Dictionary<string, object> {
+                        { "id", profId },
+                        { "name", profName },
+                        { "scope", "user" },
+                        { "updated_at", DateTime.UtcNow.Ticks / 10000000 }
+                    };
 
-                    string profName = "Assistant";
-                    Match nm = Regex.Match(body, "\"name\"\\s*:\\s*\"([^\"]+)\"");
-                    if (nm.Success) profName = nm.Groups[1].Value;
-
-                    string newEntry = "{\"id\":\"" + profId + "\",\"name\":\"" + profName + "\",\"scope\":\"user\",\"updated_at\":" + (DateTime.UtcNow.Ticks / 10000000) + "}";
                     lock (_dataLock) {
-                        try {
-                            string existing = File.Exists(_profilesFile) ? File.ReadAllText(_profilesFile, Encoding.UTF8).Trim() : "[]";
-                            if (existing == "[]" || string.IsNullOrEmpty(existing)) {
-                                File.WriteAllText(_profilesFile, "[" + newEntry + "]", Encoding.UTF8);
-                            } else if (existing.EndsWith("]")) {
-                                File.WriteAllText(_profilesFile, existing.Substring(0, existing.Length - 1) + "," + newEntry + "]", Encoding.UTF8);
-                            }
-                        } catch { }
+                        var list = new List<object>();
+                        if (File.Exists(_profilesFile)) {
+                            try {
+                                var existing = serializer.Deserialize<List<object>>(File.ReadAllText(_profilesFile, Encoding.UTF8));
+                                if (existing != null) list = existing;
+                            } catch { }
+                        }
+                        list.Add(newEntry);
+                        EnqueueAtomicWrite(_profilesFile, serializer.Serialize(list));
                     }
 
-                    byte[] respBytes = Encoding.UTF8.GetBytes("{\"id\":\"" + profId + "\"}");
-                    res.ContentType = "application/json";
-                    res.StatusCode = 200;
-                    res.OutputStream.Write(respBytes, 0, respBytes.Length);
-                    res.Close();
+                    WriteJson(res, 200, new { id = profId });
                     return;
                 }
                 res.StatusCode = 405;
                 res.Close();
-            } catch {
-                res.StatusCode = 500;
-                res.Close();
+            } catch (Exception ex) {
+                LogEvent("error", "profiles", ex.Message);
+                WriteJson(res, 500, new { error = ex.Message });
             }
         }
 
