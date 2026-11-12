@@ -457,7 +457,11 @@ export const createAgentSlice: StateCreator<any, [], [], AgentSlice> = (set, get
           },
           workspace,
           new AbortController().signal,
-          () => {}
+          () => {},
+          {
+            sessionId: run.id,
+            onApprovalRequest: async () => ({ decision: "approved", scope: "once" }),
+          }
         );
         stepResultText = execRes.output.slice(0, 600);
       } catch (err: any) {

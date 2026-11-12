@@ -119,10 +119,16 @@ test("Autonomous Agent & Features Validation", async (t) => {
     assert.equal(calcRes.ok, true);
     assert.equal(calcRes.result?.result, 50);
 
-    const saveRes = await executeWorkspaceToolCall({
-      name: "memory_save",
-      arguments: { content: "User prefers TypeScript strict mode and functional components", category: "preference" },
-    });
+    const saveRes = await executeWorkspaceToolCall(
+      {
+        name: "memory_save",
+        arguments: { content: "User prefers TypeScript strict mode and functional components", category: "preference" },
+      },
+      undefined,
+      undefined,
+      undefined,
+      { onApprovalRequest: async () => ({ decision: "approved", scope: "once" }) }
+    );
     assert.equal(saveRes.ok, true);
 
     const recallRes = await executeWorkspaceToolCall({

@@ -1,6 +1,6 @@
 import assert from 'node:assert/strict';
 import { test } from 'node:test';
-import { streamWorkspaceChat } from '../core/ai/tools/workspace_chat.ts';
+import { streamWorkspaceChat, executeWorkspaceToolCall, globalPermissionGate } from '../core/ai/tools/workspace_chat.ts';
 import { RequestStatusTracker } from '../core/ai/request_status.ts';
 
 function records(items: unknown[]) {
@@ -74,4 +74,89 @@ test('status tracker supports answer/tool cycles and stopping tools', () => {
   for (const phase of ['reading_message', 'writing_answer', 'using_tool', 'writing_answer', 'using_tool', 'stopped'] as const) tracker.transition(phase);
   assert.equal(tracker.getCurrentPhase(), 'stopped');
   tracker.destroy();
+});
+
+test('SEC-06: write and shell tools require always_ask and fail closed without approval handler', async () => {
+  for (const name of ['create_file', 'edit_file', 'delete_path', 'run_command', 'start_background']) {
+    assert.equal(globalPermissionGate.getTool(name)?.permissionLevel, 'always_ask', `${name} must be always_ask`);
+  }
+  assert.equal(globalPermissionGate.getTool('read_file')?.permissionLevel, 'auto_allow');
+
+  const original = globalThis.fetch;
+  let executed = 0;
+  globalThis.fetch = async () => { executed++; return Response.json({ ok: true }); };
+  try {
+    const res = await executeWorkspaceToolCall(
+      { name: 'run_command', arguments: { command: 'whoami' } },
+      { root: 'ws', id: 'sec06-fail-closed' },
+      new AbortController().signal,
+      () => {}
+    );
+    assert.equal(res.ok, false);
+    assert.equal(executed, 0);
+    assert.match(res.output, /denied|approval/i);
+  } finally {
+    globalThis.fetch = original;
+  }
+});
+
+test('SEC-06: denied tool returns refusal to model without executing; approve once vs session scopes work', async () => {
+  const original = globalThis.fetch;
+  let execCalls = 0;
+  let prompts = 0;
+  globalPermissionGate.clearSession('sec06-ws');
+  globalThis.fetch = async (url) => {
+    if (url === '/api/tools/execute' || url === '/api/terminal/execute') {
+      execCalls++;
+      return Response.json({ created: 'a.txt' });
+    }
+    return Response.json({});
+  };
+  try {
+    const denied = await executeWorkspaceToolCall(
+      { name: 'create_file', arguments: { path: 'a.txt', content: 'hi' } },
+      { root: 'ws', id: 'sec06-ws' },
+      new AbortController().signal,
+      () => {},
+      { onApprovalRequest: async () => { prompts++; return { decision: 'denied', scope: 'once' }; } }
+    );
+    assert.equal(denied.ok, false);
+    assert.equal(execCalls, 0);
+    assert.equal(prompts, 1);
+
+    const once = await executeWorkspaceToolCall(
+      { name: 'create_file', arguments: { path: 'a.txt', content: 'hi' } },
+      { root: 'ws', id: 'sec06-ws' },
+      new AbortController().signal,
+      () => {},
+      { onApprovalRequest: async () => { prompts++; return { decision: 'approved', scope: 'once' }; } }
+    );
+    assert.equal(once.ok, true);
+    assert.equal(execCalls, 1);
+    assert.equal(prompts, 2);
+
+    const sess1 = await executeWorkspaceToolCall(
+      { name: 'create_file', arguments: { path: 'b.txt', content: 'hi' } },
+      { root: 'ws', id: 'sec06-ws' },
+      new AbortController().signal,
+      () => {},
+      { onApprovalRequest: async () => { prompts++; return { decision: 'approved', scope: 'session' }; } }
+    );
+    assert.equal(sess1.ok, true);
+    assert.equal(prompts, 3);
+
+    const sess2 = await executeWorkspaceToolCall(
+      { name: 'create_file', arguments: { path: 'c.txt', content: 'hi' } },
+      { root: 'ws', id: 'sec06-ws' },
+      new AbortController().signal,
+      () => {},
+      { onApprovalRequest: async () => { prompts++; return { decision: 'denied', scope: 'once' }; } }
+    );
+    assert.equal(sess2.ok, true);
+    assert.equal(execCalls, 3);
+    assert.equal(prompts, 3);
+  } finally {
+    globalPermissionGate.clearSession('sec06-ws');
+    globalThis.fetch = original;
+  }
 });

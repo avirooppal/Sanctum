@@ -295,18 +295,33 @@ for (const [name, op] of Object.entries(operations)) {
       ),
       required: op.required,
     },
-    permissionLevel: op.safety === "read" ? "auto_allow" : "auto_allow",
+    permissionLevel: op.safety === "read" ? "auto_allow" : "always_ask",
   });
 }
 
+export interface ToolApprovalRequest {
+  toolName: string;
+  arguments: Record<string, any>;
+}
+
+export interface ToolApprovalResponse {
+  decision: ApprovalDecision;
+  scope: ApprovalScope;
+  approvalToken?: string;
+}
+
 /**
- * Executes a single workspace or local tool call via unified executor or /api/tools/execute.
+ * Executes a single workspace or local tool call via permission gate and /api/tools/execute.
  */
 export async function executeWorkspaceToolCall(
   call: { name: string; arguments: Record<string, any>; id?: string },
   workspace: { root: string; id: string } = { root: ".", id: "default" },
   signal: AbortSignal = new AbortController().signal,
-  onActivity: (activity: ToolActivity) => void = () => {}
+  onActivity: (activity: ToolActivity) => void = () => {},
+  options?: {
+    sessionId?: string;
+    onApprovalRequest?: (promptData: ToolApprovalRequest) => Promise<ToolApprovalResponse>;
+  }
 ): Promise<{ toolName: string; id: string; output: string; ok: boolean; result?: any }> {
   signal.throwIfAborted();
   const id = call.id || crypto.randomUUID();
@@ -332,6 +347,44 @@ export async function executeWorkspaceToolCall(
     }
 
     const op = operations[activity.name];
+    const sessionId = options?.sessionId || workspace.id || "default";
+    const perm = globalPermissionGate.checkPermission(activity.name, sessionId);
+    let approvalToken: string | undefined;
+
+    if (!perm.allowed) {
+      if (!perm.requiresPrompt || !options?.onApprovalRequest) {
+        const reason = perm.requiresPrompt
+          ? "Tool execution denied: user approval required but no approval handler is available."
+          : perm.reason || `Tool '${activity.name}' is denied by security policy.`;
+        parsedResult = { error: reason, denied: true };
+        output = JSON.stringify(parsedResult);
+        onActivity({ ...activity, status: "error", output });
+        return { toolName: activity.name, id, output, ok: false, result: parsedResult };
+      }
+
+      const choice = await options.onApprovalRequest({
+        toolName: activity.name,
+        arguments: activity.arguments,
+      });
+      signal.throwIfAborted();
+
+      if (choice.decision !== "approved") {
+        parsedResult = { error: `User denied execution of '${activity.name}'. Do not retry without permission.`, denied: true };
+        output = JSON.stringify(parsedResult);
+        onActivity({ ...activity, status: "error", output });
+        return { toolName: activity.name, id, output, ok: false, result: parsedResult };
+      }
+
+      approvalToken = choice.approvalToken;
+      if (choice.scope === "session") {
+        globalPermissionGate.grantSessionApproval(activity.name, sessionId);
+      }
+    }
+
+    const requestHeaders: Record<string, string> = { "Content-Type": "application/json" };
+    if (approvalToken) {
+      requestHeaders["X-Sanctum-Approval"] = approvalToken;
+    }
 
     // If tool has a local in-process handler (memory, vault, calculator, datetime), run directly
     if (op.localHandler) {
@@ -350,7 +403,7 @@ export async function executeWorkspaceToolCall(
       const termRes = await fetch("/api/terminal/execute", {
         method: "POST",
         signal,
-        headers: { "Content-Type": "application/json" },
+        headers: requestHeaders,
         body: JSON.stringify({
           action: op.action,
           ...activity.arguments,
@@ -384,7 +437,7 @@ export async function executeWorkspaceToolCall(
     const result = await fetch("/api/tools/execute", {
       method: "POST",
       signal,
-      headers: { "Content-Type": "application/json" },
+      headers: requestHeaders,
       body: JSON.stringify({
         name: "workspace_files",
         arguments: {
@@ -428,10 +481,7 @@ export async function* streamWorkspaceChat(
     ragContext?: string;
     imageAttached?: string;
     onActivity: (activity: ToolActivity) => void;
-    onApprovalRequest?: (promptData: {
-      toolName: string;
-      arguments: Record<string, any>;
-    }) => Promise<{ decision: ApprovalDecision; scope: ApprovalScope }>;
+    onApprovalRequest?: (promptData: ToolApprovalRequest) => Promise<ToolApprovalResponse>;
   }
 ): AsyncGenerator<StreamChunkEvent> {
   const workspaceResponse = await fetch("/api/workspace", { signal: options.signal });
@@ -615,7 +665,8 @@ export async function* streamWorkspaceChat(
           { name: call.name, arguments: call.arguments, id: call.id },
           workspace,
           options.signal,
-          options.onActivity
+          options.onActivity,
+          { sessionId: workspace.id || "default", onApprovalRequest: options.onApprovalRequest }
         );
         results[idx] = res;
       });
@@ -629,7 +680,8 @@ export async function* streamWorkspaceChat(
           { name: call.name, arguments: call.arguments, id: call.id },
           workspace,
           options.signal,
-          options.onActivity
+          options.onActivity,
+          { sessionId: workspace.id || "default", onApprovalRequest: options.onApprovalRequest }
         );
         results[idx] = res;
       }

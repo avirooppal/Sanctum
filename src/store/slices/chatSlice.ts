@@ -1,4 +1,4 @@
-import { streamWorkspaceChat } from "../../../core/ai/tools/workspace_chat.ts";
+import { streamWorkspaceChat, type ToolApprovalResponse } from "../../../core/ai/tools/workspace_chat.ts";
 import type { StateCreator } from "zustand";
 import type { ChatSession, ChatMessage, ChatProject, RequestStatusEvent } from "../../../contracts/types/index.ts";
 import { globalVectorStore } from "../../../core/ai/rag/vectorStore.ts";
@@ -6,6 +6,13 @@ import { globalMemoryStore, LocalMemoryStore } from "../../../core/ai/memory/mem
 import { LocalEngineClient } from "../../../core/ai/inference/engine.ts";
 import { DEFAULT_OLLAMA_ENDPOINT } from "../../../contracts/constants/index.ts";
 import { RequestStatusTracker } from "../../../core/ai/request_status.ts";
+
+export interface PendingToolApproval {
+  id: string;
+  toolName: string;
+  arguments: Record<string, any>;
+  resolve: (res: ToolApprovalResponse) => void;
+}
 
 export interface AttachedDoc {
   name: string;
@@ -27,6 +34,8 @@ export interface ChatSlice {
   attachedDocuments: AttachedDoc[];
   activeTracker: RequestStatusTracker | null;
   activeAbortController: AbortController | null;
+  pendingToolApproval: PendingToolApproval | null;
+  resolveToolApproval: (decision: "approved" | "denied", scope?: "once" | "session", approvalToken?: string) => void;
   toggleMessageBookmark: (sessionId: string, messageId: string) => void;
 
   setActiveSessionId: (id: string) => void;
@@ -94,6 +103,13 @@ export const createChatSlice: StateCreator<any, [], [], ChatSlice> = (set, get) 
   attachedDocuments: [],
   activeTracker: null,
   activeAbortController: null,
+  pendingToolApproval: null,
+  resolveToolApproval: (decision, scope = "once", approvalToken) => {
+    const pending = get().pendingToolApproval;
+    if (!pending) return;
+    set({ pendingToolApproval: null });
+    pending.resolve({ decision, scope, approvalToken });
+  },
   toggleMessageBookmark: (sessionId, messageId) =>
     set((state: any) => ({
       chatSessions: state.chatSessions.map((s: ChatSession) =>
@@ -326,6 +342,8 @@ export const createChatSlice: StateCreator<any, [], [], ChatSlice> = (set, get) 
     }),
 
   stopInference: () => {
+    get().pendingToolApproval?.resolve({ decision: "denied", scope: "once" });
+    set({ pendingToolApproval: null });
     get().activeAbortController?.abort();
     const tracker = get().activeTracker;
     if (tracker) {
@@ -572,6 +590,17 @@ export const createChatSlice: StateCreator<any, [], [], ChatSlice> = (set, get) 
         : LocalEngineClient.streamChat.bind(LocalEngineClient);
       for await (const chunk of stream(activeModel.id, historyPayload, {
         endpoint: DEFAULT_OLLAMA_ENDPOINT,
+        onApprovalRequest: ({ toolName, arguments: toolArgs }) =>
+          new Promise<ToolApprovalResponse>((resolve) => {
+            set({
+              pendingToolApproval: {
+                id: `appr-${crypto.randomUUID()}`,
+                toolName,
+                arguments: toolArgs,
+                resolve,
+              },
+            });
+          }),
         onActivity: (activity: import("../../../core/ai/tools/workspace_chat.ts").ToolActivity) => {
           tracker.transition("using_tool", {
             detail: `${activity.arguments.action || activity.name}: ${
@@ -682,9 +711,10 @@ export const createChatSlice: StateCreator<any, [], [], ChatSlice> = (set, get) 
           },
         });
     } finally {
+      get().pendingToolApproval?.resolve({ decision: "denied", scope: "once" });
       tracker.destroy();
       if (get().activeAbortController === controller) {
-        set({ activeTracker: null, activeAbortController: null });
+        set({ activeTracker: null, activeAbortController: null, pendingToolApproval: null });
       }
       syncThreadsToBackend(get().chatSessions);
     }

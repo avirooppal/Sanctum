@@ -43,6 +43,7 @@ import { extractAttachmentText } from "@/lib/attachments";
 import { AccessScopeBadge } from "@/components/access/AccessScopeBadge";
 import { InteractiveTerminal } from "@/components/terminal/InteractiveTerminal";
 import { Terminal as TerminalIcon } from "lucide-react";
+import { ToolApprovalModal } from "@/components/chat/ToolApprovalModal";
 
 interface ChatScreenProps {
   onNavigate?: (module: "chat" | "hub" | "settings") => void;
@@ -945,6 +946,7 @@ export const ChatScreen: React.FC<ChatScreenProps> = () => {
           )}
         </aside>
       )}
+      <ToolApprovalModal />
     </main>
   );
 };
