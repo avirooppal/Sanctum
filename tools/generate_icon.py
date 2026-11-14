@@ -7,7 +7,7 @@ import os
 import shutil
 
 ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
-SRC_JPG = os.path.join(ROOT, "Beta.jpg")
+SRC_JPG = os.path.join(ROOT, "public", "logo.jpg")
 DEPLOY_DIR = os.path.join(ROOT, "deploy", "installer")
 PUBLIC_DIR = os.path.join(ROOT, "public")
 ICONS_DIR = os.path.join(ROOT, "assets", "icons")
@@ -37,8 +37,6 @@ def generate_all_icons():
     resized_images[256].save(master_png, format="PNG", optimize=True)
 
     # Web public directory assets
-    resized_images[256].save(os.path.join(PUBLIC_DIR, "mascot.jpg"), format="JPEG", quality=95)
-    resized_images[256].save(os.path.join(PUBLIC_DIR, "beta.jpg"), format="JPEG", quality=95)
     resized_images[256].save(os.path.join(PUBLIC_DIR, "logo.jpg"), format="JPEG", quality=95)
     resized_images[64].save(os.path.join(PUBLIC_DIR, "favicon.ico"), format="ICO", sizes=[(16, 16), (32, 32), (48, 48), (64, 64)])
 

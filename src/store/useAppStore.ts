@@ -9,7 +9,7 @@ import { ResearchSlice, createResearchSlice } from "./slices/researchSlice";
 import { RagSlice, createRagSlice } from "./slices/ragSlice";
 import { TelemetrySlice, createTelemetrySlice } from "./slices/telemetrySlice";
 import { AgentSlice, createAgentSlice } from "./slices/agentSlice";
-import { globalVectorStore } from "@/lib/vectorStore";
+import { globalVectorStore } from "../../core/ai/rag/vectorStore.ts";
 import { globalMemoryStore } from "../../core/ai/memory/memory_store.ts";
 import {
   clearVaultDb,

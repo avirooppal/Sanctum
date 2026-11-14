@@ -20,6 +20,10 @@
       }
     ],
     "paths": {
+      "@/types": ["./contracts/types/index.ts"],
+      "@/lib/constants": ["./contracts/constants/index.ts"],
+      "@/lib/engine": ["./core/ai/inference/engine.ts"],
+      "@/lib/vectorStore": ["./core/ai/rag/vectorStore.ts"],
       "@/*": ["./src/*"],
       "@contracts/*": ["./contracts/*"],
       "@core/*": ["./core/*"]

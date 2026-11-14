@@ -8,7 +8,7 @@ import {
   BENCHMARK_PRESETS,
   HARDWARE_THREAD_OPTIONS,
   ARENA_SPLIT_OPTIONS,
-} from "../src/lib/constants.ts";
+} from "../contracts/constants/index.ts";
 
 describe("Application Constants & Contracts Characterization", () => {
   test("default endpoints are pinned", () => {

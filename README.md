@@ -108,7 +108,7 @@ Runtime logs live in `%APPDATA%\Sanctum\logs\desktop.jsonl` (or the custom
 To inspect a downloaded file's checksum:
 
 ```powershell
-Get-FileHash .\dist\Sanctum.exe -Algorithm SHA256
+Get-FileHash .\Sanctum.exe -Algorithm SHA256
 ```
 
 Compare the result with the matching entry in `SHA256SUMS`.
@@ -184,20 +184,25 @@ while a response is running.
 
 | Layer / path | Responsibility |
 | --- | --- |
-| `src/app/` | Next.js entry points and same-origin HTTP routes |
-| `src/components/jan/JanAppShell.tsx` | Active application shell: onboarding, chat, projects, hub, and settings |
-| `src/components/screens/` | Chat and other screen implementations |
-| `src/store/slices/` | Zustand state and workflow orchestration |
-| `src/lib/attachments.ts` | Local PDF, DOCX, and text extraction |
-| `core/ai/` | Engine clients, stream parsing, prompts, retrieval, speech, and observability |
+| `src/app/` | Next.js entry points, `/landing` route, and same-origin HTTP routes (`src/app/api/`) |
+| `src/components/jan/` | Active desktop application shell: onboarding, chat, projects, hub, and settings |
+| `src/components/landing/` | Standalone Sanctum landing hero (`SanctumHero.tsx`) |
+| `src/components/screens/` | Chat, Vault, Models, Agents, Arena, and Research screens |
+| `src/store/slices/` | Zustand state slices and workflow orchestration |
+| `src/lib/` | Local attachment extraction (`attachments.ts`), IndexedDB vault (`vaultStorage.ts`), and WebView2 host bridge (`hostBridge.ts`) |
+| `apps/ui/` | Presentation API client and localized error string mappings |
+| `core/ai/` | Engine clients, stream parsing, prompts, retrieval, speech (`whisperx_server.py`), tools, and observability |
 | `core/domain/` | Domain types and settings schema |
-| `core/infra/` | Persistence and settings storage |
-| `contracts/` | Shared types, constants, and validation contracts |
-| `tools/compile_desktop_host.py` | C# host source and compiler driver |
-| `tools/exe-verify/` | Packaged desktop verification utilities |
-| `deploy/` | Installer assets and packaging documentation |
-| `tests/` | Unit, contract, workflow, and live integration tests |
-| `public/` | Branding, static assets, and the bundled PDF worker |
+| `core/infra/` | Checkpoints, diff engine, audit logs, security boundary resolvers, and settings persistence |
+| `contracts/` | Shared API contracts, error codes, constants, and TypeScript types |
+| `packs/` | Capability pack manifests (`agents`, `rag`, `research`, `speech`) |
+| `tools/` | Architecture gate (`check_architecture.py`), C# WebView2 host (`tools/native/`), installer builders, and EXE verification suite (`tools/exe-verify/`) |
+| `vendor/webview2/` | Checked-in Microsoft WebView2 SDK assemblies for C# host compilation |
+| `deploy/` | Windows installer icon assets and packaging documentation |
+| `assets/icons/` | Multi-resolution application icon suite (`16px`–`1024px`) |
+| `public/` | Static web assets (`logo.jpg`, `favicon.ico`) and bundled PDF.js worker (`pdf.worker.min.mjs`) |
+| `website/` | Static GitHub Pages landing page (`website/index.html`) |
+| `tests/` | Unit, contract, security, architecture, and pipeline test suites |
 
 **Web request path:** React/Zustand → Next.js API route → local Ollama → streamed response.
 
@@ -332,11 +337,6 @@ Also exercise the actual desktop window: onboarding, model selection, attachment
 upload and answers, download progress, microphone start/stop, and reopening the
 saved workspace. A successful web build alone does not verify the packaged EXE.
 
-The 29 October 2026 repair run recorded **196 passing tests, zero failures, and
-four optional llama.cpp oracle checks skipped**. Real desktop checks are documented
-in [desktop repair verification](docs/DESKTOP_REPAIR.md). This is a dated result,
-not a guarantee for future changes.
-
 ## Troubleshooting
 
 | Symptom | Checks and recovery |
@@ -385,26 +385,17 @@ inference, downloads, or transcription with simulated success responses.
 | Document | Topic |
 | --- | --- |
 | [Windows packaging](deploy/README.md) | Build prerequisites and artifact generation |
-| [Architecture](docs/ARCHITECTURE.md) | Broader repository architecture |
+| [Architecture](docs/ARCHITECTURE.md) | Layered repository architecture and dependency boundaries |
 | [Desktop runtime](docs/APP_NOT_WRAPPER.md) | Native window, WebView2, and transport design |
-| [Desktop repair verification](docs/DESKTOP_REPAIR.md) | Root causes, repairs, and actual EXE checks |
-| [Project checklist](docs/PROJECT_CHECKLIST.md) | Implementation and verification tracking |
-| [Executable verification](docs/EXE_VERIFICATION.md) | Desktop verification procedures and historical evidence |
-| [Pipeline verification](docs/PIPELINE_VERIFICATION.md) | Engine and request-pipeline checks |
-| [Security update](docs/SECURITY_UPDATE.md) | Dependency remediation notes |
-| [Evidence archive](evals/README.md) | Generated reports and historical verification policy |
+| [UI parity](docs/UI_PARITY.md) | Desktop interface parity and layout reference |
+| [UI provenance](docs/ui-provenance.md) | Upstream UI provenance and adaptation notes |
+| [UI deviations](docs/ui-deviations.md) | Intentional deviations from upstream UI |
+| [Apps layer](apps/README.md) | Presentation client separation mandate |
+| [Capability packs](packs/README.md) | Pack manifest structure and domain packs |
 
 ## Branding and license
 
-The README uses [Sanctum's logo](public/logo.jpg). The original beta artwork is
-retained in [public/beta.jpg](public/beta.jpg).
-
-<details>
-<summary>View beta artwork</summary>
-
-![Sanctum beta artwork](public/beta.jpg)
-
-</details>
+The repository uses [Sanctum's logo](public/logo.jpg) across the desktop shell, web interface, and landing page.
 
 Sanctum is licensed under the [MIT License](LICENSE). Packaged dependencies have
 their own licenses; see [third-party notices](THIRD_PARTY_NOTICES.txt) and the

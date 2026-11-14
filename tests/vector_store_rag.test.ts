@@ -1,6 +1,6 @@
 import { test, describe } from "node:test";
 import assert from "node:assert/strict";
-import { InMemoryVectorStore } from "../src/lib/vectorStore.ts";
+import { InMemoryVectorStore } from "../core/ai/rag/vectorStore.ts";
 import { stripHeavyPayloadsForLocalStorage } from "../src/lib/vaultStorage.ts";
 
 describe("VectorStore & RAG Ingestion Characterization", () => {
