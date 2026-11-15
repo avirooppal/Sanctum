@@ -84,24 +84,19 @@ export const BrowserAgentTab: React.FC = () => {
     };
   }, [refreshStatus]);
 
-  const handleInstallPack = async () => {
+  const handleTestBrowserCapability = async () => {
     setBusy(true);
     try {
-      const res = await fetchWithApproval(
-        "/api/browser/pack",
-        {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ action: "install" }),
-        },
-        "browser_pack"
-      );
-      if (res.ok) {
-        setData(await res.json());
-        toast.success("Browser Agent pack (browser-use) initialized.");
+      const res = await fetch("/api/capabilities/test", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ capability: "browser", mode: "builtin" }),
+      });
+      const json = await res.json().catch(() => ({}));
+      if (res.ok && json.ok) {
+        toast.success(json.message || "Browser capability verified and ready.");
       } else {
-        const err = await res.json().catch(() => ({}));
-        toast.error(err.error || "Failed to install Browser Agent pack.");
+        toast.error(json.message || json.error || "Browser capability test failed.");
       }
     } finally {
       setBusy(false);
@@ -128,7 +123,11 @@ export const BrowserAgentTab: React.FC = () => {
         setPendingDomain(null);
         toast.success(`Domain ${domain}: ${permission.replace("_", " ")}`);
         if (permission !== "block") {
-          await handleNavigate(urlInput);
+          if (goalInput.trim()) {
+            await handleRunTask();
+          } else {
+            await handleNavigate(urlInput);
+          }
         }
       }
     } finally {
@@ -213,35 +212,28 @@ export const BrowserAgentTab: React.FC = () => {
 
   return (
     <div className="flex flex-col flex-1 min-h-0 overflow-hidden bg-background text-xs">
-      {/* Pack Installation Prompt if not installed */}
-      {pack && !pack.installed && (
-        <div className="m-3 rounded-xl border border-primary/30 bg-primary/5 p-3.5 space-y-2.5">
-          <div className="flex items-center justify-between">
-            <div className="flex items-center gap-2 font-semibold text-foreground">
-              <Globe className="size-4 text-primary" />
-              <span>Browser Agent Pack (browser-use · MIT)</span>
-            </div>
-            <span className="rounded-md bg-emerald-500/15 px-2 py-0.5 text-[10px] font-mono text-emerald-400">
-              Detected: {pack.detectedBrowser?.channel || "chromium"}
+      {/* URL & Control Bar (Built-in Browser Agent Capability) */}
+      <div className="flex flex-col gap-2 border-b border-border/60 bg-card/50 p-2.5 shrink-0">
+        <div className="flex items-center justify-between gap-2 text-[10px] text-muted-foreground">
+          <div className="flex items-center gap-1.5 min-w-0">
+            <Globe className="size-3 text-primary shrink-0" />
+            <span className="font-medium text-foreground truncate">
+              Web Browser Capability
+            </span>
+            <span className="rounded bg-emerald-500/15 px-1.5 py-0.5 font-mono text-emerald-400 shrink-0">
+              {pack?.detectedBrowser?.channel || "msedge"} · Ready
             </span>
           </div>
-          <p className="text-[11px] text-muted-foreground leading-relaxed">
-            Installs an isolated Python environment (<code className="font-mono">{pack.venvDir}</code>) and dedicated browser profile (<code className="font-mono">{pack.profileDir}</code>) with telemetry hard-disabled (<code className="font-mono">ANONYMIZED_TELEMETRY=false</code>).
-          </p>
           <button
             type="button"
             disabled={busy}
-            onClick={handleInstallPack}
-            className="inline-flex items-center gap-1.5 rounded-lg bg-primary px-3 py-1.5 text-xs font-medium text-primary-foreground hover:bg-primary/90 disabled:opacity-50"
+            onClick={() => void handleTestBrowserCapability()}
+            className="inline-flex items-center gap-1 rounded border border-border/70 bg-background px-2 py-0.5 text-[10px] font-medium text-foreground hover:bg-accent shrink-0"
           >
-            <Download className="size-3.5" />
-            <span>Initialize Browser Agent Pack</span>
+            <RefreshCw className={cn("size-2.5", busy && "animate-spin")} />
+            <span>Test Capability</span>
           </button>
         </div>
-      )}
-
-      {/* URL & Control Bar */}
-      <div className="flex flex-col gap-2 border-b border-border/60 bg-card/50 p-2.5 shrink-0">
         <div className="flex items-center gap-1.5">
           <span
             className={cn(

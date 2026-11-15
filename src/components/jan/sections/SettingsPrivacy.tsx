@@ -3,6 +3,7 @@
 import React, { useState, useEffect } from "react";
 import { IconLock, IconShieldCheck, IconDeviceFloppy, IconDownload, IconTrash } from "@tabler/icons-react";
 import { Button } from "@/components/ui/button";
+import { fetchWithApproval } from "@/lib/hostBridge";
 import { cn } from "@/lib/utils";
 import { toast } from "sonner";
 
@@ -31,14 +32,14 @@ export const SettingsPrivacy: React.FC = () => {
   const handleSave = async () => {
     setIsSaving(true);
     try {
-      const res = await fetch("/api/settings", {
+      const res = await fetchWithApproval("/api/settings", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
           "privacy.strictConsentPrompt": strictConsent,
           "privacy.diagnosticOptIn": diagnosticOptIn,
         }),
-      });
+      }, "settings_write");
       if (res.ok) {
         toast.success("Privacy configuration saved");
       } else {

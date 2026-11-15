@@ -3,6 +3,7 @@
 import React, { useState, useEffect } from "react";
 import { IconCommand, IconDeviceFloppy } from "@tabler/icons-react";
 import { Button } from "@/components/ui/button";
+import { fetchWithApproval } from "@/lib/hostBridge";
 import { toast } from "sonner";
 
 export const SettingsShortcuts: React.FC = () => {
@@ -27,7 +28,7 @@ export const SettingsShortcuts: React.FC = () => {
   const handleSave = async () => {
     setIsSaving(true);
     try {
-      const res = await fetch("/api/settings", {
+      const res = await fetchWithApproval("/api/settings", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
@@ -35,7 +36,7 @@ export const SettingsShortcuts: React.FC = () => {
           "shortcuts.newProject": newProject,
           "shortcuts.search": search,
         }),
-      });
+      }, "settings_write");
       if (res.ok) {
         toast.success("Shortcuts updated");
       } else {

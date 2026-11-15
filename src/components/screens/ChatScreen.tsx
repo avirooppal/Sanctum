@@ -524,18 +524,40 @@ export const ChatScreen: React.FC<ChatScreenProps> = ({ onNavigate }) => {
     const desktop = (window as any).chrome?.webview;
     if (!desktop) return;
     const handleSpeech = (event: any) => {
-      const data = event.data;
-      if (data?.type === "speechStarted") {
-        setIsRecording(true); setRecordingSeconds(0);
-        setWhisperStatus("Listening offline. Click the microphone to stop.");
+      const data =
+        typeof event.data === "string"
+          ? (() => {
+              try {
+                return JSON.parse(event.data);
+              } catch {
+                return null;
+              }
+            })()
+          : event.data;
+      if (!data?.type) return;
+      if (data.type === "speechStarted") {
+        setIsRecording(true);
+        setRecordingSeconds(0);
+        setWhisperStatus("Listening offline… Speak now, then click the microphone to finish.");
         if (timerRef.current) clearInterval(timerRef.current);
-        timerRef.current = setInterval(() => setRecordingSeconds(value => value + 1), 1000);
-      } else if (data?.type === "speechResult") {
-        setPrompt(value => value ? `${value} ${data.text}` : data.text);
-      } else if (data?.type === "speechError" || data?.type === "speechStopped") {
+        timerRef.current = setInterval(() => setRecordingSeconds((value) => value + 1), 1000);
+      } else if (data.type === "speechInterim") {
+        if (data.text) {
+          setWhisperStatus(`Hearing: "${data.text}"`);
+        }
+      } else if (data.type === "speechResult") {
+        if (data.text && String(data.text).trim()) {
+          const text = String(data.text).trim();
+          setPrompt((value) => (value ? `${value} ${text}` : text));
+          setWhisperStatus(`Transcript added: "${text}"`);
+        }
+      } else if (data.type === "speechError" || data.type === "speechStopped") {
         setIsRecording(false);
-        if (timerRef.current) { clearInterval(timerRef.current); timerRef.current = null; }
-        setWhisperStatus(data.type === "speechError" ? data.text : "Dictation stopped.");
+        if (timerRef.current) {
+          clearInterval(timerRef.current);
+          timerRef.current = null;
+        }
+        setWhisperStatus(data.type === "speechError" ? data.text : null);
       }
     };
     desktop.addEventListener("message", handleSpeech);
@@ -632,17 +654,23 @@ export const ChatScreen: React.FC<ChatScreenProps> = ({ onNavigate }) => {
   // --- WHISPERX & MICROPHONE RECORDING ---
   const startRecording = async () => {
     setWhisperStatus(null);
+    const savedSttMode =
+      typeof window !== "undefined" ? localStorage.getItem("sanctum.sttMode") || "recommended" : "recommended";
     const desktop = (window as any).chrome?.webview;
-    if (desktop) {
-      setWhisperStatus("Starting offline dictation…");
+
+    // Use native Windows/C# offline speech recognition unless user explicitly selected a custom HTTP STT endpoint
+    if (desktop && savedSttMode !== "custom") {
+      setWhisperStatus("Starting offline voice dictation…");
       desktop.postMessage(JSON.stringify({ type: "speechStart" }));
       return;
     }
+
     try {
       const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
       audioChunksRef.current = [];
 
-      const mediaRecorder = new MediaRecorder(stream, { mimeType: "audio/webm" });
+      const mimeType = MediaRecorder.isTypeSupported("audio/webm") ? "audio/webm" : "";
+      const mediaRecorder = mimeType ? new MediaRecorder(stream, { mimeType }) : new MediaRecorder(stream);
       mediaRecorderRef.current = mediaRecorder;
 
       mediaRecorder.ondataavailable = (event) => {
@@ -652,7 +680,7 @@ export const ChatScreen: React.FC<ChatScreenProps> = ({ onNavigate }) => {
       };
 
       mediaRecorder.onstop = async () => {
-        const audioBlob = new Blob(audioChunksRef.current, { type: "audio/webm" });
+        const audioBlob = new Blob(audioChunksRef.current, { type: mimeType || "audio/webm" });
         stream.getTracks().forEach((track) => track.stop());
         await processAudioWithWhisperX(audioBlob);
       };
@@ -660,15 +688,19 @@ export const ChatScreen: React.FC<ChatScreenProps> = ({ onNavigate }) => {
       mediaRecorder.start(250);
       setIsRecording(true);
       setRecordingSeconds(0);
+      setWhisperStatus("Recording audio… Click the microphone again to transcribe.");
 
       timerRef.current = setInterval(() => {
         setRecordingSeconds((prev) => prev + 1);
       }, 1000);
-
-
     } catch (err) {
+      if (desktop) {
+        setWhisperStatus("Starting offline voice dictation…");
+        desktop.postMessage(JSON.stringify({ type: "speechStart" }));
+        return;
+      }
       console.error("Microphone access denied or not supported:", err);
-      setWhisperStatus("Microphone access denied. Please grant browser permissions.");
+      setWhisperStatus("Microphone access denied. Check microphone permissions in Settings.");
     }
   };
 
@@ -708,11 +740,15 @@ export const ChatScreen: React.FC<ChatScreenProps> = ({ onNavigate }) => {
         if (typeof data.text === "string" && data.text.trim()) {
           setPrompt((prev) => (prev ? `${prev} ${data.text}` : data.text));
           setWhisperStatus("Transcript added.");
+        } else if (data.delegatedToNativeSpeech) {
+          setIsRecording(true);
+          setWhisperStatus(data.message || "Listening via Windows Offline Speech…");
         } else {
           setWhisperStatus(data.error || data.message || "No speech detected. Please try again.");
         }
       } else {
-        setWhisperStatus("Transcription failed. Start the local speech service on port 8000, or use the Windows desktop app for offline dictation.");
+        const err = await res.json().catch(() => ({}));
+        setWhisperStatus(err.error || "Transcription failed. Test or configure STT in Settings > Capabilities.");
       }
     } catch {
       setWhisperStatus("Transcription failed. Start the local speech service on port 8000, or use the Windows desktop app for offline dictation.");

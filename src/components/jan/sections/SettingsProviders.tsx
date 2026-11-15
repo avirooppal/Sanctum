@@ -3,6 +3,7 @@
 import React, { useState, useEffect } from "react";
 import { IconCpu, IconCloud, IconPlus, IconCheck, IconDeviceFloppy, IconTrash, IconRefresh } from "@tabler/icons-react";
 import { Button } from "@/components/ui/button";
+import { fetchWithApproval } from "@/lib/hostBridge";
 import { useAppStore } from "@/store/useAppStore";
 import { cn } from "@/lib/utils";
 import { toast } from "sonner";
@@ -85,11 +86,11 @@ export const SettingsProviders: React.FC<SettingsProvidersProps> = ({
 
   const persistProviders = (nextList: ProviderConfig[], toastMsg?: string) => {
     setProviders(nextList);
-    fetch("/api/settings", {
+    fetchWithApproval("/api/settings", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ "providers.list": nextList }),
-    })
+    }, "settings_write")
       .then((r) => {
         if (r.ok && toastMsg) toast.success(toastMsg);
       })
@@ -146,15 +147,31 @@ export const SettingsProviders: React.FC<SettingsProvidersProps> = ({
     setSelectedProviderId("llamacpp");
   };
 
-  const handleTestConnection = () => {
-    if (current.type === "local") {
-      toast.success(`Local ${current.name} engine (${current.baseUrl}) is healthy and active.`);
-    } else {
-      if (!current.apiKey.trim()) {
-        toast.error(`Enter an API Key for ${current.name} before testing connection`);
-        return;
+  const handleTestConnection = async () => {
+    if (current.type === "remote" && !current.apiKey.trim()) {
+      toast.error(`Enter an API Key for ${current.name} before testing connection`);
+      return;
+    }
+    try {
+      const res = await fetch("/api/capabilities/test", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          capability: "llm",
+          mode: current.id === "llamacpp" ? "local" : "custom",
+          endpoint: current.baseUrl,
+          model: current.defaultModel || "qwen3:1.7b",
+          apiKey: current.apiKey,
+        }),
+      });
+      const data = await res.json();
+      if (data.ok) {
+        toast.success(data.message || `Connected to ${current.name} (${current.baseUrl})`);
+      } else {
+        toast.error(data.message || `Could not connect to ${current.name} (${current.baseUrl})`);
       }
-      toast.success(`Endpoint configuration verified for ${current.name} (${current.baseUrl})`);
+    } catch {
+      toast.error(`Connection test failed for ${current.name}`);
     }
   };
 

@@ -3,6 +3,7 @@
 import React, { useState, useEffect } from "react";
 import { IconPaperclip, IconDeviceFloppy } from "@tabler/icons-react";
 import { Button } from "@/components/ui/button";
+import { fetchWithApproval } from "@/lib/hostBridge";
 import { cn } from "@/lib/utils";
 import { toast } from "sonner";
 
@@ -32,7 +33,7 @@ export const SettingsAttachments: React.FC = () => {
   const handleSave = async () => {
     setIsSaving(true);
     try {
-      const res = await fetch("/api/settings", {
+      const res = await fetchWithApproval("/api/settings", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
@@ -42,7 +43,7 @@ export const SettingsAttachments: React.FC = () => {
           "attachments.chunkOverlap": Number(chunkOverlap),
           "attachments.topK": Number(topK),
         }),
-      });
+      }, "settings_write");
       if (res.ok) {
         toast.success("Attachment & RAG settings saved");
       } else {

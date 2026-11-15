@@ -3,6 +3,7 @@
 import React, { useState, useEffect } from "react";
 import { IconDeviceFloppy } from "@tabler/icons-react";
 import { Button } from "@/components/ui/button";
+import { fetchWithApproval } from "@/lib/hostBridge";
 import { cn } from "@/lib/utils";
 import { toast } from "sonner";
 
@@ -63,11 +64,11 @@ export const SettingsAppearance: React.FC = () => {
     });
     window.dispatchEvent(new CustomEvent("sanctum-settings-updated", { detail: patch }));
     try {
-      const res = await fetch("/api/settings", {
+      const res = await fetchWithApproval("/api/settings", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify(patch),
-      });
+      }, "settings_write");
       if (res.ok && toastMsg) {
         toast.success(toastMsg);
       }

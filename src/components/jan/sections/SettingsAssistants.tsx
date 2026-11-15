@@ -3,6 +3,7 @@
 import React, { useState, useEffect } from "react";
 import { IconFeather, IconDeviceFloppy } from "@tabler/icons-react";
 import { Button } from "@/components/ui/button";
+import { fetchWithApproval } from "@/lib/hostBridge";
 import { toast } from "sonner";
 import { SttModelSelector } from "@/components/speech/SttModelSelector";
 
@@ -32,7 +33,7 @@ export const SettingsAssistants: React.FC = () => {
   const handleSave = async () => {
     setIsSaving(true);
     try {
-      const res = await fetch("/api/settings", {
+      const res = await fetchWithApproval("/api/settings", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
@@ -42,7 +43,7 @@ export const SettingsAssistants: React.FC = () => {
           "assistants.topP": Number(topP),
           "assistants.maxTokens": Number(maxTokens),
         }),
-      });
+      }, "settings_write");
       if (res.ok) {
         toast.success("Assistant settings saved");
       } else {

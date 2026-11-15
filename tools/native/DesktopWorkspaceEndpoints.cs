@@ -201,6 +201,18 @@ namespace Sanctum {
                 HandleAudioDownload(req, res, method);
                 return true;
             }
+            if (path == "/api/audio/whisperx" && method == "GET") {
+                HandleAudioWhisperX(req, res);
+                return true;
+            }
+            if (path == "/api/audio/transcribe" && method == "POST") {
+                HandleAudioTranscribe(req, res);
+                return true;
+            }
+            if (path == "/api/capabilities/test" && method == "POST") {
+                HandleCapabilitiesTest(req, res);
+                return true;
+            }
             if (path.StartsWith("/api/browser/", StringComparison.OrdinalIgnoreCase)) {
                 return HandleBrowserAgentEndpoints(req, res, path, method);
             }
@@ -1468,6 +1480,7 @@ namespace Sanctum {
                     string marker = Path.Combine(mDir, ".sanctum_stt_ready.json");
                     bool downloaded = File.Exists(marker);
                     m["downloaded"] = downloaded;
+                    m["installed"] = downloaded;
                     m["active"] = string.Equals(id, activeId, StringComparison.OrdinalIgnoreCase);
                     m["installPath"] = downloaded ? mDir : null;
                 }
@@ -1484,6 +1497,7 @@ namespace Sanctum {
 
                 WriteJson(res, 200, new {
                     models = catalog,
+                    activeModel = activeId,
                     activeModelId = activeId,
                     sttDir = sttDir,
                     serverStatus = serverStatus
@@ -1504,7 +1518,7 @@ namespace Sanctum {
                         activeModelId = modelId,
                         updatedAt = DateTime.UtcNow.ToString("o")
                     }));
-                    WriteJson(res, 200, new { status = "selected", activeModelId = modelId });
+                    WriteJson(res, 200, new { status = "selected", activeModelId = modelId, activeModel = modelId });
                 } catch (Exception ex) {
                     WriteJson(res, 400, new { error = ex.Message });
                 }
@@ -1602,6 +1616,390 @@ namespace Sanctum {
                 } catch (Exception ex) {
                     try { WriteJson(res, 500, new { error = ex.Message }); } catch { }
                 }
+            }
+        }
+
+        private Dictionary<string, object> ReadSavedSettingsSnapshot() {
+            var serializer = new JavaScriptSerializer();
+            try {
+                if (File.Exists(_settingsFile)) {
+                    var parsed = serializer.Deserialize<Dictionary<string, object>>(File.ReadAllText(_settingsFile, Encoding.UTF8));
+                    if (parsed != null) return parsed;
+                }
+            } catch { }
+            return new Dictionary<string, object>();
+        }
+
+        private void HandleAudioWhisperX(HttpListenerRequest req, HttpListenerResponse res) {
+            var settings = ReadSavedSettingsSnapshot();
+            string sttMode = settings.ContainsKey("assistants.sttMode") && settings["assistants.sttMode"] != null
+                ? Convert.ToString(settings["assistants.sttMode"]) : "recommended";
+            string sttEndpoint = settings.ContainsKey("assistants.sttEndpoint") && settings["assistants.sttEndpoint"] != null
+                ? Convert.ToString(settings["assistants.sttEndpoint"]).Trim() : "http://127.0.0.1:8000";
+            string sttModel = settings.ContainsKey("assistants.sttModel") && settings["assistants.sttModel"] != null
+                ? Convert.ToString(settings["assistants.sttModel"]) : "qwen3-asr-0.6b";
+
+            bool httpOnline = false;
+            try {
+                string healthUrl = sttEndpoint.TrimEnd('/') + "/health";
+                var hReq = (HttpWebRequest)WebRequest.Create(healthUrl);
+                hReq.Proxy = null;
+                hReq.Timeout = 1200;
+                using (var hRes = (HttpWebResponse)hReq.GetResponse()) {
+                    httpOnline = ((int)hRes.StatusCode >= 200 && (int)hRes.StatusCode < 400);
+                }
+            } catch { }
+
+            bool windowsSpeechAvailable = false;
+            string windowsCulture = "";
+            try {
+                var recognizers = System.Speech.Recognition.SpeechRecognitionEngine.InstalledRecognizers();
+                if (recognizers != null && recognizers.Count > 0) {
+                    windowsSpeechAvailable = true;
+                    windowsCulture = recognizers[0].Culture.Name;
+                }
+            } catch { }
+
+            string sttDir = Path.Combine(_modelsDir, "stt");
+            bool localModelReady = File.Exists(Path.Combine(sttDir, sttModel, ".sanctum_stt_ready.json")) ||
+                                   File.Exists(Path.Combine(sttDir, "qwen3-asr-0.6b", ".sanctum_stt_ready.json")) ||
+                                   File.Exists(Path.Combine(sttDir, "nemotron-3.5-transcribe", ".sanctum_stt_ready.json"));
+
+            bool online = httpOnline || windowsSpeechAvailable || localModelReady;
+            WriteJson(res, 200, new {
+                online = online,
+                httpServerOnline = httpOnline,
+                windowsSpeechAvailable = windowsSpeechAvailable,
+                windowsCulture = windowsCulture,
+                localModelReady = localModelReady,
+                mode = sttMode,
+                model = sttModel,
+                endpoint = sttEndpoint
+            });
+        }
+
+        private void HandleAudioTranscribe(HttpListenerRequest req, HttpListenerResponse res) {
+            try {
+                var settings = ReadSavedSettingsSnapshot();
+                string sttMode = settings.ContainsKey("assistants.sttMode") && settings["assistants.sttMode"] != null
+                    ? Convert.ToString(settings["assistants.sttMode"]) : "recommended";
+                string sttEndpoint = settings.ContainsKey("assistants.sttEndpoint") && settings["assistants.sttEndpoint"] != null
+                    ? Convert.ToString(settings["assistants.sttEndpoint"]).Trim() : "http://127.0.0.1:8000";
+                string sttModel = settings.ContainsKey("assistants.sttModel") && settings["assistants.sttModel"] != null
+                    ? Convert.ToString(settings["assistants.sttModel"]) : "qwen3-asr-0.6b";
+                string sttApiKey = settings.ContainsKey("assistants.sttApiKey") && settings["assistants.sttApiKey"] != null
+                    ? Convert.ToString(settings["assistants.sttApiKey"]).Trim() : "";
+
+                byte[] bodyBytes;
+                using (var ms = new MemoryStream()) {
+                    req.InputStream.CopyTo(ms);
+                    bodyBytes = ms.ToArray();
+                }
+
+                // 1. Try forwarding to configured HTTP STT server (custom endpoint or local port 8000)
+                string baseEp = string.IsNullOrEmpty(sttEndpoint) ? "http://127.0.0.1:8000" : sttEndpoint.TrimEnd('/');
+                string[] candidateUrls = baseEp.EndsWith("/transcribe", StringComparison.OrdinalIgnoreCase) ||
+                                         baseEp.EndsWith("/transcriptions", StringComparison.OrdinalIgnoreCase)
+                    ? new string[] { baseEp }
+                    : new string[] { baseEp + "/transcribe", baseEp + "/v1/audio/transcriptions" };
+
+                foreach (string targetUrl in candidateUrls) {
+                    try {
+                        var upReq = (HttpWebRequest)WebRequest.Create(targetUrl);
+                        upReq.Proxy = null;
+                        upReq.Method = "POST";
+                        upReq.Timeout = 30000;
+                        upReq.ContentType = req.ContentType;
+                        if (!string.IsNullOrEmpty(sttApiKey)) {
+                            upReq.Headers["Authorization"] = "Bearer " + sttApiKey;
+                        }
+                        upReq.ContentLength = bodyBytes.Length;
+                        using (var reqStream = upReq.GetRequestStream()) {
+                            reqStream.Write(bodyBytes, 0, bodyBytes.Length);
+                        }
+                        using (var upRes = (HttpWebResponse)upReq.GetResponse())
+                        using (var sr = new StreamReader(upRes.GetResponseStream(), Encoding.UTF8)) {
+                            string respJson = sr.ReadToEnd();
+                            res.StatusCode = (int)upRes.StatusCode;
+                            res.ContentType = "application/json; charset=utf-8";
+                            byte[] outBytes = Encoding.UTF8.GetBytes(respJson);
+                            res.ContentLength64 = outBytes.Length;
+                            res.OutputStream.Write(outBytes, 0, outBytes.Length);
+                            res.Close();
+                            return;
+                        }
+                    } catch { }
+                }
+
+                // 2. Fallback: Trigger Windows Speech Recognition or return guidance
+                bool hasWinSpeech = false;
+                try {
+                    var recs = System.Speech.Recognition.SpeechRecognitionEngine.InstalledRecognizers();
+                    hasWinSpeech = (recs != null && recs.Count > 0);
+                } catch { }
+
+                if (hasWinSpeech) {
+                    StartDictation();
+                    WriteJson(res, 200, new {
+                        text = "",
+                        delegatedToNativeSpeech = true,
+                        model = sttModel,
+                        message = "Switched to native Windows offline dictation. Speak now."
+                    });
+                    return;
+                }
+
+                WriteJson(res, 503, new {
+                    error = "STT endpoint (" + baseEp + ") is not reachable and Windows Offline Speech is not installed. Configure or test your STT endpoint in Settings > Capabilities."
+                });
+            } catch (Exception ex) {
+                WriteJson(res, 500, new { error = ex.Message });
+            }
+        }
+
+        private void HandleCapabilitiesTest(HttpListenerRequest req, HttpListenerResponse res) {
+            var serializer = new JavaScriptSerializer();
+            try {
+                string body = ReadRequestBodyUtf8(req, 65536);
+                var payload = serializer.Deserialize<Dictionary<string, object>>(body) ?? new Dictionary<string, object>();
+                string capability = payload.ContainsKey("capability") ? Convert.ToString(payload["capability"]).ToLowerInvariant() : "llm";
+                string mode = payload.ContainsKey("mode") ? Convert.ToString(payload["mode"]).ToLowerInvariant() : "builtin";
+                string endpoint = payload.ContainsKey("endpoint") && payload["endpoint"] != null ? Convert.ToString(payload["endpoint"]).Trim() : "";
+                string model = payload.ContainsKey("model") && payload["model"] != null ? Convert.ToString(payload["model"]).Trim() : "";
+                string apiKey = payload.ContainsKey("apiKey") && payload["apiKey"] != null ? Convert.ToString(payload["apiKey"]).Trim() : "";
+                string executablePath = payload.ContainsKey("executablePath") && payload["executablePath"] != null ? Convert.ToString(payload["executablePath"]).Trim() : "";
+
+                var sw = Stopwatch.StartNew();
+
+                if (capability == "llm") {
+                    if (mode == "custom" && !string.IsNullOrEmpty(endpoint)) {
+                        string baseEp = endpoint.TrimEnd('/');
+                        string[] probeUrls = new string[] {
+                            baseEp + "/models",
+                            baseEp + "/v1/models",
+                            baseEp + "/api/tags",
+                            baseEp
+                        };
+                        string lastErr = "Unreachable endpoint";
+                        foreach (string pUrl in probeUrls) {
+                            try {
+                                var pReq = (HttpWebRequest)WebRequest.Create(pUrl);
+                                pReq.Proxy = null;
+                                pReq.Timeout = 4000;
+                                if (!string.IsNullOrEmpty(apiKey)) {
+                                    pReq.Headers["Authorization"] = "Bearer " + apiKey;
+                                }
+                                using (var pRes = (HttpWebResponse)pReq.GetResponse()) {
+                                    sw.Stop();
+                                    WriteJson(res, 200, new {
+                                        ok = true,
+                                        capability = "llm",
+                                        mode = "custom",
+                                        latencyMs = Math.Max(1, sw.ElapsedMilliseconds),
+                                        endpoint = endpoint,
+                                        model = model,
+                                        message = "Connected to custom LLM endpoint (" + pUrl + ") in " + Math.Max(1, sw.ElapsedMilliseconds) + " ms."
+                                    });
+                                    return;
+                                }
+                            } catch (Exception ex) {
+                                lastErr = ex.Message;
+                            }
+                        }
+                        sw.Stop();
+                        WriteJson(res, 200, new {
+                            ok = false,
+                            capability = "llm",
+                            mode = "custom",
+                            latencyMs = Math.Max(1, sw.ElapsedMilliseconds),
+                            endpoint = endpoint,
+                            message = "Could not connect to custom LLM endpoint (" + endpoint + "): " + lastErr
+                        });
+                        return;
+                    }
+
+                    // Built-in local Ollama check
+                    EnsureEngineStarted();
+                    try {
+                        var tags = EngineJson("/api/tags", null, 3500);
+                        int modelCount = 0;
+                        var modelsArr = tags != null && tags.ContainsKey("models") ? tags["models"] as IEnumerable : null;
+                        if (modelsArr != null) {
+                            foreach (var _ in modelsArr) modelCount++;
+                        }
+                        sw.Stop();
+                        WriteJson(res, 200, new {
+                            ok = true,
+                            capability = "llm",
+                            mode = "local",
+                            latencyMs = Math.Max(1, sw.ElapsedMilliseconds),
+                            endpoint = EngineBase,
+                            modelCount = modelCount,
+                            message = "Local Ollama runtime online at " + EngineBase + " (" + modelCount + " models installed, " + Math.Max(1, sw.ElapsedMilliseconds) + " ms)."
+                        });
+                        return;
+                    } catch (Exception ex) {
+                        sw.Stop();
+                        WriteJson(res, 200, new {
+                            ok = false,
+                            capability = "llm",
+                            mode = "local",
+                            latencyMs = Math.Max(1, sw.ElapsedMilliseconds),
+                            endpoint = EngineBase,
+                            message = "Local Ollama runtime is not running on " + EngineBase + " (" + ex.Message + "). Click Set Up Sanctum or start Ollama."
+                        });
+                        return;
+                    }
+                }
+
+                if (capability == "stt") {
+                    if (mode == "custom" && !string.IsNullOrEmpty(endpoint)) {
+                        string baseEp = endpoint.TrimEnd('/');
+                        string[] probeUrls = new string[] {
+                            baseEp + "/health",
+                            baseEp + "/v1/models",
+                            baseEp
+                        };
+                        string lastErr = "Unreachable STT server";
+                        foreach (string pUrl in probeUrls) {
+                            try {
+                                var pReq = (HttpWebRequest)WebRequest.Create(pUrl);
+                                pReq.Proxy = null;
+                                pReq.Timeout = 3000;
+                                if (!string.IsNullOrEmpty(apiKey)) {
+                                    pReq.Headers["Authorization"] = "Bearer " + apiKey;
+                                }
+                                using (var pRes = (HttpWebResponse)pReq.GetResponse()) {
+                                    sw.Stop();
+                                    WriteJson(res, 200, new {
+                                        ok = true,
+                                        capability = "stt",
+                                        mode = "custom",
+                                        latencyMs = Math.Max(1, sw.ElapsedMilliseconds),
+                                        endpoint = endpoint,
+                                        model = model,
+                                        message = "Custom STT endpoint verified at " + pUrl + " (" + Math.Max(1, sw.ElapsedMilliseconds) + " ms)."
+                                    });
+                                    return;
+                                }
+                            } catch (Exception ex) {
+                                lastErr = ex.Message;
+                            }
+                        }
+                        sw.Stop();
+                        WriteJson(res, 200, new {
+                            ok = false,
+                            capability = "stt",
+                            mode = "custom",
+                            latencyMs = Math.Max(1, sw.ElapsedMilliseconds),
+                            endpoint = endpoint,
+                            message = "Custom STT server unreachable at " + endpoint + " (" + lastErr + ")."
+                        });
+                        return;
+                    }
+
+                    // Check Windows Offline Speech + Local STT model status
+                    bool winSpeech = false;
+                    string winCulture = "en-US";
+                    try {
+                        var recs = System.Speech.Recognition.SpeechRecognitionEngine.InstalledRecognizers();
+                        if (recs != null && recs.Count > 0) {
+                            winSpeech = true;
+                            winCulture = recs[0].Culture.Name;
+                        }
+                    } catch { }
+
+                    bool port8000 = false;
+                    try {
+                        var hReq = (HttpWebRequest)WebRequest.Create("http://127.0.0.1:8000/health");
+                        hReq.Proxy = null;
+                        hReq.Timeout = 1000;
+                        using (var hRes = (HttpWebResponse)hReq.GetResponse()) {
+                            port8000 = ((int)hRes.StatusCode >= 200 && (int)hRes.StatusCode < 400);
+                        }
+                    } catch { }
+
+                    string targetSttModel = string.IsNullOrEmpty(model) ? "qwen3-asr-0.6b" : model;
+                    string sttMarker = Path.Combine(_modelsDir, "stt", targetSttModel, ".sanctum_stt_ready.json");
+                    bool modelDownloaded = File.Exists(sttMarker);
+                    sw.Stop();
+
+                    bool sttReady = port8000 || winSpeech || modelDownloaded;
+                    string summary = port8000
+                        ? "Local STT daemon online on 127.0.0.1:8000 (" + targetSttModel + ")."
+                        : (modelDownloaded && winSpeech)
+                        ? "Local STT model (" + targetSttModel + ") downloaded & Windows Offline Speech (" + winCulture + ") active."
+                        : winSpeech
+                        ? "Windows Offline Speech Recognizer (" + winCulture + ") active and ready for voice dictation."
+                        : modelDownloaded
+                        ? "Local STT model (" + targetSttModel + ") downloaded and ready."
+                        : "No local STT model or Windows Speech pack detected yet.";
+
+                    WriteJson(res, 200, new {
+                        ok = sttReady,
+                        capability = "stt",
+                        mode = mode,
+                        latencyMs = Math.Max(1, sw.ElapsedMilliseconds),
+                        model = targetSttModel,
+                        windowsSpeechAvailable = winSpeech,
+                        httpServerOnline = port8000,
+                        modelDownloaded = modelDownloaded,
+                        message = summary
+                    });
+                    return;
+                }
+
+                if (capability == "browser") {
+                    var detected = DetectSystemBrowserChannel();
+                    string channel = Convert.ToString(detected["channel"] ?? "chromium");
+                    string detectedExe = Convert.ToString(detected["executablePath"] ?? "");
+
+                    if (mode == "custom" && !string.IsNullOrEmpty(executablePath)) {
+                        bool exists = File.Exists(executablePath);
+                        sw.Stop();
+                        WriteJson(res, 200, new {
+                            ok = exists,
+                            capability = "browser",
+                            mode = "custom",
+                            latencyMs = Math.Max(1, sw.ElapsedMilliseconds),
+                            executablePath = executablePath,
+                            message = exists
+                                ? "Custom browser executable verified: " + executablePath
+                                : "Custom browser executable not found at: " + executablePath
+                        });
+                        return;
+                    }
+
+                    string profileDir = GetBrowserProfileDir();
+                    Directory.CreateDirectory(profileDir);
+                    string title, visText;
+                    List<Dictionary<string, object>> els, fms;
+                    ParseHtmlToInteractiveDom("https://sanctum.local/self-test", "<html><head><title>Browser Self-Test</title></head><body><a href='/ok'>Verify</a></body></html>", out title, out visText, out els, out fms);
+                    sw.Stop();
+
+                    WriteJson(res, 200, new {
+                        ok = true,
+                        capability = "browser",
+                        mode = "builtin",
+                        latencyMs = Math.Max(1, sw.ElapsedMilliseconds),
+                        channel = channel,
+                        executablePath = detectedExe,
+                        profileDir = profileDir,
+                        message = "Browser Agent capability ready (" + channel + " · isolated profile · telemetry OFF · " + Math.Max(1, sw.ElapsedMilliseconds) + " ms)."
+                    });
+                    return;
+                }
+
+                sw.Stop();
+                WriteJson(res, 200, new {
+                    ok = true,
+                    capability = capability,
+                    mode = mode,
+                    latencyMs = Math.Max(1, sw.ElapsedMilliseconds),
+                    message = "Capability " + capability + " verified."
+                });
+            } catch (Exception ex) {
+                WriteJson(res, 500, new { ok = false, error = ex.Message });
             }
         }
 

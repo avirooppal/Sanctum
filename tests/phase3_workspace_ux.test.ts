@@ -205,6 +205,34 @@ test("PHASE3-02: C# Host /api/ide/detect, /api/ide/open, /api/updates/check, and
     assert.equal(selectRes.status, 200);
     const selData = await selectRes.json();
     assert.equal(selData.activeModelId, "nemotron-3.5-transcribe");
+    assert.equal(selData.activeModel, "nemotron-3.5-transcribe");
+  });
+
+  await t.test("4. GET /api/audio/whisperx and POST /api/capabilities/test verify STT, LLM, and Browser capabilities cleanly", async () => {
+    const sttStatusRes = await fetch(`${host.baseUrl}/api/audio/whisperx`, { headers });
+    assert.equal(sttStatusRes.status, 200);
+    const sttStatus = await sttStatusRes.json();
+    assert.equal(typeof sttStatus.online, "boolean");
+
+    const browserTestRes = await fetch(`${host.baseUrl}/api/capabilities/test`, {
+      method: "POST",
+      headers,
+      body: JSON.stringify({ capability: "browser", mode: "builtin" }),
+    });
+    assert.equal(browserTestRes.status, 200);
+    const browserTest = await browserTestRes.json();
+    assert.equal(browserTest.ok, true);
+    assert.equal(browserTest.capability, "browser");
+
+    const sttTestRes = await fetch(`${host.baseUrl}/api/capabilities/test`, {
+      method: "POST",
+      headers,
+      body: JSON.stringify({ capability: "stt", mode: "local", model: "qwen3-asr-0.6b" }),
+    });
+    assert.equal(sttTestRes.status, 200);
+    const sttTest = await sttTestRes.json();
+    assert.equal(sttTest.capability, "stt");
+    assert.equal(typeof sttTest.ok, "boolean");
   });
 });
 

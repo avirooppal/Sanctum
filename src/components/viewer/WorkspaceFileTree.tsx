@@ -395,11 +395,11 @@ export const WorkspaceFileTree: React.FC<WorkspaceFileTreeProps> = ({
       className="w-60 shrink-0 border-l border-border/70 bg-sidebar/60 flex flex-col min-h-0 select-none"
     >
       {/* Workspace Header & Toggle Sidebar */}
-      <div className="flex items-center justify-between gap-1.5 px-2.5 py-2 border-b border-border/60">
-        <span className="text-[11px] font-medium text-muted-foreground truncate">
+      <div className="flex items-center justify-between gap-1 px-2 py-2 border-b border-border/60">
+        <span className="text-[11px] font-medium text-muted-foreground truncate min-w-0">
           Workspace
         </span>
-        <div className="flex items-center gap-1">
+        <div className="flex items-center gap-1 shrink-0">
           <button
             type="button"
             onClick={() => setShowIgnoredFiles(!showIgnoredFiles)}
@@ -419,7 +419,8 @@ export const WorkspaceFileTree: React.FC<WorkspaceFileTreeProps> = ({
           <button
             type="button"
             onClick={onToggleSidebar}
-            className="px-2 py-0.5 rounded-md border border-border/70 bg-card/80 text-[11px] text-foreground/90 hover:bg-accent transition-colors"
+            title="Toggle workspace file tree sidebar"
+            className="px-1.5 py-0.5 rounded-md border border-border/70 bg-card/80 text-[10px] font-medium text-foreground/90 hover:bg-accent transition-colors whitespace-nowrap shrink-0"
           >
             Toggle sidebar
           </button>

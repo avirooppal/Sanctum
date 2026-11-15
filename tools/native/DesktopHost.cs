@@ -1254,7 +1254,7 @@ namespace Sanctum {
                     Uri origin;
                     bool trusted = Uri.TryCreate(args.Uri, UriKind.Absolute, out origin) && origin.Scheme == "https" && origin.Host == "sanctum.app";
                     args.State = trusted && args.PermissionKind == CoreWebView2PermissionKind.Microphone
-                        ? CoreWebView2PermissionState.Default : CoreWebView2PermissionState.Deny;
+                        ? CoreWebView2PermissionState.Allow : CoreWebView2PermissionState.Deny;
                 };
 
                 // Preserve the workspace origin, but send API traffic to the shared streaming backend.
@@ -1389,6 +1389,8 @@ namespace Sanctum {
             } catch { }
         }
 
+        private string _lastSpeechHypothesis = "";
+
         private void SpeechEvent(string type, string text) {
             if (IsDisposed || !IsHandleCreated) return;
             BeginInvoke((Action)(() => {
@@ -1398,20 +1400,55 @@ namespace Sanctum {
 
         private void StartDictation() {
             try {
-                if (_speech != null) { _speech.Dispose(); _speech = null; }
+                if (_speech != null) { try { _speech.RecognizeAsyncCancel(); _speech.Dispose(); } catch { } _speech = null; }
+                _lastSpeechHypothesis = "";
                 var recognizers = SpeechRecognitionEngine.InstalledRecognizers();
                 if (recognizers.Count == 0) throw new InvalidOperationException("Install Windows Speech Recognition in Settings > Time & language > Speech.");
                 _speech = new SpeechRecognitionEngine(recognizers[0]);
                 _speech.LoadGrammar(new DictationGrammar());
-                _speech.SpeechRecognized += (s, e) => SpeechEvent("speechResult", e.Result.Text);
-                _speech.RecognizeCompleted += (s, e) => SpeechEvent(e.Error == null ? "speechStopped" : "speechError", e.Error == null ? "" : e.Error.Message);
+                _speech.SpeechHypothesized += (s, e) => {
+                    if (e.Result != null && !string.IsNullOrWhiteSpace(e.Result.Text)) {
+                        _lastSpeechHypothesis = e.Result.Text;
+                        SpeechEvent("speechInterim", e.Result.Text);
+                    }
+                };
+                _speech.SpeechRecognized += (s, e) => {
+                    _lastSpeechHypothesis = "";
+                    if (e.Result != null && !string.IsNullOrWhiteSpace(e.Result.Text)) {
+                        SpeechEvent("speechResult", e.Result.Text);
+                    }
+                };
+                _speech.RecognizeCompleted += (s, e) => {
+                    if (!string.IsNullOrWhiteSpace(_lastSpeechHypothesis)) {
+                        string pending = _lastSpeechHypothesis;
+                        _lastSpeechHypothesis = "";
+                        SpeechEvent("speechResult", pending);
+                    }
+                    SpeechEvent(e.Error == null ? "speechStopped" : "speechError", e.Error == null ? "" : e.Error.Message);
+                };
                 _speech.SetInputToDefaultAudioDevice();
                 _speech.RecognizeAsync(RecognizeMode.Multiple);
                 SpeechEvent("speechStarted", "Listening on this device");
             } catch (Exception ex) {
-                if (_speech != null) { _speech.Dispose(); _speech = null; }
+                if (_speech != null) { try { _speech.Dispose(); } catch { } _speech = null; }
                 SpeechEvent("speechError", "Cannot start microphone: " + ex.Message);
             }
+        }
+
+        private void StopDictation() {
+            try {
+                if (!string.IsNullOrWhiteSpace(_lastSpeechHypothesis)) {
+                    string pending = _lastSpeechHypothesis;
+                    _lastSpeechHypothesis = "";
+                    SpeechEvent("speechResult", pending);
+                }
+                if (_speech != null) {
+                    _speech.RecognizeAsyncCancel();
+                    _speech.Dispose();
+                    _speech = null;
+                }
+            } catch { }
+            SpeechEvent("speechStopped", "");
         }
 
         private void PtyPost(object payload) {
@@ -1643,7 +1680,7 @@ namespace Sanctum {
                 } else if (raw.Contains("\"speechStart\"")) {
                     StartDictation();
                 } else if (raw.Contains("\"speechStop\"")) {
-                    if (_speech != null) _speech.RecognizeAsyncStop();
+                    StopDictation();
                 } else if (raw.Contains("\"selectToolWorkspace\"")) {
                     using (var dlg = new FolderBrowserDialog()) {
                         dlg.Description = "Choose the workspace Sanctum can read and edit";
@@ -1949,13 +1986,6 @@ namespace Sanctum {
             if ((path == "/api/ollama/pull" || path == "/v1/downloads") && method == "POST") {
                 HandleDownloadOrPull(req, res);
                 return;
-            }
-
-            if (path == "/api/audio/whisperx") {
-                ProxyRequest(req, res, "http://127.0.0.1:8000/health"); return;
-            }
-            if (path == "/api/audio/transcribe" && method == "POST") {
-                ProxyRequest(req, res, "http://127.0.0.1:8000/transcribe"); return;
             }
 
             if (path == "/v1/chat/completions" && method == "POST") {
@@ -2826,8 +2856,13 @@ private void HandleTerminal(HttpListenerRequest req, HttpListenerResponse res) {
                 }
             } catch (Exception ex) {
                 if (!started) {
-                    LogEvent("error", "engine", ex.Message);
-                    try { WriteJson(res, 502, new { error = "Local service unavailable: " + ex.Message }); } catch { }
+                    var webEx = ex as WebException;
+                    bool isOffline = (webEx != null && (webEx.Status == WebExceptionStatus.ConnectFailure || webEx.Status == WebExceptionStatus.Timeout)) ||
+                                     (ex.Message != null && ex.Message.IndexOf("Unable to connect to the remote server", StringComparison.OrdinalIgnoreCase) >= 0);
+                    if (!isOffline) {
+                        LogEvent("error", "engine", ex.Message);
+                    }
+                    try { WriteJson(res, 503, new { online = false, error = "Local service unavailable: " + ex.Message }); } catch { }
                 }
             } finally {
                 if (upstream != null) upstream.Abort();
@@ -2968,7 +3003,11 @@ private void HandleTerminal(HttpListenerRequest req, HttpListenerResponse res) {
             "general.language", "general.autoUpdateCheck", "general.spellCheck", "general.dataFolder",
             "appearance.theme", "appearance.fontSize", "appearance.showTokenSpeed", "appearance.coloredUserBubble",
             "assistants.defaultModel", "assistants.systemPrompt", "assistants.temperature", "assistants.topP",
-            "assistants.maxTokens", "assistants.sttMode", "assistants.sttModel", "assistants.sttEndpoint",
+            "assistants.maxTokens", "assistants.sttMode", "assistants.sttModel", "assistants.sttEndpoint", "assistants.sttApiKey",
+            "llm.mode", "llm.customEndpoint", "llm.customModel", "llm.customApiKey",
+            "browser.mode", "browser.customExecutablePath", "browser.headless", "browser.useVision",
+            "rag.mode", "rag.customEndpoint", "rag.customModel",
+            "providers.list",
             "attachments.enable", "attachments.maxFileSizeMB", "attachments.chunkSize", "attachments.chunkOverlap", "attachments.topK",
             "localApi.enable", "localApi.host", "localApi.port", "localApi.apiKeyRequired", "localApi.corsEnabled",
             "httpsProxy.enable", "httpsProxy.url", "httpsProxy.bypass",
