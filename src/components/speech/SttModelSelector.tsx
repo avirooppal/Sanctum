@@ -51,7 +51,18 @@ export const SttModelSelector: React.FC<SttModelSelectorProps> = ({
       if (!res.ok) return;
       const data = await res.json();
       if (Array.isArray(data.models)) {
-        setModels(data.models);
+        setModels(() =>
+          data.models.map((m: any) => {
+            const staticSpec = STT_MODEL_CATALOG.find((cat) => cat.id === m.id) || ({} as Partial<SttModelSpec>);
+            return {
+              ...staticSpec,
+              ...m,
+              highlights: Array.isArray(m.highlights) && m.highlights.length > 0
+                ? m.highlights
+                : (staticSpec.highlights || []),
+            };
+          })
+        );
       }
       if (typeof data.activeModel === "string") {
         setActiveModel(selectedModelId || data.activeModel);
@@ -174,7 +185,7 @@ export const SttModelSelector: React.FC<SttModelSelectorProps> = ({
                 </p>
               ) : (
                 <ul className="space-y-1 text-[11px] text-muted-foreground leading-snug">
-                  {item.highlights.map((h, i) => (
+                  {(item.highlights || []).map((h, i) => (
                     <li key={i} className="flex items-start gap-1.5">
                       <IconSparkles size={11} className="text-primary shrink-0 mt-0.5" />
                       <span>{h}</span>

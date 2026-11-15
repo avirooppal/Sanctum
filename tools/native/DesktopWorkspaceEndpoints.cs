@@ -1426,28 +1426,44 @@ namespace Sanctum {
                 new Dictionary<string, object> {
                     { "id", "qwen3-asr-0.6b" },
                     { "name", "Alibaba Qwen3-ASR-0.6B" },
+                    { "provider", "Alibaba Qwen" },
                     { "tier", "light" },
                     { "badge", "Light & Accurate" },
                     { "parameters", "600M" },
                     { "sizeGB", 1.2 },
+                    { "vramGB", 1.5 },
                     { "vramRequiredGB", 1.5 },
                     { "languages", "52 languages" },
+                    { "hardware", "Consumer GPUs & CPUs" },
                     { "bestFor", "Real-time transcription, edge deployments, and consumer GPUs or CPUs" },
                     { "description", "Built with just 600 million parameters, it runs fast with low VRAM usage while handling 52 languages, heavy accents, and noisy audio." },
+                    { "highlights", new string[] {
+                        "Efficiency: 600M parameters — runs fast with low VRAM usage while keeping accuracy high.",
+                        "Versatility: Handles 52 languages, heavy accents, and noisy audio.",
+                        "Best for: Real-time transcription, edge deployments, and consumer GPUs or CPUs."
+                    } },
                     { "hfRepo", "Qwen/Qwen3-ASR-0.6B" },
                     { "engineModelArg", "qwen3-asr-0.6b" }
                 },
                 new Dictionary<string, object> {
                     { "id", "nemotron-3.5-transcribe" },
                     { "name", "NVIDIA Nemotron 3.5 Transcribe" },
+                    { "provider", "NVIDIA" },
                     { "tier", "heavy" },
                     { "badge", "Heavy & Super Accurate" },
                     { "parameters", "1.1B" },
                     { "sizeGB", 2.8 },
+                    { "vramGB", 6.0 },
                     { "vramRequiredGB", 6.0 },
                     { "languages", "English (Leaderboard #1)" },
+                    { "hardware", "High-VRAM NVIDIA GPUs" },
                     { "bestFor", "Offline batch transcription, medical or legal audio, and high-VRAM NVIDIA GPUs" },
                     { "description", "Top-tier open-source ASR (~5.6% WER) with clean punctuation, capitalization, and complex technical vocabulary without hallucinating during pauses." },
+                    { "highlights", new string[] {
+                        "Top-tier precision: Ultra-low word error rates (~5.6% WER on standard English benchmarks).",
+                        "Clean formatting: Accurate punctuation, capitalization, and complex technical vocabulary without pause hallucinations.",
+                        "Best for: Offline batch transcription, medical or legal audio, and high-VRAM NVIDIA GPUs."
+                    } },
                     { "hfRepo", "nvidia/parakeet-tdt-0.6b-v2" },
                     { "engineModelArg", "nemotron-3.5-transcribe" }
                 }
