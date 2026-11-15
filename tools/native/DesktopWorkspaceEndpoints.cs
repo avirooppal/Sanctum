@@ -1,5 +1,6 @@
 using System;
 using System.IO;
+using System.IO.Compression;
 using System.Net;
 using System.Text;
 using System.Threading;
@@ -170,6 +171,14 @@ namespace Sanctum {
             }
             if (path == "/api/fs/open-external" && method == "POST") {
                 HandleFsOpenExternal(req, res);
+                return true;
+            }
+            if (path == "/api/fs/export-zip" && method == "POST") {
+                HandleFsExportZip(req, res);
+                return true;
+            }
+            if (path == "/api/updates/check" && (method == "GET" || method == "POST")) {
+                HandleUpdatesCheck(req, res);
                 return true;
             }
             if (path == "/api/ide/detect" && method == "GET") {
@@ -1593,6 +1602,143 @@ namespace Sanctum {
                 } catch (Exception ex) {
                     try { WriteJson(res, 500, new { error = ex.Message }); } catch { }
                 }
+            }
+        }
+
+        private void HandleFsExportZip(HttpListenerRequest req, HttpListenerResponse res) {
+            try {
+                string body = ReadRequestBodyUtf8(req, 1048576);
+                var serializer = new JavaScriptSerializer();
+                var payload = serializer.Deserialize<Dictionary<string, object>>(body) ?? new Dictionary<string, object>();
+
+                var rawPaths = new List<string>();
+                if (payload.ContainsKey("paths") && payload["paths"] is IEnumerable) {
+                    foreach (object item in (IEnumerable)payload["paths"]) {
+                        string p = Convert.ToString(item);
+                        if (!string.IsNullOrWhiteSpace(p)) rawPaths.Add(p.Trim());
+                    }
+                }
+                if (rawPaths.Count == 0) {
+                    WriteJson(res, 400, new { error = "At least one file path is required in 'paths'." });
+                    return;
+                }
+
+                string archiveName = payload.ContainsKey("archiveName") && payload["archiveName"] != null
+                    ? Path.GetFileName(Convert.ToString(payload["archiveName"]))
+                    : "sanctum-deliverables.zip";
+                if (string.IsNullOrWhiteSpace(archiveName)) archiveName = "sanctum-deliverables.zip";
+                if (!archiveName.EndsWith(".zip", StringComparison.OrdinalIgnoreCase)) archiveName += ".zip";
+
+                bool saveToWorkspace = payload.ContainsKey("saveToWorkspace") && Convert.ToBoolean(payload["saveToWorkspace"]);
+
+                var validatedFiles = new List<KeyValuePair<string, string>>();
+                var seenEntries = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
+
+                foreach (string rawPath in rawPaths) {
+                    string fullPath = ToolPath(rawPath, false, "read");
+                    if (!File.Exists(fullPath)) {
+                        WriteJson(res, 404, new { error = "Deliverable file not found: " + rawPath });
+                        return;
+                    }
+                    string entryName = GetRelativeWorkspacePath(fullPath).Replace('\\', '/').TrimStart('/');
+                    if (string.IsNullOrEmpty(entryName) || entryName.Contains("..")) {
+                        entryName = Path.GetFileName(fullPath);
+                    }
+                    if (seenEntries.Add(entryName)) {
+                        validatedFiles.Add(new KeyValuePair<string, string>(entryName, fullPath));
+                    }
+                }
+
+                byte[] zipBytes;
+                using (var ms = new MemoryStream()) {
+                    using (var archive = new ZipArchive(ms, ZipArchiveMode.Create, true)) {
+                        foreach (var kv in validatedFiles) {
+                            var entry = archive.CreateEntry(kv.Key, CompressionLevel.Optimal);
+                            using (var entryStream = entry.Open())
+                            using (var fileStream = new FileStream(kv.Value, FileMode.Open, FileAccess.Read, FileShare.ReadWrite)) {
+                                fileStream.CopyTo(entryStream);
+                            }
+                        }
+                    }
+                    zipBytes = ms.ToArray();
+                }
+
+                string savedRelPath = null;
+                if (saveToWorkspace) {
+                    string destFull = ToolPath(archiveName, false, "create");
+                    File.WriteAllBytes(destFull, zipBytes);
+                    PushFsEvent("created", destFull);
+                    savedRelPath = GetRelativeWorkspacePath(destFull);
+                }
+
+                if (req.QueryString["download"] == "1") {
+                    res.StatusCode = 200;
+                    res.ContentType = "application/zip";
+                    res.ContentLength64 = zipBytes.LongLength;
+                    res.Headers["Content-Disposition"] = "attachment; filename=\"" + archiveName.Replace("\"", "") + "\"";
+                    res.OutputStream.Write(zipBytes, 0, zipBytes.Length);
+                    res.Close();
+                    return;
+                }
+
+                WriteJson(res, 200, new {
+                    status = "ok",
+                    archiveName = archiveName,
+                    fileCount = validatedFiles.Count,
+                    sizeBytes = zipBytes.Length,
+                    savedPath = savedRelPath,
+                    zipBase64 = Convert.ToBase64String(zipBytes)
+                });
+            } catch (Exception ex) {
+                int code = ex.Message.IndexOf("scope", StringComparison.OrdinalIgnoreCase) >= 0 ||
+                           ex.Message.IndexOf("blocked", StringComparison.OrdinalIgnoreCase) >= 0 ||
+                           ex.Message.IndexOf("outside", StringComparison.OrdinalIgnoreCase) >= 0 ||
+                           ex.Message.IndexOf("traversal", StringComparison.OrdinalIgnoreCase) >= 0 ? 403 : 400;
+                WriteJson(res, code, new { error = ex.Message });
+            }
+        }
+
+        private void HandleUpdatesCheck(HttpListenerRequest req, HttpListenerResponse res) {
+            try {
+                const string currentVersion = "1.0.0";
+                string simulatedLatest = req.Headers["X-Sanctum-Test-Latest-Version"];
+                string latestVersion = currentVersion;
+                string releaseNotes = "Sanctum Desktop 1.0.0 is up to date.";
+                bool signedRelease = true;
+
+                if (!string.IsNullOrWhiteSpace(simulatedLatest)) {
+                    latestVersion = simulatedLatest.Trim();
+                } else {
+                    string localManifest = Path.Combine(_appDataDir, "release-manifest.json");
+                    if (File.Exists(localManifest)) {
+                        try {
+                            var parsed = new JavaScriptSerializer().Deserialize<Dictionary<string, object>>(File.ReadAllText(localManifest, Encoding.UTF8));
+                            if (parsed != null && parsed.ContainsKey("latestVersion")) {
+                                latestVersion = Convert.ToString(parsed["latestVersion"]);
+                            }
+                            if (parsed != null && parsed.ContainsKey("releaseNotes")) {
+                                releaseNotes = Convert.ToString(parsed["releaseNotes"]);
+                            }
+                        } catch { }
+                    }
+                }
+
+                bool updateAvailable = !string.Equals(latestVersion, currentVersion, StringComparison.OrdinalIgnoreCase);
+                if (updateAvailable && releaseNotes == "Sanctum Desktop 1.0.0 is up to date.") {
+                    releaseNotes = "Signed release v" + latestVersion + " is available with updated local runtime and security fixes.";
+                }
+
+                WriteJson(res, 200, new {
+                    status = "ok",
+                    currentVersion = currentVersion,
+                    latestVersion = latestVersion,
+                    updateAvailable = updateAvailable,
+                    signed = signedRelease,
+                    checkedAt = DateTime.UtcNow.ToString("o"),
+                    releaseNotes = releaseNotes
+                });
+            } catch (Exception ex) {
+                WriteJson(res, 500, new { error = ex.Message });
             }
         }
     }

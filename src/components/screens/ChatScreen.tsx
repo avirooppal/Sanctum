@@ -50,6 +50,7 @@ import { InteractiveTerminal } from "@/components/terminal/InteractiveTerminal";
 import { Terminal as TerminalIcon } from "lucide-react";
 import { ToolApprovalModal } from "@/components/chat/ToolApprovalModal";
 import { ArtifactViewerPanel } from "@/components/viewer/ArtifactViewerPanel";
+import { WorkspaceHeaderActions } from "@/components/viewer/WorkspaceHeaderActions";
 import { TurnChangesSummaryCard, DiffReviewModal } from "@/components/viewer/DiffReviewModal";
 import { detectCandidateFilePaths } from "@core/infra/security/content_sanitizer.ts";
 
@@ -411,7 +412,7 @@ const MessageRow: React.FC<{
 });
 MessageRow.displayName = "MessageRow";
 
-export const ChatScreen: React.FC<ChatScreenProps> = () => {
+export const ChatScreen: React.FC<ChatScreenProps> = ({ onNavigate }) => {
   const {
     chatSessions,
     activeSessionId,
@@ -864,6 +865,8 @@ export const ChatScreen: React.FC<ChatScreenProps> = () => {
                 title={model ? `Active: ${model.name}` : "No active model"}
               />
             </div>
+
+            <WorkspaceHeaderActions onOpenSettings={() => onNavigate?.("settings")} />
 
             <button
               type="button"

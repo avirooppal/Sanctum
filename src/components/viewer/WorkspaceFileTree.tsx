@@ -251,6 +251,15 @@ export const WorkspaceFileTree: React.FC<WorkspaceFileTreeProps> = ({
   } | null>(null);
   const [renamingEntry, setRenamingEntry] = useState<FsTreeEntry | null>(null);
   const [renameValue, setRenameValue] = useState("");
+  const filterInputRef = React.useRef<HTMLInputElement>(null);
+
+  useEffect(() => {
+    const onFocusTree = () => {
+      setTimeout(() => filterInputRef.current?.focus(), 40);
+    };
+    window.addEventListener("sanctum:focus-file-tree", onFocusTree);
+    return () => window.removeEventListener("sanctum:focus-file-tree", onFocusTree);
+  }, []);
 
   const activeTab = viewerTabs.find((t) => t.id === activeViewerTabId) || null;
 
@@ -422,6 +431,7 @@ export const WorkspaceFileTree: React.FC<WorkspaceFileTreeProps> = ({
         <div className="relative flex items-center">
           <Search className="size-3 text-muted-foreground absolute left-2 pointer-events-none" />
           <input
+            ref={filterInputRef}
             type="text"
             value={treeSearchQuery}
             onChange={(e) => setTreeSearchQuery(e.target.value)}

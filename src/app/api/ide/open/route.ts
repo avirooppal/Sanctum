@@ -1,8 +1,57 @@
 import { NextRequest, NextResponse } from "next/server";
 import { spawn } from "node:child_process";
+import fs from "node:fs";
+import path from "node:path";
+import os from "node:os";
 import { matchCommandRule } from "@core/infra/security/command_matcher.ts";
 import { resolveFsTarget } from "../../fs/_shared";
-import { detectInstalledIdes } from "../detect/route";
+
+function detectInstalledIdes() {
+  const localApp = process.env.LOCALAPPDATA || path.join(os.homedir(), "AppData", "Local");
+  const progFiles = process.env.ProgramFiles || "C:\\Program Files";
+
+  const candidates = [
+    {
+      id: "vscode",
+      name: "VS Code",
+      command: "code",
+      paths: [
+        path.join(localApp, "Programs", "Microsoft VS Code", "Code.exe"),
+        path.join(progFiles, "Microsoft VS Code", "Code.exe"),
+      ],
+    },
+    {
+      id: "cursor",
+      name: "Cursor",
+      command: "cursor",
+      paths: [
+        path.join(localApp, "Programs", "cursor", "Cursor.exe"),
+        path.join(localApp, "cursor", "Cursor.exe"),
+      ],
+    },
+    {
+      id: "windsurf",
+      name: "Windsurf",
+      command: "windsurf",
+      paths: [path.join(localApp, "Programs", "Windsurf", "Windsurf.exe")],
+    },
+  ];
+
+  const ides: { id: string; name: string; command: string; executable: string }[] = [];
+  for (const c of candidates) {
+    const found = c.paths.find((p) => fs.existsSync(p));
+    if (found) {
+      ides.push({ id: c.id, name: c.name, command: c.command, executable: found });
+    }
+  }
+  ides.push({
+    id: "explorer",
+    name: "Windows Explorer",
+    command: "explorer",
+    executable: path.join(process.env.SystemRoot || "C:\\Windows", "explorer.exe"),
+  });
+  return ides;
+}
 
 export async function POST(req: NextRequest) {
   try {

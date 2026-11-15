@@ -4,7 +4,7 @@ import path from "node:path";
 import os from "node:os";
 import { getWorkspaceAndScope } from "../../fs/_shared";
 
-export function detectInstalledIdes() {
+function detectInstalledIdes() {
   const localApp = process.env.LOCALAPPDATA || path.join(os.homedir(), "AppData", "Local");
   const progFiles = process.env.ProgramFiles || "C:\\Program Files";
 

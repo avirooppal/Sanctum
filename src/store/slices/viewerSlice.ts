@@ -32,6 +32,7 @@ export interface ViewerSlice {
   activeViewerTabId: string | null;
   deliverables: DeliverableItem[];
   activeDiffCheckpointId: string | null;
+  updateAvailableInfo: { latestVersion: string; releaseNotes: string } | null;
 
   openFileTab: (
     filePath: string,
@@ -43,6 +44,8 @@ export interface ViewerSlice {
       sessionId?: string;
     }
   ) => void;
+  addDeliverableItem: (filePath: string, title?: string, sessionId?: string) => void;
+  setUpdateAvailableInfo: (info: { latestVersion: string; releaseNotes: string } | null) => void;
   closeViewerTab: (tabId: string) => void;
   setActiveViewerTab: (tabId: string) => void;
   reorderViewerTabs: (fromIndex: number, toIndex: number) => void;
@@ -79,6 +82,28 @@ export const createViewerSlice: StateCreator<any, [], [], ViewerSlice> = (set, g
   activeViewerTabId: null,
   deliverables: [],
   activeDiffCheckpointId: null,
+  updateAvailableInfo: null,
+
+  addDeliverableItem: (filePath, title, sessionId) => {
+    const normPath = normalizeRelPath(filePath);
+    if (!normPath || normPath === "__browser__") return;
+    set((state: any) => ({
+      deliverables: [
+        {
+          id: `deliv-${Date.now()}-${Math.random().toString(36).slice(2, 5)}`,
+          path: normPath,
+          title: title || getBaseName(normPath),
+          timestamp: new Date().toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" }),
+          sessionId: sessionId || state.activeSessionId,
+        },
+        ...state.deliverables.filter(
+          (d: DeliverableItem) => d.path.toLowerCase() !== normPath.toLowerCase()
+        ),
+      ],
+    }));
+  },
+
+  setUpdateAvailableInfo: (info) => set({ updateAvailableInfo: info }),
 
   openFileTab: (filePath, opts) => {
     const normPath = normalizeRelPath(filePath);

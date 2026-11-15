@@ -24,11 +24,12 @@ import { fetchWithApproval } from "@/lib/hostBridge";
 import { globalMemoryStore, type MemoryFact } from "@core/ai/memory/memory_store.ts";
 
 export const SettingsGeneral: React.FC = () => {
-  const { resetAllData, exportPortableArchive, importPortableArchive } = useAppStore(
+  const { resetAllData, exportPortableArchive, importPortableArchive, setUpdateAvailableInfo } = useAppStore(
     useShallow((s) => ({
       resetAllData: s.resetAllData,
       exportPortableArchive: s.exportPortableArchive,
       importPortableArchive: s.importPortableArchive,
+      setUpdateAvailableInfo: s.setUpdateAvailableInfo,
     }))
   );
   const [autoUpdateCheck, setAutoUpdateCheck] = useState<boolean>(false);
@@ -335,7 +336,24 @@ export const SettingsGeneral: React.FC = () => {
             <Button
               variant="outline"
               size="sm"
-              onClick={() => toast.success(`Sanctum ${appVersion} is up to date.`)}
+              onClick={async () => {
+                try {
+                  const res = await fetch("/api/updates/check");
+                  const data = await res.json();
+                  if (data?.updateAvailable && data?.signed) {
+                    setUpdateAvailableInfo({
+                      latestVersion: String(data.latestVersion),
+                      releaseNotes: String(data.releaseNotes || ""),
+                    });
+                    toast.info(`Update available: v${data.latestVersion} (signed release)`);
+                  } else {
+                    setUpdateAvailableInfo(null);
+                    toast.success(`Sanctum ${appVersion} is up to date.`);
+                  }
+                } catch {
+                  toast.success(`Sanctum ${appVersion} is up to date.`);
+                }
+              }}
               className="rounded-xl text-xs h-8"
             >
               Check for updates

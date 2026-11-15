@@ -32,8 +32,15 @@ export interface ChatSlice {
   enableRagInChat: boolean;
   toolsEnabled: boolean;
   thinkEnabled: boolean;
+  thinkingEffort: "off" | "low" | "medium" | "high";
+  agentExecutionMode: "fast" | "plan";
+  pendingPlanApproval: { sessionId: string; planPath: string; originalPrompt: string } | null;
   setToolsEnabled: (enabled: boolean) => void;
   setThinkEnabled: (enabled: boolean) => void;
+  setThinkingEffort: (effort: "off" | "low" | "medium" | "high") => void;
+  setAgentExecutionMode: (mode: "fast" | "plan") => void;
+  approvePlanAndExecute: () => Promise<void>;
+  dismissPlanApproval: () => void;
   attachedImage: { src: string; name: string; width: number; height: number } | null;
   attachedDocuments: AttachedDoc[];
   activeTracker: RequestStatusTracker | null;
@@ -129,8 +136,32 @@ export const createChatSlice: StateCreator<any, [], [], ChatSlice> = (set, get) 
   enableRagInChat: false,
   toolsEnabled: false,
   thinkEnabled: false,
+  thinkingEffort: "off",
+  agentExecutionMode: "fast",
+  pendingPlanApproval: null,
   setToolsEnabled: (enabled) => set({ toolsEnabled: enabled }),
-  setThinkEnabled: (enabled) => set({ thinkEnabled: enabled }),
+  setThinkEnabled: (enabled) =>
+    set((state: any) => ({
+      thinkEnabled: enabled,
+      thinkingEffort: enabled ? (state.thinkingEffort === "off" ? "medium" : state.thinkingEffort) : "off",
+    })),
+  setThinkingEffort: (effort) =>
+    set({
+      thinkingEffort: effort,
+      thinkEnabled: effort !== "off",
+    }),
+  setAgentExecutionMode: (mode) =>
+    set((state: any) => ({
+      agentExecutionMode: mode,
+      toolsEnabled: mode === "plan" ? true : state.toolsEnabled,
+    })),
+  approvePlanAndExecute: async () => {
+    const pending = get().pendingPlanApproval;
+    set({ pendingPlanApproval: null, agentExecutionMode: "fast", toolsEnabled: true });
+    const planPath = pending?.planPath || "PLAN.md";
+    await get().sendMessage(`Approved ${planPath}. Proceed to execute the plan step by step.`);
+  },
+  dismissPlanApproval: () => set({ pendingPlanApproval: null }),
   attachedImage: null,
   attachedDocuments: [],
   activeTracker: null,
@@ -626,11 +657,20 @@ export const createChatSlice: StateCreator<any, [], [], ChatSlice> = (set, get) 
       ];
     });
     if (session.systemPrompt) historyPayload.unshift({ role: "system", content: session.systemPrompt });
+    const isPlanMode = get().agentExecutionMode === "plan";
+    if (isPlanMode) {
+      historyPayload.unshift({
+        role: "system",
+        content:
+          "[PLAN MODE ACTIVE]: Do NOT modify existing source code files yet. First, inspect the workspace, write a structured step-by-step plan to 'PLAN.md' using create_file or edit_file, call present_file({ path: 'PLAN.md' }), and wait for user approval before executing changes.",
+      });
+    }
     historyPayload.push({ role: "user", content });
 
     const imageBase64 = get().attachedImage?.src;
     let finalAssistantText = "";
     let writeToolsExecuted = false;
+    let planArtifactWritten = false;
 
     set({ attachedImage: null, attachedDocuments: [] });
     try {
@@ -657,6 +697,22 @@ export const createChatSlice: StateCreator<any, [], [], ChatSlice> = (set, get) 
             ["create_file", "edit_file", "patch_file", "move_file", "delete_file"].includes(activity.name)
           ) {
             writeToolsExecuted = true;
+            const targetPath = String(activity.arguments?.path || "");
+            if (targetPath && activity.name !== "delete_file") {
+              get().addDeliverableItem?.(targetPath, undefined, session.id);
+            }
+            if (targetPath.toLowerCase().endsWith("plan.md")) {
+              planArtifactWritten = true;
+            }
+          }
+          if (activity.status === "success" && activity.name === "present_file") {
+            const targetPath = String(activity.arguments?.path || "");
+            if (targetPath) {
+              get().addDeliverableItem?.(targetPath, undefined, session.id);
+            }
+            if (targetPath.toLowerCase().endsWith("plan.md")) {
+              planArtifactWritten = true;
+            }
           }
           tracker.transition("using_tool", {
             detail: `${activity.arguments.action || activity.name}: ${
@@ -744,6 +800,19 @@ export const createChatSlice: StateCreator<any, [], [], ChatSlice> = (set, get) 
               tokens_per_second: chunk.metrics.tps,
             },
           });
+        }
+      }
+
+      if (isPlanMode && (planArtifactWritten || finalAssistantText.trim().length > 0)) {
+        set({
+          pendingPlanApproval: {
+            sessionId: session.id,
+            planPath: "PLAN.md",
+            originalPrompt: content,
+          },
+        });
+        if (typeof window !== "undefined") {
+          window.dispatchEvent(new CustomEvent("sanctum:open-file", { detail: { path: "PLAN.md" } }));
         }
       }
 

@@ -117,9 +117,11 @@ export const ArtifactViewerPanel: React.FC = () => {
       openFileTab("__browser__", { title: "Browser Agent" });
     };
     window.addEventListener("sanctum:present-file", onPresentFile);
+    window.addEventListener("sanctum:open-file", onPresentFile);
     window.addEventListener("sanctum:browser-updated", onBrowserUpdated);
     return () => {
       window.removeEventListener("sanctum:present-file", onPresentFile);
+      window.removeEventListener("sanctum:open-file", onPresentFile);
       window.removeEventListener("sanctum:browser-updated", onBrowserUpdated);
     };
   }, [openFileTab]);

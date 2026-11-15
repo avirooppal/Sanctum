@@ -73,6 +73,8 @@ def package():
         f.write("- clsx (MIT License) - Luke Edwards\n")
         f.write("- PDF.js / pdfjs-dist (Apache-2.0) - Mozilla Foundation\n")
         f.write("- Mammoth (BSD-2-Clause) - Michael Williamson\n")
+        f.write("- browser-use (MIT License) - Copyright (c) 2024 Gregor Zunic & Browser Use Contributors (https://github.com/browser-use/browser-use)\n")
+        f.write("- Microsoft Playwright (Apache-2.0) - Microsoft Corporation\n")
     print(f"Generated {bundle_file} and {notices_file}")
 
     # 4. Source Link / Offer

@@ -11,3 +11,5 @@ Sanctum bundles components licensed under permissive open-source licenses:
 - clsx (MIT License) - Luke Edwards
 - PDF.js / pdfjs-dist (Apache-2.0) - Mozilla Foundation
 - Mammoth (BSD-2-Clause) - Michael Williamson
+- browser-use (MIT License) - Copyright (c) 2024 Gregor Zunic & Browser Use Contributors (https://github.com/browser-use/browser-use)
+- Microsoft Playwright (Apache-2.0) - Microsoft Corporation

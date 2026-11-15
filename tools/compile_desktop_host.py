@@ -71,6 +71,8 @@ def compile_desktop_host(output_path: str):
         refs = [
             "System.dll",
             "System.Core.dll",
+            "System.IO.Compression.dll",
+            "System.IO.Compression.FileSystem.dll",
             r"C:\Windows\Microsoft.NET\assembly\GAC_MSIL\System.Speech\v4.0_4.0.0.0__31bf3856ad364e35\System.Speech.dll",
             "System.Web.Extensions.dll",
             "System.Management.dll",
