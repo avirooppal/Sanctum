@@ -406,7 +406,8 @@ export const ArtifactViewerPanel: React.FC = () => {
         </div>
       </div>
 
-      {/* Sub-bar: Breadcrumb + Preview/Raw Toggle + Actions */}
+      {/* Sub-bar: Breadcrumb + Preview/Raw Toggle + Actions (only shown when a file tab is active or sidebar is collapsed) */}
+      {((activeTab && activeTab.path !== "__browser__") || !isTreeOpen) && (
       <div className="flex items-center justify-between gap-2 px-3 py-1.5 border-b border-border/60 bg-card/70 text-xs shrink-0">
         {/* Breadcrumb: workspace > folder > file */}
         <div className="flex items-center gap-1 min-w-0 flex-1 overflow-hidden text-[11px] text-muted-foreground">
@@ -514,6 +515,7 @@ export const ArtifactViewerPanel: React.FC = () => {
           )}
         </div>
       </div>
+      )}
 
       {/* Changed-on-Disk Banner when Tab has Unsaved Edits */}
       {activeTab?.changedOnDisk && (

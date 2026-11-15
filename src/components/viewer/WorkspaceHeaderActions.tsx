@@ -26,7 +26,8 @@ interface DetectedIde {
 
 export const WorkspaceHeaderActions: React.FC<{
   onOpenSettings?: () => void;
-}> = ({ onOpenSettings }) => {
+  sessionTitle?: string;
+}> = ({ onOpenSettings, sessionTitle }) => {
   const {
     viewerTabs,
     activeViewerTabId,
@@ -55,7 +56,7 @@ export const WorkspaceHeaderActions: React.FC<{
     }))
   );
 
-  const [workspaceName, setWorkspaceName] = useState("Workspace");
+  const [workspaceName, setWorkspaceName] = useState("workspace");
   const [workspaceRoot, setWorkspaceRoot] = useState("");
   const [detectedIdes, setDetectedIdes] = useState<DetectedIde[]>([]);
   const [selectedIdeId, setSelectedIdeId] = useState<string>("code");
@@ -76,7 +77,7 @@ export const WorkspaceHeaderActions: React.FC<{
         const root = String(ws.root || "");
         setWorkspaceRoot(root);
         const parts = root.replace(/\\/g, "/").split("/").filter(Boolean);
-        setWorkspaceName(parts[parts.length - 1] || "Workspace");
+        setWorkspaceName(parts[parts.length - 1] || "workspace");
       }
     } catch {}
 
@@ -285,155 +286,152 @@ export const WorkspaceHeaderActions: React.FC<{
 
   return (
     <>
-      <div className="flex items-center gap-1.5 shrink-0" data-no-drag>
-        {/* Workspace Folder Switcher Pill */}
-        <button
-          type="button"
-          onClick={handleSelectWorkspaceFolder}
-          title={
-            workspaceRoot
-              ? `Current workspace: ${workspaceRoot}\nClick to switch workspace folder`
-              : "Select workspace folder"
-          }
-          className="hidden md:flex items-center gap-1.5 rounded-xl border border-border/60 bg-card/90 hover:bg-muted/60 px-2.5 py-1 text-[11px] font-medium text-foreground/90 transition-colors shadow-xs max-w-[160px]"
-        >
-          <FolderGit2 className="size-3.5 text-primary shrink-0" />
-          <span className="truncate">{workspaceName}</span>
-        </button>
-
-        {/* Update Available Pill (only shown after user-initiated check finds a newer signed release) */}
-        {updateAvailableInfo && (
+      <div className="flex items-center justify-between gap-2 min-w-0 flex-1" data-no-drag>
+        {/* Left: Minimal Workspace / Session Title Breadcrumb */}
+        <div className="flex items-center gap-1.5 min-w-0 truncate text-xs">
           <button
             type="button"
-            onClick={onOpenSettings}
-            title={updateAvailableInfo.releaseNotes}
-            className="flex items-center gap-1 rounded-full bg-sky-500/20 border border-sky-500/40 px-2.5 py-0.5 text-[11px] font-semibold text-sky-300 hover:bg-sky-500/30 transition-colors"
+            onClick={handleSelectWorkspaceFolder}
+            title={
+              workspaceRoot
+                ? `Workspace: ${workspaceRoot}\nClick to change folder`
+                : "Select workspace folder"
+            }
+            className="flex items-center gap-1.5 rounded-lg px-2 py-1 text-muted-foreground hover:text-foreground hover:bg-muted/50 transition-colors shrink-0"
           >
-            <Sparkles className="size-3" />
-            <span>Update v{updateAvailableInfo.latestVersion}</span>
+            <FolderGit2 className="size-3.5 text-primary/80 shrink-0" />
+            <span className="font-medium text-foreground/90 max-w-[120px] truncate">
+              {workspaceName}
+            </span>
           </button>
-        )}
-
-        {/* Open IDE Split Button */}
-        <div className="relative flex items-center rounded-xl border border-border/60 bg-card/90 shadow-xs">
-          <button
-            type="button"
-            onClick={() => void handleOpenIde()}
-            title={`Open ${workspaceName} in ${selectedIdeId} (includes focused file & line)`}
-            className="flex items-center gap-1.5 px-2.5 py-1 text-[11px] font-medium text-muted-foreground hover:text-foreground transition-colors"
-          >
-            <Code2 className="size-3.5 text-sky-400" />
-            <span className="hidden sm:inline">Open IDE</span>
-          </button>
-          {detectedIdes.length > 1 && (
-            <button
-              type="button"
-              onClick={() => setIdeMenuOpen((v) => !v)}
-              aria-label="Choose IDE"
-              className="px-1 py-1 border-l border-border/60 text-muted-foreground hover:text-foreground"
-            >
-              <ChevronDown className="size-3" />
-            </button>
-          )}
-
-          {ideMenuOpen && (
-            <div className="absolute right-0 top-full mt-1 z-40 w-44 rounded-xl border border-border/80 bg-popover p-1 shadow-xl text-xs">
-              {detectedIdes.map((ide) => (
-                <button
-                  key={ide.id}
-                  type="button"
-                  onClick={() => {
-                    setSelectedIdeId(ide.id);
-                    setIdeMenuOpen(false);
-                    void handleOpenIde(ide.id);
-                  }}
-                  className={cn(
-                    "flex w-full items-center justify-between rounded-lg px-2.5 py-1.5 text-left hover:bg-muted/70",
-                    selectedIdeId === ide.id && "text-primary font-medium"
-                  )}
-                >
-                  <span>{ide.name}</span>
-                  <span className="text-[10px] font-mono text-muted-foreground">
-                    {ide.id}
-                  </span>
-                </button>
-              ))}
-            </div>
+          {sessionTitle && (
+            <>
+              <span className="text-muted-foreground/40">/</span>
+              <span className="text-muted-foreground truncate max-w-[200px]">
+                {sessionTitle}
+              </span>
+            </>
           )}
         </div>
 
-        {/* Deliverables Popover + Export ZIP */}
-        <div className="relative">
-          <button
-            type="button"
-            onClick={() => setDeliverablesOpen((v) => !v)}
-            title="Session Deliverables & Export as ZIP"
-            className={cn(
-              "flex items-center gap-1.5 rounded-xl border border-border/60 bg-card/90 px-2.5 py-1 text-[11px] font-medium transition-colors shadow-xs",
-              deliverables.length > 0
-                ? "text-foreground border-emerald-500/30"
-                : "text-muted-foreground hover:text-foreground"
-            )}
-          >
-            <PackageCheck className="size-3.5 text-emerald-400" />
-            <span className="hidden lg:inline">Deliverables</span>
-            {deliverables.length > 0 && (
-              <span className="rounded-full bg-emerald-500/20 px-1.5 py-0.2 text-[10px] font-mono text-emerald-300">
-                {deliverables.length}
-              </span>
-            )}
-          </button>
+        {/* Right: Compact Action Controls */}
+        <div className="flex items-center gap-1.5 shrink-0">
+          {updateAvailableInfo && (
+            <button
+              type="button"
+              onClick={onOpenSettings}
+              title={updateAvailableInfo.releaseNotes}
+              className="flex items-center gap-1 rounded-full bg-sky-500/20 border border-sky-500/40 px-2.5 py-0.5 text-[11px] font-semibold text-sky-300 hover:bg-sky-500/30 transition-colors"
+            >
+              <Sparkles className="size-3" />
+              <span>Update v{updateAvailableInfo.latestVersion}</span>
+            </button>
+          )}
 
-          {deliverablesOpen && (
-            <div className="absolute right-0 top-full mt-1.5 z-40 w-72 rounded-xl border border-border/80 bg-popover p-2.5 shadow-xl space-y-2 text-xs">
-              <div className="flex items-center justify-between border-b border-border/60 pb-1.5">
-                <span className="font-semibold text-foreground">
-                  Session Deliverables ({deliverables.length})
-                </span>
-                {deliverables.length > 0 && (
-                  <button
-                    type="button"
-                    disabled={exportingZip}
-                    onClick={() => void handleExportDeliverablesZip()}
-                    className="flex items-center gap-1 rounded-md bg-primary/15 hover:bg-primary/25 text-primary px-2 py-0.5 text-[11px] font-medium"
-                  >
-                    <Download className="size-3" />
-                    <span>{exportingZip ? "Zipping…" : "Export as ZIP"}</span>
-                  </button>
-                )}
-              </div>
+          {/* Deliverables Pill (only visible when deliverables exist in session, keeping UI minimal) */}
+          {deliverables.length > 0 && (
+            <div className="relative">
+              <button
+                type="button"
+                onClick={() => setDeliverablesOpen((v) => !v)}
+                title="Session Deliverables & Export as ZIP"
+                className="flex items-center gap-1 rounded-lg border border-emerald-500/30 bg-emerald-500/10 px-2 py-1 text-[11px] font-medium text-emerald-300 hover:bg-emerald-500/20 transition-colors"
+              >
+                <PackageCheck className="size-3.5" />
+                <span className="font-mono text-[10px]">{deliverables.length}</span>
+              </button>
 
-              {deliverables.length === 0 ? (
-                <p className="text-[11px] text-muted-foreground py-2">
-                  Files created, edited, or presented (`present_file`) in this session appear here for one-click review or ZIP export.
-                </p>
-              ) : (
-                <div className="max-h-56 overflow-y-auto space-y-1">
-                  {deliverables.map((d) => (
+              {deliverablesOpen && (
+                <div className="absolute right-0 top-full mt-1.5 z-40 w-72 rounded-xl border border-border/80 bg-popover p-2.5 shadow-xl space-y-2 text-xs">
+                  <div className="flex items-center justify-between border-b border-border/60 pb-1.5">
+                    <span className="font-semibold text-foreground">
+                      Deliverables ({deliverables.length})
+                    </span>
                     <button
-                      key={d.id}
                       type="button"
-                      onClick={() => {
-                        openFileTab(d.path, { title: d.title });
-                        setDeliverablesOpen(false);
-                      }}
-                      className="flex w-full items-center justify-between gap-2 rounded-lg px-2 py-1.5 text-left hover:bg-muted/70"
+                      disabled={exportingZip}
+                      onClick={() => void handleExportDeliverablesZip()}
+                      className="flex items-center gap-1 rounded-md bg-primary/15 hover:bg-primary/25 text-primary px-2 py-0.5 text-[11px] font-medium"
                     >
-                      <div className="flex items-center gap-1.5 min-w-0">
-                        <FileText className="size-3.5 text-sky-400 shrink-0" />
-                        <span className="font-mono text-[11px] text-foreground truncate">
-                          {d.path}
-                        </span>
-                      </div>
-                      <span className="text-[10px] text-muted-foreground shrink-0">
-                        {d.timestamp}
-                      </span>
+                      <Download className="size-3" />
+                      <span>{exportingZip ? "Zipping…" : "Export as ZIP"}</span>
                     </button>
-                  ))}
+                  </div>
+                  <div className="max-h-56 overflow-y-auto space-y-1">
+                    {deliverables.map((d) => (
+                      <button
+                        key={d.id}
+                        type="button"
+                        onClick={() => {
+                          openFileTab(d.path, { title: d.title });
+                          setDeliverablesOpen(false);
+                        }}
+                        className="flex w-full items-center justify-between gap-2 rounded-lg px-2 py-1.5 text-left hover:bg-muted/70"
+                      >
+                        <div className="flex items-center gap-1.5 min-w-0">
+                          <FileText className="size-3.5 text-sky-400 shrink-0" />
+                          <span className="font-mono text-[11px] text-foreground truncate">
+                            {d.path}
+                          </span>
+                        </div>
+                        <span className="text-[10px] text-muted-foreground shrink-0">
+                          {d.timestamp}
+                        </span>
+                      </button>
+                    ))}
+                  </div>
                 </div>
               )}
             </div>
           )}
+
+          {/* Open IDE Button */}
+          <div className="relative flex items-center rounded-lg border border-border/60 bg-card/80">
+            <button
+              type="button"
+              onClick={() => void handleOpenIde()}
+              title={`Open ${workspaceName} in ${selectedIdeId}`}
+              className="flex items-center gap-1.5 px-2.5 py-1 text-[11px] font-medium text-muted-foreground hover:text-foreground transition-colors"
+            >
+              <Code2 className="size-3.5 text-muted-foreground" />
+              <span>Open IDE</span>
+            </button>
+            {detectedIdes.length > 1 && (
+              <button
+                type="button"
+                onClick={() => setIdeMenuOpen((v) => !v)}
+                aria-label="Choose IDE"
+                className="px-1 py-1 border-l border-border/60 text-muted-foreground hover:text-foreground"
+              >
+                <ChevronDown className="size-3" />
+              </button>
+            )}
+
+            {ideMenuOpen && (
+              <div className="absolute right-0 top-full mt-1 z-40 w-44 rounded-xl border border-border/80 bg-popover p-1 shadow-xl text-xs">
+                {detectedIdes.map((ide) => (
+                  <button
+                    key={ide.id}
+                    type="button"
+                    onClick={() => {
+                      setSelectedIdeId(ide.id);
+                      setIdeMenuOpen(false);
+                      void handleOpenIde(ide.id);
+                    }}
+                    className={cn(
+                      "flex w-full items-center justify-between rounded-lg px-2.5 py-1.5 text-left hover:bg-muted/70",
+                      selectedIdeId === ide.id && "text-primary font-medium"
+                    )}
+                  >
+                    <span>{ide.name}</span>
+                    <span className="text-[10px] font-mono text-muted-foreground">
+                      {ide.id}
+                    </span>
+                  </button>
+                ))}
+              </div>
+            )}
+          </div>
         </div>
       </div>
 

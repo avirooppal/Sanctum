@@ -5,7 +5,18 @@ import { useShallow } from "zustand/react/shallow";
 import { fetchWithApproval } from "@/lib/hostBridge";
 import { toast } from "sonner";
 import { cn } from "@/lib/utils";
-import { Zap, FileCheck2, Brain, Sparkles, Check, X } from "lucide-react";
+import {
+  Zap,
+  FileCheck2,
+  Brain,
+  Sparkles,
+  Check,
+  X,
+  ChevronDown,
+  Wrench,
+  FolderOpen,
+  RotateCcw,
+} from "lucide-react";
 
 function modelSupportsThinking(modelId?: string, modelName?: string): boolean {
   const s = `${modelId || ""} ${modelName || ""}`.toLowerCase();
@@ -26,13 +37,71 @@ function modelSupportsThinking(modelId?: string, modelName?: string): boolean {
 function getModelCapabilityTags(m: any): string[] {
   const tags: string[] = ["Tools"];
   const s = `${m?.id || ""} ${m?.name || ""}`.toLowerCase();
-  if (m?.supportsVision || s.includes("vl") || s.includes("vision") || s.includes("llava") || s.includes("gemma3")) {
+  if (
+    m?.supportsVision ||
+    s.includes("vl") ||
+    s.includes("vision") ||
+    s.includes("llava") ||
+    s.includes("gemma3")
+  ) {
     tags.push("Vision");
   }
   if (modelSupportsThinking(m?.id, m?.name)) {
     tags.push("Thinking");
   }
   return tags;
+}
+
+export function WorkspacePendingPlanBanner() {
+  const { pendingPlanApproval, approvePlanAndExecute, dismissPlanApproval, openFileTab, activeTracker } =
+    useAppStore(
+      useShallow((s) => ({
+        pendingPlanApproval: s.pendingPlanApproval,
+        approvePlanAndExecute: s.approvePlanAndExecute,
+        dismissPlanApproval: s.dismissPlanApproval,
+        openFileTab: s.openFileTab,
+        activeTracker: s.activeTracker,
+      }))
+    );
+
+  if (!pendingPlanApproval) return null;
+
+  return (
+    <div className="flex items-center justify-between gap-2 bg-primary/10 border-b border-primary/30 px-3.5 py-2 text-xs rounded-t-2xl">
+      <div className="flex items-center gap-2 min-w-0">
+        <FileCheck2 className="size-3.5 text-primary shrink-0" />
+        <span className="font-medium text-foreground truncate">
+          Plan ready in{" "}
+          <button
+            type="button"
+            onClick={() => openFileTab(pendingPlanApproval.planPath)}
+            className="underline font-mono text-primary hover:opacity-80"
+          >
+            {pendingPlanApproval.planPath}
+          </button>
+        </span>
+      </div>
+      <div className="flex items-center gap-1.5 shrink-0">
+        <button
+          type="button"
+          disabled={!!activeTracker}
+          onClick={() => void approvePlanAndExecute()}
+          className="flex items-center gap-1 rounded-lg bg-primary text-primary-foreground hover:bg-primary/90 px-2.5 py-1 text-[11px] font-semibold shadow-xs"
+        >
+          <Check className="size-3" />
+          <span>Approve & Execute</span>
+        </button>
+        <button
+          type="button"
+          onClick={dismissPlanApproval}
+          className="p-1 rounded-md text-muted-foreground hover:text-foreground hover:bg-muted/60"
+          title="Dismiss plan prompt"
+        >
+          <X className="size-3.5" />
+        </button>
+      </div>
+    </div>
+  );
 }
 
 export function WorkspaceTools() {
@@ -48,10 +117,6 @@ export function WorkspaceTools() {
     setThinkingEffort,
     agentExecutionMode,
     setAgentExecutionMode,
-    pendingPlanApproval,
-    approvePlanAndExecute,
-    dismissPlanApproval,
-    openFileTab,
     activeTracker,
   } = useAppStore(
     useShallow((s) => ({
@@ -66,10 +131,6 @@ export function WorkspaceTools() {
       setThinkingEffort: s.setThinkingEffort,
       agentExecutionMode: s.agentExecutionMode,
       setAgentExecutionMode: s.setAgentExecutionMode,
-      pendingPlanApproval: s.pendingPlanApproval,
-      approvePlanAndExecute: s.approvePlanAndExecute,
-      dismissPlanApproval: s.dismissPlanApproval,
-      openFileTab: s.openFileTab,
       activeTracker: s.activeTracker,
     }))
   );
@@ -137,263 +198,235 @@ export function WorkspaceTools() {
     }
   };
 
+  const effortLabel =
+    thinkingEffort === "off"
+      ? null
+      : thinkingEffort.charAt(0).toUpperCase() + thinkingEffort.slice(1);
+
   return (
-    <div className="border-b border-border/60" data-no-drag>
-      {/* Pending Plan Approval Banner (when Plan Mode generated PLAN.md) */}
-      {pendingPlanApproval && (
-        <div className="flex items-center justify-between gap-2 bg-primary/10 border-b border-primary/30 px-3 py-2 text-xs">
-          <div className="flex items-center gap-2 min-w-0">
-            <FileCheck2 className="size-4 text-primary shrink-0" />
-            <span className="font-medium text-foreground truncate">
-              Plan ready in{" "}
-              <button
-                type="button"
-                onClick={() => openFileTab(pendingPlanApproval.planPath)}
-                className="underline font-mono text-primary hover:opacity-80"
-              >
-                {pendingPlanApproval.planPath}
-              </button>
-              . Review and approve before file changes execute.
+    <div className="flex items-center gap-1.5 min-w-0" data-no-drag>
+      {/* Unified Model + Effort Selector Pill (Antigravity style: "✦ qwen3:1.7b Medium ⌄") */}
+      <div className="relative">
+        <button
+          type="button"
+          disabled={!!activeTracker}
+          onClick={() => setModelPickerOpen((v) => !v)}
+          className="flex items-center gap-1.5 h-7 rounded-lg px-2 text-xs text-muted-foreground hover:text-foreground hover:bg-accent/60 transition-colors"
+          title="Select model, reasoning effort, and workspace settings"
+        >
+          <Sparkles className="size-3.5 text-primary/80 shrink-0" />
+          <span className="font-medium text-foreground/90 max-w-[130px] truncate">
+            {activeModel?.name || "Select Model"}
+          </span>
+          {effortLabel && (
+            <span className="text-[11px] text-muted-foreground font-normal">
+              {effortLabel}
             </span>
-          </div>
-          <div className="flex items-center gap-1.5 shrink-0">
-            <button
-              type="button"
-              disabled={!!activeTracker}
-              onClick={() => void approvePlanAndExecute()}
-              className="flex items-center gap-1 rounded-lg bg-primary text-primary-foreground hover:bg-primary/90 px-2.5 py-1 text-[11px] font-semibold shadow-xs"
-            >
-              <Check className="size-3" />
-              <span>Approve & Execute</span>
-            </button>
-            <button
-              type="button"
-              onClick={dismissPlanApproval}
-              className="p-1 rounded-md text-muted-foreground hover:text-foreground hover:bg-muted/60"
-              title="Dismiss plan prompt"
-            >
-              <X className="size-3.5" />
-            </button>
-          </div>
-        </div>
-      )}
+          )}
+          <ChevronDown className="size-3 opacity-60 shrink-0" />
+        </button>
 
-      <div className="flex flex-wrap items-center gap-1.5 px-3 py-2 text-xs">
-        {/* Grouped Model Selector (Local vs Cloud + Size/Quant/Context + Capability Tags) */}
-        {models.length > 0 && (
-          <div className="relative">
-            <button
-              type="button"
-              disabled={!!activeTracker}
-              onClick={() => setModelPickerOpen((v) => !v)}
-              className="flex items-center gap-1.5 rounded-lg border border-border/80 bg-background/60 hover:bg-accent/60 px-2 py-1 text-[11px] font-medium text-foreground shrink-0"
-              title="Select Local or Cloud Model"
-            >
-              <Sparkles className="size-3 text-primary" />
-              <span className="max-w-[130px] truncate">
-                {activeModel?.name || "Select Model"}
-              </span>
-              {activeModel?.quantization && (
-                <span className="text-[10px] font-mono text-muted-foreground">
-                  {activeModel.quantization}
-                </span>
-              )}
-            </button>
+        {modelPickerOpen && (
+          <div className="absolute left-0 bottom-full mb-2 z-40 w-80 rounded-2xl border border-border/80 bg-popover p-3 shadow-2xl space-y-3 text-xs">
+            {/* 1. Local & Cloud Models */}
+            <div className="space-y-1.5">
+              <div className="text-[10px] font-semibold uppercase tracking-wider text-muted-foreground px-1">
+                Local Models (Ollama / GGUF)
+              </div>
+              <div className="max-h-44 overflow-y-auto space-y-1">
+                {localModels.map((m: any) => {
+                  const caps = getModelCapabilityTags(m);
+                  return (
+                    <button
+                      key={m.id}
+                      type="button"
+                      onClick={() => {
+                        setActiveModelId(m.id);
+                      }}
+                      className={cn(
+                        "flex flex-col w-full gap-1 rounded-xl px-2.5 py-1.5 text-left hover:bg-muted/70 transition-colors",
+                        activeModel?.id === m.id && "bg-primary/10 border border-primary/30"
+                      )}
+                    >
+                      <div className="flex items-center justify-between gap-2">
+                        <span className="font-medium text-foreground text-xs truncate">
+                          {m.name}
+                        </span>
+                        <span className="font-mono text-[10px] text-muted-foreground shrink-0">
+                          {m.fileSizeGB ? `${m.fileSizeGB} GB` : ""} · {m.quantization || "Q4_K_M"} ·{" "}
+                          {((m.config?.contextSize || 8192) / 1024).toFixed(0)}k ctx
+                        </span>
+                      </div>
+                      <div className="flex items-center gap-1">
+                        {caps.map((tag) => (
+                          <span
+                            key={tag}
+                            className="rounded bg-muted px-1.5 py-0.2 text-[9px] font-mono text-muted-foreground"
+                          >
+                            {tag}
+                          </span>
+                        ))}
+                      </div>
+                    </button>
+                  );
+                })}
+              </div>
 
-            {modelPickerOpen && (
-              <div className="absolute left-0 bottom-full mb-1.5 z-40 w-80 rounded-xl border border-border/80 bg-popover p-2 shadow-2xl space-y-2">
-                <div className="text-[10px] font-semibold uppercase tracking-wider text-muted-foreground px-1.5">
-                  Local Models (Ollama / GGUF)
-                </div>
-                <div className="max-h-48 overflow-y-auto space-y-1">
-                  {localModels.map((m: any) => {
-                    const caps = getModelCapabilityTags(m);
-                    return (
+              {cloudModels.length > 0 && (
+                <>
+                  <div className="text-[10px] font-semibold uppercase tracking-wider text-muted-foreground px-1 pt-1 border-t border-border/50">
+                    Configured Cloud Models
+                  </div>
+                  <div className="space-y-1">
+                    {cloudModels.map((m: any) => (
                       <button
                         key={m.id}
                         type="button"
-                        onClick={() => {
-                          setActiveModelId(m.id);
-                          setModelPickerOpen(false);
-                        }}
-                        className={cn(
-                          "flex flex-col w-full gap-1 rounded-lg px-2.5 py-1.5 text-left hover:bg-muted/70",
-                          activeModel?.id === m.id && "bg-primary/10 border border-primary/30"
-                        )}
+                        onClick={() => setActiveModelId(m.id)}
+                        className="flex w-full items-center justify-between rounded-xl px-2.5 py-1.5 text-left hover:bg-muted/70"
                       >
-                        <div className="flex items-center justify-between gap-2">
-                          <span className="font-medium text-foreground text-xs truncate">
-                            {m.name}
-                          </span>
-                          <span className="font-mono text-[10px] text-muted-foreground shrink-0">
-                            {m.fileSizeGB ? `${m.fileSizeGB} GB` : ""} · {m.quantization || "Q4_K_M"} ·{" "}
-                            {((m.config?.contextSize || 8192) / 1024).toFixed(0)}k ctx
-                          </span>
-                        </div>
-                        <div className="flex items-center gap-1">
-                          {caps.map((tag) => (
-                            <span
-                              key={tag}
-                              className="rounded bg-muted px-1.5 py-0.2 text-[9px] font-mono text-muted-foreground"
-                            >
-                              {tag}
-                            </span>
-                          ))}
-                        </div>
+                        <span className="font-medium text-foreground text-xs">{m.name}</span>
+                        <span className="text-[10px] font-mono text-sky-400">Cloud</span>
                       </button>
-                    );
-                  })}
-                </div>
+                    ))}
+                  </div>
+                </>
+              )}
+            </div>
 
-                {cloudModels.length > 0 && (
-                  <>
-                    <div className="text-[10px] font-semibold uppercase tracking-wider text-muted-foreground px-1.5 pt-1 border-t border-border/50">
-                      Configured Cloud Models
-                    </div>
-                    <div className="space-y-1">
-                      {cloudModels.map((m: any) => (
-                        <button
-                          key={m.id}
-                          type="button"
-                          onClick={() => {
-                            setActiveModelId(m.id);
-                            setModelPickerOpen(false);
-                          }}
-                          className="flex w-full items-center justify-between rounded-lg px-2.5 py-1.5 text-left hover:bg-muted/70"
-                        >
-                          <span className="font-medium text-foreground text-xs">{m.name}</span>
-                          <span className="text-[10px] font-mono text-sky-400">Cloud</span>
-                        </button>
-                      ))}
-                    </div>
-                  </>
+            {/* 2. Reasoning Effort Picker */}
+            <div className="space-y-1.5 pt-2 border-t border-border/60">
+              <div className="flex items-center justify-between px-1">
+                <span className="text-[10px] font-semibold uppercase tracking-wider text-muted-foreground flex items-center gap-1">
+                  <Brain className="size-3" />
+                  Reasoning Effort
+                </span>
+                <button
+                  type="button"
+                  onClick={() => setThinkEnabled?.(!thinkEnabled)}
+                  className="text-[10px] text-muted-foreground hover:text-foreground"
+                >
+                  Reasoning {thinkEnabled ? "on" : "off"}
+                </button>
+              </div>
+              <div
+                className={cn(
+                  "grid grid-cols-4 gap-1 rounded-xl bg-background/70 border border-border/60 p-1",
+                  !supportsThinking && "opacity-50"
                 )}
+                title={
+                  supportsThinking
+                    ? "Reasoning token budget (Off, Low, Medium, High)"
+                    : "Selected model does not support extended thinking"
+                }
+              >
+                {(["off", "low", "medium", "high"] as const).map((lvl) => (
+                  <button
+                    key={lvl}
+                    type="button"
+                    disabled={!!activeTracker || !supportsThinking}
+                    onClick={() => setThinkingEffort(lvl)}
+                    className={cn(
+                      "py-1 rounded-lg text-[11px] font-medium capitalize transition-colors",
+                      thinkingEffort === lvl
+                        ? "bg-primary/20 text-primary font-semibold"
+                        : "text-muted-foreground hover:text-foreground"
+                    )}
+                  >
+                    {lvl}
+                  </button>
+                ))}
+              </div>
+            </div>
+
+            {/* 3. Workspace Folder & Undo Trash */}
+            {root && (
+              <div className="space-y-1.5 pt-2 border-t border-border/60">
+                <div className="text-[10px] text-muted-foreground font-mono truncate px-1" title={root}>
+                  {root}
+                </div>
+                <div className="flex items-center gap-1.5">
+                  <button
+                    type="button"
+                    disabled={!!activeTracker}
+                    onClick={() => {
+                      (window as any).chrome?.webview?.postMessage(
+                        JSON.stringify({ type: "selectToolWorkspace" })
+                      );
+                      setModelPickerOpen(false);
+                    }}
+                    className="flex-1 flex items-center justify-center gap-1 rounded-lg border border-border/70 bg-card/70 hover:bg-muted py-1 text-[11px] text-foreground"
+                  >
+                    <FolderOpen className="size-3" />
+                    <span>Choose folder</span>
+                  </button>
+                  {toolsEnabled && (
+                    <button
+                      type="button"
+                      disabled={!!activeTracker || undoBusy}
+                      onClick={handleUndoTrash}
+                      className="flex items-center justify-center gap-1 rounded-lg border border-border/70 bg-card/70 hover:bg-muted px-2.5 py-1 text-[11px] text-muted-foreground hover:text-foreground"
+                    >
+                      <RotateCcw className="size-3" />
+                      <span>Undo trash</span>
+                    </button>
+                  )}
+                </div>
               </div>
             )}
           </div>
         )}
+      </div>
 
-        {/* Effort / Thinking Level Picker: Off | Low | Medium | High */}
-        <div
-          className={cn(
-            "flex items-center rounded-lg border border-border/80 bg-background/60 p-0.5 shrink-0",
-            !supportsThinking && "opacity-50"
-          )}
-          title={
-            supportsThinking
-              ? "Reasoning effort / token budget (Off, Low, Medium, High)"
-              : "Selected model does not support extended thinking tokens"
-          }
-        >
-          <Brain className="size-3 text-muted-foreground mx-1" />
-          {(["off", "low", "medium", "high"] as const).map((lvl) => (
-            <button
-              key={lvl}
-              type="button"
-              disabled={!!activeTracker || !supportsThinking}
-              onClick={() => setThinkingEffort(lvl)}
-              className={cn(
-                "px-1.5 py-0.5 rounded text-[10px] font-medium capitalize transition-colors",
-                thinkingEffort === lvl
-                  ? "bg-primary/20 text-primary font-semibold"
-                  : "text-muted-foreground hover:text-foreground"
-              )}
-            >
-              {lvl}
-            </button>
-          ))}
-        </div>
+      {/* Compact Tools Toggle Pill */}
+      <button
+        type="button"
+        aria-pressed={toolsEnabled}
+        disabled={!!activeTracker}
+        onClick={() => setToolsEnabled(!toolsEnabled)}
+        title="Enable/disable workspace file, terminal, and browser tools"
+        className={cn(
+          "flex items-center gap-1 h-6 px-2 rounded-full text-[11px] border transition-colors shrink-0",
+          toolsEnabled
+            ? "border-primary/40 bg-primary/15 text-primary font-medium"
+            : "border-transparent text-muted-foreground hover:text-foreground hover:bg-accent/50"
+        )}
+      >
+        <Wrench className="size-3" />
+        <span>Tools {toolsEnabled ? "on" : "off"}</span>
+      </button>
 
-        {/* Fast vs Plan Execution Mode Toggle */}
-        <div
-          className="flex items-center rounded-lg border border-border/80 bg-background/60 p-0.5 shrink-0"
-          title="Fast: act directly. Plan: write PLAN.md first, open in viewer, and wait for approval."
-        >
-          <button
-            type="button"
-            disabled={!!activeTracker}
-            onClick={() => setAgentExecutionMode("fast")}
-            className={cn(
-              "flex items-center gap-1 px-2 py-0.5 rounded text-[10px] font-medium transition-colors",
-              agentExecutionMode === "fast"
-                ? "bg-accent text-foreground font-semibold"
-                : "text-muted-foreground hover:text-foreground"
-            )}
-          >
+      {/* Compact Fast vs Plan Pill (cycles Fast <-> Plan on click) */}
+      <button
+        type="button"
+        disabled={!!activeTracker}
+        onClick={() =>
+          setAgentExecutionMode(agentExecutionMode === "fast" ? "plan" : "fast")
+        }
+        title={
+          agentExecutionMode === "fast"
+            ? "Fast mode: act directly. Click to switch to Plan mode (PLAN.md first)."
+            : "Plan mode: writes PLAN.md and waits for approval. Click to switch to Fast mode."
+        }
+        className={cn(
+          "flex items-center gap-1 h-6 px-2 rounded-full text-[11px] border transition-colors shrink-0",
+          agentExecutionMode === "plan"
+            ? "border-sky-500/40 bg-sky-500/15 text-sky-300 font-medium"
+            : "border-transparent text-muted-foreground hover:text-foreground hover:bg-accent/50"
+        )}
+      >
+        {agentExecutionMode === "fast" ? (
+          <>
             <Zap className="size-3 text-amber-400" />
             <span>Fast</span>
-          </button>
-          <button
-            type="button"
-            disabled={!!activeTracker}
-            onClick={() => setAgentExecutionMode("plan")}
-            className={cn(
-              "flex items-center gap-1 px-2 py-0.5 rounded text-[10px] font-medium transition-colors",
-              agentExecutionMode === "plan"
-                ? "bg-primary/20 text-primary font-semibold"
-                : "text-muted-foreground hover:text-foreground"
-            )}
-          >
-            <FileCheck2 className="size-3" />
-            <span>Plan</span>
-          </button>
-        </div>
-
-        <button
-          type="button"
-          aria-pressed={toolsEnabled}
-          disabled={!!activeTracker}
-          onClick={() => setToolsEnabled(!toolsEnabled)}
-          className="rounded border px-2 py-1 font-medium whitespace-nowrap shrink-0"
-        >
-          Tools {toolsEnabled ? "on" : "off"}
-        </button>
-        <button
-          type="button"
-          aria-pressed={Boolean(thinkEnabled)}
-          disabled={!!activeTracker || !supportsThinking}
-          onClick={() => setThinkEnabled?.(!thinkEnabled)}
-          className="rounded border px-2 py-1 whitespace-nowrap shrink-0"
-          title={
-            supportsThinking
-              ? "Toggle model reasoning step"
-              : "Selected model does not support reasoning mode"
-          }
-        >
-          Reasoning {thinkEnabled ? "on" : "off"}
-        </button>
-
-        {root && (
+          </>
+        ) : (
           <>
-            <span className="min-w-[60px] flex-1 truncate text-muted-foreground" title={root}>
-              {root}
-            </span>
-            {toolsEnabled && (
-              <button
-                type="button"
-                disabled={!!activeTracker || undoBusy}
-                onClick={handleUndoTrash}
-                className="rounded border px-2 py-1 text-muted-foreground hover:text-foreground whitespace-nowrap shrink-0"
-                title="Restore most recently trashed file from tool-trash"
-              >
-                Undo trash
-              </button>
-            )}
-            <button
-              type="button"
-              disabled={!!activeTracker}
-              onClick={() =>
-                (window as any).chrome?.webview?.postMessage(
-                  JSON.stringify({ type: "selectToolWorkspace" })
-                )
-              }
-              className="rounded border px-2 py-1 whitespace-nowrap shrink-0"
-            >
-              Choose folder
-            </button>
+            <FileCheck2 className="size-3 text-sky-400" />
+            <span>Plan</span>
           </>
         )}
-      </div>
+      </button>
     </div>
   );
 }

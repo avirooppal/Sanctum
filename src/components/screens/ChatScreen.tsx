@@ -43,7 +43,7 @@ import { splitThinking, PromptTemplates } from "@core/ai/index.ts";
 import { RequestStatusLine } from "@/components/chat/RequestStatusLine";
 import { determineDocumentType } from "@core/domain/documents.ts";
 import { toast } from "sonner";
-import { WorkspaceTools } from "@/components/chat/WorkspaceTools";
+import { WorkspaceTools, WorkspacePendingPlanBanner } from "@/components/chat/WorkspaceTools";
 import { extractAttachmentText } from "@/lib/attachments";
 import { AccessScopeBadge } from "@/components/access/AccessScopeBadge";
 import { InteractiveTerminal } from "@/components/terminal/InteractiveTerminal";
@@ -787,15 +787,17 @@ export const ChatScreen: React.FC<ChatScreenProps> = ({ onNavigate }) => {
   return (
     <main className="relative flex flex-1 min-h-0 w-full overflow-hidden bg-background">
       <section className="relative flex flex-col flex-1 min-w-0 min-h-0">
-        {/* Top In-Window Titlebar & Floating Model Selector Pill (Matches Screenshot 2026-10-25 190854.png) */}
+        {/* Minimal Top Header Bar (no overlapping duplicate model selector; dynamic right padding only when viewer is closed) */}
         <div
           onMouseDown={handleTitleBarMouseDown}
           onDoubleClick={handleTitleBarDoubleClick}
           onContextMenu={handleTitleBarContextMenu}
-          className="flex items-center justify-between gap-2 px-3 sm:px-4 pr-32 sm:pr-36 h-11 shrink-0"
+          className={cn(
+            "flex items-center justify-between gap-2 px-3 sm:px-4 h-11 shrink-0 border-b border-border/40",
+            !isViewerOpen && "pr-32 sm:pr-36"
+          )}
         >
-          <div className="flex items-center gap-1.5 min-w-0 flex-1">
-            {/* When sidebar is collapsed, show the floating pill [DownloadPopover] [Expand Sidebar] */}
+          <div className="flex items-center gap-2 min-w-0 flex-1">
             {isExplorerCollapsed && (
               <div className="flex items-center gap-0.5 rounded-xl bg-card/90 border border-border/60 px-1.5 py-0.5 shadow-xs shrink-0">
                 <DownloadPopover />
@@ -812,82 +814,46 @@ export const ChatScreen: React.FC<ChatScreenProps> = ({ onNavigate }) => {
             )}
 
             <AccessScopeBadge />
-            {/* Model Selector Pill */}
-            <div className="flex items-center gap-1 min-w-0 shrink rounded-xl bg-card/90 border border-border/60 px-2 py-0.5 shadow-xs">
-              {models.length > 0 ? (
-                <Select className="w-auto min-w-0" value={model?.id} onValueChange={setActiveModelId}>
-                  <SelectTrigger aria-label="Select model" disabled={!!activeTracker} className="h-7 w-auto min-w-0 max-w-[140px] sm:max-w-[240px] gap-1.5 border-0 bg-transparent shadow-none px-1.5 text-xs font-medium hover:bg-accent/60 rounded-lg truncate">
-                    <SelectValue />
-                  </SelectTrigger>
-                  <SelectContent className="w-72">
-                    {models.map((m) => (
-                      <SelectItem key={m.id} value={m.id}>
-                        {m.name}
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
-              ) : (
-                <span className="text-xs text-muted-foreground px-2 py-1">No model available</span>
-              )}
 
+            <WorkspaceHeaderActions
+              onOpenSettings={() => onNavigate?.("settings")}
+              sessionTitle={session?.title}
+            />
+
+            <div className="flex items-center gap-1 shrink-0">
               <button
                 type="button"
                 onClick={() => setIsTerminalOpen((v) => !v)}
                 aria-label="Toggle terminal"
                 title="Toggle Interactive Terminal"
                 className={cn(
-                  "p-1 rounded-lg text-muted-foreground hover:text-foreground hover:bg-accent/60 transition-colors",
+                  "p-1.5 rounded-lg text-muted-foreground hover:text-foreground hover:bg-accent/60 transition-colors",
                   isTerminalOpen && "bg-accent text-primary"
                 )}
               >
                 <TerminalIcon className="size-3.5" />
               </button>
+
               <button
                 type="button"
-                onClick={() => setDetailsOpen((v) => !v)}
-                aria-label="Model details"
-                aria-pressed={detailsOpen}
-                title="Model & Session Parameters"
+                onClick={toggleViewer}
+                aria-label="Toggle workspace viewer panel"
+                title="Toggle Artifact & Workspace Viewer (Ctrl+\\)"
                 className={cn(
-                  "p-1 rounded-lg text-muted-foreground hover:text-foreground hover:bg-accent/60 transition-colors",
-                  detailsOpen && "bg-accent text-foreground"
+                  "flex items-center gap-1.5 rounded-lg border px-2 py-1 text-[11px] font-medium transition-colors",
+                  isViewerOpen
+                    ? "border-primary/40 bg-primary/10 text-primary"
+                    : "border-border/60 bg-card/80 text-muted-foreground hover:text-foreground"
                 )}
               >
-                <Settings className="size-3.5" />
-              </button>
-
-              <span
-                className={cn(
-                  "size-2 rounded-full mx-1 shrink-0",
-                  model ? "bg-emerald-500 shadow-[0_0_6px_rgba(16,185,129,0.6)]" : "bg-muted-foreground/40"
+                {isViewerOpen ? <PanelRightClose className="size-3.5" /> : <PanelRightOpen className="size-3.5" />}
+                {viewerTabs.length > 0 && (
+                  <span className="rounded-full bg-primary/20 px-1.5 py-0.2 text-[10px] font-mono text-primary">
+                    {viewerTabs.length}
+                  </span>
                 )}
-                title={model ? `Active: ${model.name}` : "No active model"}
-              />
+              </button>
             </div>
-
-            <WorkspaceHeaderActions onOpenSettings={() => onNavigate?.("settings")} />
-
-            <button
-              type="button"
-              onClick={toggleViewer}
-              aria-label="Toggle workspace viewer panel"
-              title="Toggle Artifact & Workspace Viewer (Ctrl+\\)"
-              className={cn(
-                "flex items-center gap-1.5 rounded-xl border border-border/60 bg-card/90 px-2.5 py-1 text-[11px] font-medium transition-colors shadow-xs",
-                isViewerOpen
-                  ? "border-primary/40 bg-primary/10 text-primary"
-                  : "text-muted-foreground hover:text-foreground hover:bg-muted/50"
-              )}
-            >
-              {isViewerOpen ? <PanelRightClose className="size-3.5" /> : <PanelRightOpen className="size-3.5" />}
-              <span className="hidden sm:inline">Viewer</span>
-              {viewerTabs.length > 0 && (
-                <span className="rounded-full bg-primary/20 px-1.5 py-0.2 text-[10px] font-mono text-primary">
-                  {viewerTabs.length}
-                </span>
-              )}
-            </button>
           </div>
         </div>
 
@@ -1107,7 +1073,7 @@ export const ChatScreen: React.FC<ChatScreenProps> = ({ onNavigate }) => {
               </div>
             )}
 
-            <WorkspaceTools />
+            <WorkspacePendingPlanBanner />
             <textarea
               ref={textareaRef}
               rows={1}
@@ -1143,6 +1109,30 @@ export const ChatScreen: React.FC<ChatScreenProps> = ({ onNavigate }) => {
                   <Plus className="size-4" />
                 </button>
 
+                {/* Inline Model + Effort + Tools + Fast/Plan Pills */}
+                <WorkspaceTools />
+
+                {/* My documents (RAG) Toggle — only shown when documents exist */}
+                {(documents.length > 0 || attachedDocuments.length > 0) && (
+                  <button
+                    type="button"
+                    onClick={() => setEnableRagInChat(!enableRagInChat)}
+                    aria-pressed={enableRagInChat}
+                    title="Ground responses in indexed documents"
+                    className={cn(
+                      "flex items-center gap-1 h-6 px-2 rounded-full text-[11px] border transition-colors",
+                      enableRagInChat
+                        ? "border-primary/50 bg-primary/15 text-foreground font-medium"
+                        : "border-border/70 text-muted-foreground hover:text-foreground"
+                    )}
+                  >
+                    <FileText className="size-3" />
+                    <span>Docs ({documents.length + attachedDocuments.length})</span>
+                  </button>
+                )}
+              </div>
+
+              <div className="flex items-center gap-1.5">
                 {/* Model & Sampling Parameters Toggle */}
                 <button
                   type="button"
@@ -1159,10 +1149,17 @@ export const ChatScreen: React.FC<ChatScreenProps> = ({ onNavigate }) => {
                   <SlidersHorizontal className="size-3.5" />
                 </button>
 
-                <button type="button" onClick={() => setBookmarksOnly(v => !v)}
-                  aria-label="Show bookmarked responses" aria-pressed={bookmarksOnly}
+                <button
+                  type="button"
+                  onClick={() => setBookmarksOnly((v) => !v)}
+                  aria-label="Show bookmarked responses"
+                  aria-pressed={bookmarksOnly}
                   title="Show bookmarked responses"
-                  className={cn("p-1.5 rounded-lg hover:bg-accent/60", bookmarksOnly && "text-primary bg-primary/15")}>
+                  className={cn(
+                    "p-1.5 rounded-lg text-muted-foreground hover:text-foreground hover:bg-accent/60",
+                    bookmarksOnly && "text-primary bg-primary/15"
+                  )}
+                >
                   <Bookmark className="size-3.5" />
                 </button>
 
@@ -1182,41 +1179,11 @@ export const ChatScreen: React.FC<ChatScreenProps> = ({ onNavigate }) => {
                   {isRecording ? <Square className="size-3.5 fill-current" /> : <Mic className="size-3.5" />}
                 </button>
 
-                {/* My documents (RAG) Toggle */}
-                <button
-                  type="button"
-                  onClick={() => setEnableRagInChat(!enableRagInChat)}
-                  aria-pressed={enableRagInChat}
-                  disabled={documents.length === 0 && attachedDocuments.length === 0}
-                  title={
-                    documents.length === 0 && attachedDocuments.length === 0
-                      ? "Attach or add documents in Vault first"
-                      : "Ground responses in indexed documents"
-                  }
-                  className={cn(
-                    "ml-1 flex items-center gap-1.5 h-7 px-2.5 rounded-full text-xs border transition-colors disabled:opacity-40 disabled:pointer-events-none",
-                    enableRagInChat
-                      ? "border-primary/50 bg-primary/15 text-foreground font-medium"
-                      : "border-border/70 text-muted-foreground hover:text-foreground"
-                  )}
-                >
-                  <FileText className="size-3.5" />
-                  <span>My documents</span>
-                  {(documents.length > 0 || attachedDocuments.length > 0) && (
-                    <span className="text-[10px] opacity-70">
-                      ({documents.length + attachedDocuments.length})
-                    </span>
-                  )}
-                </button>
-              </div>
-
-              <div className="flex items-center gap-2.5">
                 {/* Context Window % Badge */}
                 <div
-                  className="flex items-center gap-1 text-[11px] font-mono text-muted-foreground"
+                  className="flex items-center gap-1 px-1 text-[11px] font-mono text-muted-foreground"
                   title={`Estimated context usage: ${estTokens} / ${maxContext.toLocaleString()} tokens`}
                 >
-                  <span className="inline-block size-2 rounded-full border border-muted-foreground/60" />
                   <span>{contextPercent}%</span>
                 </div>
 
