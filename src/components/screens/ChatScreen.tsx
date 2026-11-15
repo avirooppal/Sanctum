@@ -23,6 +23,11 @@ import {
   ThumbsDown,
   PanelRightOpen,
   PanelRightClose,
+  Zap,
+  FileCheck2,
+  Code2,
+  PackageCheck,
+  HelpCircle,
 } from "lucide-react";
 import { IconChevronRight } from "@tabler/icons-react";
 import { Button } from "@/components/ui/button";
@@ -48,6 +53,7 @@ import { extractAttachmentText } from "@/lib/attachments";
 import { AccessScopeBadge } from "@/components/access/AccessScopeBadge";
 import { InteractiveTerminal } from "@/components/terminal/InteractiveTerminal";
 import { Terminal as TerminalIcon } from "lucide-react";
+import { fetchWithApproval } from "@/lib/hostBridge";
 import { ToolApprovalModal } from "@/components/chat/ToolApprovalModal";
 import { ArtifactViewerPanel } from "@/components/viewer/ArtifactViewerPanel";
 import { WorkspaceHeaderActions } from "@/components/viewer/WorkspaceHeaderActions";
@@ -443,6 +449,9 @@ export const ChatScreen: React.FC<ChatScreenProps> = ({ onNavigate }) => {
     viewerTabs,
     openFileTab,
     setActiveDiffCheckpointId,
+    createNewChatSession,
+    agentExecutionMode,
+    setAgentExecutionMode,
   } = useAppStore(
     useShallow((s) => ({
       chatSessions: s.chatSessions,
@@ -474,6 +483,9 @@ export const ChatScreen: React.FC<ChatScreenProps> = ({ onNavigate }) => {
       viewerTabs: s.viewerTabs,
       openFileTab: s.openFileTab,
       setActiveDiffCheckpointId: s.setActiveDiffCheckpointId,
+      createNewChatSession: s.createNewChatSession,
+      agentExecutionMode: s.agentExecutionMode,
+      setAgentExecutionMode: s.setAgentExecutionMode,
     }))
   );
 
@@ -488,6 +500,8 @@ export const ChatScreen: React.FC<ChatScreenProps> = ({ onNavigate }) => {
   const [whisperStatus, setWhisperStatus] = useState<string | null>(null);
   const [mentionCandidates, setMentionCandidates] = useState<string[]>([]);
   const [mentionQuery, setMentionQuery] = useState<string | null>(null);
+  const [slashQuery, setSlashQuery] = useState<string | null>(null);
+  const [selectedSlashIndex, setSelectedSlashIndex] = useState(0);
 
   const textareaRef = useRef<HTMLTextAreaElement>(null);
   const endRef = useRef<HTMLDivElement>(null);
@@ -582,9 +596,258 @@ export const ChatScreen: React.FC<ChatScreenProps> = ({ onNavigate }) => {
     };
   }, []);
 
+  const SLASH_COMMANDS = [
+    {
+      name: "browser",
+      aliases: ["browse", "web"],
+      syntax: "/browser <goal or url>",
+      description: "Autonomous web browser agent (navigate, click, extract data via browser-use)",
+      category: "Capability" as const,
+      icon: <Globe className="size-3.5 text-sky-400" />,
+      requiresArg: true,
+      argPlaceholder: "e.g. /browser search documentation on https://docs.python.org",
+      execute: (arg?: string) => {
+        if (!arg) {
+          setPrompt("/browser ");
+          textareaRef.current?.focus();
+          return;
+        }
+        sendMessage(`Please use the browser_task tool to browse and complete this task: "${arg}"`);
+      },
+    },
+    {
+      name: "plan",
+      aliases: ["planning"],
+      syntax: "/plan",
+      description: "Switch to Plan Mode (agent generates PLAN.md and waits for your approval)",
+      category: "Mode" as const,
+      icon: <FileCheck2 className="size-3.5 text-purple-400" />,
+      requiresArg: false,
+      execute: () => {
+        setAgentExecutionMode("plan");
+        toast.success("Plan Mode active: agent will create PLAN.md and request approval before acting.");
+      },
+    },
+    {
+      name: "fast",
+      aliases: ["direct"],
+      syntax: "/fast",
+      description: "Switch to Fast Mode (direct autonomous execution without plan review)",
+      category: "Mode" as const,
+      icon: <Zap className="size-3.5 text-amber-400" />,
+      requiresArg: false,
+      execute: () => {
+        setAgentExecutionMode("fast");
+        toast.success("Fast Mode active: direct autonomous execution.");
+      },
+    },
+    {
+      name: "terminal",
+      aliases: ["term", "cmd", "pwsh"],
+      syntax: "/terminal",
+      description: "Toggle interactive ConPTY terminal drawer (native Windows shell)",
+      category: "Tool" as const,
+      icon: <TerminalIcon className="size-3.5 text-emerald-400" />,
+      requiresArg: false,
+      execute: () => {
+        setIsTerminalOpen((v) => !v);
+      },
+    },
+    {
+      name: "review",
+      aliases: ["diff", "changes"],
+      syntax: "/review",
+      description: "Open checkpoint diff review & per-hunk rollback modal for turn changes",
+      category: "Tool" as const,
+      icon: <RotateCcw className="size-3.5 text-indigo-400" />,
+      requiresArg: false,
+      execute: async () => {
+        try {
+          const res = await fetch("/api/checkpoints");
+          if (res.ok) {
+            const data = await res.json();
+            if (Array.isArray(data.checkpoints) && data.checkpoints.length > 0) {
+              setActiveDiffCheckpointId(data.checkpoints[0].id);
+              return;
+            }
+          }
+          toast.info("No checkpointed file modifications found in this session.");
+        } catch {
+          toast.error("Could not fetch checkpoints.");
+        }
+      },
+    },
+    {
+      name: "deliverables",
+      aliases: ["export", "zip"],
+      syntax: "/deliverables",
+      description: "Package and export workspace deliverables as a ZIP archive",
+      category: "Tool" as const,
+      icon: <PackageCheck className="size-3.5 text-emerald-400" />,
+      requiresArg: false,
+      execute: async () => {
+        try {
+          const res = await fetchWithApproval(
+            "/api/fs/export-zip",
+            {
+              method: "POST",
+              headers: { "Content-Type": "application/json" },
+              body: JSON.stringify({ paths: ["."] }),
+            },
+            "export_zip"
+          );
+          const data = await res.json();
+          if (res.ok && data.outputPath) {
+            toast.success(`Deliverables packaged into ${data.outputPath}`);
+            openFileTab(data.outputPath);
+          } else {
+            toast.error(data.error || "Failed to package deliverables ZIP");
+          }
+        } catch {
+          toast.error("Failed to package deliverables ZIP");
+        }
+      },
+    },
+    {
+      name: "ide",
+      aliases: ["code", "cursor"],
+      syntax: "/ide",
+      description: "Open current workspace in detected desktop IDE (VS Code / Cursor / Windsurf)",
+      category: "Tool" as const,
+      icon: <Code2 className="size-3.5 text-sky-400" />,
+      requiresArg: false,
+      execute: async () => {
+        try {
+          const res = await fetchWithApproval(
+            "/api/ide/open",
+            {
+              method: "POST",
+              headers: { "Content-Type": "application/json" },
+              body: JSON.stringify({ ideId: "code" }),
+            },
+            "ide_open"
+          );
+          if (res.ok) {
+            toast.success("Opened workspace in IDE");
+          } else {
+            const body = await res.json().catch(() => ({}));
+            toast.error(body.error || "Failed to launch IDE");
+          }
+        } catch {
+          toast.error("Could not launch IDE");
+        }
+      },
+    },
+    {
+      name: "stt",
+      aliases: ["voice", "mic", "dictate"],
+      syntax: "/stt",
+      description: "Toggle offline voice dictation / speech-to-text",
+      category: "Capability" as const,
+      icon: <Mic className="size-3.5 text-rose-400" />,
+      requiresArg: false,
+      execute: () => {
+        toggleMic();
+      },
+    },
+    {
+      name: "vault",
+      aliases: ["rag", "docs"],
+      syntax: "/vault",
+      description: "Toggle Document Vault (RAG) grounding in chat responses",
+      category: "Capability" as const,
+      icon: <FileText className="size-3.5 text-teal-400" />,
+      requiresArg: false,
+      execute: () => {
+        setEnableRagInChat(!enableRagInChat);
+        toast.success(!enableRagInChat ? "Document Vault grounding enabled" : "Document Vault grounding disabled");
+      },
+    },
+    {
+      name: "clear",
+      aliases: ["new", "reset"],
+      syntax: "/clear",
+      description: "Clear conversation messages and start a fresh chat session",
+      category: "System" as const,
+      icon: <Trash2 className="size-3.5 text-rose-400" />,
+      requiresArg: false,
+      execute: () => {
+        createNewChatSession();
+        toast.success("Started new clean chat session");
+      },
+    },
+    {
+      name: "settings",
+      aliases: ["config", "preferences"],
+      syntax: "/settings",
+      description: "Open Sanctum Settings (Capabilities, Hardware, Models, Privacy)",
+      category: "System" as const,
+      icon: <Settings className="size-3.5 text-muted-foreground" />,
+      requiresArg: false,
+      execute: () => {
+        onNavigate?.("settings");
+      },
+    },
+    {
+      name: "help",
+      aliases: ["shortcuts", "commands", "?"],
+      syntax: "/help",
+      description: "Show available slash commands, tools, and keyboard shortcuts",
+      category: "System" as const,
+      icon: <HelpCircle className="size-3.5 text-amber-400" />,
+      requiresArg: false,
+      execute: () => {
+        toast.info(
+          "Commands: /browser, /plan, /fast, /terminal, /review, /deliverables, /ide, /stt, /vault, /clear, /settings. Shortcuts: Ctrl+B (sidebar), Ctrl+\\ (viewer).",
+          { duration: 6000 }
+        );
+      },
+    },
+  ];
+
+  const matchingSlashCommands = SLASH_COMMANDS.filter((cmd) => {
+    if (slashQuery === null) return false;
+    if (!slashQuery) return true;
+    return (
+      cmd.name.toLowerCase().includes(slashQuery) ||
+      cmd.syntax.toLowerCase().includes(slashQuery) ||
+      cmd.description.toLowerCase().includes(slashQuery) ||
+      cmd.aliases?.some((a) => a.toLowerCase().includes(slashQuery))
+    );
+  });
+
   const send = () => {
     const trimmed = prompt.trim();
     if ((!trimmed && !attachedImage && attachedDocuments.length === 0) || !model || isStreaming) return;
+
+    // Check direct slash command execution:
+    if (trimmed.startsWith("/")) {
+      const match = trimmed.match(/^\/([a-zA-Z0-9_-]+)(?:\s+(.*))?$/);
+      if (match) {
+        const cmdName = match[1].toLowerCase();
+        const cmdArg = (match[2] || "").trim();
+
+        if (cmdName === "browser" || cmdName === "browse" || cmdName === "web") {
+          if (!cmdArg) {
+            toast.info("Please provide a URL or goal, e.g. /browser extract pricing from https://example.com");
+            return;
+          }
+          const promptMessage = `Please use the browser_task tool to browse and complete this task: "${cmdArg}"`;
+          sendMessage(promptMessage);
+          setPrompt("");
+          return;
+        }
+
+        const found = SLASH_COMMANDS.find(
+          (c) => c.name.toLowerCase() === cmdName || c.aliases?.includes(cmdName)
+        );
+        if (found) {
+          void found.execute(cmdArg);
+          setPrompt("");
+          return;
+        }
+      }
+    }
 
     const messageText = trimmed || (attachedImage ? PromptTemplates.ANALYZE_IMAGE : PromptTemplates.ANALYZE_DOCUMENT);
     sendMessage(messageText);
@@ -793,8 +1056,19 @@ export const ChatScreen: React.FC<ChatScreenProps> = ({ onNavigate }) => {
     }
   };
 
-  // Detect @file mention in prompt
+  // Detect slash command or @file mention in prompt
   useEffect(() => {
+    const slashMatch = prompt.match(/(?:^|\s)\/([a-zA-Z0-9_-]*)$/);
+    if (slashMatch) {
+      setSlashQuery(slashMatch[1].toLowerCase());
+      setSelectedSlashIndex(0);
+      setMentionQuery(null);
+      setMentionCandidates([]);
+      return;
+    } else {
+      setSlashQuery(null);
+    }
+
     const match = prompt.match(/(?:^|\s)@([a-zA-Z0-9_./\\-]{1,60})$/);
     if (!match) {
       setMentionQuery(null);
@@ -1012,6 +1286,62 @@ export const ChatScreen: React.FC<ChatScreenProps> = ({ onNavigate }) => {
               isRecording && "border-destructive ring-1 ring-destructive/20"
             )}
           >
+            {/* Slash Command Autocomplete Popover */}
+            {slashQuery !== null && matchingSlashCommands.length > 0 && (
+              <div className="absolute bottom-full left-3 mb-2 z-40 w-96 max-w-[calc(100vw-3rem)] rounded-2xl border border-border/80 bg-popover/95 backdrop-blur-md p-1.5 shadow-2xl animate-in fade-in slide-in-from-bottom-2 duration-150">
+                <div className="flex items-center justify-between px-2.5 py-1 border-b border-border/50 text-[10px] font-semibold uppercase tracking-wider text-muted-foreground">
+                  <span>Slash Commands</span>
+                  <span className="font-mono text-[9px] lowercase font-normal opacity-70">↑↓ navigate · enter select</span>
+                </div>
+                <div className="max-h-64 overflow-y-auto py-1 space-y-0.5">
+                  {matchingSlashCommands.map((cmd, idx) => {
+                    const isSelected = idx === selectedSlashIndex;
+                    return (
+                      <button
+                        key={cmd.name}
+                        type="button"
+                        onClick={() => {
+                          if (cmd.requiresArg) {
+                            setPrompt(`/${cmd.name} `);
+                            setSlashQuery(null);
+                            textareaRef.current?.focus();
+                          } else {
+                            void cmd.execute();
+                            setPrompt("");
+                            setSlashQuery(null);
+                          }
+                        }}
+                        onMouseEnter={() => setSelectedSlashIndex(idx)}
+                        className={cn(
+                          "flex w-full items-start gap-2.5 rounded-xl px-2.5 py-2 text-left transition-colors",
+                          isSelected
+                            ? "bg-primary/10 text-foreground"
+                            : "hover:bg-muted/60 text-muted-foreground hover:text-foreground"
+                        )}
+                      >
+                        <div className="size-6 rounded-lg bg-card border border-border/60 flex items-center justify-center shrink-0 mt-0.5 shadow-2xs">
+                          {cmd.icon}
+                        </div>
+                        <div className="min-w-0 flex-1 space-y-0.5">
+                          <div className="flex items-center justify-between gap-1.5">
+                            <span className="font-mono text-xs font-semibold text-foreground">
+                              {cmd.syntax}
+                            </span>
+                            <span className="text-[9px] font-medium px-1.5 py-0.2 rounded-full bg-muted/80 text-muted-foreground border border-border/40 shrink-0">
+                              {cmd.category}
+                            </span>
+                          </div>
+                          <p className="text-[11px] text-muted-foreground leading-snug line-clamp-1">
+                            {cmd.description}
+                          </p>
+                        </div>
+                      </button>
+                    );
+                  })}
+                </div>
+              </div>
+            )}
+
             {/* @file Mention Autocomplete Popover */}
             {mentionQuery !== null && mentionCandidates.length > 0 && (
               <div className="absolute bottom-full left-3 mb-1.5 z-30 w-72 rounded-xl border border-border/80 bg-popover p-1 shadow-xl">
@@ -1116,6 +1446,40 @@ export const ChatScreen: React.FC<ChatScreenProps> = ({ onNavigate }) => {
               value={prompt}
               onChange={(e) => setPrompt(e.target.value)}
               onKeyDown={(e) => {
+                if (slashQuery !== null && matchingSlashCommands.length > 0) {
+                  if (e.key === "ArrowDown") {
+                    e.preventDefault();
+                    setSelectedSlashIndex((prev) => (prev + 1) % matchingSlashCommands.length);
+                    return;
+                  }
+                  if (e.key === "ArrowUp") {
+                    e.preventDefault();
+                    setSelectedSlashIndex((prev) => (prev - 1 + matchingSlashCommands.length) % matchingSlashCommands.length);
+                    return;
+                  }
+                  if (e.key === "Enter" || e.key === "Tab") {
+                    e.preventDefault();
+                    const chosen = matchingSlashCommands[selectedSlashIndex] || matchingSlashCommands[0];
+                    if (chosen) {
+                      if (chosen.requiresArg) {
+                        setPrompt(`/${chosen.name} `);
+                        setSlashQuery(null);
+                        textareaRef.current?.focus();
+                      } else {
+                        void chosen.execute();
+                        setPrompt("");
+                        setSlashQuery(null);
+                      }
+                    }
+                    return;
+                  }
+                  if (e.key === "Escape") {
+                    e.preventDefault();
+                    setSlashQuery(null);
+                    return;
+                  }
+                }
+
                 if (e.key === "Enter" && !e.shiftKey) {
                   e.preventDefault();
                   send();

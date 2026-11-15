@@ -196,8 +196,7 @@ export const WorkspaceHeaderActions: React.FC<{
   const handleOpenIde = async (ideOverride?: string) => {
     const ideToUse = ideOverride || selectedIdeId || "code";
     const activeTab = viewerTabs.find((t) => t.id === activeViewerTabId);
-    const fileArg =
-      activeTab && activeTab.path !== "__browser__" ? activeTab.path : undefined;
+    const fileArg = activeTab ? activeTab.path : undefined;
     const lineArg = activeTab?.jumpLine || 1;
 
     try {

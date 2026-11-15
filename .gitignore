@@ -45,6 +45,7 @@ scratch/
 temp_skills/
 *.tsbuildinfo
 deploy/installer/build_payload/
+brag-output/
 __pycache__/
 
 # dev-only engine oracle and pipeline caches (ADR 0105)
