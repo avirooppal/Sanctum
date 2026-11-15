@@ -192,6 +192,9 @@ namespace Sanctum {
                 HandleAudioDownload(req, res, method);
                 return true;
             }
+            if (path.StartsWith("/api/browser/", StringComparison.OrdinalIgnoreCase)) {
+                return HandleBrowserAgentEndpoints(req, res, path, method);
+            }
             return false;
         }
 

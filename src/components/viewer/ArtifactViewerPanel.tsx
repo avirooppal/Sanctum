@@ -12,12 +12,14 @@ import {
   ChevronRight,
   FileText,
   AlertCircle,
+  Globe,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { useAppStore } from "@/store/useAppStore";
 import { useShallow } from "zustand/react/shallow";
 import { WorkspaceFileTree } from "./WorkspaceFileTree";
 import { FileContentRenderer, FsReadResponse } from "./FileContentRenderer";
+import { BrowserAgentTab } from "./BrowserAgentTab";
 import { fetchWithApproval } from "@/lib/hostBridge";
 import { toast } from "sonner";
 
@@ -111,8 +113,15 @@ export const ArtifactViewerPanel: React.FC = () => {
         });
       }
     };
+    const onBrowserUpdated = () => {
+      openFileTab("__browser__", { title: "Browser Agent" });
+    };
     window.addEventListener("sanctum:present-file", onPresentFile);
-    return () => window.removeEventListener("sanctum:present-file", onPresentFile);
+    window.addEventListener("sanctum:browser-updated", onBrowserUpdated);
+    return () => {
+      window.removeEventListener("sanctum:present-file", onPresentFile);
+      window.removeEventListener("sanctum:browser-updated", onBrowserUpdated);
+    };
   }, [openFileTab]);
 
   // Load active tab content
@@ -368,15 +377,31 @@ export const ArtifactViewerPanel: React.FC = () => {
           )}
         </div>
 
-        <button
-          type="button"
-          onClick={() => setIsViewerOpen(false)}
-          aria-label="Close viewer panel"
-          title="Collapse Viewer Panel"
-          className="p-1 rounded-md text-muted-foreground hover:text-foreground hover:bg-muted/60 shrink-0"
-        >
-          <PanelRightClose className="size-3.5" />
-        </button>
+        <div className="flex items-center gap-1 shrink-0">
+          <button
+            type="button"
+            onClick={() => openFileTab("__browser__", { title: "Browser Agent" })}
+            title="Open Browser Agent Tab (browser-use)"
+            className={cn(
+              "flex items-center gap-1 px-2 py-1 rounded-md text-[11px] font-medium transition-colors border",
+              activeTab?.path === "__browser__"
+                ? "border-primary/40 bg-primary/15 text-primary"
+                : "border-border/60 bg-card/70 text-muted-foreground hover:text-foreground"
+            )}
+          >
+            <Globe className="size-3" />
+            <span>Browser</span>
+          </button>
+          <button
+            type="button"
+            onClick={() => setIsViewerOpen(false)}
+            aria-label="Close viewer panel"
+            title="Collapse Viewer Panel"
+            className="p-1 rounded-md text-muted-foreground hover:text-foreground hover:bg-muted/60 shrink-0"
+          >
+            <PanelRightClose className="size-3.5" />
+          </button>
+        </div>
       </div>
 
       {/* Sub-bar: Breadcrumb + Preview/Raw Toggle + Actions */}
@@ -511,7 +536,9 @@ export const ArtifactViewerPanel: React.FC = () => {
       {/* Main Split Body: File Renderer (left) + Collapsible Workspace Tree (right) */}
       <div className="flex-1 flex min-h-0 min-w-0 overflow-hidden select-text">
         <div className="flex-1 flex flex-col min-w-0 min-h-0 overflow-hidden">
-          {activeTab ? (
+          {activeTab?.path === "__browser__" ? (
+            <BrowserAgentTab />
+          ) : activeTab ? (
             <FileContentRenderer
               tab={activeTab}
               data={activeData}

@@ -326,6 +326,11 @@ export const SettingsGeneral: React.FC = () => {
               <p className="text-[11px] text-muted-foreground mt-0.5">
                 Architecture: Standalone desktop app (embedded WebView2 engine, same class as Jan and VS Code)
               </p>
+              <p className="text-[11px] text-muted-foreground mt-0.5">
+                Open-Source Attributions: Browser Agent Pack built on{" "}
+                <span className="font-mono text-foreground">browser-use</span> (https://github.com/browser-use/browser-use, MIT License, Copyright © 2024 Gregor Zunic &amp; Browser Use Contributors) and Microsoft Playwright (Apache-2.0). See{" "}
+                <span className="font-mono text-foreground">packs/browser-agent/NOTICE</span>.
+              </p>
             </div>
             <Button
               variant="outline"

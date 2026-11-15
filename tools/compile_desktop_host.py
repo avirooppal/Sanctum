@@ -93,6 +93,7 @@ def compile_desktop_host(output_path: str):
         cmd.append(temp_cs)
         cmd.append(os.path.abspath("tools/native/DesktopServices.cs"))
         cmd.append(os.path.abspath("tools/native/DesktopWorkspaceEndpoints.cs"))
+        cmd.append(os.path.abspath("tools/native/DesktopBrowserEndpoints.cs"))
         print(f"Compiling Sanctum Standalone Embedded WebView2 host using csc.exe to {output_path}...")
         res = subprocess.run(cmd, capture_output=True, text=True)
     else:

@@ -1,0 +1,23 @@
+{
+  "id": "sanctum.agents.browser-use",
+  "name": "Browser Agent Pack (browser-use)",
+  "version": "1.0.0",
+  "description": "Supervised autonomous browser automation built on browser-use and Playwright in an isolated profile.",
+  "license": "MIT",
+  "upstream": "https://github.com/browser-use/browser-use",
+  "permissions": "consent-gated",
+  "capabilities": [
+    "browser_task",
+    "browser_open",
+    "browser_state",
+    "browser_click",
+    "browser_type",
+    "browser_extract",
+    "browser_screenshot",
+    "browser_close"
+  ],
+  "dependencies": [
+    "browser-use==0.1.40",
+    "playwright==1.49.1"
+  ]
+}

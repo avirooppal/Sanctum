@@ -23,6 +23,7 @@ export type SettingsSection =
   | "logs"
   | "monitor"
   | "general"
+  | "capabilities"
   | "appearance"
   | "assistants"
   | "attachments"
@@ -70,6 +71,7 @@ export const SettingsMenu: React.FC<SettingsMenuProps> = ({
 
   const allSections: { id: SettingsSection; label: string; icon: React.ReactNode; devOnly?: boolean }[] = [
     { id: "general", label: "General", icon: <IconAdjustmentsHorizontal size={16} /> },
+    { id: "capabilities", label: "Capabilities", icon: <IconWorld size={16} /> },
     { id: "appearance", label: "Appearance", icon: <IconPalette size={16} /> },
     { id: "assistants", label: "Assistants", icon: <IconFeather size={16} /> },
     { id: "attachments", label: "Attachments", icon: <IconPaperclip size={16} /> },

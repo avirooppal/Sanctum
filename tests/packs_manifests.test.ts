@@ -8,6 +8,7 @@ describe("Optional Packs & Manifests Validation (R5)", () => {
     { dir: "packs/rag", id: "sanctum.rag.vault" },
     { dir: "packs/research", id: "sanctum.research.deep" },
     { dir: "packs/agents", id: "sanctum.agents.computer-use" },
+    { dir: "packs/browser-agent", id: "sanctum.agents.browser-use" },
   ];
 
   test("all pack directories have valid JSON manifests", () => {

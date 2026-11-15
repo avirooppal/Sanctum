@@ -21,6 +21,7 @@ import { SettingsClaudeCode } from "@/components/jan/sections/SettingsClaudeCode
 import { SettingsLogs } from "@/components/jan/sections/SettingsLogs";
 import { SettingsMonitor } from "@/components/jan/sections/SettingsMonitor";
 import { SettingsDeveloper } from "@/components/jan/sections/SettingsDeveloper";
+import { SettingsCapabilities } from "@/components/jan/sections/SettingsCapabilities";
 import { ChatScreen } from "@/components/screens/ChatScreen";
 import { WindowControls, handleTitleBarMouseDown, handleTitleBarDoubleClick, handleTitleBarContextMenu } from "@/components/jan/WindowControls";
 import { useAppStore } from "@/store/useAppStore";
@@ -198,6 +199,7 @@ export const JanAppShell: React.FC = () => {
               {activeSettingsSection === "logs" && <SettingsLogs />}
               {activeSettingsSection === "monitor" && <SettingsMonitor />}
               {activeSettingsSection === "general" && <SettingsGeneral />}
+              {activeSettingsSection === "capabilities" && <SettingsCapabilities />}
               {activeSettingsSection === "appearance" && <SettingsAppearance />}
               {activeSettingsSection === "assistants" && <SettingsAssistants />}
               {activeSettingsSection === "attachments" && <SettingsAttachments />}

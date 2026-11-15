@@ -102,6 +102,15 @@ def prepare():
             if os.path.exists(s_file):
                 shutil.copy2(s_file, os.path.join(speech_dst, fname))
 
+    browser_pack_src = os.path.join(ROOT, "packs", "browser-agent")
+    if os.path.exists(browser_pack_src):
+        browser_pack_dst = os.path.join(payload_dir, "packs", "browser-agent")
+        os.makedirs(browser_pack_dst, exist_ok=True)
+        for fname in ["pack.json", "NOTICE", "requirements.txt", "sidecar.py", "BENCHMARK.md"]:
+            s_file = os.path.join(browser_pack_src, fname)
+            if os.path.exists(s_file):
+                shutil.copy2(s_file, os.path.join(browser_pack_dst, fname))
+
     print("Payload preparation complete.")
 
 
