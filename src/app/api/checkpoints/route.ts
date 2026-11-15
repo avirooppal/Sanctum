@@ -5,25 +5,40 @@ import { getSanctumDataDir } from "@core/infra/security/audit_logger.ts";
 import {
   createCheckpoint,
   listCheckpoints,
+  getCheckpoint,
   rewindCheckpoint,
+  enrichCheckpointWithDiffs,
+  applyCheckpointHunks,
   type RewindMode,
 } from "@core/infra/checkpoints/checkpoint_manager.ts";
 
 function getWorkspaceState(): { root: string; id: string } {
   const dataDir = getSanctumDataDir();
+  const cfgPath = path.join(dataDir, "tool_workspace.txt");
+  const idPath = path.join(dataDir, "tool_workspace_id.txt");
   const wsMetaFile = path.join(dataDir, "workspace.json");
-  const defaultRoot = path.join(dataDir, "workspace");
+  let root = path.join(dataDir, "workspace");
+
   try {
-    if (fs.existsSync(wsMetaFile)) {
+    if (fs.existsSync(cfgPath)) {
+      const saved = fs.readFileSync(cfgPath, "utf-8").trim();
+      if (saved && fs.existsSync(saved)) root = path.resolve(saved);
+    } else if (fs.existsSync(wsMetaFile)) {
       const parsed = JSON.parse(fs.readFileSync(wsMetaFile, "utf-8"));
       if (parsed && typeof parsed.root === "string" && fs.existsSync(parsed.root)) {
-        const root = path.resolve(parsed.root);
-        return { root, id: Buffer.from(root.toLowerCase()).toString("hex").slice(0, 16) };
+        root = path.resolve(parsed.root);
       }
     }
   } catch {}
-  const root = path.resolve(defaultRoot);
-  return { root, id: Buffer.from(root.toLowerCase()).toString("hex").slice(0, 16) };
+
+  let id = Buffer.from(root.toLowerCase()).toString("hex").slice(0, 16);
+  try {
+    if (fs.existsSync(idPath)) {
+      id = fs.readFileSync(idPath, "utf-8").trim() || id;
+    }
+  } catch {}
+
+  return { root, id };
 }
 
 export async function GET(req: NextRequest) {
@@ -31,7 +46,7 @@ export async function GET(req: NextRequest) {
     const ws = getWorkspaceState();
     const url = new URL(req.url);
     const limit = Math.min(100, Math.max(1, Number(url.searchParams.get("limit")) || 30));
-    const checkpoints = listCheckpoints(ws.id, limit);
+    const checkpoints = listCheckpoints(ws.id, limit).map((cp) => enrichCheckpointWithDiffs(cp));
     return NextResponse.json({ checkpoints, workspaceId: ws.id });
   } catch (err: any) {
     return NextResponse.json({ error: err.message || "Failed to load checkpoints" }, { status: 500 });
@@ -57,7 +72,31 @@ export async function POST(req: NextRequest) {
         conversationSnapshot,
       });
 
-      return NextResponse.json(checkpoint);
+      return NextResponse.json(enrichCheckpointWithDiffs(checkpoint));
+    }
+
+    if (action === "diff") {
+      const cpId = String(body.checkpointId || "");
+      const cp = cpId ? getCheckpoint(ws.id, cpId) : listCheckpoints(ws.id, 1)[0] || null;
+      if (!cp) {
+        return NextResponse.json({ error: "Checkpoint not found" }, { status: 404 });
+      }
+      return NextResponse.json(enrichCheckpointWithDiffs(cp));
+    }
+
+    if (action === "apply_hunks") {
+      const checkpointId = String(body.checkpointId || "");
+      const relPath = String(body.path || "");
+      const acceptedHunkIndices = Array.isArray(body.acceptedHunkIndices)
+        ? body.acceptedHunkIndices.map(Number)
+        : [];
+      const updated = applyCheckpointHunks({
+        workspaceId: ws.id,
+        checkpointId,
+        path: relPath,
+        acceptedHunkIndices,
+      });
+      return NextResponse.json(updated);
     }
 
     if (action === "rewind") {

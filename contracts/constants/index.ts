@@ -80,7 +80,26 @@ export const JAN_STYLE_DOWNLOAD_CATALOG: CuratedModel[] = [
     parameters: "22M",
   },
 
-  // Speech-to-Text / WhisperX
+  // Speech-to-Text (STT)
+  {
+    id: "qwen3-asr-0.6b",
+    name: "Alibaba Qwen3-ASR-0.6B",
+    type: "audio",
+    description:
+      "600M-parameter multilingual ASR supporting 52 languages, heavy accents, and noisy audio with low VRAM on consumer GPUs or CPUs.",
+    sizeGB: 1.2,
+    parameters: "600M",
+    recommended: true,
+  },
+  {
+    id: "nemotron-3.5-transcribe",
+    name: "NVIDIA Nemotron 3.5 Transcribe",
+    type: "audio",
+    description:
+      "Top-tier English ASR (~5.6% WER) with accurate punctuation, capitalization, and technical vocabulary for high-VRAM NVIDIA GPUs.",
+    sizeGB: 2.8,
+    parameters: "1.1B",
+  },
   {
     id: "whisper-base",
     name: "WhisperX Base",
@@ -88,7 +107,6 @@ export const JAN_STYLE_DOWNLOAD_CATALOG: CuratedModel[] = [
     description: "Fast speech recognition with phoneme alignment via WhisperX / faster-whisper.",
     sizeGB: 0.14,
     parameters: "74M",
-    recommended: true,
   },
   {
     id: "whisper-small",
@@ -97,6 +115,73 @@ export const JAN_STYLE_DOWNLOAD_CATALOG: CuratedModel[] = [
     description: "Balanced multilingual transcription with high accuracy for voice notes.",
     sizeGB: 0.46,
     parameters: "244M",
+  },
+];
+
+export interface SttModelSpec {
+  id: string;
+  name: string;
+  provider: string;
+  tier: "light" | "heavy";
+  badge: string;
+  hfRepo: string;
+  backend: "qwen-asr" | "nemo" | "whisperx";
+  parameters: string;
+  sizeGB: number;
+  vramGB: number;
+  languages: string;
+  hardware: string;
+  bestFor: string;
+  highlights: string[];
+  description: string;
+  recommended?: boolean;
+}
+
+export const STT_MODEL_CATALOG: SttModelSpec[] = [
+  {
+    id: "qwen3-asr-0.6b",
+    name: "Alibaba Qwen3-ASR-0.6B",
+    provider: "Alibaba Qwen",
+    tier: "light",
+    badge: "Light & Accurate",
+    hfRepo: "Qwen/Qwen3-ASR-0.6B",
+    backend: "qwen-asr",
+    parameters: "600M",
+    sizeGB: 1.2,
+    vramGB: 1.5,
+    languages: "52 languages",
+    hardware: "Consumer GPUs & CPUs",
+    bestFor: "Real-time transcription, edge deployments, and consumer GPUs or CPUs.",
+    highlights: [
+      "Efficiency: 600M parameters — runs fast with low VRAM usage while keeping accuracy high.",
+      "Versatility: Handles 52 languages, heavy accents, and noisy audio.",
+      "Best for: Real-time transcription, edge deployments, and consumer GPUs or CPUs.",
+    ],
+    description:
+      "Built with 600M parameters for fast, low-VRAM transcription across 52 languages, heavy accents, and noisy audio.",
+    recommended: true,
+  },
+  {
+    id: "nemotron-3.5-transcribe",
+    name: "NVIDIA Nemotron 3.5 Transcribe",
+    provider: "NVIDIA",
+    tier: "heavy",
+    badge: "Heavy & Super Accurate",
+    hfRepo: "nvidia/nemotron-3.5-transcribe",
+    backend: "nemo",
+    parameters: "1.1B",
+    sizeGB: 2.8,
+    vramGB: 6.0,
+    languages: "English (Leaderboard #1)",
+    hardware: "High-VRAM NVIDIA GPUs",
+    bestFor: "Offline batch transcription, medical or legal audio, and high-VRAM NVIDIA GPUs.",
+    highlights: [
+      "Top-tier precision: Ultra-low word error rates (~5.6% WER on standard English benchmarks).",
+      "Clean formatting: Accurate punctuation, capitalization, and complex technical vocabulary without pause hallucinations.",
+      "Best for: Offline batch transcription, medical or legal audio, and high-VRAM NVIDIA GPUs.",
+    ],
+    description:
+      "Top-tier English ASR (~5.6% WER) with clean punctuation, technical vocabulary, and zero pause hallucinations.",
   },
 ];
 

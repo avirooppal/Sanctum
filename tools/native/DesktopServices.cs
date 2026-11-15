@@ -383,6 +383,7 @@ namespace Sanctum {
                 WriteJson(res, 200, new { source = source, count = matched.Count, entries = matched });
                 return true;
             }
+            if (HandleWorkspaceAndViewerEndpoints(req, res, path, method)) return true;
             return false;
         }
         private void ExportLogs() {

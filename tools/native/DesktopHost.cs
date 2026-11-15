@@ -2709,9 +2709,11 @@ private void HandleTerminal(HttpListenerRequest req, HttpListenerResponse res) {
                     } else if (action == "create") {
                         string content = ToolArg(args, "content", true);
                         if (Encoding.UTF8.GetByteCount(content) > 1048576) throw new Exception("Write limit is 1 MiB.");
+                        string cpId = RecordPreToolSnapshot("create", target, relative);
                         using (var stream = new FileStream(target, FileMode.CreateNew, FileAccess.Write))
                         using (var writer = new StreamWriter(stream, new UTF8Encoding(false))) writer.Write(content);
-                        result = new { created = relative };
+                        PushFsEvent("created", target);
+                        result = new { created = relative, checkpointId = cpId };
                     } else if (action == "edit" || action == "patch") {
                         if (new FileInfo(target).Length > 1048576) throw new Exception("Edit limit is 1 MiB.");
                         string before = ToolArg(args, "old_text", true), after = ToolArg(args, "new_text", true);
@@ -2721,24 +2723,32 @@ private void HandleTerminal(HttpListenerRequest req, HttpListenerResponse res) {
                             throw new Exception("old_text must match exactly once. Read the file first.");
                         string updated = content.Substring(0, at) + after + content.Substring(at + before.Length);
                         if (Encoding.UTF8.GetByteCount(updated) > 1048576) throw new Exception("Edit limit is 1 MiB.");
+                        string cpId = RecordPreToolSnapshot(action, target, relative);
                         File.WriteAllText(target, updated, new UTF8Encoding(false));
-                        result = new { edited = relative };
+                        PushFsEvent("changed", target);
+                        result = new { edited = relative, checkpointId = cpId };
                     } else if (action == "mkdir") {
-                        Directory.CreateDirectory(target); result = new { created = relative };
+                        Directory.CreateDirectory(target);
+                        PushFsEvent("created", target);
+                        result = new { created = relative };
                     } else if (action == "move") {
                         string destination = ToolArg(args, "destination", true);
                         string dest = ToolPath(destination, false, "move_destination");
                         if (File.Exists(dest) || Directory.Exists(dest)) throw new Exception("Destination already exists.");
+                        string cpId = RecordPreToolSnapshot("move", target, relative);
                         MovePathSafe(target, dest);
-                        result = new { moved = relative, destination = destination };
+                        PushFsEvent("renamed", dest);
+                        result = new { moved = relative, destination = destination, checkpointId = cpId };
                     } else if (action == "delete") {
                         // Reversible deletion: move to private trash, never recursively erase.
+                        string cpId = RecordPreToolSnapshot("delete", target, relative);
                         string trash = Path.Combine(_appDataDir, "tool-trash", Guid.NewGuid().ToString("N"));
                         Directory.CreateDirectory(trash);
                         string saved = Path.Combine(trash, Path.GetFileName(target));
                         MovePathSafe(target, saved);
                         File.WriteAllText(Path.Combine(trash, "restore.json"), new JavaScriptSerializer().Serialize(new { original = target, saved = saved }));
-                        result = new { deleted = relative, recoverableAt = saved };
+                        PushFsEvent("deleted", target);
+                        result = new { deleted = relative, recoverableAt = saved, checkpointId = cpId };
                     } else throw new Exception("Unsupported file action.");
                     LogEvent("info", "tools", action + " completed");
                     WriteJson(res, 200, result);

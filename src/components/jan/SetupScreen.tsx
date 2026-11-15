@@ -20,6 +20,7 @@ import { useAppStore } from "@/store/useAppStore";
 import { useShallow } from "zustand/react/shallow";
 import { cn } from "@/lib/utils";
 import { toast } from "sonner";
+import { SttModelSelector } from "@/components/speech/SttModelSelector";
 
 type Setup = {
   phase: string;
@@ -55,6 +56,7 @@ export const SetupScreen = ({
 
   // STT Configuration State
   const [sttMode, setSttMode] = useState<STTMode>("recommended");
+  const [selectedSttModel, setSelectedSttModel] = useState<string>("qwen3-asr-0.6b");
   const [customEndpoint, setCustomEndpoint] = useState("http://127.0.0.1:8000");
   const [customModel, setCustomModel] = useState("base");
   const [sttStatus, setSttStatus] = useState<{
@@ -147,7 +149,7 @@ export const SetupScreen = ({
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
           "assistants.sttMode": sttMode,
-          "assistants.sttModel": sttMode === "custom" ? customModel : "whisper-base",
+          "assistants.sttModel": sttMode === "custom" ? customModel : selectedSttModel,
           "assistants.sttEndpoint": sttMode === "custom" ? customEndpoint : "http://127.0.0.1:8000",
         }),
       }, "settings_write");
@@ -189,7 +191,7 @@ export const SetupScreen = ({
   };
 
   const copyLaunchCommand = () => {
-    const cmd = "python scripts/whisperx_server.py --model base --port 8000";
+    const cmd = `python core/ai/speech/whisperx_server.py --model ${selectedSttModel} --port 8000`;
     navigator.clipboard.writeText(cmd);
     setCopiedCmd(true);
     toast.success("STT launch command copied to clipboard");
@@ -294,7 +296,7 @@ export const SetupScreen = ({
                 </div>
                 <p className="text-[11px] text-muted-foreground">
                   {sttMode === "recommended"
-                    ? "Recommended: Whisper Base / Tiny (WhisperX, 145 MB offline STT)"
+                    ? `Local STT: ${selectedSttModel === "nemotron-3.5-transcribe" ? "NVIDIA Nemotron 3.5 Transcribe (Heavy)" : "Alibaba Qwen3-ASR-0.6B (Light)"}`
                     : sttMode === "custom"
                     ? `Custom STT: ${customModel} @ ${customEndpoint}`
                     : "Web Speech API (in-browser voice fallback)"}
@@ -310,7 +312,7 @@ export const SetupScreen = ({
             <div className="p-4 pt-1 border-t border-border/60 space-y-4">
               {/* STT Option Selector */}
               <div className="grid grid-cols-1 sm:grid-cols-3 gap-2">
-                {/* 1. Recommended Lightweight STT */}
+                {/* 1. Recommended Local STT Models */}
                 <div
                   onClick={() => setSttMode("recommended")}
                   className={cn(
@@ -323,17 +325,17 @@ export const SetupScreen = ({
                   <div>
                     <div className="flex items-center justify-between mb-1.5">
                       <span className="text-[11px] font-bold text-foreground">
-                        Whisper Base
+                        Local STT Models
                       </span>
                       {sttMode === "recommended" && (
                         <IconCircleCheck size={14} className="text-primary" />
                       )}
                     </div>
-                    <span className="text-[10px] px-1.5 py-0.5 rounded bg-emerald-500/10 text-emerald-400 font-mono font-medium">
-                      145 MB · 74M Params
+                    <span className="inline-block text-[10px] px-1.5 py-0.5 rounded bg-emerald-500/10 text-emerald-400 font-mono font-medium whitespace-nowrap">
+                      Qwen3 / Nemotron
                     </span>
                     <p className="text-[11px] text-muted-foreground mt-2 leading-snug">
-                      Best open-source lightweight model for fast offline speech transcription.
+                      Download &amp; run Qwen3-ASR-0.6B (light) or Nemotron 3.5 Transcribe (heavy).
                     </p>
                   </div>
                 </div>
@@ -397,10 +399,10 @@ export const SetupScreen = ({
 
               {/* Mode-specific Setup Details */}
               {sttMode === "recommended" && (
-                <div className="p-3.5 rounded-xl border border-border/70 bg-card space-y-2.5">
+                <div className="p-3.5 rounded-xl border border-border/70 bg-card space-y-3">
                   <div className="flex items-center justify-between">
                     <span className="text-xs font-semibold text-foreground">
-                      Local Setup: WhisperX / faster-whisper
+                      Choose &amp; Download Local STT Model
                     </span>
                     <button
                       type="button"
@@ -416,14 +418,15 @@ export const SetupScreen = ({
                     </button>
                   </div>
 
-                  <p className="text-[11px] text-muted-foreground">
-                    To enable 100% private offline speech transcription, install and launch the lightweight
-                    Whisper service included in Sanctum:
-                  </p>
+                  <SttModelSelector
+                    compact
+                    selectedModelId={selectedSttModel}
+                    onSelectModel={setSelectedSttModel}
+                  />
 
                   <div className="relative flex items-center justify-between bg-muted/60 p-2 rounded-lg border border-border font-mono text-[11px]">
                     <span className="text-foreground truncate select-all">
-                      python scripts/whisperx_server.py --model base --port 8000
+                      python core/ai/speech/whisperx_server.py --model {selectedSttModel} --port 8000
                     </span>
                     <button
                       type="button"
@@ -438,10 +441,6 @@ export const SetupScreen = ({
                       )}
                     </button>
                   </div>
-
-                  <p className="text-[10px] text-muted-foreground">
-                    Prerequisite: <code className="font-mono text-foreground">pip install whisperx</code> (or <code className="font-mono text-foreground">faster-whisper</code>).
-                  </p>
                 </div>
               )}
 

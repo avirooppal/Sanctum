@@ -1,7 +1,7 @@
 import { StateCreator } from "zustand";
 import { LocalModel, ModelCategory } from "@/types";
 import { LocalEngineClient } from "@/lib/engine";
-import { DEFAULT_OLLAMA_ENDPOINT } from "@/lib/constants";
+import { DEFAULT_OLLAMA_ENDPOINT, JAN_STYLE_DOWNLOAD_CATALOG } from "@/lib/constants";
 
 export interface DownloadProgress {
   percent: number;
@@ -118,24 +118,31 @@ export const createModelsSlice: StateCreator<any, [], [], ModelsSlice> = (set, g
       },
     }));
 
-    const success = await LocalEngineClient.pullOllamaModel(
-      modelName,
-      DEFAULT_OLLAMA_ENDPOINT,
-      (pct, status) => {
-        if (controller.signal.aborted) return;
-        set((state: any) => ({
-          downloadProgressMap: {
-            ...state.downloadProgressMap,
-            [modelName]: {
-              percent: pct,
-              status: status || "Downloading layers...",
-              isDownloading: pct < 100,
-            },
+    const isAudioModel =
+      JAN_STYLE_DOWNLOAD_CATALOG.some((m) => m.id === modelName && m.type === "audio");
+
+    const onProgress = (pct: number, status: string) => {
+      if (controller.signal.aborted) return;
+      set((state: any) => ({
+        downloadProgressMap: {
+          ...state.downloadProgressMap,
+          [modelName]: {
+            percent: pct,
+            status: status || "Downloading layers...",
+            isDownloading: pct < 100,
           },
-        }));
-      },
-      controller.signal
-    );
+        },
+      }));
+    };
+
+    const success = isAudioModel
+      ? await LocalEngineClient.pullSttModel(modelName, onProgress, controller.signal)
+      : await LocalEngineClient.pullOllamaModel(
+          modelName,
+          DEFAULT_OLLAMA_ENDPOINT,
+          onProgress,
+          controller.signal
+        );
     downloadControllers.delete(modelName);
     if (controller.signal.aborted) return false;
 

@@ -283,7 +283,7 @@ export const WelcomeModal: React.FC<WelcomeModalProps> = ({ forceOpen = false, o
                           : "text-muted-foreground hover:text-foreground"
                       )}
                     >
-                      {tab === "audio" ? "WhisperX" : tab}
+                      {tab === "audio" ? "Speech (STT)" : tab}
                     </button>
                   ))}
                 </div>
@@ -328,7 +328,7 @@ export const WelcomeModal: React.FC<WelcomeModalProps> = ({ forceOpen = false, o
                               ? "bg-blue-500/10 text-blue-600"
                               : "bg-muted text-muted-foreground"
                           )}>
-                            {item.type === "embedding" ? "RAG Embed" : item.type === "audio" ? "WhisperX" : "LLM"}
+                            {item.type === "embedding" ? "RAG Embed" : item.type === "audio" ? "Speech STT" : "LLM"}
                           </span>
                         </div>
 

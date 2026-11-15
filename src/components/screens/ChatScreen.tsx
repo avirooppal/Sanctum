@@ -19,6 +19,10 @@ import {
   Globe,
   Settings,
   Gauge,
+  ThumbsUp,
+  ThumbsDown,
+  PanelRightOpen,
+  PanelRightClose,
 } from "lucide-react";
 import { IconChevronRight } from "@tabler/icons-react";
 import { Button } from "@/components/ui/button";
@@ -45,6 +49,9 @@ import { AccessScopeBadge } from "@/components/access/AccessScopeBadge";
 import { InteractiveTerminal } from "@/components/terminal/InteractiveTerminal";
 import { Terminal as TerminalIcon } from "lucide-react";
 import { ToolApprovalModal } from "@/components/chat/ToolApprovalModal";
+import { ArtifactViewerPanel } from "@/components/viewer/ArtifactViewerPanel";
+import { TurnChangesSummaryCard, DiffReviewModal } from "@/components/viewer/DiffReviewModal";
+import { detectCandidateFilePaths } from "@core/infra/security/content_sanitizer.ts";
 
 interface ChatScreenProps {
   onNavigate?: (module: "chat" | "hub" | "settings") => void;
@@ -57,27 +64,69 @@ const MessageRow: React.FC<{
   onRetry?: () => void;
   onDelete?: () => void;
   onBookmark?: () => void;
-}> = React.memo(({ msg, modelName, onStop, onRetry, onDelete, onBookmark }) => {
+  onOpenFile?: (path: string) => void;
+  onOpenDiffReview?: (checkpointId?: string) => void;
+}> = React.memo(({ msg, modelName, onStop, onRetry, onDelete, onBookmark, onOpenFile, onOpenDiffReview }) => {
   const [showThinking, setShowThinking] = useState(false);
   const [copied, setCopied] = useState(false);
+  const [feedback, setFeedback] = useState<"up" | "down" | null>(null);
+  const [verifiedPaths, setVerifiedPaths] = useState<string[]>([]);
   const bookmarked = Boolean(msg.bookmarked);
 
   const handleCopy = async () => {
     try {
-    await navigator.clipboard.writeText(msg.content);
-    setCopied(true);
-    toast.success("Copied to clipboard");
-    setTimeout(() => setCopied(false), 1800);
-    } catch { toast.error("Could not copy. Select the message text and copy it manually."); }
+      await navigator.clipboard.writeText(msg.content);
+      setCopied(true);
+      toast.success("Copied to clipboard");
+      setTimeout(() => setCopied(false), 1800);
+    } catch {
+      toast.error("Could not copy. Select the message text and copy it manually.");
+    }
   };
+
+  const { thinking, answer } = splitThinking(msg.content);
+
+  // Detect and verify mentioned file paths against workspace scope before linking
+  useEffect(() => {
+    if (msg.role !== "assistant" || !answer) return;
+    const candidates = detectCandidateFilePaths(answer);
+    if (candidates.length === 0) {
+      setVerifiedPaths([]);
+      return;
+    }
+    let active = true;
+    Promise.all(
+      candidates.slice(0, 8).map(async (p) => {
+        try {
+          const res = await fetch(`/api/fs/read?path=${encodeURIComponent(p)}&maxBytes=1024`);
+          if (!res.ok) return null;
+          const body = await res.json();
+          return body?.exists ? String(body.path || p) : null;
+        } catch {
+          return null;
+        }
+      })
+    ).then((results) => {
+      if (active) {
+        setVerifiedPaths(results.filter((r): r is string => Boolean(r)));
+      }
+    });
+    return () => {
+      active = false;
+    };
+  }, [msg.role, answer]);
 
   if (msg.role === "user") {
     return (
-      <div className="flex flex-col items-end gap-1 group">
+      <div id={`msg-${msg.id}`} className="flex flex-col items-end gap-1 group">
         <div className="max-w-[80%] rounded-2xl rounded-br-sm bg-primary text-primary-foreground px-4 py-2.5 text-sm whitespace-pre-wrap shadow-sm">
           {msg.content}
           {msg.image && <img src={msg.image.src} alt={msg.image.name} className="mt-2 max-h-52 rounded-lg" />}
-          {msg.attachments?.map(doc => <div key={doc.name} className="mt-2 text-xs opacity-80">📎 {doc.name}</div>)}
+          {msg.attachments?.map((doc) => (
+            <div key={doc.name} className="mt-2 text-xs opacity-80">
+              📎 {doc.name}
+            </div>
+          ))}
         </div>
         <div className="flex items-center gap-1 opacity-0 group-hover:opacity-100 transition-opacity pr-1">
           <button
@@ -103,11 +152,25 @@ const MessageRow: React.FC<{
     );
   }
 
-  const { thinking, answer } = splitThinking(msg.content);
+  const mutatingActivities = (msg.toolActivities || []).filter(
+    (a) =>
+      a.status === "success" &&
+      ["create_file", "edit_file", "apply_patch", "move_path", "delete_path"].includes(a.name)
+  );
+
+  let latestCheckpointId: string | undefined;
+  for (const act of mutatingActivities) {
+    if (act.output) {
+      try {
+        const parsed = JSON.parse(act.output);
+        if (parsed?.checkpointId) latestCheckpointId = String(parsed.checkpointId);
+      } catch {}
+    }
+  }
 
   return (
-    <div className="flex gap-3 group">
-      <div className="min-w-0 flex-1 space-y-2">
+    <div id={`msg-${msg.id}`} className="flex gap-3 group">
+      <div className="min-w-0 flex-1 space-y-2.5">
         {/* Assistant header: Model name + Timestamp */}
         <div className="flex items-center gap-2 text-xs">
           <span className="font-semibold text-foreground">{modelName || "Local Model"}</span>
@@ -116,10 +179,76 @@ const MessageRow: React.FC<{
           )}
         </div>
 
-        {msg.toolActivities?.map(activity => <details key={activity.id} className="rounded border border-border px-3 py-2 text-xs">
-          <summary className="cursor-pointer">{String(activity.arguments.action || activity.name)} {String(activity.arguments.path || "")} — {activity.status}</summary>
-          <pre className="mt-2 max-h-64 overflow-auto whitespace-pre-wrap">{JSON.stringify(activity.arguments, null, 2)}{activity.output ? `\n${activity.output}` : ""}</pre>
-        </details>)}
+        {/* Collapsible Tool-Step Rows ("Ran <name> finished >") */}
+        {msg.toolActivities?.map((activity) => {
+          const targetLabel = String(
+            activity.arguments?.path ||
+              activity.arguments?.command ||
+              activity.arguments?.query ||
+              ""
+          );
+          const statusLabel =
+            activity.status === "success"
+              ? "finished"
+              : activity.status === "running"
+              ? "running…"
+              : activity.status;
+          const filePathArg =
+            typeof activity.arguments?.path === "string" &&
+            activity.arguments.path !== "."
+              ? String(activity.arguments.path)
+              : null;
+
+          return (
+            <details
+              key={activity.id}
+              className="group/tool rounded-lg border border-border/60 bg-card/40 px-3 py-1.5 text-xs"
+            >
+              <summary className="flex items-center justify-between gap-2 cursor-pointer list-none text-muted-foreground hover:text-foreground">
+                <div className="flex items-center gap-1.5 min-w-0">
+                  <span className="font-medium text-foreground/85">
+                    Ran {String(activity.arguments.action || activity.name)}
+                  </span>
+                  {targetLabel && (
+                    <span className="font-mono text-[11px] text-muted-foreground truncate max-w-[260px]">
+                      {targetLabel}
+                    </span>
+                  )}
+                  <span
+                    className={cn(
+                      "text-[11px]",
+                      activity.status === "error"
+                        ? "text-destructive"
+                        : "text-muted-foreground"
+                    )}
+                  >
+                    {statusLabel}
+                  </span>
+                  <ChevronRight className="size-3.5 transition-transform group-open/tool:rotate-90 shrink-0" />
+                </div>
+
+                {filePathArg && onOpenFile && (
+                  <button
+                    type="button"
+                    onClick={(e) => {
+                      e.preventDefault();
+                      e.stopPropagation();
+                      onOpenFile(filePathArg);
+                    }}
+                    className="px-1.5 py-0.5 rounded bg-muted/70 hover:bg-accent text-[10px] font-mono text-foreground shrink-0"
+                  >
+                    Open {filePathArg.split("/").pop()}
+                  </button>
+                )}
+              </summary>
+              <pre className="mt-2 max-h-56 overflow-auto rounded bg-background/60 p-2 font-mono text-[11px] text-muted-foreground whitespace-pre-wrap">
+                {JSON.stringify(activity.arguments, null, 2)}
+                {activity.output ? `\n\n${activity.output}` : ""}
+              </pre>
+            </details>
+          );
+        })}
+
         {thinking && (
           <div>
             <button
@@ -146,6 +275,34 @@ const MessageRow: React.FC<{
           !thinking && !msg.requestStatus && <div className="text-sm text-muted-foreground animate-pulse">…</div>
         )}
 
+        {/* Clickable Verified Workspace File Pills */}
+        {verifiedPaths.length > 0 && onOpenFile && (
+          <div className="flex flex-wrap items-center gap-1.5 pt-1">
+            {verifiedPaths.map((p) => (
+              <button
+                key={p}
+                type="button"
+                onClick={() => onOpenFile(p)}
+                className="flex items-center gap-1.5 rounded-lg border border-border/70 bg-card/80 hover:bg-accent px-2.5 py-1 text-xs font-mono text-foreground transition-colors"
+              >
+                <FileText className="size-3 text-sky-400 shrink-0" />
+                <span>{p}</span>
+              </button>
+            ))}
+          </div>
+        )}
+
+        {/* "N files changed +X -Y [Review]" Summary Card */}
+        {mutatingActivities.length > 0 && onOpenDiffReview && (
+          <div className="pt-1">
+            <TurnChangesSummaryCard
+              checkpointId={latestCheckpointId}
+              changedFilesCount={mutatingActivities.length}
+              onOpenReview={(cpId) => onOpenDiffReview(cpId || "latest")}
+            />
+          </div>
+        )}
+
         {/* Live Request Status Indicator */}
         {msg.requestStatus && (
           <div className="pt-1 pb-0.5">
@@ -157,64 +314,94 @@ const MessageRow: React.FC<{
           </div>
         )}
 
-        {/* Message Action Bar + Telemetry matching owner screenshot */}
+        {/* Message Action Bar: Timestamp + Copy + Thumbs + Bookmark + Telemetry */}
         {(!msg.requestStatus || ["done", "stopped", "error", "cancelled"].includes(msg.requestStatus.phase)) && (answer || thinking) && (
-          <div className="flex items-center gap-1.5 pt-1 text-muted-foreground">
-            <button
-              type="button"
-              onClick={handleCopy}
-              className="p-1 rounded-md hover:bg-muted/60 hover:text-foreground transition-colors"
-              title="Copy response"
-              aria-label="Copy response"
-            >
-              {copied ? <Check className="size-3.5 text-emerald-400" /> : <Copy className="size-3.5" />}
-            </button>
-            <button
-              type="button"
-              onClick={() => {
-                onBookmark?.();
-                toast.success(bookmarked ? "Removed bookmark" : "Response bookmarked");
-              }}
-              className={cn(
-                "p-1 rounded-md hover:bg-muted/60 hover:text-foreground transition-colors",
-                bookmarked && "text-primary"
-              )}
-              title="Bookmark response"
-              aria-label="Bookmark response"
-              aria-pressed={bookmarked}
-            >
-              <Bookmark className="size-3.5" />
-            </button>
-            {onDelete && (
+          <div className="flex items-center justify-between gap-2 pt-1 text-muted-foreground">
+            <div className="flex items-center gap-1">
               <button
                 type="button"
-                onClick={onDelete}
-                className="p-1 rounded-md hover:bg-destructive/15 hover:text-destructive transition-colors"
-                title="Delete message"
-                aria-label="Delete message"
-              >
-                <Trash2 className="size-3.5" />
-              </button>
-            )}
-            {onRetry && (
-              <button
-                type="button"
-                onClick={onRetry}
+                onClick={handleCopy}
                 className="p-1 rounded-md hover:bg-muted/60 hover:text-foreground transition-colors"
-                title="Regenerate response"
-                aria-label="Regenerate response"
+                title="Copy response"
+                aria-label="Copy response"
               >
-                <RotateCcw className="size-3.5" />
+                {copied ? <Check className="size-3.5 text-emerald-400" /> : <Copy className="size-3.5" />}
               </button>
-            )}
+              <button
+                type="button"
+                onClick={() => setFeedback((f) => (f === "up" ? null : "up"))}
+                aria-label="Helpful response"
+                aria-pressed={feedback === "up"}
+                className={cn(
+                  "p-1 rounded-md hover:bg-muted/60 hover:text-foreground transition-colors",
+                  feedback === "up" && "text-emerald-400"
+                )}
+              >
+                <ThumbsUp className="size-3.5" />
+              </button>
+              <button
+                type="button"
+                onClick={() => setFeedback((f) => (f === "down" ? null : "down"))}
+                aria-label="Unhelpful response"
+                aria-pressed={feedback === "down"}
+                className={cn(
+                  "p-1 rounded-md hover:bg-muted/60 hover:text-foreground transition-colors",
+                  feedback === "down" && "text-rose-400"
+                )}
+              >
+                <ThumbsDown className="size-3.5" />
+              </button>
+              <button
+                type="button"
+                onClick={() => {
+                  onBookmark?.();
+                  toast.success(bookmarked ? "Removed bookmark" : "Response bookmarked");
+                }}
+                className={cn(
+                  "p-1 rounded-md hover:bg-muted/60 hover:text-foreground transition-colors",
+                  bookmarked && "text-primary"
+                )}
+                title="Bookmark response"
+                aria-label="Bookmark response"
+                aria-pressed={bookmarked}
+              >
+                <Bookmark className="size-3.5" />
+              </button>
+              {onDelete && (
+                <button
+                  type="button"
+                  onClick={onDelete}
+                  className="p-1 rounded-md hover:bg-destructive/15 hover:text-destructive transition-colors"
+                  title="Delete message"
+                  aria-label="Delete message"
+                >
+                  <Trash2 className="size-3.5" />
+                </button>
+              )}
+              {onRetry && (
+                <button
+                  type="button"
+                  onClick={onRetry}
+                  className="p-1 rounded-md hover:bg-muted/60 hover:text-foreground transition-colors"
+                  title="Regenerate response"
+                  aria-label="Regenerate response"
+                >
+                  <RotateCcw className="size-3.5" />
+                </button>
+              )}
 
-            {msg.metrics && msg.metrics.totalTokens > 0 && (
-              <div className="ml-2 flex items-center gap-1.5 text-[11px] font-mono text-muted-foreground/75">
-                <Gauge className="size-3" />
-                <span>
-                  {msg.metrics.tps} tokens/sec ({msg.metrics.totalTokens} tokens)
-                </span>
-              </div>
+              {msg.metrics && msg.metrics.totalTokens > 0 && (
+                <div className="ml-2 flex items-center gap-1.5 text-[11px] font-mono text-muted-foreground/75">
+                  <Gauge className="size-3" />
+                  <span>
+                    {msg.metrics.tps} tokens/sec ({msg.metrics.totalTokens} tokens)
+                  </span>
+                </div>
+              )}
+            </div>
+
+            {msg.timestamp && (
+              <span className="text-[11px] text-muted-foreground/60">{msg.timestamp}</span>
             )}
           </div>
         )}
@@ -250,6 +437,11 @@ export const ChatScreen: React.FC<ChatScreenProps> = () => {
     removeAttachedDocument,
     isExplorerCollapsed,
     toggleExplorer,
+    isViewerOpen,
+    toggleViewer,
+    viewerTabs,
+    openFileTab,
+    setActiveDiffCheckpointId,
   } = useAppStore(
     useShallow((s) => ({
       chatSessions: s.chatSessions,
@@ -276,6 +468,11 @@ export const ChatScreen: React.FC<ChatScreenProps> = () => {
       removeAttachedDocument: s.removeAttachedDocument,
       isExplorerCollapsed: s.isExplorerCollapsed,
       toggleExplorer: s.toggleExplorer,
+      isViewerOpen: s.isViewerOpen,
+      toggleViewer: s.toggleViewer,
+      viewerTabs: s.viewerTabs,
+      openFileTab: s.openFileTab,
+      setActiveDiffCheckpointId: s.setActiveDiffCheckpointId,
     }))
   );
 
@@ -288,6 +485,8 @@ export const ChatScreen: React.FC<ChatScreenProps> = () => {
   const [recordingSeconds, setRecordingSeconds] = useState(0);
   const [isTranscribing, setIsTranscribing] = useState(false);
   const [whisperStatus, setWhisperStatus] = useState<string | null>(null);
+  const [mentionCandidates, setMentionCandidates] = useState<string[]>([]);
+  const [mentionQuery, setMentionQuery] = useState<string | null>(null);
 
   const textareaRef = useRef<HTMLTextAreaElement>(null);
   const endRef = useRef<HTMLDivElement>(null);
@@ -530,6 +729,60 @@ export const ChatScreen: React.FC<ChatScreenProps> = () => {
     }
   };
 
+  // Attach workspace file by relative path (via drag-from-tree or @file mention)
+  const attachWorkspaceFile = async (relPath: string) => {
+    try {
+      const res = await fetch(`/api/fs/read?path=${encodeURIComponent(relPath)}&maxBytes=524288`);
+      const data = await res.json();
+      if (!res.ok || data.binary || typeof data.content !== "string") {
+        toast.error(data.error || `${relPath}: cannot attach binary file as text.`);
+        return;
+      }
+      const name = relPath.split("/").pop() || relPath;
+      addAttachedDocument({
+        name: relPath,
+        size: data.size || data.content.length,
+        content: data.content,
+      });
+      uploadDocument(activeCollectionId || "col-default", {
+        name,
+        size: data.size || data.content.length,
+        type: determineDocumentType(name),
+        rawContent: data.content,
+      });
+      setEnableRagInChat(true);
+    } catch {
+      toast.error(`Could not attach ${relPath}`);
+    }
+  };
+
+  // Detect @file mention in prompt
+  useEffect(() => {
+    const match = prompt.match(/(?:^|\s)@([a-zA-Z0-9_./\\-]{1,60})$/);
+    if (!match) {
+      setMentionQuery(null);
+      setMentionCandidates([]);
+      return;
+    }
+    const q = match[1].toLowerCase();
+    setMentionQuery(match[1]);
+    let cancelled = false;
+    fetch("/api/fs/tree?path=")
+      .then((r) => (r.ok ? r.json() : null))
+      .then((data) => {
+        if (cancelled || !data || !Array.isArray(data.entries)) return;
+        const files = data.entries
+          .filter((e: any) => e.type === "file" && String(e.path).toLowerCase().includes(q))
+          .slice(0, 6)
+          .map((e: any) => String(e.path));
+        setMentionCandidates(files);
+      })
+      .catch(() => {});
+    return () => {
+      cancelled = true;
+    };
+  }, [prompt]);
+
   return (
     <main className="relative flex flex-1 min-h-0 w-full overflow-hidden bg-background">
       <section className="relative flex flex-col flex-1 min-w-0 min-h-0">
@@ -611,8 +864,55 @@ export const ChatScreen: React.FC<ChatScreenProps> = () => {
                 title={model ? `Active: ${model.name}` : "No active model"}
               />
             </div>
+
+            <button
+              type="button"
+              onClick={toggleViewer}
+              aria-label="Toggle workspace viewer panel"
+              title="Toggle Artifact & Workspace Viewer (Ctrl+\\)"
+              className={cn(
+                "flex items-center gap-1.5 rounded-xl border border-border/60 bg-card/90 px-2.5 py-1 text-[11px] font-medium transition-colors shadow-xs",
+                isViewerOpen
+                  ? "border-primary/40 bg-primary/10 text-primary"
+                  : "text-muted-foreground hover:text-foreground hover:bg-muted/50"
+              )}
+            >
+              {isViewerOpen ? <PanelRightClose className="size-3.5" /> : <PanelRightOpen className="size-3.5" />}
+              <span className="hidden sm:inline">Viewer</span>
+              {viewerTabs.length > 0 && (
+                <span className="rounded-full bg-primary/20 px-1.5 py-0.2 text-[10px] font-mono text-primary">
+                  {viewerTabs.length}
+                </span>
+              )}
+            </button>
           </div>
         </div>
+
+        {/* Thin Conversation Outline Strip for Long Threads */}
+        {messages.length > 2 && (
+          <div
+            aria-label="Conversation outline"
+            className="hidden sm:flex flex-col items-center gap-1.5 absolute left-2 top-1/2 -translate-y-1/2 z-10 py-2 px-1 rounded-full bg-card/60 border border-border/40 backdrop-blur-xs"
+          >
+            {messages.slice(-20).map((m, idx) => (
+              <button
+                key={m.id}
+                type="button"
+                onClick={() => {
+                  const el = document.getElementById(`msg-${m.id}`);
+                  el?.scrollIntoView({ behavior: "smooth", block: "center" });
+                }}
+                title={`${m.role === "user" ? "You" : "Assistant"}: ${(m.content || "").slice(0, 60)}`}
+                className={cn(
+                  "w-1.5 rounded-full transition-all",
+                  m.role === "user"
+                    ? "h-1.5 bg-muted-foreground/50 hover:bg-foreground"
+                    : "h-2.5 bg-primary/60 hover:bg-primary"
+                )}
+              />
+            ))}
+          </div>
+        )}
 
         {/* Messages */}
         <div className="flex-1 overflow-y-auto">
@@ -656,15 +956,18 @@ export const ChatScreen: React.FC<ChatScreenProps> = () => {
                     </div>
                   )}
                   {visibleMessages.map((m) => (
-                    <MessageRow
-                      key={m.id}
-                      msg={m}
-                      modelName={m.modelId || model?.name}
-                      onStop={stopInference}
-                      onRetry={!isStreaming && m.id === messages.at(-1)?.id ? regenerateLastMessage : undefined}
-                      onDelete={!isStreaming && session ? () => deleteChatMessage(session.id, m.id) : undefined}
-                      onBookmark={session ? () => toggleMessageBookmark(session.id, m.id) : undefined}
-                    />
+                    <div id={`msg-${m.id}`} key={m.id}>
+                      <MessageRow
+                        msg={m}
+                        modelName={m.modelId || model?.name}
+                        onStop={stopInference}
+                        onRetry={!isStreaming && m.id === messages.at(-1)?.id ? regenerateLastMessage : undefined}
+                        onDelete={!isStreaming && session ? () => deleteChatMessage(session.id, m.id) : undefined}
+                        onBookmark={session ? () => toggleMessageBookmark(session.id, m.id) : undefined}
+                        onOpenFile={(p) => openFileTab(p)}
+                        onOpenDiffReview={(cpId) => setActiveDiffCheckpointId(cpId || "latest")}
+                      />
+                    </div>
                   ))}
                 </>
               );
@@ -690,13 +993,43 @@ export const ChatScreen: React.FC<ChatScreenProps> = () => {
             onDragOver={(e) => e.preventDefault()}
             onDrop={(e) => {
               e.preventDefault();
-              if (e.dataTransfer.files) handleFiles(e.dataTransfer.files);
+              const sanctumPath = e.dataTransfer.getData("application/x-sanctum-path");
+              if (sanctumPath) {
+                void attachWorkspaceFile(sanctumPath);
+                return;
+              }
+              if (e.dataTransfer.files && e.dataTransfer.files.length > 0) {
+                handleFiles(e.dataTransfer.files);
+              }
             }}
             className={cn(
-              "mx-auto max-w-2xl rounded-2xl border border-border/80 bg-card/95 focus-within:border-muted-foreground/50 transition-colors shadow-lg",
+              "relative mx-auto max-w-2xl rounded-2xl border border-border/80 bg-card/95 focus-within:border-muted-foreground/50 transition-colors shadow-lg",
               isRecording && "border-destructive ring-1 ring-destructive/20"
             )}
           >
+            {/* @file Mention Autocomplete Popover */}
+            {mentionQuery !== null && mentionCandidates.length > 0 && (
+              <div className="absolute bottom-full left-3 mb-1.5 z-30 w-72 rounded-xl border border-border/80 bg-popover p-1 shadow-xl">
+                <div className="px-2 py-1 text-[10px] font-semibold uppercase tracking-wider text-muted-foreground">
+                  Workspace Files (@{mentionQuery})
+                </div>
+                {mentionCandidates.map((cand) => (
+                  <button
+                    key={cand}
+                    type="button"
+                    onClick={() => {
+                      setPrompt((prev) => prev.replace(/@([a-zA-Z0-9_./\\-]{1,60})$/, `@${cand} `));
+                      void attachWorkspaceFile(cand);
+                      setMentionQuery(null);
+                    }}
+                    className="flex w-full items-center gap-2 rounded-lg px-2.5 py-1.5 text-left text-xs font-mono text-foreground hover:bg-muted/70"
+                  >
+                    <FileText className="size-3.5 text-primary shrink-0" />
+                    <span className="truncate">{cand}</span>
+                  </button>
+                ))}
+              </div>
+            )}
             {/* Attached Files & Image Previews */}
             {(attachedImage || attachedDocuments.length > 0) && (
               <div className="flex flex-wrap items-center gap-2 px-3.5 pt-3 pb-1 border-b border-border/50">
@@ -994,6 +1327,8 @@ export const ChatScreen: React.FC<ChatScreenProps> = () => {
           )}
         </aside>
       )}
+      <ArtifactViewerPanel />
+      <DiffReviewModal />
       <ToolApprovalModal />
     </main>
   );

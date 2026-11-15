@@ -90,9 +90,17 @@ def prepare():
 
     compile_uninstaller(uninst_target)
 
-    # 5. Resources bin directory
+    # 5. Resources bin directory + bundled speech helper scripts
     bin_target = os.path.join(payload_dir, "resources", "bin")
     os.makedirs(bin_target, exist_ok=True)
+    speech_src = os.path.join(ROOT, "core", "ai", "speech")
+    if os.path.exists(speech_src):
+        speech_dst = os.path.join(payload_dir, "core", "ai", "speech")
+        os.makedirs(speech_dst, exist_ok=True)
+        for fname in ["stt_download.py", "whisperx_server.py", "requirements.txt"]:
+            s_file = os.path.join(speech_src, fname)
+            if os.path.exists(s_file):
+                shutil.copy2(s_file, os.path.join(speech_dst, fname))
 
     print("Payload preparation complete.")
 

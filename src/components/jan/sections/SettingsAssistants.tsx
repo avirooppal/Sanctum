@@ -4,6 +4,7 @@ import React, { useState, useEffect } from "react";
 import { IconFeather, IconDeviceFloppy } from "@tabler/icons-react";
 import { Button } from "@/components/ui/button";
 import { toast } from "sonner";
+import { SttModelSelector } from "@/components/speech/SttModelSelector";
 
 export const SettingsAssistants: React.FC = () => {
   const [defaultModel, setDefaultModel] = useState<string>("qwen-0.5b-chat");
@@ -156,6 +157,18 @@ export const SettingsAssistants: React.FC = () => {
             />
           </div>
         </div>
+      </section>
+
+      <section className="space-y-4">
+        <div>
+          <h2 className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">
+            Speech-to-Text (Voice Dictation)
+          </h2>
+          <p className="mt-1 text-[11px] text-muted-foreground">
+            Download and select your preferred offline STT model: light &amp; multilingual or heavy &amp; ultra-accurate.
+          </p>
+        </div>
+        <SttModelSelector />
       </section>
     </div>
   );

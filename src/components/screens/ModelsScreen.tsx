@@ -259,7 +259,7 @@ export const ModelsScreen: React.FC = () => {
                       : "text-muted-foreground hover:text-foreground"
                   )}
                 >
-                  {tab === "audio" ? "WhisperX" : tab}
+                  {tab === "audio" ? "Speech (STT)" : tab}
                 </button>
               ))}
             </div>
@@ -312,7 +312,7 @@ export const ModelsScreen: React.FC = () => {
                           {item.type === "embedding"
                             ? "RAG Embed"
                             : item.type === "audio"
-                            ? "WhisperX"
+                            ? "Speech STT"
                             : "LLM"}
                         </Badge>
                       </div>

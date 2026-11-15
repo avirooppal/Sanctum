@@ -5,6 +5,7 @@ import {
   DEFAULT_LM_STUDIO_ENDPOINT,
   DEFAULT_WHISPERX_ENDPOINT,
   JAN_STYLE_DOWNLOAD_CATALOG,
+  STT_MODEL_CATALOG,
   BENCHMARK_PRESETS,
   HARDWARE_THREAD_OPTIONS,
   ARENA_SPLIT_OPTIONS,
@@ -25,6 +26,11 @@ describe("Application Constants & Contracts Characterization", () => {
     assert.ok(modelIds.includes("deepseek-r1:8b"));
     assert.ok(modelIds.includes("nomic-embed-text"));
     assert.ok(modelIds.includes("whisper-base"));
+    assert.ok(modelIds.includes("qwen3-asr-0.6b"));
+    assert.ok(modelIds.includes("nemotron-3.5-transcribe"));
+
+    const sttIds = STT_MODEL_CATALOG.map((m) => m.id);
+    assert.deepEqual(sttIds, ["qwen3-asr-0.6b", "nemotron-3.5-transcribe"]);
 
     // Every model must have size, type, parameters, and description
     for (const m of JAN_STYLE_DOWNLOAD_CATALOG) {

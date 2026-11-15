@@ -329,10 +329,52 @@ export const operations: Record<string, WorkspaceOperation> = {
     safety: "read",
     parallelSafe: true,
   },
+  present_file: {
+    action: "present_file",
+    description: "Open and present a workspace file (plan, report, code, image, or deliverable) in the right-hand Artifact Viewer panel for the user.",
+    required: ["path"],
+    optional: ["title", "line"],
+    safety: "read",
+    parallelSafe: true,
+    localHandler: async (args) => {
+      const rawPath = String(args.path || "").trim();
+      if (!rawPath) return { error: "Missing file path to present." };
+      try {
+        const res = await fetch(`/api/fs/read?path=${encodeURIComponent(rawPath)}&maxBytes=65536`);
+        if (!res.ok) {
+          const errBody = await res.json().catch(() => ({}));
+          return { error: errBody?.error || `Cannot present file '${rawPath}' (${res.status})` };
+        }
+        const meta = await res.json();
+        const canonicalRel = meta.path || rawPath;
+        if (typeof window !== "undefined") {
+          window.dispatchEvent(
+            new CustomEvent("sanctum:present-file", {
+              detail: {
+                path: canonicalRel,
+                title: args.title ? String(args.title) : undefined,
+                line: args.line ? Number(args.line) : undefined,
+              },
+            })
+          );
+        }
+        return {
+          presented: canonicalRel,
+          size: meta.size,
+          isBinary: meta.isBinary,
+          message: `Opened ${canonicalRel} in the Artifact Viewer panel.`,
+        };
+      } catch (err: any) {
+        return { error: err?.message || "Failed to present file." };
+      }
+    },
+  },
 };
 
 const properties: Record<string, { type: string; description: string }> = {
   path: { type: "string", description: "Path relative to the selected workspace (use . for root)" },
+  title: { type: "string", description: "Optional display label for presented deliverable" },
+  line: { type: "number", description: "Optional 1-based line number to jump to" },
   content: { type: "string", description: "Full text content to write or save" },
   old_text: { type: "string", description: "Exact unique text to replace" },
   new_text: { type: "string", description: "Replacement text" },
@@ -552,7 +594,19 @@ export async function executeWorkspaceToolCall(
     const body = await result.json();
     ok = result.ok;
     parsedResult = body;
-    output = JSON.stringify(body);
+    if (
+      ok &&
+      (activity.name === "read_file" || activity.name === "read_file_range") &&
+      typeof body?.content === "string"
+    ) {
+      output = JSON.stringify({
+        ...body,
+        untrusted: true,
+        content: `<untrusted_file_content path="${String(activity.arguments.path || "")}">\n${body.content}\n</untrusted_file_content>`,
+      });
+    } else {
+      output = JSON.stringify(body);
+    }
     onActivity({ ...activity, status: result.ok ? "success" : "error", output });
   } catch (error) {
     ok = false;

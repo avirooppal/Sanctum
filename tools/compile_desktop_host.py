@@ -92,6 +92,7 @@ def compile_desktop_host(output_path: str):
             cmd.append(f"/win32icon:{icon_path}")
         cmd.append(temp_cs)
         cmd.append(os.path.abspath("tools/native/DesktopServices.cs"))
+        cmd.append(os.path.abspath("tools/native/DesktopWorkspaceEndpoints.cs"))
         print(f"Compiling Sanctum Standalone Embedded WebView2 host using csc.exe to {output_path}...")
         res = subprocess.run(cmd, capture_output=True, text=True)
     else:
@@ -103,10 +104,12 @@ Add-Type -TypeDefinition $source -Language CSharp -ReferencedAssemblies "System.
         print(f"Compiling Sanctum Standalone Embedded WebView2 host using PowerShell to {output_path}...")
         res = subprocess.run(cmd, capture_output=True, text=True)
 
-    if os.path.exists(temp_cs):
-        os.remove(temp_cs)
-    if os.path.exists(manifest_path):
-        os.remove(manifest_path)
+    for tmp in (temp_cs, manifest_path):
+        try:
+            if os.path.exists(tmp):
+                os.remove(tmp)
+        except OSError:
+            pass
 
     if res.returncode != 0:
         print(f"Compilation error: {res.stderr}\n{res.stdout}")

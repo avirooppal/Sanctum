@@ -630,6 +630,7 @@ export const createChatSlice: StateCreator<any, [], [], ChatSlice> = (set, get) 
 
     const imageBase64 = get().attachedImage?.src;
     let finalAssistantText = "";
+    let writeToolsExecuted = false;
 
     set({ attachedImage: null, attachedDocuments: [] });
     try {
@@ -651,6 +652,12 @@ export const createChatSlice: StateCreator<any, [], [], ChatSlice> = (set, get) 
           }),
         getApprovalToken: (toolName: string) => requestHostApprovalToken(toolName),
         onActivity: (activity: import("../../../core/ai/tools/workspace_chat.ts").ToolActivity) => {
+          if (
+            activity.status === "success" &&
+            ["create_file", "edit_file", "patch_file", "move_file", "delete_file"].includes(activity.name)
+          ) {
+            writeToolsExecuted = true;
+          }
           tracker.transition("using_tool", {
             detail: `${activity.arguments.action || activity.name}: ${
               activity.arguments.path || activity.arguments.query || ""
@@ -738,6 +745,54 @@ export const createChatSlice: StateCreator<any, [], [], ChatSlice> = (set, get) 
             },
           });
         }
+      }
+
+      if (writeToolsExecuted) {
+        try {
+          const cpRes = await fetch("/api/checkpoints", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({
+              action: "create",
+              turnIndex: session.messages.length,
+              label: autoTitle,
+            }),
+          });
+          if (cpRes.ok) {
+            const cpData = await cpRes.json();
+            const cp = cpData.checkpoint;
+            if (cp && cp.filesChanged > 0) {
+              set((state: any) => ({
+                chatSessions: state.chatSessions.map((s: ChatSession) =>
+                  s.id === session.id
+                    ? {
+                        ...s,
+                        messages: s.messages.map((m: ChatMessage) =>
+                          m.id === assistantMsgId
+                            ? {
+                                ...m,
+                                turnChanges: {
+                                  checkpointId: cp.id,
+                                  filesCount: cp.filesChanged,
+                                  addedLines: cp.totalAdded || 0,
+                                  removedLines: cp.totalRemoved || 0,
+                                  files: (cp.fileDiffs || []).map((f: any) => ({
+                                    path: f.path,
+                                    status: f.existedBefore === false ? "added" : "modified",
+                                    added: f.added || 0,
+                                    removed: f.removed || 0,
+                                  })),
+                                },
+                              }
+                            : m
+                        ),
+                      }
+                    : s
+                ),
+              }));
+            }
+          }
+        } catch {}
       }
 
       // Save turn to episodic cross-chat memory

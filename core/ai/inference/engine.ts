@@ -242,6 +242,53 @@ export class LocalEngineClient {
   }
 
   /**
+   * Download an offline Speech-to-Text (STT) model via /api/audio/download with live NDJSON progress
+   */
+  public static async pullSttModel(
+    modelId: string,
+    onProgress: (percent: number, status: string) => void,
+    signal?: AbortSignal
+  ): Promise<boolean> {
+    try {
+      const response = await fetch("/api/audio/download", {
+        signal,
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ modelId }),
+      });
+
+      if (!response.ok || !response.body) {
+        const msg = await response.text().catch(() => "");
+        onProgress(0, `Download failed: ${msg || `HTTP ${response.status}`}`);
+        return false;
+      }
+
+      let succeeded = false;
+      for await (const data of readStreamRecords(response.body, signal)) {
+        if (data.error) {
+          onProgress(0, `Download failed: ${data.error}`);
+          return false;
+        }
+        if (data.status === "success") {
+          succeeded = true;
+          onProgress(100, "Installed successfully");
+        } else if (data.total && typeof data.completed === "number") {
+          onProgress(
+            Math.min(98, Math.max(1, Math.round((data.completed / data.total) * 98))),
+            data.status || "Downloading"
+          );
+        } else if (data.status) {
+          onProgress(/verifying|writing/i.test(data.status) ? 99 : 2, data.status);
+        }
+      }
+      return succeeded;
+    } catch (error) {
+      onProgress(0, `Download failed: ${error instanceof Error ? error.message : "connection interrupted"}`);
+      return false;
+    }
+  }
+
+  /**
    * Real streaming call to local engine (/api/chat or /v1/chat/completions)
    */
   public static async *streamChat(
