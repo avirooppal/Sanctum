@@ -42,6 +42,11 @@ def build_installer():
 def build_payload_b64() -> str:
     payload_dir = os.path.join(ROOT, "deploy", "installer", "build_payload")
     zip_path = os.path.join(ROOT, "deploy", "installer", "payload.zip")
+    if os.path.exists(zip_path):
+        try:
+            os.remove(zip_path)
+        except Exception:
+            pass
 
     print("Creating compressed payload archive...")
     with zipfile.ZipFile(zip_path, "w", zipfile.ZIP_DEFLATED) as zf:
@@ -259,7 +264,8 @@ Add-Type -TypeDefinition $source -Language CSharp -ReferencedAssemblies "System.
 
 def build_direct_launcher(out_path, payload_b64):
     import hashlib
-    git_commit = hashlib.sha256(base64.b64decode(payload_b64)).hexdigest()
+    payload_bytes = base64.b64decode(payload_b64)
+    build_stamp = hashlib.sha256(payload_bytes).hexdigest()
 
     cs_launcher = r"""using System;
 using System.Diagnostics;
@@ -300,21 +306,21 @@ public class SanctumLauncher {
                     try {
                         if (!string.Equals(oldProc.MainModule.FileName, exe, StringComparison.OrdinalIgnoreCase)) continue;
                     } catch { continue; }
-                    if (!oldProc.CloseMainWindow() || !oldProc.WaitForExit(5000)) {
-                        var choice = System.Windows.Forms.MessageBox.Show(
-                            "Sanctum is still running (possibly minimized to the system tray). Close it automatically to complete the update?",
-                            "Sanctum Update",
-                            System.Windows.Forms.MessageBoxButtons.YesNo,
-                            System.Windows.Forms.MessageBoxIcon.Question
-                        );
-                        if (choice == System.Windows.Forms.DialogResult.Yes) {
-                            try { oldProc.Kill(); oldProc.WaitForExit(5000); } catch { }
-                        } else {
-                            return 1;
+                    try {
+                        if (!oldProc.CloseMainWindow() || !oldProc.WaitForExit(1500)) {
+                            oldProc.Kill();
+                            oldProc.WaitForExit(3000);
                         }
-                    }
+                    } catch { }
                 }
                 Directory.CreateDirectory(appDir);
+
+                // Clean stale web assets before extracting fresh bundle to prevent conflicting webpack chunks
+                string webDir = Path.Combine(appDir, "resources", "web");
+                if (Directory.Exists(webDir)) {
+                    try { Directory.Delete(webDir, true); } catch { }
+                }
+
                 byte[] zipData = Convert.FromBase64String("__PAYLOAD_B64__");
                 File.WriteAllBytes(tempZip, zipData);
                 string rootFull = Path.GetFullPath(appDir).TrimEnd(Path.DirectorySeparatorChar) + Path.DirectorySeparatorChar;
@@ -360,7 +366,7 @@ public class SanctumLauncher {
         }
     }
 }
-""".replace("__PAYLOAD_B64__", payload_b64).replace("__BUILD_STAMP__", git_commit)
+""".replace("__PAYLOAD_B64__", payload_b64).replace("__BUILD_STAMP__", build_stamp)
 
     temp_cs = os.path.join(ROOT, "deploy", "installer", "temp_launcher.cs")
     with open(temp_cs, "w", encoding="utf-8") as f:

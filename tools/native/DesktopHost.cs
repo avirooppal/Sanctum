@@ -1274,6 +1274,31 @@ namespace Sanctum {
                         return send(target, { method: request.method, headers, signal: request.signal,
                             body: ['GET', 'HEAD'].includes(request.method) ? undefined : await request.arrayBuffer() });
                     };
+                    window.addEventListener('error', (e) => {
+                        try {
+                            if (window.chrome && window.chrome.webview) {
+                                window.chrome.webview.postMessage(JSON.stringify({
+                                    type: 'client_error',
+                                    message: e.message || String(e),
+                                    filename: e.filename,
+                                    lineno: e.lineno,
+                                    colno: e.colno,
+                                    stack: e.error ? e.error.stack : ''
+                                }));
+                            }
+                        } catch (_) {}
+                    });
+                    window.addEventListener('unhandledrejection', (e) => {
+                        try {
+                            if (window.chrome && window.chrome.webview) {
+                                window.chrome.webview.postMessage(JSON.stringify({
+                                    type: 'client_error',
+                                    message: (e.reason && e.reason.message) || String(e.reason),
+                                    stack: (e.reason && e.reason.stack) || ''
+                                }));
+                            }
+                        } catch (_) {}
+                    });
                 })();".Replace("__PORT__", _port.ToString()).Replace("__TOKEN__", _authToken);
                 await _wvCore.AddScriptToExecuteOnDocumentCreatedAsync(bridge);
 
@@ -1672,6 +1697,10 @@ namespace Sanctum {
                 if (string.IsNullOrEmpty(raw)) return;
 
                 if (e.Source != "https://sanctum.app/index.html" && !e.Source.StartsWith("https://sanctum.app/")) return;
+                if (raw.Contains("\"client_error\"")) {
+                    LogEvent("error", "client", raw);
+                    return;
+                }
                 if (raw.Contains("\"exportLogs\"")) {
                     ExportLogs();
                 } else if (raw.Contains("\"openLogs\"")) {
