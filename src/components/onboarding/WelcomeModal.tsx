@@ -95,8 +95,8 @@ export const WelcomeModal: React.FC<WelcomeModalProps> = ({ forceOpen = false, o
           <div className="flex items-center gap-2.5">
             <div className="relative w-7 h-7 rounded-full overflow-hidden border border-border shadow-xs">
               <Image
-                src="/mascot.jpg"
-                alt="Sanctum Mascot"
+                src="/logo.jpg"
+                alt="Sanctum Logo"
                 fill
                 className="object-cover"
                 priority
@@ -127,7 +127,7 @@ export const WelcomeModal: React.FC<WelcomeModalProps> = ({ forceOpen = false, o
             <div className="flex flex-col items-center text-center space-y-6 py-4">
               <div className="relative w-20 h-20 rounded-2xl overflow-hidden border-2 border-border/80 shadow-md">
                 <Image
-                  src="/mascot.jpg"
+                  src="/logo.jpg"
                   alt="Sanctum"
                   fill
                   className="object-cover"

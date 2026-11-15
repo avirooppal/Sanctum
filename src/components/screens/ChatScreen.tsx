@@ -1199,12 +1199,20 @@ export const ChatScreen: React.FC<ChatScreenProps> = ({ onNavigate }) => {
             {messages.length === 0 ? (
               <div className="flex flex-col items-center text-center pt-[14vh] gap-4">
                 <img
-                  src="/mascot.jpg"
-                  alt="Sanctum Mascot"
+                  src="/logo.jpg"
+                  alt="Sanctum Logo"
                   width={56}
                   height={56}
                   style={{ width: "56px", height: "56px", maxWidth: "56px", maxHeight: "56px" }}
                   className="size-14 w-14 h-14 rounded-2xl object-cover bg-card border border-border/80 shadow-lg"
+                  onError={(e) => {
+                    const target = e.currentTarget;
+                    if (target.src.endsWith("/logo.jpg")) {
+                      target.src = "/mascot.jpg";
+                    } else if (target.src.endsWith("/mascot.jpg")) {
+                      target.src = "/assets/icons/icon-128.png";
+                    }
+                  }}
                 />
                 <div className="space-y-1.5">
                   <h2 className="text-lg font-semibold tracking-tight text-foreground">
