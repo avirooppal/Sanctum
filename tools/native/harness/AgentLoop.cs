@@ -81,6 +81,9 @@ namespace Sanctum.Harness {
         private readonly CheckpointService _checkpoints;
         private readonly BackgroundTaskManager _tasks;
         private readonly WorktreeManager _worktrees;
+        private readonly HarnessMcpManager _mcp;
+        private readonly ExtensionsManager _extensions;
+        private readonly HarnessScheduler _scheduler;
         private readonly ConcurrentDictionary<string, JArray> _todos = new ConcurrentDictionary<string, JArray>(StringComparer.OrdinalIgnoreCase);
         private readonly Dictionary<string, HarnessToolDescriptor> _tools = new Dictionary<string, HarnessToolDescriptor>(StringComparer.OrdinalIgnoreCase);
         private readonly ConcurrentDictionary<string, CancellationTokenSource> _activeRuns = new ConcurrentDictionary<string, CancellationTokenSource>(StringComparer.OrdinalIgnoreCase);
@@ -99,6 +102,9 @@ namespace Sanctum.Harness {
             _checkpoints = new CheckpointService(dataRoot);
             _tasks = new BackgroundTaskManager();
             _worktrees = new WorktreeManager(dataRoot);
+            _mcp = new HarnessMcpManager(dataRoot, this);
+            _extensions = new ExtensionsManager(dataRoot);
+            _scheduler = new HarnessScheduler(dataRoot, this);
             RegisterPhase1aTools();
             BuiltinTools.RegisterAll(this, dataRoot);
             OrchestrationTools.RegisterAll(this);
@@ -113,10 +119,15 @@ namespace Sanctum.Harness {
         public CheckpointService Checkpoints => _checkpoints;
         public BackgroundTaskManager Tasks => _tasks;
         public WorktreeManager Worktrees => _worktrees;
+        public HarnessMcpManager Mcp => _mcp;
+        public ExtensionsManager Extensions => _extensions;
+        public HarnessScheduler Scheduler => _scheduler;
         public int ActiveRunCount => _activeRuns.Count;
 
         public void Dispose() {
             InterruptAllRuns();
+            _scheduler.Dispose();
+            _mcp.Dispose();
             _tasks.Dispose();
         }
 

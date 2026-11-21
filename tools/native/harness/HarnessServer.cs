@@ -354,6 +354,55 @@ namespace Sanctum.Harness {
                     return (200, new JObject { ["worktrees"] = _engine.Worktrees.ListWorktrees() });
                 }
 
+                // MCP Server Management (Job-Object supervised, trusted-channel first-run approval)
+                if (method == "GET" && path == "/v1/mcp/servers") {
+                    return (200, new JObject { ["servers"] = _engine.Mcp.ListServers() });
+                }
+                if (method == "POST" && path == "/v1/mcp/servers") {
+                    var cfg = body.ToObject<McpServerConfig>();
+                    return _engine.Mcp.RegisterServer(cfg, viaTrustedChannel);
+                }
+                if (path.StartsWith("/v1/mcp/servers/")) {
+                    string rest = path.Substring("/v1/mcp/servers/".Length);
+                    string[] parts = rest.Split(new[] { '/' }, StringSplitOptions.RemoveEmptyEntries);
+                    if (parts.Length == 1 && method == "DELETE") {
+                        return _engine.Mcp.DeleteServer(parts[0], viaTrustedChannel);
+                    }
+                    if (parts.Length == 2 && method == "POST") {
+                        if (parts[1] == "discover") return _engine.Mcp.DiscoverAndRegisterTools(parts[0]);
+                        if (parts[1] == "restart") return (200, _engine.Mcp.RestartServer(parts[0]));
+                    }
+                }
+
+                // Extensions (.sanctum/ agents, skills, commands, hooks, packs)
+                if (method == "GET" && path == "/v1/extensions") {
+                    string ws = body["workspace"]?.Value<string>() ?? Environment.CurrentDirectory;
+                    return (200, _engine.Extensions.Discover(ws));
+                }
+                if (method == "POST" && path == "/v1/extensions/hooks/approve") {
+                    string ws = body["workspace"]?.Value<string>() ?? "";
+                    return _engine.Extensions.ApproveWorkspaceHooks(ws, viaTrustedChannel);
+                }
+
+                // Scheduler (unattended:true fail-closed runs)
+                if (method == "GET" && path == "/v1/schedules") {
+                    return (200, new JObject { ["jobs"] = _engine.Scheduler.ListJobs() });
+                }
+                if (method == "POST" && path == "/v1/schedules") {
+                    var job = body.ToObject<ScheduledJob>();
+                    return _engine.Scheduler.AddJob(job, viaTrustedChannel);
+                }
+                if (path.StartsWith("/v1/schedules/")) {
+                    string rest = path.Substring("/v1/schedules/".Length);
+                    string[] parts = rest.Split(new[] { '/' }, StringSplitOptions.RemoveEmptyEntries);
+                    if (parts.Length == 1 && method == "DELETE") {
+                        return _engine.Scheduler.DeleteJob(parts[0], viaTrustedChannel);
+                    }
+                    if (parts.Length == 2 && method == "POST" && parts[1] == "run") {
+                        return _engine.Scheduler.TriggerJobNow(parts[0]);
+                    }
+                }
+
                 if (method == "GET" && path == "/v1/rules") {
                     return (200, new JObject { ["rules"] = _engine.Permissions.ListRules() });
                 }

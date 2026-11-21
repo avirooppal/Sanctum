@@ -13,7 +13,7 @@ using Newtonsoft.Json.Linq;
 namespace Sanctum.Harness {
     public static class ProtocolConstants {
         public const int Version = 1;
-        public const string HarnessVersion = "1.0.0-harness.3";
+        public const string HarnessVersion = "1.0.0-harness.4";
         public const int MaxClientBuffer = 256;
         public const int IdempotencyCacheSize = 512;
         public const int BlobThresholdBytes = 16 * 1024;
