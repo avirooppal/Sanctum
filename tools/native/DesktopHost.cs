@@ -3244,13 +3244,25 @@ private void HandleTerminal(HttpListenerRequest req, HttpListenerResponse res) {
                     return;
                 }
                 if (req.HttpMethod == "POST") {
+                    if (!ConsumeApprovalToken(req.Headers["X-Sanctum-Approval"], "memory_write")) {
+                        RecordAuditLog("memory_write", memFile, "post", "host", "denied", "Missing or invalid single-use approval token.");
+                        WriteJson(res, 403, new { error = "User approval token required to modify memory." });
+                        return;
+                    }
                     string body = ReadRequestBodyUtf8(req);
                     EnqueueAtomicWrite(memFile, body);
+                    RecordAuditLog("memory_write", memFile, "post", "host", "allowed", "Memory persisted.");
                     WriteJson(res, 200, new { status = "saved" });
                     return;
                 }
                 if (req.HttpMethod == "DELETE") {
+                    if (!ConsumeApprovalToken(req.Headers["X-Sanctum-Approval"], "memory_write")) {
+                        RecordAuditLog("memory_write", memFile, "delete", "host", "denied", "Missing or invalid single-use approval token.");
+                        WriteJson(res, 403, new { error = "User approval token required to clear memory." });
+                        return;
+                    }
                     EnqueueAtomicWrite(memFile, "{\"enabled\":true,\"facts\":[],\"episodes\":[]}");
+                    RecordAuditLog("memory_write", memFile, "delete", "host", "allowed", "Memory cleared.");
                     WriteJson(res, 200, new { status = "cleared" });
                     return;
                 }
@@ -3279,6 +3291,11 @@ private void HandleTerminal(HttpListenerRequest req, HttpListenerResponse res) {
                     return;
                 }
                 if (req.HttpMethod == "POST") {
+                    if (!ConsumeApprovalToken(req.Headers["X-Sanctum-Approval"], "mcp_config")) {
+                        RecordAuditLog("mcp_config", mcpFile, "post", "host", "denied", "Missing or invalid single-use approval token.");
+                        WriteJson(res, 403, new { error = "User approval token required to modify MCP server configuration." });
+                        return;
+                    }
                     string body = ReadRequestBodyUtf8(req);
                     var serializer = new JavaScriptSerializer();
                     object parsed = serializer.DeserializeObject(body);
@@ -3289,6 +3306,7 @@ private void HandleTerminal(HttpListenerRequest req, HttpListenerResponse res) {
                     }
                     EnqueueAtomicWrite(mcpFile, serializer.Serialize(toSave ?? new object[0]));
                     lock (_mcpLock) { _mcpToolsCache.Clear(); }
+                    RecordAuditLog("mcp_config", mcpFile, "post", "host", "allowed", "MCP server configuration updated.");
                     WriteJson(res, 200, new { status = "saved" });
                     return;
                 }

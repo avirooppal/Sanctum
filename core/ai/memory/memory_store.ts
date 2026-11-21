@@ -455,13 +455,43 @@ export class LocalMemoryStore {
     }
   }
 
+  private async requestMemoryApprovalToken(): Promise<string | undefined> {
+    if (typeof window === "undefined") return undefined;
+    const wv = (window as any).chrome?.webview;
+    if (!wv?.postMessage || !wv?.addEventListener) return undefined;
+    return new Promise((resolve) => {
+      const requestId = `mem-${Date.now()}-${Math.random().toString(36).slice(2, 8)}`;
+      const timer = setTimeout(() => {
+        wv.removeEventListener("message", onMsg);
+        resolve(undefined);
+      }, 2000);
+      const onMsg = (event: { data: unknown }) => {
+        try {
+          const msg = typeof event.data === "string" ? JSON.parse(event.data) : (event.data as any);
+          if (msg?.type === "approvalTokenIssued" && msg.requestId === requestId) {
+            clearTimeout(timer);
+            wv.removeEventListener("message", onMsg);
+            resolve(typeof msg.token === "string" ? msg.token : undefined);
+          }
+        } catch {}
+      };
+      wv.addEventListener("message", onMsg);
+      wv.postMessage(JSON.stringify({ type: "requestApprovalToken", requestId, toolName: "memory_write" }));
+    });
+  }
+
   private syncToBackend(): void {
     if (typeof window === "undefined") return;
-    fetch("/api/memory", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify(this.exportData()),
-    }).catch(() => {});
+    const payload = JSON.stringify(this.exportData());
+    void this.requestMemoryApprovalToken().then((token) => {
+      const headers: Record<string, string> = { "Content-Type": "application/json" };
+      if (token) headers["X-Sanctum-Approval"] = token;
+      fetch("/api/memory", {
+        method: "POST",
+        headers,
+        body: payload,
+      }).catch(() => {});
+    });
   }
 }
 

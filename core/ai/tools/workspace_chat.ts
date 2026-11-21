@@ -630,10 +630,18 @@ export async function executeWorkspaceToolCall(
         }
       }
 
+      const mcpHeaders: Record<string, string> = { "Content-Type": "application/json" };
+      if (options?.getApprovalToken) {
+        const mcpApprovalToken = await options.getApprovalToken("mcp_call");
+        if (mcpApprovalToken) {
+          mcpHeaders["X-Sanctum-Approval"] = mcpApprovalToken;
+        }
+      }
+
       const mcpRes = await fetch("/api/mcp/call", {
         method: "POST",
         signal,
-        headers: { "Content-Type": "application/json" },
+        headers: mcpHeaders,
         body: JSON.stringify({
           serverId: mcpTool.serverId,
           toolName: mcpTool.toolName,

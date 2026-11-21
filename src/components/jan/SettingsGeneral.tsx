@@ -412,7 +412,7 @@ export const SettingsGeneral: React.FC = () => {
         }),
       });
       await fetchWithApproval("/api/settings", { method: "DELETE" }, "settings_write").catch(() => {});
-      await fetch("/api/memory", { method: "DELETE" }).catch(() => {});
+      await fetchWithApproval("/api/memory", { method: "DELETE" }, "memory_write").catch(() => {});
       await fetch("/api/threads", {
         method: "POST",
         headers: { "Content-Type": "application/json" },

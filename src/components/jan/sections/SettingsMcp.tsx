@@ -28,6 +28,7 @@ import {
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { cn } from "@/lib/utils";
+import { fetchWithApproval } from "@/lib/hostBridge";
 import { toast } from "sonner";
 import type {
   McpServerConfig,
@@ -124,11 +125,15 @@ export const SettingsMcp: React.FC = () => {
   const persistServers = async (next: McpServerConfig[]) => {
     setServers(next);
     try {
-      const res = await fetch("/api/mcp", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ servers: next }),
-      });
+      const res = await fetchWithApproval(
+        "/api/mcp",
+        {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ servers: next }),
+        },
+        "mcp_config"
+      );
       if (!res.ok) {
         const err = await res.json().catch(() => ({}));
         toast.error(err.error || "Failed to save MCP configuration");

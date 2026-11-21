@@ -3,6 +3,7 @@
 import React, { useState, useEffect, useRef } from "react";
 import { IconPlugConnected, IconSettings } from "@tabler/icons-react";
 import { cn } from "@/lib/utils";
+import { fetchWithApproval } from "@/lib/hostBridge";
 import { toast } from "sonner";
 
 interface McpServerSummary {
@@ -50,11 +51,15 @@ export const McpQuickToggle: React.FC<McpQuickToggleProps> = ({ onOpenMcpSetting
     const next = servers.map((s) => (s.id === id ? { ...s, enabled: !s.enabled } : s));
     setServers(next);
     try {
-      await fetch("/api/mcp", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ servers: next }),
-      });
+      await fetchWithApproval(
+        "/api/mcp",
+        {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ servers: next }),
+        },
+        "mcp_config"
+      );
     } catch {
       toast.error("Failed to update MCP connector");
     }

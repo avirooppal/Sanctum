@@ -528,6 +528,11 @@ namespace Sanctum {
 
         private void HandleMcpCall(HttpListenerRequest req, HttpListenerResponse res) {
             try {
+                if (!ConsumeApprovalToken(req.Headers["X-Sanctum-Approval"], "mcp_call")) {
+                    RecordAuditLog("mcp_call", "mcp", "call", "host", "denied", "Missing or invalid single-use approval token.");
+                    WriteJson(res, 403, new { ok = false, error = "User approval token required to execute MCP tool." });
+                    return;
+                }
                 string body = ReadRequestBodyUtf8(req);
                 var serializer = new JavaScriptSerializer();
                 serializer.MaxJsonLength = 16 * 1024 * 1024;
