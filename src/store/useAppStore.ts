@@ -117,6 +117,11 @@ export const useAppStore = create<AppState>()(
 
         try {
           if (typeof window !== "undefined") {
+            fetch("/v1/erase-all", {
+              method: "POST",
+              headers: { "Content-Type": "application/json" },
+              body: JSON.stringify({ confirm: "ERASE_ALL_DATA" }),
+            }).catch(() => {});
             localStorage.removeItem("sanctum-platform-state");
             localStorage.removeItem("sanctum-memory-store-v1");
             localStorage.clear();
@@ -193,14 +198,12 @@ export const useAppStore = create<AppState>()(
       // Hydrate manually after mount so the first client render matches SSR (no hydration mismatch)
       skipHydration: true,
       partialize: (state) => {
-        const stripped = stripHeavyPayloadsForLocalStorage(state.documents, state.chatSessions);
+        const stripped = stripHeavyPayloadsForLocalStorage(state.documents, []);
         return {
         hasCompletedOnboarding: state.hasCompletedOnboarding,
         activeModule: state.activeModule,
         isExplorerCollapsed: state.isExplorerCollapsed,
-        chatSessions: stripped.chatSessions,
-        threadsRevision: state.threadsRevision,
-        threadsUpdatedAt: state.threadsUpdatedAt,
+        // Chat sessions and agent runs are owned exclusively by the host harness session log (Phase 5).
         activeSessionId: state.activeSessionId,
         projects: state.projects,
         activeProjectId: state.activeProjectId,
@@ -219,9 +222,6 @@ export const useAppStore = create<AppState>()(
         documents: stripped.documents,
         chunkSize: state.chunkSize,
         overlap: state.overlap,
-        agentRuns: state.agentRuns,
-        activeRunId: state.activeRunId,
-        agentPrompt: state.agentPrompt,
         autonomyMode: state.autonomyMode,
         activePresetId: state.activePresetId,
       };

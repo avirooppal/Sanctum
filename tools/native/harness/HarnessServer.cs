@@ -418,6 +418,35 @@ namespace Sanctum.Harness {
                     return (200, new JObject { ["entries"] = _engine.Audit.ReadRecent(limit) });
                 }
 
+                if (method == "GET" && path == "/v1/export") {
+                    var bundle = _engine.Store.ExportBundle();
+                    bundle["rules"] = _engine.Permissions.ListRules();
+                    bundle["schedules"] = _engine.Scheduler.ListJobs();
+                    return (200, bundle);
+                }
+
+                if (method == "POST" && path == "/v1/import") {
+                    return (200, _engine.Store.ImportBundle(body));
+                }
+
+                if (method == "POST" && path == "/v1/erase-all") {
+                    bool confirmed = string.Equals(body["confirm"]?.Value<string>(), "ERASE_ALL_DATA", StringComparison.Ordinal);
+                    if (!viaTrustedChannel && !confirmed) {
+                        return (403, new JObject {
+                            ["error"] = "Erase all data requires trusted channel or confirm='ERASE_ALL_DATA'.",
+                            ["code"] = "confirmation_required"
+                        });
+                    }
+                    _engine.InterruptAllRuns();
+                    var erased = _engine.Store.EraseAll();
+                    try {
+                        string auditFile = Path.Combine(_appDataDir, "audit.jsonl");
+                        if (File.Exists(auditFile)) File.Delete(auditFile);
+                    } catch { }
+                    erased["erased"] = true;
+                    return (200, erased);
+                }
+
                 if (method == "POST" && path == "/v1/untrusted/wrap") {
                     string kind = body["kind"]?.Value<string>() ?? "file";
                     string label = body["label"]?.Value<string>() ?? "";

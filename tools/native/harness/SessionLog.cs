@@ -363,5 +363,88 @@ namespace Sanctum.Harness {
             }
             return summary;
         }
+
+        public JObject ExportBundle() {
+            var sessionsObj = new JObject();
+            if (Directory.Exists(_sessionsDir)) {
+                foreach (string file in Directory.GetFiles(_sessionsDir, "*.jsonl")) {
+                    string id = Path.GetFileNameWithoutExtension(file);
+                    sessionsObj[id] = File.ReadAllText(file, Utf8NoBom);
+                }
+            }
+            var blobsObj = new JObject();
+            if (Directory.Exists(_blobsDir)) {
+                foreach (string file in Directory.GetFiles(_blobsDir, "*.bin")) {
+                    string sha = Path.GetFileNameWithoutExtension(file);
+                    blobsObj[sha] = File.ReadAllText(file, Utf8NoBom);
+                }
+            }
+            return new JObject {
+                ["format"] = "sanctum-harness-archive-v1",
+                ["exportedAt"] = DateTime.UtcNow.ToString("o"),
+                ["sessions"] = sessionsObj,
+                ["blobs"] = blobsObj
+            };
+        }
+
+        public JObject ImportBundle(JObject bundle) {
+            int importedSessions = 0;
+            int importedBlobs = 0;
+            Directory.CreateDirectory(_sessionsDir);
+            Directory.CreateDirectory(_blobsDir);
+
+            if (bundle?["blobs"] is JObject blobsObj) {
+                foreach (var prop in blobsObj.Properties()) {
+                    string safeSha = SanitizeSessionId(prop.Name);
+                    string path = Path.Combine(_blobsDir, safeSha + ".bin");
+                    File.WriteAllText(path, prop.Value?.Value<string>() ?? "", Utf8NoBom);
+                    WindowsAclHelper.ApplyUserOnlyFileAcl(path);
+                    importedBlobs++;
+                }
+            }
+            if (bundle?["sessions"] is JObject sessionsObj) {
+                foreach (var prop in sessionsObj.Properties()) {
+                    string safeId = SanitizeSessionId(prop.Name);
+                    string path = GetLogPath(safeId);
+                    object lk = GetSessionLock(safeId);
+                    lock (lk) {
+                        File.WriteAllText(path, prop.Value?.Value<string>() ?? "", Utf8NoBom);
+                        WindowsAclHelper.ApplyUserOnlyFileAcl(path);
+                        _lastSeqBySession.Remove(safeId);
+                        _lastHashBySession.Remove(safeId);
+                    }
+                    importedSessions++;
+                }
+            }
+            return new JObject {
+                ["importedSessions"] = importedSessions,
+                ["importedBlobs"] = importedBlobs
+            };
+        }
+
+        public JObject EraseAll() {
+            int deletedSessions = 0;
+            int deletedBlobs = 0;
+            if (Directory.Exists(_sessionsDir)) {
+                foreach (string f in Directory.GetFiles(_sessionsDir, "*.jsonl*")) {
+                    try { File.Delete(f); deletedSessions++; } catch { }
+                }
+                string cpDir = Path.Combine(_sessionsDir, "checkpoints");
+                if (Directory.Exists(cpDir)) {
+                    try { Directory.Delete(cpDir, true); } catch { }
+                }
+            }
+            if (Directory.Exists(_blobsDir)) {
+                foreach (string f in Directory.GetFiles(_blobsDir, "*.bin")) {
+                    try { File.Delete(f); deletedBlobs++; } catch { }
+                }
+            }
+            _lastSeqBySession.Clear();
+            _lastHashBySession.Clear();
+            return new JObject {
+                ["deletedSessions"] = deletedSessions,
+                ["deletedBlobs"] = deletedBlobs
+            };
+        }
     }
 }
