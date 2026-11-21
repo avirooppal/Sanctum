@@ -25,6 +25,11 @@ namespace Sanctum.Harness {
             if (args == null || args.Length == 0) return false;
 
             string cmd = args[0].Trim().ToLowerInvariant();
+            if (cmd == "--parse-fixture") {
+                try { AttachConsole(-1); } catch { }
+                exitCode = RunParseFixture(args.Length > 1 ? args[1] : "");
+                return true;
+            }
             if (cmd != "--harness" && cmd != "run" && cmd != "sessions" && cmd != "resume" && cmd != "attach") {
                 return false;
             }
@@ -120,8 +125,12 @@ namespace Sanctum.Harness {
                 }
 
                 var store = new SessionLogStore(dataDir);
-                IModelProvider provider = new MockModelProvider(mockScript);
-                var engine = new HarnessEngine(store, provider);
+                string providerName = (GetArg(args, "--provider") ?? "mock").ToLowerInvariant();
+                string ollamaEndpoint = GetArg(args, "--ollama-endpoint") ?? "http://127.0.0.1:11434";
+                IModelProvider provider = providerName == "ollama"
+                    ? (IModelProvider)new OllamaModelProvider(ollamaEndpoint)
+                    : new MockModelProvider(mockScript);
+                var engine = new HarnessEngine(store, provider, dataDir);
                 using (var server = new HarnessServer(dataDir, engine, port, pipeName)) {
                     server.Start();
                     Console.WriteLine(JsonConvert.SerializeObject(new {
@@ -247,6 +256,28 @@ namespace Sanctum.Harness {
                     }
                 }
             }
+            return 0;
+        }
+
+        private static int RunParseFixture(string fixturePath) {
+            if (string.IsNullOrWhiteSpace(fixturePath) || !File.Exists(fixturePath)) {
+                Console.Error.WriteLine("Fixture file not found: " + fixturePath);
+                return 2;
+            }
+            var cases = JArray.Parse(File.ReadAllText(fixturePath, Utf8NoBom));
+            var results = new JArray();
+            foreach (JObject c in cases) {
+                string id = c["id"]?.Value<string>() ?? "";
+                string content = c["input"]?["content"]?.Value<string>() ?? "";
+                var rawCalls = c["input"]?["tool_calls"] as JArray;
+                int turnId = c["turnId"]?.Value<int>() ?? 1;
+                var parsed = ToolCallParser.Parse(content, rawCalls, turnId);
+                results.Add(new JObject {
+                    ["id"] = id,
+                    ["calls"] = JArray.FromObject(parsed)
+                });
+            }
+            Console.WriteLine(results.ToString(Formatting.None));
             return 0;
         }
 

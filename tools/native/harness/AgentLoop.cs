@@ -2,9 +2,11 @@ using System;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Diagnostics;
+using System.IO;
 using System.Linq;
 using System.Text;
 using System.Threading;
+using System.Threading.Tasks;
 using Newtonsoft.Json.Linq;
 
 namespace Sanctum.Harness {
@@ -74,6 +76,7 @@ namespace Sanctum.Harness {
     public sealed class HarnessEngine {
         private readonly SessionLogStore _store;
         private readonly IModelProvider _provider;
+        private readonly PermissionEngine _permissions;
         private readonly Dictionary<string, HarnessToolDescriptor> _tools = new Dictionary<string, HarnessToolDescriptor>(StringComparer.OrdinalIgnoreCase);
         private readonly ConcurrentDictionary<string, CancellationTokenSource> _activeRuns = new ConcurrentDictionary<string, CancellationTokenSource>(StringComparer.OrdinalIgnoreCase);
         private readonly ConcurrentDictionary<string, string> _activeRunIds = new ConcurrentDictionary<string, string>(StringComparer.OrdinalIgnoreCase);
@@ -82,14 +85,19 @@ namespace Sanctum.Harness {
         private readonly object _idemLock = new object();
         private readonly Dictionary<string, LinkedList<KeyValuePair<string, JObject>>> _idempotency = new Dictionary<string, LinkedList<KeyValuePair<string, JObject>>>(StringComparer.OrdinalIgnoreCase);
 
-        public HarnessEngine(SessionLogStore store, IModelProvider provider) {
+        public HarnessEngine(SessionLogStore store, IModelProvider provider, string appDataDir = null) {
             _store = store;
             _provider = provider;
+            string dataRoot = appDataDir ?? Path.GetDirectoryName(store.SessionsDir);
+            _permissions = new PermissionEngine(dataRoot);
             RegisterPhase1aTools();
+            BuiltinTools.RegisterAll(this, dataRoot);
             _store.RecoverAllSessionsOnStartup();
         }
 
         public SessionLogStore Store => _store;
+        public IModelProvider Provider => _provider;
+        public PermissionEngine Permissions => _permissions;
         public int ActiveRunCount => _activeRuns.Count;
 
         private void RegisterPhase1aTools() {
@@ -141,6 +149,7 @@ namespace Sanctum.Harness {
 
         public void RegisterTool(HarnessToolDescriptor tool) {
             _tools[tool.Name] = tool;
+            _permissions.RegisterKnownTool(tool.Name);
         }
 
         public JArray ListToolsJson() {
@@ -452,21 +461,70 @@ namespace Sanctum.Harness {
 
                     foreach (var call in turn.ToolCalls) {
                         cts.Token.ThrowIfCancellationRequested();
+                        var latestSummary = _store.BuildSummary(sessionId);
+                        string curMode = latestSummary?.Mode ?? "build";
+                        string curAutonomy = latestSummary?.Autonomy ?? "auto_reads";
+                        string curWorkspace = latestSummary?.Workspace ?? Environment.CurrentDirectory;
+
                         AppendAndBroadcast(sessionId, "tool_call_requested", new JObject {
                             ["callId"] = call.Id,
                             ["tool"] = call.Name,
                             ["arguments"] = call.Arguments
                         }, runId, durableFlush: true);
 
-                        if (!_tools.TryGetValue(call.Name, out var tool)) {
+                        _tools.TryGetValue(call.Name, out var tool);
+                        var decision = _permissions.Evaluate(sessionId, curMode, curAutonomy, tool, call.Arguments);
+
+                        if (decision.Kind == PermissionDecisionKind.Deny) {
                             AppendAndBroadcast(sessionId, "tool_finished", new JObject {
                                 ["callId"] = call.Id,
                                 ["tool"] = call.Name,
                                 ["ok"] = false,
-                                ["error"] = "Unknown tool: " + call.Name
+                                ["denied"] = true,
+                                ["error"] = decision.Reason
                             }, runId, durableFlush: true);
-                            history.Add(new JObject { ["role"] = "tool", ["tool_call_id"] = call.Id, ["content"] = "Error: unknown tool" });
+                            history.Add(new JObject { ["role"] = "tool", ["tool_call_id"] = call.Id, ["content"] = "Permission denied: " + decision.Reason });
                             continue;
+                        }
+
+                        if (decision.Kind == PermissionDecisionKind.Ask) {
+                            var pending = _permissions.CreatePendingApproval(sessionId, runId, call.Id, call.Name, call.Arguments, decision);
+                            AppendAndBroadcast(sessionId, "approval_requested", new JObject {
+                                ["approvalId"] = pending.ApprovalId,
+                                ["callId"] = pending.CallId,
+                                ["tool"] = pending.ToolName,
+                                ["riskClass"] = pending.RiskClass,
+                                ["argsSha256"] = pending.CanonicalArgsSha256,
+                                ["cardText"] = pending.HostCardText,
+                                ["reason"] = decision.Reason
+                            }, runId, durableFlush: true);
+
+                            try {
+                                int waitIdx = WaitHandle.WaitAny(new[] { pending.WaitHandle.WaitHandle, cts.Token.WaitHandle }, 120000);
+                                if (waitIdx == 1) throw new OperationCanceledException(cts.Token);
+                                bool isApproved = waitIdx == 0 && pending.Approved;
+                                AppendAndBroadcast(sessionId, "approval_resolved", new JObject {
+                                    ["approvalId"] = pending.ApprovalId,
+                                    ["callId"] = pending.CallId,
+                                    ["approved"] = isApproved,
+                                    ["scope"] = pending.Scope,
+                                    ["resolvedBy"] = waitIdx == 0 ? pending.ResolvedBy : "timeout"
+                                }, runId, durableFlush: true);
+
+                                if (!isApproved) {
+                                    AppendAndBroadcast(sessionId, "tool_finished", new JObject {
+                                        ["callId"] = call.Id,
+                                        ["tool"] = call.Name,
+                                        ["ok"] = false,
+                                        ["denied"] = true,
+                                        ["error"] = waitIdx == 0 ? "User denied tool execution." : "Approval timed out."
+                                    }, runId, durableFlush: true);
+                                    history.Add(new JObject { ["role"] = "tool", ["tool_call_id"] = call.Id, ["content"] = "Tool execution denied by user." });
+                                    continue;
+                                }
+                            } finally {
+                                _permissions.RemovePending(pending.ApprovalId);
+                            }
                         }
 
                         AppendAndBroadcast(sessionId, "tool_started", new JObject {
@@ -477,9 +535,11 @@ namespace Sanctum.Harness {
                         string rawOut;
                         bool ok = true;
                         try {
+                            var execArgs = (JObject)(call.Arguments?.DeepClone() ?? new JObject());
+                            execArgs["_workspace"] = curWorkspace;
                             using (var toolCts = CancellationTokenSource.CreateLinkedTokenSource(cts.Token)) {
                                 toolCts.CancelAfter(Math.Min(budgets.ToolTimeoutMs, tool.TimeoutMs));
-                                rawOut = tool.Execute(call.Arguments, toolCts.Token) ?? "";
+                                rawOut = tool.Execute(execArgs, toolCts.Token) ?? "";
                             }
                         } catch (OperationCanceledException) when (cts.IsCancellationRequested) {
                             throw;

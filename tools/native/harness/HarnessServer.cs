@@ -340,6 +340,25 @@ namespace Sanctum.Harness {
                     return (200, new JObject { ["tools"] = _engine.ListToolsJson() });
                 }
 
+                if (method == "GET" && path.StartsWith("/v1/capabilities/")) {
+                    string model = Uri.UnescapeDataString(path.Substring("/v1/capabilities/".Length).Trim('/'));
+                    var caps = _engine.Provider.GetCapabilities(model);
+                    return (200, new JObject {
+                        ["provider"] = _engine.Provider.Name,
+                        ["model"] = model,
+                        ["capabilities"] = JObject.FromObject(caps)
+                    });
+                }
+
+                if (method == "POST" && path.StartsWith("/v1/approvals/")) {
+                    string approvalId = path.Substring("/v1/approvals/".Length).Trim('/');
+                    bool approved = body["approved"]?.Value<bool>() ?? false;
+                    string scope = body["scope"]?.Value<string>() ?? "once";
+                    string callId = body["callId"]?.Value<string>();
+                    string argsSha = body["argsSha256"]?.Value<string>();
+                    return _engine.Permissions.ResolveApproval(approvalId, approved, scope, callId, argsSha, viaTrustedChannel);
+                }
+
                 if (method == "GET" && path == "/v1/sessions") {
                     return (200, new JObject { ["sessions"] = JArray.FromObject(_engine.ListSessions()) });
                 }
