@@ -13,7 +13,7 @@ using Newtonsoft.Json.Linq;
 namespace Sanctum.Harness {
     public static class ProtocolConstants {
         public const int Version = 1;
-        public const string HarnessVersion = "1.0.0-harness.2";
+        public const string HarnessVersion = "1.0.0-harness.3";
         public const int MaxClientBuffer = 256;
         public const int IdempotencyCacheSize = 512;
         public const int BlobThresholdBytes = 16 * 1024;
@@ -41,6 +41,8 @@ namespace Sanctum.Harness {
         [JsonProperty("model")] public string Model { get; set; } = "mock";
         [JsonProperty("parentSessionId", NullValueHandling = NullValueHandling.Ignore)] public string ParentSessionId { get; set; }
         [JsonProperty("forkAfterSeq", NullValueHandling = NullValueHandling.Ignore)] public long? ForkAfterSeq { get; set; }
+        [JsonProperty("role", NullValueHandling = NullValueHandling.Ignore)] public string Role { get; set; }
+        [JsonProperty("worktreePath", NullValueHandling = NullValueHandling.Ignore)] public string WorktreePath { get; set; }
         [JsonProperty("lastSeq")] public long LastSeq { get; set; }
         [JsonProperty("activeRunId", NullValueHandling = NullValueHandling.Ignore)] public string ActiveRunId { get; set; }
         [JsonProperty("createdAt")] public string CreatedAt { get; set; } = "";

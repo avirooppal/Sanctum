@@ -346,6 +346,14 @@ namespace Sanctum.Harness {
                     return (200, new JObject { ["tools"] = _engine.ListToolsJson() });
                 }
 
+                if (method == "GET" && path == "/v1/agents") {
+                    return (200, new JObject { ["agents"] = _engine.ListAgents() });
+                }
+
+                if (method == "GET" && path == "/v1/worktrees") {
+                    return (200, new JObject { ["worktrees"] = _engine.Worktrees.ListWorktrees() });
+                }
+
                 if (method == "GET" && path == "/v1/rules") {
                     return (200, new JObject { ["rules"] = _engine.Permissions.ListRules() });
                 }
@@ -449,10 +457,62 @@ namespace Sanctum.Harness {
                         if (action == "tasks") {
                             return (200, new JObject { ["tasks"] = _engine.Tasks.ListTasks(sessionId) });
                         }
+                        if (action == "todos") {
+                            return (200, new JObject { ["sessionId"] = sessionId, ["items"] = _engine.GetTodos(sessionId) });
+                        }
+                        if (action == "context") {
+                            var sum = _engine.GetSessionSummary(sessionId);
+                            if (sum == null) return (404, new JObject { ["error"] = "Session not found." });
+                            return (200, new JObject {
+                                ["sessionId"] = sessionId,
+                                ["instructions"] = ContextEngine.LoadInstructions(sum.Workspace),
+                                ["repoMap"] = ContextEngine.BuildRepoMap(sum.Workspace, 120),
+                                ["todos"] = _engine.GetTodos(sessionId)
+                            });
+                        }
+                    }
+
+                    if (parts.Length == 2 && method == "DELETE") {
+                        if (parts[1] == "worktree") {
+                            var sum = _engine.GetSessionSummary(sessionId);
+                            if (sum == null) return (404, new JObject { ["error"] = "Session not found." });
+                            return (200, _engine.Worktrees.RemoveWorktree(sum.Workspace, sessionId));
+                        }
                     }
 
                     if (parts.Length == 2 && method == "POST") {
                         string action = parts[1];
+                        if (action == "compact") {
+                            int keep = body["keepRecentMessages"]?.Value<int>() ?? 2;
+                            return (200, _engine.CompactSession(sessionId, keep));
+                        }
+                        if (action == "todos") {
+                            var items = body["items"] as JArray ?? new JArray();
+                            _engine.UpdateTodos(sessionId, items);
+                            return (200, new JObject { ["sessionId"] = sessionId, ["items"] = _engine.GetTodos(sessionId) });
+                        }
+                        if (action == "verify") {
+                            string cmd = body["command"]?.Value<string>() ?? "git status";
+                            return _engine.VerifySession(sessionId, cmd, viaTrustedChannel);
+                        }
+                        if (action == "subagents") {
+                            string role = body["role"]?.Value<string>() ?? "worker";
+                            string prompt = body["prompt"]?.Value<string>() ?? "";
+                            string model = body["model"]?.Value<string>();
+                            string mode = body["mode"]?.Value<string>();
+                            bool wt = body["worktree"]?.Value<bool>() ?? false;
+                            return (201, _engine.SpawnSubagentAndWait(sessionId, role, prompt, model, mode, wt, _shutdownCts.Token));
+                        }
+                        if (action == "worktree") {
+                            var sum = _engine.GetSessionSummary(sessionId);
+                            if (sum == null) return (404, new JObject { ["error"] = "Session not found." });
+                            return (201, _engine.Worktrees.CreateWorktree(sum.Workspace, sessionId));
+                        }
+                        if (action == "mentions") {
+                            var sum = _engine.GetSessionSummary(sessionId);
+                            if (sum == null) return (404, new JObject { ["error"] = "Session not found." });
+                            return (200, ContextEngine.ResolveMentions(sum.Workspace, body["prompt"]?.Value<string>() ?? ""));
+                        }
                         if (action == "checkpoints") {
                             var cp = _engine.CreateCheckpoint(sessionId, body["label"]?.Value<string>());
                             return (201, cp);

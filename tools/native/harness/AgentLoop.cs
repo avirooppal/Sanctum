@@ -80,6 +80,8 @@ namespace Sanctum.Harness {
         private readonly PermissionEngine _permissions;
         private readonly CheckpointService _checkpoints;
         private readonly BackgroundTaskManager _tasks;
+        private readonly WorktreeManager _worktrees;
+        private readonly ConcurrentDictionary<string, JArray> _todos = new ConcurrentDictionary<string, JArray>(StringComparer.OrdinalIgnoreCase);
         private readonly Dictionary<string, HarnessToolDescriptor> _tools = new Dictionary<string, HarnessToolDescriptor>(StringComparer.OrdinalIgnoreCase);
         private readonly ConcurrentDictionary<string, CancellationTokenSource> _activeRuns = new ConcurrentDictionary<string, CancellationTokenSource>(StringComparer.OrdinalIgnoreCase);
         private readonly ConcurrentDictionary<string, string> _activeRunIds = new ConcurrentDictionary<string, string>(StringComparer.OrdinalIgnoreCase);
@@ -96,8 +98,10 @@ namespace Sanctum.Harness {
             _permissions = new PermissionEngine(dataRoot, _audit);
             _checkpoints = new CheckpointService(dataRoot);
             _tasks = new BackgroundTaskManager();
+            _worktrees = new WorktreeManager(dataRoot);
             RegisterPhase1aTools();
             BuiltinTools.RegisterAll(this, dataRoot);
+            OrchestrationTools.RegisterAll(this);
             ThreadMigration.MigrateLegacyThreadsIfNeeded(dataRoot, _store);
             _store.RecoverAllSessionsOnStartup();
         }
@@ -108,6 +112,7 @@ namespace Sanctum.Harness {
         public PermissionEngine Permissions => _permissions;
         public CheckpointService Checkpoints => _checkpoints;
         public BackgroundTaskManager Tasks => _tasks;
+        public WorktreeManager Worktrees => _worktrees;
         public int ActiveRunCount => _activeRuns.Count;
 
         public void Dispose() {
@@ -255,19 +260,200 @@ namespace Sanctum.Harness {
             return evt;
         }
 
-        public SessionSummary CreateSession(string title, string workspace, string mode, string autonomy, string model, bool unattended = false) {
+        public SessionSummary CreateSession(
+            string title,
+            string workspace,
+            string mode,
+            string autonomy,
+            string model,
+            bool unattended = false,
+            string role = null,
+            string parentSessionId = null,
+            string worktreePath = null) {
             string id = "s_" + Guid.NewGuid().ToString("N").Substring(0, 12);
             string safeMode = (mode == "plan" || mode == "build") ? mode : "build";
             string safeAutonomy = (autonomy == "ask_all" || autonomy == "auto_reads") ? autonomy : "auto_reads";
-            AppendAndBroadcast(id, "session_started", new JObject {
+            var payload = new JObject {
                 ["title"] = string.IsNullOrWhiteSpace(title) ? "New Session" : title.Trim(),
                 ["workspace"] = workspace ?? "",
                 ["mode"] = safeMode,
                 ["autonomy"] = safeAutonomy,
                 ["unattended"] = unattended,
                 ["model"] = string.IsNullOrWhiteSpace(model) ? "mock" : model.Trim()
-            }, durableFlush: true);
+            };
+            if (!string.IsNullOrWhiteSpace(role)) payload["role"] = role.Trim();
+            if (!string.IsNullOrWhiteSpace(parentSessionId)) payload["parentSessionId"] = parentSessionId.Trim();
+            if (!string.IsNullOrWhiteSpace(worktreePath)) payload["worktreePath"] = worktreePath.Trim();
+            AppendAndBroadcast(id, "session_started", payload, durableFlush: true);
             return _store.BuildSummary(id);
+        }
+
+        public void UpdateTodos(string sessionId, JArray items) {
+            if (string.IsNullOrWhiteSpace(sessionId) || !_store.SessionExists(sessionId)) {
+                throw new KeyNotFoundException("Session not found.");
+            }
+            var cloned = (JArray)(items?.DeepClone() ?? new JArray());
+            _todos[sessionId] = cloned;
+            AppendAndBroadcast(sessionId, "todo_updated", new JObject { ["items"] = cloned }, durableFlush: true);
+        }
+
+        public JArray GetTodos(string sessionId) {
+            if (_todos.TryGetValue(sessionId, out var cached)) return (JArray)cached.DeepClone();
+            var events = _store.ReadEvents(sessionId, 0);
+            for (int i = events.Count - 1; i >= 0; i--) {
+                if (events[i].Type == "todo_updated" && events[i].Payload?["items"] is JArray arr) {
+                    _todos[sessionId] = (JArray)arr.DeepClone();
+                    return (JArray)arr.DeepClone();
+                }
+            }
+            return new JArray();
+        }
+
+        public JObject CompactSession(string sessionId, int keepRecentMessages = 2) {
+            if (!_store.SessionExists(sessionId)) throw new KeyNotFoundException("Session not found.");
+            var events = _store.ReadEvents(sessionId, 0);
+            var payload = ContextEngine.BuildCompactionPayload(events, Math.Max(1, keepRecentMessages));
+            if (payload == null) {
+                return new JObject { ["compacted"] = false, ["reason"] = "Not enough messages to compact." };
+            }
+            var evt = AppendAndBroadcast(sessionId, "compaction", payload, durableFlush: true);
+            var resp = (JObject)payload.DeepClone();
+            resp["compacted"] = true;
+            resp["seq"] = evt.Seq;
+            return resp;
+        }
+
+        public (int status, JObject body) VerifySession(string sessionId, string command, bool viaTrustedChannel) {
+            var sum = _store.BuildSummary(sessionId);
+            if (sum == null) return (404, new JObject { ["error"] = "Session not found." });
+            string cmd = string.IsNullOrWhiteSpace(command) ? "git status" : command.Trim();
+            _tools.TryGetValue("run_command", out var runCmdTool);
+            var cmdArgs = new JObject { ["command"] = cmd };
+            var decision = _permissions.Evaluate(sessionId, sum.Mode, sum.Autonomy, runCmdTool, cmdArgs, sum.Unattended);
+            if (decision.Kind == PermissionDecisionKind.Deny) {
+                return (403, new JObject { ["error"] = decision.Reason, ["code"] = "permission_denied" });
+            }
+            if (decision.Kind == PermissionDecisionKind.Ask && !viaTrustedChannel) {
+                return (403, new JObject { ["error"] = "Non-allowlisted verification command requires trusted channel.", ["code"] = "trusted_channel_required" });
+            }
+
+            string ws = string.IsNullOrWhiteSpace(sum.Workspace) ? Environment.CurrentDirectory : sum.Workspace;
+            cmdArgs["_workspace"] = ws;
+            string output = "";
+            bool ok = true;
+            try {
+                using (var cts = new CancellationTokenSource(30000)) {
+                    output = runCmdTool.Execute(cmdArgs, cts.Token) ?? "";
+                }
+                ok = !output.Contains("\"exitCode\":1") && !output.StartsWith("Tool error:");
+            } catch (Exception ex) {
+                ok = false;
+                output = ex.Message;
+            }
+
+            var result = new JObject {
+                ["command"] = SecretsRedactor.Redact(cmd),
+                ["ok"] = ok,
+                ["output"] = SecretsRedactor.Redact(output)
+            };
+            AppendAndBroadcast(sessionId, "verification_result", result, durableFlush: true);
+            return (200, result);
+        }
+
+        public JObject SpawnSubagentAndWait(
+            string parentSessionId,
+            string role,
+            string prompt,
+            string model,
+            string mode,
+            bool useWorktree,
+            CancellationToken ct) {
+            var parent = _store.BuildSummary(parentSessionId);
+            if (parent == null) throw new KeyNotFoundException("Parent session not found.");
+
+            string childWorkspace = parent.Workspace;
+            string wtPath = null;
+            string provisionalId = "sub_" + Guid.NewGuid().ToString("N").Substring(0, 8);
+            if (useWorktree && !string.IsNullOrWhiteSpace(parent.Workspace)) {
+                var wt = _worktrees.CreateWorktree(parent.Workspace, provisionalId);
+                wtPath = wt["worktreePath"]?.Value<string>();
+                if (!string.IsNullOrEmpty(wtPath)) childWorkspace = wtPath;
+            }
+
+            var child = CreateSession(
+                title: $"[{role}] {(prompt.Length > 36 ? prompt.Substring(0, 36) : prompt)}",
+                workspace: childWorkspace,
+                mode: string.IsNullOrWhiteSpace(mode) ? parent.Mode : mode,
+                autonomy: parent.Autonomy,
+                model: string.IsNullOrWhiteSpace(model) ? parent.Model : model,
+                unattended: parent.Unattended,
+                role: role,
+                parentSessionId: parentSessionId,
+                worktreePath: wtPath);
+
+            AppendAndBroadcast(parentSessionId, "subagent_started", new JObject {
+                ["childSessionId"] = child.SessionId,
+                ["role"] = role,
+                ["model"] = child.Model,
+                ["worktreePath"] = wtPath
+            }, durableFlush: true);
+
+            var (_, statusCode, runResp) = StartRun(child.SessionId, prompt, new RunBudgets { MaxSteps = 8, MaxWallTimeMs = 45000 });
+            if (statusCode < 200 || statusCode >= 300) {
+                return new JObject { ["ok"] = false, ["childSessionId"] = child.SessionId, ["error"] = runResp["error"] };
+            }
+
+            // Wait for child run completion or parent cancellation
+            var deadline = DateTime.UtcNow.AddSeconds(45);
+            while (DateTime.UtcNow < deadline && _activeRuns.ContainsKey(child.SessionId)) {
+                if (ct.IsCancellationRequested) {
+                    InterruptRun(child.SessionId);
+                    break;
+                }
+                Thread.Sleep(40);
+            }
+
+            var childEvents = _store.ReadEvents(child.SessionId, 0);
+            string lastAssistant = "";
+            string stopReason = "completed";
+            foreach (var e in childEvents) {
+                if (e.Type == "assistant_message") lastAssistant = e.Payload?["content"]?.Value<string>() ?? lastAssistant;
+                if (e.Type == "run_finished") stopReason = e.Payload?["stopReason"]?.Value<string>() ?? stopReason;
+            }
+
+            var finishedPayload = new JObject {
+                ["childSessionId"] = child.SessionId,
+                ["role"] = role,
+                ["stopReason"] = stopReason,
+                ["worktreePath"] = wtPath,
+                ["summary"] = lastAssistant
+            };
+            AppendAndBroadcast(parentSessionId, "subagent_finished", finishedPayload, durableFlush: true);
+            return finishedPayload;
+        }
+
+        public JArray ListAgents() {
+            var sessions = ListSessions();
+            var arr = new JArray();
+            foreach (var s in sessions) {
+                bool isRunning = !string.IsNullOrEmpty(s.ActiveRunId);
+                arr.Add(new JObject {
+                    ["sessionId"] = s.SessionId,
+                    ["parentSessionId"] = s.ParentSessionId,
+                    ["role"] = string.IsNullOrWhiteSpace(s.Role) ? "primary" : s.Role,
+                    ["title"] = s.Title,
+                    ["mode"] = s.Mode,
+                    ["autonomy"] = s.Autonomy,
+                    ["model"] = s.Model,
+                    ["workspace"] = s.Workspace,
+                    ["worktreePath"] = s.WorktreePath,
+                    ["status"] = isRunning ? "running" : "idle",
+                    ["activeRunId"] = s.ActiveRunId,
+                    ["lastSeq"] = s.LastSeq,
+                    ["updatedAt"] = s.UpdatedAt
+                });
+            }
+            return arr;
         }
 
         public JObject CreateCheckpoint(string sessionId, string label = null) {
@@ -615,6 +801,7 @@ namespace Sanctum.Harness {
                         try {
                             var execArgs = (JObject)(call.Arguments?.DeepClone() ?? new JObject());
                             execArgs["_workspace"] = curWorkspace;
+                            execArgs["_sessionId"] = sessionId;
                             using (var toolCts = CancellationTokenSource.CreateLinkedTokenSource(cts.Token)) {
                                 toolCts.CancelAfter(Math.Min(budgets.ToolTimeoutMs, tool.TimeoutMs));
                                 rawOut = tool.Execute(execArgs, toolCts.Token) ?? "";
@@ -642,6 +829,12 @@ namespace Sanctum.Harness {
                                     ["tool"] = call.Name,
                                     ["callId"] = call.Id
                                 }, runId, durableFlush: false);
+                                if (string.Equals(curMode, "plan", StringComparison.OrdinalIgnoreCase) && PermissionEngine.IsPlanMdPath(changedPath)) {
+                                    AppendAndBroadcast(sessionId, "plan_ready", new JObject {
+                                        ["path"] = changedPath,
+                                        ["callId"] = call.Id
+                                    }, runId, durableFlush: true);
+                                }
                             }
                         }
 
@@ -679,12 +872,55 @@ namespace Sanctum.Harness {
 
         private List<JObject> BuildModelMessagesFromLog(string sessionId) {
             var events = _store.ReadEvents(sessionId, 0);
+            var sum = _store.BuildSummary(sessionId);
             var msgs = new List<JObject>();
+
+            // 1. Inject workspace AGENTS.md & .sanctum/rules/*.md instructions if present
+            if (sum != null && !string.IsNullOrWhiteSpace(sum.Workspace)) {
+                var instr = ContextEngine.LoadInstructions(sum.Workspace);
+                string combined = instr["combined"]?.Value<string>() ?? "";
+                if (!string.IsNullOrWhiteSpace(combined)) {
+                    msgs.Add(new JObject {
+                        ["role"] = "system",
+                        ["content"] = "Workspace instructions:\n" + combined
+                    });
+                }
+            }
+
+            // 2. Find latest compaction checkpoint
+            long compactedUpTo = 0;
+            string compactionSummary = null;
             foreach (var e in events) {
+                if (e.Type == "compaction") {
+                    long upTo = e.Payload?["compactedUpToSeq"]?.Value<long>() ?? 0;
+                    if (upTo >= compactedUpTo) {
+                        compactedUpTo = upTo;
+                        compactionSummary = e.Payload?["summary"]?.Value<string>();
+                    }
+                }
+            }
+            if (!string.IsNullOrWhiteSpace(compactionSummary)) {
+                msgs.Add(new JObject {
+                    ["role"] = "system",
+                    ["content"] = compactionSummary
+                });
+            }
+
+            // 3. Replay user/assistant messages after compaction, resolving @mentions on user turns
+            foreach (var e in events) {
+                if (e.Seq <= compactedUpTo) continue;
                 if (e.Type == "user_message") {
+                    string content = e.Payload?["content"]?.Value<string>() ?? "";
+                    if (sum != null && !string.IsNullOrWhiteSpace(sum.Workspace) && content.Contains("@")) {
+                        var mentions = ContextEngine.ResolveMentions(sum.Workspace, content);
+                        string ctxText = mentions["contextText"]?.Value<string>() ?? "";
+                        if (!string.IsNullOrWhiteSpace(ctxText)) {
+                            content = content + "\n\n[Resolved @mentions]\n" + ctxText;
+                        }
+                    }
                     msgs.Add(new JObject {
                         ["role"] = "user",
-                        ["content"] = e.Payload?["content"]?.Value<string>() ?? ""
+                        ["content"] = content
                     });
                 } else if (e.Type == "assistant_message") {
                     msgs.Add(new JObject {
