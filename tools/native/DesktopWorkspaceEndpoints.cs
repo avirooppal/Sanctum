@@ -2216,10 +2216,16 @@ namespace Sanctum {
             try {
                 const string currentVersion = BuildVersion;
                 string currentCommit = BuildCommit;
+                string localBuildStamp = "";
+                try {
+                    string localStampPath = Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "build_stamp.txt");
+                    if (File.Exists(localStampPath)) localBuildStamp = File.ReadAllText(localStampPath, Encoding.UTF8).Trim().ToLowerInvariant();
+                } catch { }
                 string simulatedLatest = req.Headers["X-Sanctum-Test-Latest-Version"];
                 string latestVersion = currentVersion;
                 string latestCommit = currentCommit;
-                string releaseNotes = "Sanctum Desktop " + currentVersion + " (" + currentCommit + ") is up to date.";
+                string remoteBuildStamp = "";
+                string releaseNotes = "Sanctum Desktop " + currentVersion + " is up to date.";
                 string downloadUrl = "https://github.com/avirooppal/Sanctum/raw/main/Sanctum.exe";
                 string expectedSha256 = "";
                 bool signedRelease = true;
@@ -2235,7 +2241,29 @@ namespace Sanctum {
                     checkSource = "simulated";
                 } else {
                     var serializer = new JavaScriptSerializer();
-                    // 1. Check latest commit on main
+                    bool manifestFetched = false;
+                    // 1. Fetch authoritative release-manifest.json (contains exact buildStamp + exeSha256)
+                    try {
+                        string manifestJson = FetchGitHubText("https://raw.githubusercontent.com/avirooppal/Sanctum/main/release-manifest.json", 7000);
+                        var mObj = serializer.Deserialize<Dictionary<string, object>>(manifestJson);
+                        if (mObj != null) {
+                            manifestFetched = true;
+                            if (mObj.ContainsKey("version") && !string.IsNullOrEmpty(Convert.ToString(mObj["version"]))) {
+                                latestVersion = Convert.ToString(mObj["version"]);
+                            }
+                            if (mObj.ContainsKey("buildStamp")) {
+                                remoteBuildStamp = Convert.ToString(mObj["buildStamp"]).Trim().ToLowerInvariant();
+                            }
+                            if (mObj.ContainsKey("exeSha256")) {
+                                expectedSha256 = Convert.ToString(mObj["exeSha256"]).Trim().ToLowerInvariant();
+                            }
+                            if (mObj.ContainsKey("downloadUrl") && !string.IsNullOrEmpty(Convert.ToString(mObj["downloadUrl"]))) {
+                                downloadUrl = Convert.ToString(mObj["downloadUrl"]);
+                            }
+                        }
+                    } catch { }
+
+                    // 2. Fetch latest commit message for readable release notes
                     try {
                         string commitJson = FetchGitHubText("https://api.github.com/repos/avirooppal/Sanctum/commits/main", 8000);
                         var commitObj = serializer.Deserialize<Dictionary<string, object>>(commitJson);
@@ -2253,65 +2281,53 @@ namespace Sanctum {
                             }
                         }
                     } catch {
-                        checkSource = "offline";
+                        if (!manifestFetched) checkSource = "offline";
                     }
 
-                    // 2. Check SHA256SUMS for Sanctum.exe integrity hash
-                    try {
-                        string sums = FetchGitHubText("https://raw.githubusercontent.com/avirooppal/Sanctum/main/SHA256SUMS", 6000);
-                        foreach (string rawLine in sums.Split(new[] { "\r\n", "\n" }, StringSplitOptions.RemoveEmptyEntries)) {
-                            string line = rawLine.Trim();
-                            if (line.IndexOf("Sanctum.exe", StringComparison.OrdinalIgnoreCase) >= 0) {
-                                string[] parts = line.Split(new[] { ' ', '\t' }, StringSplitOptions.RemoveEmptyEntries);
-                                if (parts.Length >= 1 && parts[0].Length == 64) {
-                                    expectedSha256 = parts[0].ToLowerInvariant();
-                                    break;
-                                }
-                            }
-                        }
-                    } catch { }
-
-                    // 3. Also check GitHub Releases if published
-                    try {
-                        string relJson = FetchGitHubText("https://api.github.com/repos/avirooppal/Sanctum/releases/latest", 6000);
-                        var relObj = serializer.Deserialize<Dictionary<string, object>>(relJson);
-                        if (relObj != null && relObj.ContainsKey("tag_name")) {
-                            string tag = Convert.ToString(relObj["tag_name"]).TrimStart('v', 'V');
-                            if (!string.IsNullOrEmpty(tag)) latestVersion = tag;
-                            if (relObj.ContainsKey("body") && !string.IsNullOrWhiteSpace(Convert.ToString(relObj["body"]))) {
-                                releaseNotes = Convert.ToString(relObj["body"]).Trim();
-                            }
-                            if (relObj.ContainsKey("assets") && relObj["assets"] is object[]) {
-                                foreach (object aObj in (object[])relObj["assets"]) {
-                                    var a = aObj as Dictionary<string, object>;
-                                    if (a != null && string.Equals(Convert.ToString(a["name"]), "Sanctum.exe", StringComparison.OrdinalIgnoreCase)) {
-                                        string bUrl = Convert.ToString(a["browser_download_url"]);
-                                        if (!string.IsNullOrEmpty(bUrl)) downloadUrl = bUrl;
+                    // 3. Fallback SHA256SUMS if manifest didn't provide exeSha256
+                    if (string.IsNullOrEmpty(expectedSha256)) {
+                        try {
+                            string sums = FetchGitHubText("https://raw.githubusercontent.com/avirooppal/Sanctum/main/SHA256SUMS", 6000);
+                            foreach (string rawLine in sums.Split(new[] { "\r\n", "\n" }, StringSplitOptions.RemoveEmptyEntries)) {
+                                string line = rawLine.Trim();
+                                if (line.IndexOf("Sanctum.exe", StringComparison.OrdinalIgnoreCase) >= 0) {
+                                    string[] parts = line.Split(new[] { ' ', '\t' }, StringSplitOptions.RemoveEmptyEntries);
+                                    if (parts.Length >= 1 && parts[0].Length == 64) {
+                                        expectedSha256 = parts[0].ToLowerInvariant();
+                                        break;
                                     }
                                 }
                             }
-                        }
-                    } catch { }
+                        } catch { }
+                    }
 
                     bool versionDiff = !string.Equals(latestVersion, currentVersion, StringComparison.OrdinalIgnoreCase);
-                    bool commitDiff = !string.IsNullOrEmpty(latestCommit)
-                        && !string.IsNullOrEmpty(currentCommit)
-                        && currentCommit != "__GIT_COMMIT__"
-                        && !string.Equals(latestCommit, currentCommit, StringComparison.OrdinalIgnoreCase);
+                    if (!string.IsNullOrEmpty(remoteBuildStamp) && !string.IsNullOrEmpty(localBuildStamp)) {
+                        updateAvailable = versionDiff || !string.Equals(remoteBuildStamp, localBuildStamp, StringComparison.OrdinalIgnoreCase);
+                    } else {
+                        bool commitDiff = !string.IsNullOrEmpty(latestCommit)
+                            && !string.IsNullOrEmpty(currentCommit)
+                            && currentCommit != "__GIT_COMMIT__"
+                            && !string.Equals(latestCommit, currentCommit, StringComparison.OrdinalIgnoreCase);
+                        updateAvailable = versionDiff || commitDiff;
+                    }
 
-                    updateAvailable = versionDiff || commitDiff;
                     if (!updateAvailable) {
-                        releaseNotes = "Sanctum " + currentVersion + " (" + currentCommit + ") is up to date.";
+                        releaseNotes = "Sanctum " + currentVersion + " is up to date.";
                     } else if (string.IsNullOrWhiteSpace(releaseNotes)) {
                         releaseNotes = "New build " + latestVersion + " (" + latestCommit + ") is available on GitHub.";
                     }
                 }
 
+                string displayTag = !string.IsNullOrEmpty(remoteBuildStamp) && remoteBuildStamp.Length >= 7
+                    ? remoteBuildStamp.Substring(0, 7)
+                    : latestCommit;
+
                 WriteJson(res, 200, new {
                     status = "ok",
                     currentVersion = currentVersion,
-                    currentCommit = currentCommit,
-                    latestVersion = updateAvailable && latestCommit != currentCommit ? (latestVersion + "+" + latestCommit) : latestVersion,
+                    currentCommit = !string.IsNullOrEmpty(localBuildStamp) && localBuildStamp.Length >= 7 ? localBuildStamp.Substring(0, 7) : currentCommit,
+                    latestVersion = updateAvailable ? (latestVersion + "+" + displayTag) : latestVersion,
                     latestCommit = latestCommit,
                     updateAvailable = updateAvailable,
                     signed = signedRelease,
@@ -2404,11 +2420,31 @@ namespace Sanctum {
                         }
                     }
 
-                    emit(new { status = "Launching updated Sanctum.exe (your chats & models are preserved)...", percent = 100, installing = true });
+                    emit(new { status = "Closing Sanctum and installing update...", percent = 100, installing = true });
+                    res.Close();
+
+                    // Launch detached updater with --update (forces unpack + relaunches new Sanctum-Desktop.exe),
+                    // then cleanly close and exit the current process so file locks are released immediately.
                     Process.Start(new ProcessStartInfo {
                         FileName = tempExe,
+                        Arguments = "--update",
                         UseShellExecute = true
                     });
+
+                    ThreadPool.QueueUserWorkItem((_) => {
+                        try { Thread.Sleep(350); } catch { }
+                        try {
+                            if (!IsDisposed && IsHandleCreated) {
+                                BeginInvoke((Action)(() => {
+                                    try { Close(); } catch { }
+                                    try { System.Windows.Forms.Application.Exit(); } catch { }
+                                }));
+                            }
+                        } catch { }
+                        try { Thread.Sleep(500); } catch { }
+                        Environment.Exit(0);
+                    });
+                    return;
                 } catch (Exception dlEx) {
                     emit(new { status = "error", error = dlEx.Message });
                 }

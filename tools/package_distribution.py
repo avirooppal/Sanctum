@@ -43,6 +43,23 @@ def package():
 
     # 1. SHA256SUMS (Sanctum.exe is the only shipped binary)
     sha256_exe = hash_file(exe_path)
+    stamp_file = os.path.join(ROOT, "deploy", "installer", "build_stamp.txt")
+    build_stamp = ""
+    if os.path.exists(stamp_file):
+        with open(stamp_file, "r", encoding="utf-8") as sf:
+            build_stamp = sf.read().strip()
+
+    manifest = {
+        "version": VERSION,
+        "buildStamp": build_stamp,
+        "exeSha256": sha256_exe,
+        "downloadUrl": "https://github.com/avirooppal/Sanctum/raw/main/Sanctum.exe",
+        "publishedAt": datetime.now(timezone.utc).strftime("%Y-%m-%dT%H:%M:%SZ"),
+    }
+    manifest_path = os.path.join(dist_dir, "release-manifest.json")
+    with open(manifest_path, "w", encoding="utf-8") as mf:
+        json.dump(manifest, mf, indent=2)
+    print(f"Generated {manifest_path}")
     with open(os.path.join(dist_dir, "SHA256SUMS"), "w", encoding="utf-8") as f:
         f.write(f"{sha256_exe}  {exe_name}\n")
     print(f"Generated SHA256SUMS: {sha256_exe}")

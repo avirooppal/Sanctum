@@ -266,12 +266,17 @@ def build_direct_launcher(out_path, payload_b64):
     import hashlib
     payload_bytes = base64.b64decode(payload_b64)
     build_stamp = hashlib.sha256(payload_bytes).hexdigest()
+    stamp_out = os.path.join(ROOT, "deploy", "installer", "build_stamp.txt")
+    with open(stamp_out, "w", encoding="utf-8") as sf:
+        sf.write(build_stamp + "\n")
 
     cs_launcher = r"""using System;
+using System.Collections.Generic;
 using System.Diagnostics;
 using System.IO;
 using System.IO.Compression;
 using System.Reflection;
+using System.Threading;
 
 [assembly: AssemblyTitle("Sanctum")]
 [assembly: AssemblyDescription("Sanctum Standalone Desktop Application")]
@@ -282,6 +287,16 @@ using System.Reflection;
 
 public class SanctumLauncher {
     public static int Main(string[] args) {
+        bool forceUpdate = false;
+        var forwardArgs = new List<string>();
+        foreach (string a in args) {
+            if (string.Equals(a, "--update", StringComparison.OrdinalIgnoreCase)) {
+                forceUpdate = true;
+            } else {
+                forwardArgs.Add(a);
+            }
+        }
+
         string localApp = Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData);
         string appDir = Path.Combine(localApp, "Programs", "Sanctum");
         string exe = Path.Combine(appDir, "Sanctum-Desktop.exe");
@@ -289,7 +304,7 @@ public class SanctumLauncher {
         string stampFile = Path.Combine(appDir, "build_stamp.txt");
         string expectedStamp = "__BUILD_STAMP__";
 
-        bool needsUnpack = !File.Exists(exe) || !File.Exists(wvLoader) || !File.Exists(stampFile);
+        bool needsUnpack = forceUpdate || !File.Exists(exe) || !File.Exists(wvLoader) || !File.Exists(stampFile);
         if (!needsUnpack) {
             try {
                 string actualStamp = File.ReadAllText(stampFile).Trim();
@@ -302,16 +317,23 @@ public class SanctumLauncher {
         if (needsUnpack) {
             string tempZip = Path.Combine(Path.GetTempPath(), "sanctum_unpack_" + Guid.NewGuid().ToString("N") + ".zip");
             try {
-                foreach (Process oldProc in Process.GetProcessesByName("Sanctum-Desktop")) {
-                    try {
-                        if (!string.Equals(oldProc.MainModule.FileName, exe, StringComparison.OrdinalIgnoreCase)) continue;
-                    } catch { continue; }
-                    try {
-                        if (!oldProc.CloseMainWindow() || !oldProc.WaitForExit(1500)) {
-                            oldProc.Kill();
-                            oldProc.WaitForExit(3000);
-                        }
-                    } catch { }
+                // Gracefully close then terminate any running Sanctum-Desktop host so files can be replaced cleanly
+                for (int attempt = 0; attempt < 3; attempt++) {
+                    var running = Process.GetProcessesByName("Sanctum-Desktop");
+                    if (running.Length == 0) break;
+                    foreach (Process oldProc in running) {
+                        try {
+                            if (attempt == 0) {
+                                oldProc.CloseMainWindow();
+                                if (oldProc.WaitForExit(1200)) continue;
+                            }
+                            if (!oldProc.HasExited) {
+                                oldProc.Kill();
+                                oldProc.WaitForExit(3000);
+                            }
+                        } catch { }
+                    }
+                    Thread.Sleep(350);
                 }
                 Directory.CreateDirectory(appDir);
 
@@ -335,7 +357,18 @@ public class SanctumLauncher {
                             Directory.CreateDirectory(destPath);
                         } else {
                             Directory.CreateDirectory(Path.GetDirectoryName(destPath));
-                            entry.ExtractToFile(destPath, true);
+                            Exception lastErr = null;
+                            for (int retry = 0; retry < 5; retry++) {
+                                try {
+                                    entry.ExtractToFile(destPath, true);
+                                    lastErr = null;
+                                    break;
+                                } catch (IOException ioEx) {
+                                    lastErr = ioEx;
+                                    Thread.Sleep(300);
+                                }
+                            }
+                            if (lastErr != null) throw lastErr;
                         }
                     }
                 }
@@ -353,10 +386,15 @@ public class SanctumLauncher {
         ProcessStartInfo psi = new ProcessStartInfo {
             FileName = exe,
             WorkingDirectory = appDir,
-            Arguments = string.Join(" ", Array.ConvertAll(args, arg => "\"" + arg.Replace("\"", "\\\"") + "\"")),
+            Arguments = string.Join(" ", Array.ConvertAll(forwardArgs.ToArray(), arg => "\"" + arg.Replace("\"", "\\\"") + "\"")),
             UseShellExecute = false
         };
         try {
+            if (forceUpdate) {
+                // Launch updated desktop host detached so launcher exits cleanly
+                Process.Start(psi);
+                return 0;
+            }
             using (Process p = Process.Start(psi)) {
                 p.WaitForExit();
                 return p.ExitCode;
