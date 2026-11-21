@@ -202,8 +202,14 @@ namespace Sanctum.Harness {
                         return;
                     }
                 }
+                if (bodyObj == null) bodyObj = new JObject();
+                foreach (string qk in req.QueryString.AllKeys) {
+                    if (!string.IsNullOrEmpty(qk) && bodyObj[qk] == null) {
+                        bodyObj[qk] = req.QueryString[qk];
+                    }
+                }
 
-                var (status, json) = DispatchProtocolCommand(method, path, bodyObj ?? new JObject(), viaTrustedChannel: false);
+                var (status, json) = DispatchProtocolCommand(method, path, bodyObj, viaTrustedChannel: false);
                 WriteHttpJson(res, status, json);
             } catch (Exception ex) {
                 try { WriteHttpJson(res, 500, new JObject { ["error"] = ex.Message }); } catch { }
@@ -340,6 +346,43 @@ namespace Sanctum.Harness {
                     return (200, new JObject { ["tools"] = _engine.ListToolsJson() });
                 }
 
+                if (method == "GET" && path == "/v1/rules") {
+                    return (200, new JObject { ["rules"] = _engine.Permissions.ListRules() });
+                }
+
+                if (method == "POST" && path == "/v1/rules") {
+                    var rule = body.ToObject<PermissionRule>();
+                    return _engine.Permissions.AddRule(rule, viaTrustedChannel);
+                }
+
+                if (method == "GET" && path == "/v1/audit") {
+                    int limit = 100;
+                    int.TryParse(body["limit"]?.ToString() ?? "100", out limit);
+                    return (200, new JObject { ["entries"] = _engine.Audit.ReadRecent(limit) });
+                }
+
+                if (method == "POST" && path == "/v1/untrusted/wrap") {
+                    string kind = body["kind"]?.Value<string>() ?? "file";
+                    string label = body["label"]?.Value<string>() ?? "";
+                    string raw = body["content"]?.Value<string>() ?? "";
+                    return (200, new JObject { ["wrapped"] = UntrustedContent.Wrap(kind, label, raw) });
+                }
+
+                if (path.StartsWith("/v1/tasks/")) {
+                    string rest = path.Substring("/v1/tasks/".Length);
+                    string[] parts = rest.Split(new[] { '/' }, StringSplitOptions.RemoveEmptyEntries);
+                    if (parts.Length == 2) {
+                        string taskId = parts[0];
+                        string action = parts[1];
+                        if (method == "GET" && action == "output") {
+                            return (200, _engine.Tasks.ReadOutput(taskId));
+                        }
+                        if (method == "POST" && action == "kill") {
+                            return (200, _engine.Tasks.KillTask(taskId));
+                        }
+                    }
+                }
+
                 if (method == "GET" && path.StartsWith("/v1/capabilities/")) {
                     string model = Uri.UnescapeDataString(path.Substring("/v1/capabilities/".Length).Trim('/'));
                     var caps = _engine.Provider.GetCapabilities(model);
@@ -369,7 +412,8 @@ namespace Sanctum.Harness {
                         body["workspace"]?.Value<string>(),
                         body["mode"]?.Value<string>(),
                         body["autonomy"]?.Value<string>(),
-                        body["model"]?.Value<string>());
+                        body["model"]?.Value<string>(),
+                        body["unattended"]?.Value<bool>() ?? false);
                     return (201, JObject.FromObject(s));
                 }
 
@@ -396,8 +440,33 @@ namespace Sanctum.Harness {
                         });
                     }
 
+                    if (parts.Length == 2 && method == "GET") {
+                        string action = parts[1];
+                        if (action == "diff") {
+                            string cpId = body["checkpointId"]?.Value<string>() ?? "";
+                            return (200, _engine.ComputeDiff(sessionId, cpId));
+                        }
+                        if (action == "tasks") {
+                            return (200, new JObject { ["tasks"] = _engine.Tasks.ListTasks(sessionId) });
+                        }
+                    }
+
                     if (parts.Length == 2 && method == "POST") {
                         string action = parts[1];
+                        if (action == "checkpoints") {
+                            var cp = _engine.CreateCheckpoint(sessionId, body["label"]?.Value<string>());
+                            return (201, cp);
+                        }
+                        if (action == "rewind") {
+                            string scope = body["scope"]?.Value<string>() ?? "files";
+                            string cpId = body["checkpointId"]?.Value<string>();
+                            long? forkAfter = body["forkAfterSeq"]?.Value<long?>();
+                            return (200, _engine.Rewind(sessionId, scope, cpId, forkAfter));
+                        }
+                        if (action == "tasks") {
+                            string cmd = body["command"]?.Value<string>() ?? "";
+                            return _engine.StartBackgroundTask(sessionId, cmd, viaTrustedChannel);
+                        }
                         if (action == "messages") {
                             string content = body["content"]?.Value<string>() ?? "";
                             string idem = body["idempotencyKey"]?.Value<string>();
@@ -458,7 +527,7 @@ namespace Sanctum.Harness {
             if (_disposed) return;
             _disposed = true;
             _shutdownCts.Cancel();
-            _engine.InterruptAllRuns();
+            _engine.Dispose();
             try { _httpListener.Stop(); _httpListener.Close(); } catch { }
             try { if (File.Exists(_runtimeFile)) File.Delete(_runtimeFile); } catch { }
             _shutdownCts.Dispose();

@@ -73,10 +73,13 @@ namespace Sanctum.Harness {
         public Func<JObject, CancellationToken, string> Execute { get; set; }
     }
 
-    public sealed class HarnessEngine {
+    public sealed class HarnessEngine : IDisposable {
         private readonly SessionLogStore _store;
         private readonly IModelProvider _provider;
+        private readonly HarnessAuditLog _audit;
         private readonly PermissionEngine _permissions;
+        private readonly CheckpointService _checkpoints;
+        private readonly BackgroundTaskManager _tasks;
         private readonly Dictionary<string, HarnessToolDescriptor> _tools = new Dictionary<string, HarnessToolDescriptor>(StringComparer.OrdinalIgnoreCase);
         private readonly ConcurrentDictionary<string, CancellationTokenSource> _activeRuns = new ConcurrentDictionary<string, CancellationTokenSource>(StringComparer.OrdinalIgnoreCase);
         private readonly ConcurrentDictionary<string, string> _activeRunIds = new ConcurrentDictionary<string, string>(StringComparer.OrdinalIgnoreCase);
@@ -89,7 +92,10 @@ namespace Sanctum.Harness {
             _store = store;
             _provider = provider;
             string dataRoot = appDataDir ?? Path.GetDirectoryName(store.SessionsDir);
-            _permissions = new PermissionEngine(dataRoot);
+            _audit = new HarnessAuditLog(dataRoot);
+            _permissions = new PermissionEngine(dataRoot, _audit);
+            _checkpoints = new CheckpointService(dataRoot);
+            _tasks = new BackgroundTaskManager();
             RegisterPhase1aTools();
             BuiltinTools.RegisterAll(this, dataRoot);
             ThreadMigration.MigrateLegacyThreadsIfNeeded(dataRoot, _store);
@@ -98,8 +104,16 @@ namespace Sanctum.Harness {
 
         public SessionLogStore Store => _store;
         public IModelProvider Provider => _provider;
+        public HarnessAuditLog Audit => _audit;
         public PermissionEngine Permissions => _permissions;
+        public CheckpointService Checkpoints => _checkpoints;
+        public BackgroundTaskManager Tasks => _tasks;
         public int ActiveRunCount => _activeRuns.Count;
+
+        public void Dispose() {
+            InterruptAllRuns();
+            _tasks.Dispose();
+        }
 
         private void RegisterPhase1aTools() {
             RegisterTool(new HarnessToolDescriptor {
@@ -241,7 +255,7 @@ namespace Sanctum.Harness {
             return evt;
         }
 
-        public SessionSummary CreateSession(string title, string workspace, string mode, string autonomy, string model) {
+        public SessionSummary CreateSession(string title, string workspace, string mode, string autonomy, string model, bool unattended = false) {
             string id = "s_" + Guid.NewGuid().ToString("N").Substring(0, 12);
             string safeMode = (mode == "plan" || mode == "build") ? mode : "build";
             string safeAutonomy = (autonomy == "ask_all" || autonomy == "auto_reads") ? autonomy : "auto_reads";
@@ -250,9 +264,71 @@ namespace Sanctum.Harness {
                 ["workspace"] = workspace ?? "",
                 ["mode"] = safeMode,
                 ["autonomy"] = safeAutonomy,
+                ["unattended"] = unattended,
                 ["model"] = string.IsNullOrWhiteSpace(model) ? "mock" : model.Trim()
             }, durableFlush: true);
             return _store.BuildSummary(id);
+        }
+
+        public JObject CreateCheckpoint(string sessionId, string label = null) {
+            var sum = _store.BuildSummary(sessionId);
+            if (sum == null) throw new KeyNotFoundException("Session not found.");
+            var cp = _checkpoints.CreateCheckpoint(sessionId, string.IsNullOrWhiteSpace(sum.Workspace) ? Environment.CurrentDirectory : sum.Workspace, label);
+            AppendAndBroadcast(sessionId, "checkpoint_created", new JObject {
+                ["checkpointId"] = cp["checkpointId"],
+                ["label"] = cp["label"],
+                ["fileCount"] = cp["fileCount"]
+            }, durableFlush: true);
+            return cp;
+        }
+
+        public JObject ComputeDiff(string sessionId, string checkpointId) {
+            var sum = _store.BuildSummary(sessionId);
+            if (sum == null) throw new KeyNotFoundException("Session not found.");
+            return _checkpoints.ComputeDiff(checkpointId, sum.Workspace);
+        }
+
+        public JObject Rewind(string sessionId, string scope, string checkpointId, long? forkAfterSeq) {
+            var sum = _store.BuildSummary(sessionId);
+            if (sum == null) throw new KeyNotFoundException("Session not found.");
+            string normScope = string.IsNullOrWhiteSpace(scope) ? "files" : scope.Trim().ToLowerInvariant();
+            var result = new JObject { ["sessionId"] = sessionId, ["scope"] = normScope };
+
+            if (normScope == "files" || normScope == "both") {
+                if (string.IsNullOrWhiteSpace(checkpointId)) throw new ArgumentException("checkpointId is required for file rewind.");
+                result["files"] = _checkpoints.RewindFiles(checkpointId, sum.Workspace);
+                AppendAndBroadcast(sessionId, "files_rewound", new JObject {
+                    ["checkpointId"] = checkpointId,
+                    ["restoredFiles"] = result["files"]["restoredFiles"],
+                    ["removedFiles"] = result["files"]["removedFiles"]
+                }, durableFlush: true);
+            }
+            if (normScope == "conversation" || normScope == "both") {
+                long targetSeq = forkAfterSeq ?? 1;
+                var forked = ForkSession(sessionId, targetSeq, sum.Title + " (rewind)");
+                result["rewoundSession"] = JObject.FromObject(forked);
+            }
+            return result;
+        }
+
+        public (int status, JObject body) StartBackgroundTask(string sessionId, string command, bool viaTrustedChannel) {
+            var sum = _store.BuildSummary(sessionId);
+            if (sum == null) return (404, new JObject { ["error"] = "Session not found." });
+            _tools.TryGetValue("run_command", out var runCmdTool);
+            var cmdArgs = new JObject { ["command"] = command ?? "" };
+            var decision = _permissions.Evaluate(sessionId, sum.Mode, sum.Autonomy, runCmdTool, cmdArgs, sum.Unattended);
+            if (decision.Kind == PermissionDecisionKind.Deny) {
+                return (403, new JObject { ["error"] = decision.Reason, ["code"] = "permission_denied" });
+            }
+            if (decision.Kind == PermissionDecisionKind.Ask && !viaTrustedChannel) {
+                return (403, new JObject {
+                    ["error"] = "Starting a non-allowlisted background task requires a trusted channel.",
+                    ["code"] = "trusted_channel_required"
+                });
+            }
+            var task = _tasks.StartTask(sessionId, command, string.IsNullOrWhiteSpace(sum.Workspace) ? Environment.CurrentDirectory : sum.Workspace);
+            AppendAndBroadcast(sessionId, "background_task_started", task, durableFlush: true);
+            return (201, task);
         }
 
         public SessionSummary ForkSession(string parentSessionId, long forkAfterSeq, string title = null) {
@@ -474,7 +550,8 @@ namespace Sanctum.Harness {
                         }, runId, durableFlush: true);
 
                         _tools.TryGetValue(call.Name, out var tool);
-                        var decision = _permissions.Evaluate(sessionId, curMode, curAutonomy, tool, call.Arguments);
+                        bool curUnattended = latestSummary?.Unattended ?? false;
+                        var decision = _permissions.Evaluate(sessionId, curMode, curAutonomy, tool, call.Arguments, curUnattended);
 
                         if (decision.Kind == PermissionDecisionKind.Deny) {
                             AppendAndBroadcast(sessionId, "tool_finished", new JObject {
@@ -556,6 +633,17 @@ namespace Sanctum.Harness {
                             ["ok"] = ok,
                             ["output"] = stored
                         }, runId, durableFlush: true);
+
+                        if (ok && (tool.Safety == "write" || tool.Safety == "destructive") && tool.Category == "files") {
+                            string changedPath = call.Arguments?["path"]?.Value<string>() ?? call.Arguments?["to"]?.Value<string>() ?? "";
+                            if (!string.IsNullOrEmpty(changedPath)) {
+                                AppendAndBroadcast(sessionId, "file_changed", new JObject {
+                                    ["path"] = changedPath,
+                                    ["tool"] = call.Name,
+                                    ["callId"] = call.Id
+                                }, runId, durableFlush: false);
+                            }
+                        }
 
                         history.Add(new JObject {
                             ["role"] = "tool",

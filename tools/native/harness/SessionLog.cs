@@ -347,6 +347,7 @@ namespace Sanctum.Harness {
                     summary.Workspace = e.Payload?["workspace"]?.Value<string>() ?? summary.Workspace;
                     summary.Mode = e.Payload?["mode"]?.Value<string>() ?? summary.Mode;
                     summary.Autonomy = e.Payload?["autonomy"]?.Value<string>() ?? summary.Autonomy;
+                    summary.Unattended = e.Payload?["unattended"]?.Value<bool>() ?? summary.Unattended;
                     summary.Model = e.Payload?["model"]?.Value<string>() ?? summary.Model;
                     summary.ParentSessionId = e.Payload?["parentSessionId"]?.Value<string>();
                     summary.ForkAfterSeq = e.Payload?["forkAfterSeq"]?.Value<long?>();

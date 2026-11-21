@@ -33,10 +33,20 @@ namespace Sanctum.Harness {
         public string ResolvedBy { get; set; } = "";
     }
 
+    public sealed class PermissionRule {
+        [JsonProperty("id")] public string Id { get; set; } = "";
+        [JsonProperty("effect")] public string Effect { get; set; } = "ask"; // allow | ask | deny
+        [JsonProperty("tool")] public string Tool { get; set; } = "*";
+        [JsonProperty("commandPattern", NullValueHandling = NullValueHandling.Ignore)] public string CommandPattern { get; set; }
+        [JsonProperty("pathPattern", NullValueHandling = NullValueHandling.Ignore)] public string PathPattern { get; set; }
+        [JsonProperty("domainPattern", NullValueHandling = NullValueHandling.Ignore)] public string DomainPattern { get; set; }
+        [JsonProperty("createdAt")] public string CreatedAt { get; set; } = "";
+    }
+
     /// <summary>
     /// Host-side deny-by-default Permission Engine (single enforcement point).
-    /// Enforces ToolPath containment, hard-blocked system/credential paths, command rules,
-    /// Plan Mode write restriction, autonomy levels, and the Item 1 Approval Trust Model.
+    /// Enforces persistent allow/ask/deny rules, ToolPath containment, hard-blocked paths,
+    /// command rules, Plan Mode, unattended fail-closed policy, audit logging, and Item 1 Trust Model.
     /// </summary>
     public sealed class PermissionEngine {
         private static readonly HashSet<string> PlanModeMutatingTools = new HashSet<string>(StringComparer.OrdinalIgnoreCase) {
@@ -44,8 +54,8 @@ namespace Sanctum.Harness {
         };
 
         private static readonly Regex[] HardDenyCommandPatterns = new[] {
-            new Regex(@"\b(rm\s+-rf\s+/|format\s+[a-z]:|diskpart|bcdedit|cipher\s+/w|reg\s+delete\s+hklm|shutdown\s+/[sr]|vssadmin\s+delete\s+shadows)\b", RegexOptions.IgnoreCase | RegexOptions.Compiled),
-            new Regex(@"\b(Remove-Item\s+.*-Recurse.*-Force\s+[a-z]:\\|Invoke-Expression|iex\s*\(|curl\s+.*\|\s*(sh|bash|pwsh|powershell))\b", RegexOptions.IgnoreCase | RegexOptions.Compiled)
+            new Regex(@"(rm\s+-(rf|fr|r)\s+(/|/\*|[a-z]:\\)|format\s+[a-z]:|\bdiskpart\b|\bbcdedit\b|\bcipher\s+/w\b|\breg\s+delete\s+hklm\b|\bshutdown\s+/[sr]\b|\bvssadmin\s+delete\s+shadows\b|\bmkfs\b)", RegexOptions.IgnoreCase | RegexOptions.Compiled),
+            new Regex(@"(Remove-Item\s+.*-Recurse.*-Force\s+[a-z]:\\|\bInvoke-Expression\b|\biex\s*\(|curl\s+.*\|\s*(sh|bash|pwsh|powershell)\b)", RegexOptions.IgnoreCase | RegexOptions.Compiled)
         };
 
         private static readonly Regex[] ReadOnlyAllowCommandPatterns = new[] {
@@ -59,10 +69,85 @@ namespace Sanctum.Harness {
         private readonly ConcurrentDictionary<string, PendingApproval> _pending = new ConcurrentDictionary<string, PendingApproval>(StringComparer.OrdinalIgnoreCase);
         private readonly ConcurrentDictionary<string, HashSet<string>> _sessionApprovals = new ConcurrentDictionary<string, HashSet<string>>(StringComparer.OrdinalIgnoreCase);
         private readonly HashSet<string> _knownTools = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
+        private readonly List<PermissionRule> _rules = new List<PermissionRule>();
+        private readonly object _rulesLock = new object();
         private readonly string _appDataDir;
+        private readonly string _rulesPath;
+        private readonly HarnessAuditLog _audit;
 
-        public PermissionEngine(string appDataDir) {
+        public PermissionEngine(string appDataDir, HarnessAuditLog audit = null) {
             _appDataDir = appDataDir;
+            _rulesPath = Path.Combine(appDataDir, "permission_rules.json");
+            _audit = audit ?? new HarnessAuditLog(appDataDir);
+            LoadRules();
+        }
+
+        public HarnessAuditLog Audit => _audit;
+
+        private void LoadRules() {
+            lock (_rulesLock) {
+                _rules.Clear();
+                if (!File.Exists(_rulesPath)) return;
+                try {
+                    var loaded = JsonConvert.DeserializeObject<List<PermissionRule>>(File.ReadAllText(_rulesPath));
+                    if (loaded != null) _rules.AddRange(loaded);
+                } catch { }
+            }
+        }
+
+        private void SaveRules() {
+            Directory.CreateDirectory(_appDataDir);
+            string tmp = _rulesPath + ".tmp." + Guid.NewGuid().ToString("N");
+            File.WriteAllText(tmp, JsonConvert.SerializeObject(_rules, Formatting.Indented), new System.Text.UTF8Encoding(false));
+            WindowsAclHelper.ApplyUserOnlyFileAcl(tmp);
+            if (File.Exists(_rulesPath)) File.Delete(_rulesPath);
+            File.Move(tmp, _rulesPath);
+            WindowsAclHelper.ApplyUserOnlyFileAcl(_rulesPath);
+        }
+
+        public JArray ListRules() {
+            lock (_rulesLock) return JArray.FromObject(_rules);
+        }
+
+        public (int status, JObject body) AddRule(PermissionRule rule, bool viaTrustedChannel) {
+            if (!viaTrustedChannel) {
+                _audit.Record("", rule?.Tool ?? "*", "add_rule", rule?.CommandPattern ?? rule?.PathPattern ?? "", "denied", "Rule creation requires trusted channel", "bearer_channel");
+                return (403, new JObject {
+                    ["error"] = "Permission rules may only be created through a trusted channel (native dialog or CLI TTY).",
+                    ["code"] = "trusted_channel_required"
+                });
+            }
+            if (rule == null || (rule.Effect != "allow" && rule.Effect != "ask" && rule.Effect != "deny")) {
+                return (400, new JObject { ["error"] = "Invalid rule effect (must be allow, ask, or deny)." });
+            }
+            rule.Id = "rule_" + Guid.NewGuid().ToString("N").Substring(0, 10);
+            rule.CreatedAt = DateTime.UtcNow.ToString("o");
+            lock (_rulesLock) {
+                _rules.Add(rule);
+                SaveRules();
+            }
+            _audit.Record("", rule.Tool, "add_rule", rule.CommandPattern ?? rule.PathPattern ?? "*", "allowed", "Rule created: " + rule.Effect, "trusted_channel");
+            return (201, JObject.FromObject(rule));
+        }
+
+        private PermissionRule MatchCustomRule(string toolName, JObject args) {
+            string cmd = args?["command"]?.Value<string>() ?? "";
+            string p = args?["path"]?.Value<string>() ?? "";
+            string url = args?["url"]?.Value<string>() ?? "";
+            lock (_rulesLock) {
+                // Deny rules take precedence, then allow/ask
+                foreach (string pass in new[] { "deny", "allow", "ask" }) {
+                    foreach (var r in _rules) {
+                        if (!string.Equals(r.Effect, pass, StringComparison.OrdinalIgnoreCase)) continue;
+                        if (r.Tool != "*" && !string.Equals(r.Tool, toolName, StringComparison.OrdinalIgnoreCase)) continue;
+                        if (!string.IsNullOrEmpty(r.CommandPattern) && !Regex.IsMatch(cmd, r.CommandPattern, RegexOptions.IgnoreCase)) continue;
+                        if (!string.IsNullOrEmpty(r.PathPattern) && !Regex.IsMatch(p, r.PathPattern, RegexOptions.IgnoreCase)) continue;
+                        if (!string.IsNullOrEmpty(r.DomainPattern) && !Regex.IsMatch(url, r.DomainPattern, RegexOptions.IgnoreCase)) continue;
+                        return r;
+                    }
+                }
+            }
+            return null;
         }
 
         public void RegisterKnownTool(string toolName) {
@@ -142,13 +227,32 @@ namespace Sanctum.Harness {
             string mode,
             string autonomy,
             HarnessToolDescriptor tool,
-            JObject args) {
+            JObject args,
+            bool unattended = false) {
+            PermissionDecision Finalize(PermissionDecision d) {
+                if (unattended && d.Kind == PermissionDecisionKind.Ask) {
+                    d = new PermissionDecision {
+                        Kind = PermissionDecisionKind.Deny,
+                        RiskClass = d.RiskClass,
+                        Reason = "Unattended policy: action not pre-approved (" + d.Reason + ")"
+                    };
+                }
+                _audit.Record(
+                    sessionId,
+                    tool?.Name ?? "unknown",
+                    "evaluate",
+                    args?["command"]?.Value<string>() ?? args?["path"]?.Value<string>() ?? "",
+                    d.Kind.ToString().ToLowerInvariant(),
+                    d.Reason);
+                return d;
+            }
+
             if (tool == null) {
-                return new PermissionDecision { Kind = PermissionDecisionKind.Deny, Reason = "Unknown tool denied by default." };
+                return Finalize(new PermissionDecision { Kind = PermissionDecisionKind.Deny, Reason = "Unknown tool denied by default." });
             }
             lock (_knownTools) {
                 if (!_knownTools.Contains(tool.Name)) {
-                    return new PermissionDecision { Kind = PermissionDecisionKind.Deny, Reason = "Unregistered tool denied by default." };
+                    return Finalize(new PermissionDecision { Kind = PermissionDecisionKind.Deny, Reason = "Unregistered tool denied by default." });
                 }
             }
 
@@ -156,10 +260,30 @@ namespace Sanctum.Harness {
             if (string.Equals(mode, "plan", StringComparison.OrdinalIgnoreCase) && PlanModeMutatingTools.Contains(tool.Name)) {
                 string target = args?["path"]?.Value<string>() ?? "";
                 if (!IsPlanMdPath(target)) {
-                    return new PermissionDecision {
+                    return Finalize(new PermissionDecision {
                         Kind = PermissionDecisionKind.Deny,
                         Reason = "Plan Mode is active: only PLAN.md may be written before user approval."
-                    };
+                    });
+                }
+            }
+
+            // Hard-deny command safety rules ALWAYS win before custom rules
+            if (string.Equals(tool.Name, "run_command", StringComparison.OrdinalIgnoreCase)) {
+                string cmd0 = args?["command"]?.Value<string>() ?? "";
+                var (ruleAction0, ruleReason0) = EvaluateCommandRule(cmd0);
+                if (ruleAction0 == "deny") {
+                    return Finalize(new PermissionDecision { Kind = PermissionDecisionKind.Deny, RiskClass = "high", Reason = ruleReason0 });
+                }
+            }
+
+            // Custom persistent rules (created via trusted channel only)
+            var matchedRule = MatchCustomRule(tool.Name, args);
+            if (matchedRule != null) {
+                if (matchedRule.Effect == "deny") {
+                    return Finalize(new PermissionDecision { Kind = PermissionDecisionKind.Deny, RiskClass = "high", Reason = "Denied by rule " + matchedRule.Id });
+                }
+                if (matchedRule.Effect == "allow") {
+                    return Finalize(new PermissionDecision { Kind = PermissionDecisionKind.Allow, RiskClass = "low", Reason = "Allowed by rule " + matchedRule.Id });
                 }
             }
 
@@ -167,66 +291,63 @@ namespace Sanctum.Harness {
             if (string.Equals(tool.Name, "run_command", StringComparison.OrdinalIgnoreCase)) {
                 string cmd = args?["command"]?.Value<string>() ?? "";
                 var (ruleAction, ruleReason) = EvaluateCommandRule(cmd);
-                if (ruleAction == "deny") {
-                    return new PermissionDecision { Kind = PermissionDecisionKind.Deny, RiskClass = "high", Reason = ruleReason };
-                }
                 if (ruleAction == "allow" && autonomy != "ask_all") {
-                    return new PermissionDecision { Kind = PermissionDecisionKind.Allow, RiskClass = "low", Reason = ruleReason };
+                    return Finalize(new PermissionDecision { Kind = PermissionDecisionKind.Allow, RiskClass = "low", Reason = ruleReason });
                 }
-                return new PermissionDecision {
+                return Finalize(new PermissionDecision {
                     Kind = PermissionDecisionKind.Ask,
                     RiskClass = "high",
                     Reason = ruleReason,
                     HostCardText = $"Execute shell command: {cmd}"
-                };
+                });
             }
 
             // Destructive deletes are always high-risk
             if (tool.Safety == "destructive" || string.Equals(tool.Name, "delete_path", StringComparison.OrdinalIgnoreCase)) {
                 string p = args?["path"]?.Value<string>() ?? "";
-                return new PermissionDecision {
+                return Finalize(new PermissionDecision {
                     Kind = PermissionDecisionKind.Ask,
                     RiskClass = "high",
                     Reason = "Destructive delete requires native/TTY confirmation.",
                     HostCardText = $"Move workspace path to trash: {p}"
-                };
+                });
             }
 
             // Safe reads
             if (tool.Safety == "read") {
                 if (autonomy == "ask_all") {
-                    return new PermissionDecision {
+                    return Finalize(new PermissionDecision {
                         Kind = PermissionDecisionKind.Ask,
                         RiskClass = "low",
                         Reason = "Autonomy is ask_all.",
                         HostCardText = $"Run read tool '{tool.Name}' with args: {CanonicalJson.Serialize(args ?? new JObject())}"
-                    };
+                    });
                 }
-                return new PermissionDecision { Kind = PermissionDecisionKind.Allow, RiskClass = "low", Reason = "Read tool allowed." };
+                return Finalize(new PermissionDecision { Kind = PermissionDecisionKind.Allow, RiskClass = "low", Reason = "Read tool allowed." });
             }
 
             // Workspace writes (low-risk inside workspace)
             if (autonomy == "full_auto") {
-                return new PermissionDecision { Kind = PermissionDecisionKind.Allow, RiskClass = "low", Reason = "Allowed under full_auto." };
+                return Finalize(new PermissionDecision { Kind = PermissionDecisionKind.Allow, RiskClass = "low", Reason = "Allowed under full_auto." });
             }
 
             if (_sessionApprovals.TryGetValue(sessionId, out var approvedSet)) {
                 lock (approvedSet) {
                     if (approvedSet.Contains(tool.Name)) {
-                        return new PermissionDecision { Kind = PermissionDecisionKind.Allow, RiskClass = "low", Reason = "Session-approved." };
+                        return Finalize(new PermissionDecision { Kind = PermissionDecisionKind.Allow, RiskClass = "low", Reason = "Session-approved." });
                     }
                 }
             }
 
             string targetPath = args?["path"]?.Value<string>() ?? "";
-            return new PermissionDecision {
+            return Finalize(new PermissionDecision {
                 Kind = PermissionDecisionKind.Ask,
                 RiskClass = "low",
                 Reason = $"Tool '{tool.Name}' requires user approval.",
                 HostCardText = string.IsNullOrEmpty(targetPath)
                     ? $"Execute '{tool.Name}'"
                     : $"Modify workspace file ({tool.Name}): {targetPath}"
-            };
+            });
         }
 
         public PendingApproval CreatePendingApproval(string sessionId, string runId, string callId, string toolName, JObject args, PermissionDecision decision) {

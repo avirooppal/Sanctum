@@ -30,6 +30,11 @@ namespace Sanctum.Harness {
                 exitCode = RunParseFixture(args.Length > 1 ? args[1] : "");
                 return true;
             }
+            if (cmd == "--eval-permission-fixture") {
+                try { AttachConsole(-1); } catch { }
+                exitCode = RunEvalPermissionFixture(args.Length > 1 ? args[1] : "");
+                return true;
+            }
             if (cmd != "--harness" && cmd != "run" && cmd != "sessions" && cmd != "resume" && cmd != "attach") {
                 return false;
             }
@@ -278,6 +283,51 @@ namespace Sanctum.Harness {
                 });
             }
             Console.WriteLine(results.ToString(Formatting.None));
+            return 0;
+        }
+
+        private static int RunEvalPermissionFixture(string fixturePath) {
+            if (string.IsNullOrWhiteSpace(fixturePath) || !File.Exists(fixturePath)) {
+                Console.Error.WriteLine("Fixture file not found: " + fixturePath);
+                return 2;
+            }
+            var doc = JObject.Parse(File.ReadAllText(fixturePath, Utf8NoBom));
+            var cmdResults = new JArray();
+            foreach (JObject c in (doc["commands"] as JArray ?? new JArray())) {
+                string id = c["id"]?.Value<string>() ?? "";
+                string command = c["command"]?.Value<string>() ?? "";
+                var (action, reason) = PermissionEngine.EvaluateCommandRule(command);
+                cmdResults.Add(new JObject {
+                    ["id"] = id,
+                    ["action"] = action,
+                    ["reason"] = reason
+                });
+            }
+
+            string ws = doc["workspace"]?.Value<string>() ?? Environment.CurrentDirectory;
+            var pathResults = new JArray();
+            foreach (JObject p in (doc["paths"] as JArray ?? new JArray())) {
+                string id = p["id"]?.Value<string>() ?? "";
+                string raw = p["path"]?.Value<string>() ?? "";
+                bool allowed = true;
+                string err = "";
+                try {
+                    PermissionEngine.ResolveToolPath(ws, raw, allowRoot: true);
+                } catch (Exception ex) {
+                    allowed = false;
+                    err = ex.Message;
+                }
+                pathResults.Add(new JObject {
+                    ["id"] = id,
+                    ["allowed"] = allowed,
+                    ["error"] = err
+                });
+            }
+
+            Console.WriteLine(new JObject {
+                ["commands"] = cmdResults,
+                ["paths"] = pathResults
+            }.ToString(Formatting.None));
             return 0;
         }
 

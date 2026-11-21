@@ -61,8 +61,7 @@ namespace Sanctum.Harness {
                     string full = PermissionEngine.ResolveToolPath(ws, rel, allowRoot: false);
                     if (!File.Exists(full)) throw new FileNotFoundException("File not found: " + rel);
                     string text = File.ReadAllText(full, Utf8NoBom);
-                    string safeText = text.Replace("</untrusted_file_content>", "&lt;/untrusted_file_content&gt;");
-                    return $"<untrusted_file_content path=\"{rel}\">\n{safeText}\n</untrusted_file_content>";
+                    return UntrustedContent.Wrap("file", rel, text);
                 }
             });
 
@@ -91,8 +90,7 @@ namespace Sanctum.Harness {
                     int end = Math.Min(lines.Length, args["endLine"]?.Value<int>() ?? Math.Min(lines.Length, start + 199));
                     var sb = new StringBuilder();
                     for (int i = start; i <= end; i++) sb.Append(i).Append(": ").AppendLine(lines[i - 1]);
-                    string safeText = sb.ToString().Replace("</untrusted_file_content>", "&lt;/untrusted_file_content&gt;");
-                    return $"<untrusted_file_content path=\"{rel}\" lines=\"{start}-{end}\">\n{safeText}</untrusted_file_content>";
+                    return UntrustedContent.Wrap("file", $"{rel}:{start}-{end}", sb.ToString());
                 }
             });
 
