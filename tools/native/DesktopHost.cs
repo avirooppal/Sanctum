@@ -584,6 +584,10 @@ namespace Sanctum {
                 } catch { }
             }
 
+            if (Sanctum.Harness.HarnessCli.TryHandleEntrypoint(args, out int harnessExit)) {
+                return harnessExit;
+            }
+
             int port = 1337;
             bool explicitPort = false;
             bool headless = false;

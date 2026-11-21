@@ -1,0 +1,550 @@
+using System;
+using System.Collections.Concurrent;
+using System.Collections.Generic;
+using System.Diagnostics;
+using System.Linq;
+using System.Text;
+using System.Threading;
+using Newtonsoft.Json.Linq;
+
+namespace Sanctum.Harness {
+    public sealed class SseSubscriber {
+        public string Id { get; } = Guid.NewGuid().ToString("N");
+        public string SessionId { get; }
+        private readonly Queue<string> _queue = new Queue<string>();
+        private readonly object _lock = new object();
+        private readonly AutoResetEvent _signal = new AutoResetEvent(false);
+        public volatile bool SlowConsumerDisconnected;
+        public volatile bool Closed;
+
+        public SseSubscriber(string sessionId) {
+            SessionId = sessionId;
+        }
+
+        public bool EnqueueFrame(string sseFrame) {
+            lock (_lock) {
+                if (Closed) return false;
+                if (_queue.Count >= ProtocolConstants.MaxClientBuffer) {
+                    SlowConsumerDisconnected = true;
+                    Closed = true;
+                    _signal.Set();
+                    return false;
+                }
+                _queue.Enqueue(sseFrame);
+                _signal.Set();
+                return true;
+            }
+        }
+
+        public string DequeueNext(int waitMs, CancellationToken ct) {
+            while (!ct.IsCancellationRequested) {
+                lock (_lock) {
+                    if (_queue.Count > 0) return _queue.Dequeue();
+                    if (Closed) return null;
+                }
+                _signal.WaitOne(waitMs);
+                lock (_lock) {
+                    if (_queue.Count > 0) return _queue.Dequeue();
+                    if (Closed) return null;
+                }
+                if (waitMs > 0) return ""; // heartbeat tick
+            }
+            return null;
+        }
+
+        public void Close() {
+            lock (_lock) {
+                Closed = true;
+                _signal.Set();
+            }
+        }
+    }
+
+    public sealed class HarnessToolDescriptor {
+        public string Name { get; set; } = "";
+        public string Description { get; set; } = "";
+        public string Category { get; set; } = "builtin";
+        public string Safety { get; set; } = "read"; // read | write | exec | network | destructive
+        public int TimeoutMs { get; set; } = 30000;
+        public int MaxOutputChars { get; set; } = 32768;
+        public JObject InputSchema { get; set; } = new JObject();
+        public Func<JObject, CancellationToken, string> Execute { get; set; }
+    }
+
+    public sealed class HarnessEngine {
+        private readonly SessionLogStore _store;
+        private readonly IModelProvider _provider;
+        private readonly Dictionary<string, HarnessToolDescriptor> _tools = new Dictionary<string, HarnessToolDescriptor>(StringComparer.OrdinalIgnoreCase);
+        private readonly ConcurrentDictionary<string, CancellationTokenSource> _activeRuns = new ConcurrentDictionary<string, CancellationTokenSource>(StringComparer.OrdinalIgnoreCase);
+        private readonly ConcurrentDictionary<string, string> _activeRunIds = new ConcurrentDictionary<string, string>(StringComparer.OrdinalIgnoreCase);
+        private readonly object _subLock = new object();
+        private readonly List<SseSubscriber> _subscribers = new List<SseSubscriber>();
+        private readonly object _idemLock = new object();
+        private readonly Dictionary<string, LinkedList<KeyValuePair<string, JObject>>> _idempotency = new Dictionary<string, LinkedList<KeyValuePair<string, JObject>>>(StringComparer.OrdinalIgnoreCase);
+
+        public HarnessEngine(SessionLogStore store, IModelProvider provider) {
+            _store = store;
+            _provider = provider;
+            RegisterPhase1aTools();
+            _store.RecoverAllSessionsOnStartup();
+        }
+
+        public SessionLogStore Store => _store;
+        public int ActiveRunCount => _activeRuns.Count;
+
+        private void RegisterPhase1aTools() {
+            RegisterTool(new HarnessToolDescriptor {
+                Name = "echo",
+                Description = "Deterministic echo tool for Phase 1a harness verification.",
+                Category = "builtin",
+                Safety = "read",
+                InputSchema = new JObject {
+                    ["type"] = "object",
+                    ["properties"] = new JObject { ["text"] = new JObject { ["type"] = "string" } },
+                    ["required"] = new JArray("text")
+                },
+                Execute = (args, ct) => args["text"]?.Value<string>() ?? ""
+            });
+
+            RegisterTool(new HarnessToolDescriptor {
+                Name = "sleep_tool",
+                Description = "Cancellable sleep tool for testing timeouts and interrupts.",
+                Category = "builtin",
+                Safety = "read",
+                InputSchema = new JObject {
+                    ["type"] = "object",
+                    ["properties"] = new JObject { ["ms"] = new JObject { ["type"] = "integer" } }
+                },
+                Execute = (args, ct) => {
+                    int ms = Math.Min(10000, Math.Max(10, args["ms"]?.Value<int>() ?? 500));
+                    ct.WaitHandle.WaitOne(ms);
+                    ct.ThrowIfCancellationRequested();
+                    return "slept " + ms + "ms";
+                }
+            });
+
+            RegisterTool(new HarnessToolDescriptor {
+                Name = "big_output",
+                Description = "Generates large output to verify blob offloading.",
+                Category = "builtin",
+                Safety = "read",
+                InputSchema = new JObject {
+                    ["type"] = "object",
+                    ["properties"] = new JObject { ["sizeBytes"] = new JObject { ["type"] = "integer" } }
+                },
+                Execute = (args, ct) => {
+                    int sz = Math.Min(ProtocolConstants.MaxBlobBytes, Math.Max(1024, args["sizeBytes"]?.Value<int>() ?? 24576));
+                    return new string('A', sz);
+                }
+            });
+        }
+
+        public void RegisterTool(HarnessToolDescriptor tool) {
+            _tools[tool.Name] = tool;
+        }
+
+        public JArray ListToolsJson() {
+            var arr = new JArray();
+            foreach (var t in _tools.Values.OrderBy(x => x.Name, StringComparer.Ordinal)) {
+                arr.Add(new JObject {
+                    ["name"] = t.Name,
+                    ["description"] = t.Description,
+                    ["category"] = t.Category,
+                    ["safety"] = t.Safety,
+                    ["timeoutMs"] = t.TimeoutMs,
+                    ["maxOutputChars"] = t.MaxOutputChars,
+                    ["inputSchema"] = t.InputSchema
+                });
+            }
+            return arr;
+        }
+
+        public bool TryGetIdempotentResult(string sessionId, string key, out JObject cached) {
+            cached = null;
+            if (string.IsNullOrWhiteSpace(key)) return false;
+            lock (_idemLock) {
+                if (!_idempotency.TryGetValue(sessionId, out var list)) return false;
+                foreach (var kv in list) {
+                    if (kv.Key == key) {
+                        cached = (JObject)kv.Value.DeepClone();
+                        return true;
+                    }
+                }
+                return false;
+            }
+        }
+
+        public void RecordIdempotentResult(string sessionId, string key, JObject response) {
+            if (string.IsNullOrWhiteSpace(key) || response == null) return;
+            lock (_idemLock) {
+                if (!_idempotency.TryGetValue(sessionId, out var list)) {
+                    list = new LinkedList<KeyValuePair<string, JObject>>();
+                    _idempotency[sessionId] = list;
+                }
+                list.AddLast(new KeyValuePair<string, JObject>(key, (JObject)response.DeepClone()));
+                while (list.Count > ProtocolConstants.IdempotencyCacheSize) list.RemoveFirst();
+            }
+        }
+
+        public SseSubscriber Subscribe(string sessionId) {
+            var sub = new SseSubscriber(sessionId);
+            lock (_subLock) _subscribers.Add(sub);
+            return sub;
+        }
+
+        public void Unsubscribe(SseSubscriber sub) {
+            if (sub == null) return;
+            sub.Close();
+            lock (_subLock) _subscribers.Remove(sub);
+        }
+
+        private void BroadcastEvent(HarnessEvent evt) {
+            string json = CanonicalJson.SerializeObject(evt);
+            string frame = $"id: {evt.Seq}\nevent: {evt.Type}\ndata: {json}\n\n";
+            List<SseSubscriber> targets;
+            lock (_subLock) {
+                targets = _subscribers.Where(s => string.Equals(s.SessionId, evt.SessionId, StringComparison.OrdinalIgnoreCase)).ToList();
+            }
+            foreach (var sub in targets) {
+                if (!sub.EnqueueFrame(frame)) {
+                    lock (_subLock) _subscribers.Remove(sub);
+                }
+            }
+        }
+
+        private void BroadcastEphemeralDelta(string sessionId, string runId, string type, string delta) {
+            var evt = new HarnessEvent {
+                V = ProtocolConstants.Version,
+                Seq = 0, // ephemeral live delta; coalesced into durable checkpoints/final message
+                Ts = DateTime.UtcNow.ToString("o"),
+                SessionId = sessionId,
+                RunId = runId,
+                Type = type,
+                Payload = new JObject { ["delta"] = SecretsRedactor.Redact(delta) }
+            };
+            BroadcastEvent(evt);
+        }
+
+        private HarnessEvent AppendAndBroadcast(string sessionId, string type, JObject payload, string runId = null, bool durableFlush = true) {
+            var evt = _store.Append(sessionId, type, payload, runId, durableFlush);
+            BroadcastEvent(evt);
+            return evt;
+        }
+
+        public SessionSummary CreateSession(string title, string workspace, string mode, string autonomy, string model) {
+            string id = "s_" + Guid.NewGuid().ToString("N").Substring(0, 12);
+            string safeMode = (mode == "plan" || mode == "build") ? mode : "build";
+            string safeAutonomy = (autonomy == "ask_all" || autonomy == "auto_reads") ? autonomy : "auto_reads";
+            AppendAndBroadcast(id, "session_started", new JObject {
+                ["title"] = string.IsNullOrWhiteSpace(title) ? "New Session" : title.Trim(),
+                ["workspace"] = workspace ?? "",
+                ["mode"] = safeMode,
+                ["autonomy"] = safeAutonomy,
+                ["model"] = string.IsNullOrWhiteSpace(model) ? "mock" : model.Trim()
+            }, durableFlush: true);
+            return _store.BuildSummary(id);
+        }
+
+        public SessionSummary ForkSession(string parentSessionId, long forkAfterSeq, string title = null) {
+            var parent = _store.BuildSummary(parentSessionId);
+            if (parent == null) throw new KeyNotFoundException("Parent session not found.");
+            long clamped = Math.Min(Math.Max(1, forkAfterSeq), parent.LastSeq);
+            string childId = "s_" + Guid.NewGuid().ToString("N").Substring(0, 12);
+            _store.SeedForkSequence(childId, clamped);
+            AppendAndBroadcast(childId, "session_started", new JObject {
+                ["title"] = string.IsNullOrWhiteSpace(title) ? (parent.Title + " (fork)") : title.Trim(),
+                ["workspace"] = parent.Workspace,
+                ["mode"] = parent.Mode,
+                ["autonomy"] = parent.Autonomy,
+                ["model"] = parent.Model,
+                ["parentSessionId"] = parentSessionId,
+                ["forkAfterSeq"] = clamped
+            }, durableFlush: true);
+            return _store.BuildSummary(childId);
+        }
+
+        public SessionSummary GetSessionSummary(string sessionId) {
+            var summary = _store.BuildSummary(sessionId);
+            if (summary != null && _activeRunIds.TryGetValue(sessionId, out var runId)) {
+                summary.ActiveRunId = runId;
+            }
+            return summary;
+        }
+
+        public List<SessionSummary> ListSessions() {
+            var list = _store.ListSessions();
+            foreach (var s in list) {
+                if (_activeRunIds.TryGetValue(s.SessionId, out var runId)) s.ActiveRunId = runId;
+            }
+            return list;
+        }
+
+        public void SetMode(string sessionId, string mode) {
+            if (mode != "plan" && mode != "build") throw new ArgumentException("Mode must be 'plan' or 'build'.");
+            if (!_store.SessionExists(sessionId)) throw new KeyNotFoundException("Session not found.");
+            AppendAndBroadcast(sessionId, "mode_changed", new JObject { ["mode"] = mode }, durableFlush: true);
+        }
+
+        public void SetAutonomy(string sessionId, string autonomy, bool viaTrustedChannel) {
+            if (autonomy != "ask_all" && autonomy != "auto_reads" && autonomy != "full_auto") {
+                throw new ArgumentException("Autonomy must be 'ask_all', 'auto_reads', or 'full_auto'.");
+            }
+            if (autonomy == "full_auto" && !viaTrustedChannel) {
+                throw new UnauthorizedAccessException("Switching autonomy to full_auto requires native dialog or CLI TTY confirmation.");
+            }
+            if (!_store.SessionExists(sessionId)) throw new KeyNotFoundException("Session not found.");
+            AppendAndBroadcast(sessionId, "autonomy_changed", new JObject { ["autonomy"] = autonomy }, durableFlush: true);
+        }
+
+        public void SetModel(string sessionId, string model) {
+            if (string.IsNullOrWhiteSpace(model)) throw new ArgumentException("Model is required.");
+            if (!_store.SessionExists(sessionId)) throw new KeyNotFoundException("Session not found.");
+            AppendAndBroadcast(sessionId, "model_changed", new JObject { ["model"] = model.Trim() }, durableFlush: true);
+        }
+
+        public bool InterruptRun(string sessionId) {
+            if (_activeRuns.TryGetValue(sessionId, out var cts)) {
+                try { cts.Cancel(); } catch { }
+                return true;
+            }
+            return false;
+        }
+
+        public void InterruptAllRuns() {
+            foreach (var kv in _activeRuns) {
+                try { kv.Value.Cancel(); } catch { }
+            }
+        }
+
+        public (bool ok, int statusCode, JObject response) StartRun(
+            string sessionId,
+            string content,
+            RunBudgets budgets = null,
+            string idempotencyKey = null) {
+            if (!_store.SessionExists(sessionId)) {
+                return (false, 404, new JObject { ["error"] = "Session not found." });
+            }
+            if (TryGetIdempotentResult(sessionId, idempotencyKey, out var cached)) {
+                return (true, 202, cached);
+            }
+
+            var cts = new CancellationTokenSource();
+            if (!_activeRuns.TryAdd(sessionId, cts)) {
+                _activeRunIds.TryGetValue(sessionId, out var currentRun);
+                return (false, 409, new JObject {
+                    ["error"] = "A run is already active on this session.",
+                    ["code"] = "run_in_progress",
+                    ["activeRunId"] = currentRun ?? ""
+                });
+            }
+
+            string runId = "r_" + Guid.NewGuid().ToString("N").Substring(0, 12);
+            _activeRunIds[sessionId] = runId;
+            budgets = budgets ?? new RunBudgets();
+
+            var userEvt = AppendAndBroadcast(sessionId, "user_message", new JObject {
+                ["role"] = "user",
+                ["content"] = content ?? ""
+            }, runId, durableFlush: true);
+
+            AppendAndBroadcast(sessionId, "run_started", new JObject {
+                ["runId"] = runId,
+                ["budgets"] = JObject.FromObject(budgets)
+            }, runId, durableFlush: true);
+
+            var resp = new JObject {
+                ["sessionId"] = sessionId,
+                ["runId"] = runId,
+                ["seq"] = userEvt.Seq,
+                ["status"] = "running"
+            };
+            RecordIdempotentResult(sessionId, idempotencyKey, resp);
+
+            ThreadPool.QueueUserWorkItem(_ => ExecuteLoop(sessionId, runId, budgets, cts));
+            return (true, 202, resp);
+        }
+
+        private void ExecuteLoop(string sessionId, string runId, RunBudgets budgets, CancellationTokenSource cts) {
+            string stopReason = "completed";
+            var sw = Stopwatch.StartNew();
+            int totalTokens = 0;
+            var callSignatures = new List<string>();
+
+            try {
+                var summary = _store.BuildSummary(sessionId);
+                string model = summary?.Model ?? "mock";
+                var history = BuildModelMessagesFromLog(sessionId);
+                var toolsJson = ListToolsJson();
+
+                for (int step = 0; step < budgets.MaxSteps; step++) {
+                    cts.Token.ThrowIfCancellationRequested();
+                    if (sw.ElapsedMilliseconds > budgets.MaxWallTimeMs) {
+                        stopReason = "max_wall_time";
+                        break;
+                    }
+
+                    var contentBuf = new StringBuilder();
+                    var reasoningBuf = new StringBuilder();
+                    DateTime lastCheckpoint = DateTime.UtcNow;
+                    int charsSinceCheckpoint = 0;
+
+                    var turn = _provider.StreamChat(
+                        model,
+                        history,
+                        toolsJson,
+                        rDelta => {
+                            reasoningBuf.Append(rDelta);
+                            BroadcastEphemeralDelta(sessionId, runId, "reasoning_delta", rDelta);
+                        },
+                        cDelta => {
+                            contentBuf.Append(cDelta);
+                            charsSinceCheckpoint += cDelta.Length;
+                            BroadcastEphemeralDelta(sessionId, runId, "message_delta", cDelta);
+                            if (charsSinceCheckpoint >= 4096 || (DateTime.UtcNow - lastCheckpoint).TotalSeconds >= 2.0) {
+                                charsSinceCheckpoint = 0;
+                                lastCheckpoint = DateTime.UtcNow;
+                                _store.Append(sessionId, "message_checkpoint", new JObject {
+                                    ["partialContent"] = contentBuf.ToString()
+                                }, runId, durableFlush: false);
+                            }
+                        },
+                        cts.Token);
+
+                    totalTokens += turn.PromptTokens + turn.CompletionTokens;
+                    AppendAndBroadcast(sessionId, "context_usage", new JObject {
+                        ["promptTokens"] = turn.PromptTokens,
+                        ["completionTokens"] = turn.CompletionTokens,
+                        ["totalTokens"] = totalTokens
+                    }, runId, durableFlush: false);
+
+                    if (!string.IsNullOrEmpty(turn.Content) || !string.IsNullOrEmpty(turn.Reasoning)) {
+                        AppendAndBroadcast(sessionId, "assistant_message", new JObject {
+                            ["role"] = "assistant",
+                            ["content"] = turn.Content,
+                            ["reasoning"] = turn.Reasoning
+                        }, runId, durableFlush: true);
+                    }
+
+                    if (totalTokens > budgets.MaxTokens) {
+                        stopReason = "max_tokens";
+                        break;
+                    }
+
+                    if (turn.ToolCalls.Count == 0) {
+                        stopReason = "completed";
+                        break;
+                    }
+
+                    // Loop detection: 2 consecutive or 3 total identical tool call signatures
+                    string sig = string.Join("|", turn.ToolCalls.Select(c => c.Name + ":" + CanonicalJson.Serialize(c.Arguments)));
+                    string lastSig = callSignatures.Count > 0 ? callSignatures[callSignatures.Count - 1] : null;
+                    callSignatures.Add(sig);
+                    int count = callSignatures.Count(s => s == sig);
+                    if (sig == lastSig || count >= 3) {
+                        stopReason = "loop_detected";
+                        break;
+                    }
+
+                    history.Add(new JObject {
+                        ["role"] = "assistant",
+                        ["content"] = turn.Content ?? ""
+                    });
+
+                    foreach (var call in turn.ToolCalls) {
+                        cts.Token.ThrowIfCancellationRequested();
+                        AppendAndBroadcast(sessionId, "tool_call_requested", new JObject {
+                            ["callId"] = call.Id,
+                            ["tool"] = call.Name,
+                            ["arguments"] = call.Arguments
+                        }, runId, durableFlush: true);
+
+                        if (!_tools.TryGetValue(call.Name, out var tool)) {
+                            AppendAndBroadcast(sessionId, "tool_finished", new JObject {
+                                ["callId"] = call.Id,
+                                ["tool"] = call.Name,
+                                ["ok"] = false,
+                                ["error"] = "Unknown tool: " + call.Name
+                            }, runId, durableFlush: true);
+                            history.Add(new JObject { ["role"] = "tool", ["tool_call_id"] = call.Id, ["content"] = "Error: unknown tool" });
+                            continue;
+                        }
+
+                        AppendAndBroadcast(sessionId, "tool_started", new JObject {
+                            ["callId"] = call.Id,
+                            ["tool"] = call.Name
+                        }, runId, durableFlush: false);
+
+                        string rawOut;
+                        bool ok = true;
+                        try {
+                            using (var toolCts = CancellationTokenSource.CreateLinkedTokenSource(cts.Token)) {
+                                toolCts.CancelAfter(Math.Min(budgets.ToolTimeoutMs, tool.TimeoutMs));
+                                rawOut = tool.Execute(call.Arguments, toolCts.Token) ?? "";
+                            }
+                        } catch (OperationCanceledException) when (cts.IsCancellationRequested) {
+                            throw;
+                        } catch (Exception ex) {
+                            ok = false;
+                            rawOut = "Tool error: " + ex.Message;
+                        }
+
+                        var stored = _store.StoreBlobIfLarge(rawOut);
+                        AppendAndBroadcast(sessionId, "tool_finished", new JObject {
+                            ["callId"] = call.Id,
+                            ["tool"] = call.Name,
+                            ["ok"] = ok,
+                            ["output"] = stored
+                        }, runId, durableFlush: true);
+
+                        history.Add(new JObject {
+                            ["role"] = "tool",
+                            ["tool_call_id"] = call.Id,
+                            ["content"] = stored["inline"]?.Value<string>() ?? stored["preview"]?.Value<string>() ?? ""
+                        });
+                    }
+
+                    if (step + 1 >= budgets.MaxSteps) {
+                        stopReason = "max_steps";
+                    }
+                }
+            } catch (OperationCanceledException) {
+                stopReason = "interrupted";
+            } catch (Exception ex) {
+                stopReason = "error";
+                AppendAndBroadcast(sessionId, "error", new JObject {
+                    ["message"] = ex.Message
+                }, runId, durableFlush: true);
+            } finally {
+                _activeRuns.TryRemove(sessionId, out _);
+                _activeRunIds.TryRemove(sessionId, out _);
+                try {
+                    AppendAndBroadcast(sessionId, "run_finished", new JObject {
+                        ["stopReason"] = stopReason,
+                        ["elapsedMs"] = sw.ElapsedMilliseconds,
+                        ["totalTokens"] = totalTokens
+                    }, runId, durableFlush: true);
+                } catch { }
+                cts.Dispose();
+            }
+        }
+
+        private List<JObject> BuildModelMessagesFromLog(string sessionId) {
+            var events = _store.ReadEvents(sessionId, 0);
+            var msgs = new List<JObject>();
+            foreach (var e in events) {
+                if (e.Type == "user_message") {
+                    msgs.Add(new JObject {
+                        ["role"] = "user",
+                        ["content"] = e.Payload?["content"]?.Value<string>() ?? ""
+                    });
+                } else if (e.Type == "assistant_message") {
+                    msgs.Add(new JObject {
+                        ["role"] = "assistant",
+                        ["content"] = e.Payload?["content"]?.Value<string>() ?? ""
+                    });
+                }
+            }
+            return msgs;
+        }
+    }
+}
