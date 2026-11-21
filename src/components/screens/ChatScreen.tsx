@@ -1297,11 +1297,11 @@ export const ChatScreen: React.FC<ChatScreenProps> = ({ onNavigate, onOpenMcpSet
           className={cn(
             "transition-all duration-300",
             isEmptyChat
-              ? "flex-1 flex flex-col justify-end pb-6"
+              ? "flex-1 flex flex-col justify-end pb-2"
               : "flex-1 overflow-y-auto"
           )}
         >
-          <div className="mx-auto w-full max-w-2xl px-6 py-6 space-y-6">
+          <div className={cn("mx-auto w-full max-w-2xl px-6", isEmptyChat ? "py-3" : "py-6 space-y-6")}>
             {isEmptyChat ? (
               <div className="flex flex-col items-center text-center gap-3.5">
                 <img
@@ -1373,8 +1373,8 @@ export const ChatScreen: React.FC<ChatScreenProps> = ({ onNavigate, onOpenMcpSet
         {/* Composer (Centered vertically on empty chat, glides smoothly to bottom once messages exist) */}
         <div
           className={cn(
-            "px-2 sm:px-6 pt-2 transition-all duration-300",
-            isEmptyChat ? "flex-1 flex flex-col justify-start pb-10" : "shrink-0",
+            "w-full px-4 sm:px-6 transition-all duration-300",
+            isEmptyChat ? "flex-1 flex flex-col justify-start pt-2 pb-12" : "shrink-0 pt-2",
             !isEmptyChat && (isTerminalOpen ? "pb-3" : "pb-5")
           )}
         >
@@ -1402,7 +1402,7 @@ export const ChatScreen: React.FC<ChatScreenProps> = ({ onNavigate, onOpenMcpSet
               }
             }}
             className={cn(
-              "relative mx-auto max-w-2xl rounded-2xl border border-border/80 bg-card/95 focus-within:border-muted-foreground/50 transition-colors shadow-lg",
+              "relative mx-auto w-full max-w-2xl rounded-2xl border border-border/80 bg-card/90 backdrop-blur-md focus-within:border-primary/40 transition-colors shadow-xl",
               isRecording && "border-destructive ring-1 ring-destructive/20"
             )}
           >
