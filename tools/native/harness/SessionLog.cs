@@ -200,7 +200,7 @@ namespace Sanctum.Harness {
                 string line = rawLines[i];
                 if (string.IsNullOrWhiteSpace(line)) continue;
                 try {
-                    var obj = JObject.Parse(line);
+                    var obj = CanonicalJson.ParseObject(line);
                     string storedHash = obj["sha256"]?.Value<string>();
                     if (string.IsNullOrEmpty(storedHash)) throw new InvalidDataException("Missing sha256");
 

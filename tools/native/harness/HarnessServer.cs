@@ -74,6 +74,7 @@ namespace Sanctum.Harness {
         }
 
         public void Start() {
+            ThreadPool.SetMinThreads(64, 64);
             Directory.CreateDirectory(_appDataDir);
             _httpListener.Start();
             WriteRuntimeFile();
@@ -176,7 +177,8 @@ namespace Sanctum.Harness {
                     string sessionId = path.Substring("/v1/sessions/".Length, path.Length - "/v1/sessions/".Length - "/events".Length).Trim('/');
                     long afterSeq = 0;
                     long.TryParse(req.QueryString["after"] ?? "0", out afterSeq);
-                    HandleHttpSse(res, sessionId, afterSeq);
+                    var sseThread = new Thread(() => HandleHttpSse(res, sessionId, afterSeq)) { IsBackground = true };
+                    sseThread.Start();
                     return;
                 }
 

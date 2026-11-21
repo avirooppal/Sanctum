@@ -63,6 +63,13 @@ namespace Sanctum.Harness {
     }
 
     public static class CanonicalJson {
+        public static JObject ParseObject(string json) {
+            using (var sr = new StringReader(json ?? ""))
+            using (var jr = new JsonTextReader(sr) { DateParseHandling = DateParseHandling.None }) {
+                return JObject.Load(jr);
+            }
+        }
+
         public static JToken SortKeys(JToken token) {
             if (token == null) return JValue.CreateNull();
             if (token is JObject obj) {

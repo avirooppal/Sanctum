@@ -217,6 +217,7 @@ namespace Sanctum.Harness {
 
         private static int StreamSseUntilFinished(RuntimeInfo runtime, string sessionId, long afterSeq, bool jsonOut) {
             var req = (HttpWebRequest)WebRequest.Create($"http://127.0.0.1:{runtime.HttpPort}/v1/sessions/{sessionId}/events?after={afterSeq}");
+            req.Proxy = null;
             req.Method = "GET";
             req.Headers["Authorization"] = "Bearer " + runtime.Token;
             req.Timeout = 30000;
