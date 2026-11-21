@@ -93,7 +93,7 @@ export const SettingsMenu: React.FC<SettingsMenuProps> = ({
   };
 
   return (
-    <aside className="w-60 border-r border-border/60 bg-sidebar flex flex-col p-3 space-y-4 select-none shrink-0 overflow-y-auto">
+    <aside className="w-60 border-r border-border/60 bg-sidebar/80 backdrop-blur-md flex flex-col p-3 space-y-4 select-none shrink-0 overflow-y-auto">
       <div className="px-2 pt-1">
         <h2 className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">
           Settings

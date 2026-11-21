@@ -432,7 +432,7 @@ export const LeftSidebar: React.FC<LeftSidebarProps> = ({
       {!(isExplorerCollapsed && activeModule === "chat") && (
         <aside
           className={cn(
-            "relative z-40 flex flex-col justify-between bg-sidebar border-r border-border/60 select-none transition-all duration-200 h-full shrink-0",
+            "relative z-40 flex flex-col justify-between bg-sidebar/80 backdrop-blur-md border-r border-border/60 select-none transition-all duration-200 h-full shrink-0",
             isExplorerCollapsed ? "w-14 px-1.5 py-2.5" : "w-60 px-2.5 py-2.5"
           )}
         >

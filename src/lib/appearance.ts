@@ -61,14 +61,74 @@ export const WALLPAPER_PRESETS: { id: string; label: string; css: string }[] = [
 ];
 
 const STORAGE_KEY = "sanctum.appearance.v2";
+let inMemoryAppearance: AppearanceConfig | null = null;
+
+export function compressImageFileToDataUrl(
+  file: File,
+  maxDimension: number,
+  quality = 0.86
+): Promise<string> {
+  return new Promise((resolve, reject) => {
+    if (!file.type.startsWith("image/")) {
+      reject(new Error("Please select an image file (PNG, JPG, WebP, GIF, SVG)."));
+      return;
+    }
+    // Keep animated GIFs or SVGs intact if <= 2MB
+    if ((file.type === "image/gif" || file.type === "image/svg+xml") && file.size <= 2 * 1024 * 1024) {
+      const reader = new FileReader();
+      reader.onload = () => resolve(String(reader.result || ""));
+      reader.onerror = () => reject(new Error("Could not read image file."));
+      reader.readAsDataURL(file);
+      return;
+    }
+
+    const objectUrl = URL.createObjectURL(file);
+    const img = new Image();
+    img.onload = () => {
+      try {
+        let { width, height } = img;
+        if (width > maxDimension || height > maxDimension) {
+          const ratio = Math.min(maxDimension / width, maxDimension / height);
+          width = Math.max(1, Math.round(width * ratio));
+          height = Math.max(1, Math.round(height * ratio));
+        }
+        const canvas = document.createElement("canvas");
+        canvas.width = width;
+        canvas.height = height;
+        const ctx = canvas.getContext("2d");
+        if (!ctx) {
+          URL.revokeObjectURL(objectUrl);
+          reject(new Error("Canvas unavailable for image optimization."));
+          return;
+        }
+        ctx.drawImage(img, 0, 0, width, height);
+        const outMime = file.type === "image/png" && maxDimension <= 512 ? "image/png" : "image/jpeg";
+        const dataUrl = canvas.toDataURL(outMime, quality);
+        URL.revokeObjectURL(objectUrl);
+        resolve(dataUrl);
+      } catch (err) {
+        URL.revokeObjectURL(objectUrl);
+        reject(err instanceof Error ? err : new Error("Failed to process image."));
+      }
+    };
+    img.onerror = () => {
+      URL.revokeObjectURL(objectUrl);
+      reject(new Error("Unsupported or corrupted image file."));
+    };
+    img.src = objectUrl;
+  });
+}
 
 export function loadAppearanceConfig(): AppearanceConfig {
+  if (inMemoryAppearance) return inMemoryAppearance;
   if (typeof window === "undefined") return { ...DEFAULT_APPEARANCE };
   try {
     const raw = localStorage.getItem(STORAGE_KEY);
     if (!raw) return { ...DEFAULT_APPEARANCE };
     const parsed = JSON.parse(raw);
-    return { ...DEFAULT_APPEARANCE, ...(parsed && typeof parsed === "object" ? parsed : {}) };
+    const merged = { ...DEFAULT_APPEARANCE, ...(parsed && typeof parsed === "object" ? parsed : {}) };
+    inMemoryAppearance = merged;
+    return merged;
   } catch {
     return { ...DEFAULT_APPEARANCE };
   }
@@ -76,11 +136,12 @@ export function loadAppearanceConfig(): AppearanceConfig {
 
 export function saveAppearanceConfig(patch: Partial<AppearanceConfig>): AppearanceConfig {
   const next = { ...loadAppearanceConfig(), ...patch };
+  inMemoryAppearance = next;
   if (typeof window !== "undefined") {
     try {
       localStorage.setItem(STORAGE_KEY, JSON.stringify(next));
     } catch {
-      // Ignore quota errors
+      // Even if localStorage quota is tight, inMemoryAppearance + /api/settings disk store keep it persistent
     }
     applyAppearanceConfig(next);
     window.dispatchEvent(new CustomEvent("sanctum-appearance-updated", { detail: next }));

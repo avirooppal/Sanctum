@@ -17,6 +17,7 @@ import {
   DEFAULT_APPEARANCE,
   WALLPAPER_PRESETS,
   applyAppearanceConfig,
+  compressImageFileToDataUrl,
   loadAppearanceConfig,
   saveAppearanceConfig,
   type AppearanceConfig,
@@ -76,6 +77,10 @@ export const SettingsAppearance: React.FC = () => {
           if (s["appearance.theme"]) merged.theme = s["appearance.theme"];
           if (s["appearance.fontSize"]) merged.fontSize = s["appearance.fontSize"];
           if (s["appearance.accentColor"] !== undefined) merged.accentColor = String(s["appearance.accentColor"] || "");
+          if (s["appearance.wallpaper"] !== undefined) merged.wallpaper = String(s["appearance.wallpaper"] || "");
+          if (typeof s["appearance.wallpaperOpacity"] === "number") merged.wallpaperOpacity = s["appearance.wallpaperOpacity"];
+          if (typeof s["appearance.wallpaperBlur"] === "number") merged.wallpaperBlur = s["appearance.wallpaperBlur"];
+          if (s["appearance.customIcon"] !== undefined) merged.customIcon = String(s["appearance.customIcon"] || "");
           if (s["appearance.customBrandName"]) merged.customBrandName = String(s["appearance.customBrandName"]);
           if (s["appearance.showTokenSpeed"] !== undefined) merged.showTokenSpeed = Boolean(s["appearance.showTokenSpeed"]);
           if (s["appearance.coloredUserBubble"] !== undefined) merged.coloredUserBubble = Boolean(s["appearance.coloredUserBubble"]);
@@ -96,6 +101,10 @@ export const SettingsAppearance: React.FC = () => {
     if (patch.theme !== undefined) serverPatch["appearance.theme"] = patch.theme;
     if (patch.fontSize !== undefined) serverPatch["appearance.fontSize"] = patch.fontSize;
     if (patch.accentColor !== undefined) serverPatch["appearance.accentColor"] = patch.accentColor;
+    if (patch.wallpaper !== undefined) serverPatch["appearance.wallpaper"] = patch.wallpaper;
+    if (patch.wallpaperOpacity !== undefined) serverPatch["appearance.wallpaperOpacity"] = patch.wallpaperOpacity;
+    if (patch.wallpaperBlur !== undefined) serverPatch["appearance.wallpaperBlur"] = patch.wallpaperBlur;
+    if (patch.customIcon !== undefined) serverPatch["appearance.customIcon"] = patch.customIcon;
     if (patch.customBrandName !== undefined) serverPatch["appearance.customBrandName"] = patch.customBrandName;
     if (patch.showTokenSpeed !== undefined) serverPatch["appearance.showTokenSpeed"] = patch.showTokenSpeed;
     if (patch.coloredUserBubble !== undefined) serverPatch["appearance.coloredUserBubble"] = patch.coloredUserBubble;
@@ -122,9 +131,9 @@ export const SettingsAppearance: React.FC = () => {
     const file = e.target.files?.[0];
     if (!file) return;
     try {
-      const dataUrl = await readImageFileAsDataUrl(file, 5);
+      const dataUrl = await compressImageFileToDataUrl(file, 1920, 0.86);
       setWallpaperUrlInput("");
-      await updateAndPersist({ wallpaper: dataUrl }, "Custom wallpaper applied");
+      await updateAndPersist({ wallpaper: dataUrl }, "Custom wallpaper saved & applied");
     } catch (err: any) {
       toast.error(err?.message || "Failed to load wallpaper");
     } finally {
@@ -136,8 +145,8 @@ export const SettingsAppearance: React.FC = () => {
     const file = e.target.files?.[0];
     if (!file) return;
     try {
-      const dataUrl = await readImageFileAsDataUrl(file, 2);
-      await updateAndPersist({ customIcon: dataUrl }, "Custom app icon updated");
+      const dataUrl = await compressImageFileToDataUrl(file, 256, 0.9);
+      await updateAndPersist({ customIcon: dataUrl }, "Custom app icon saved & applied");
     } catch (err: any) {
       toast.error(err?.message || "Failed to load icon");
     } finally {

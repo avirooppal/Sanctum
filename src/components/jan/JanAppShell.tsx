@@ -32,6 +32,7 @@ import {
   applyAppearanceConfig,
   loadAppearanceConfig,
   resolveWallpaperStyle,
+  saveAppearanceConfig,
   type AppearanceConfig,
 } from "@/lib/appearance";
 
@@ -62,6 +63,29 @@ export const JanAppShell: React.FC = () => {
     const initial = loadAppearanceConfig();
     setAppearance(initial);
     applyAppearanceConfig(initial);
+
+    // Sync persisted appearance (including custom wallpaper & icon) from host settings.json on boot
+    fetch("/api/settings")
+      .then((r) => (r.ok ? r.json() : null))
+      .then((data) => {
+        const s = data?.settings;
+        if (!s) return;
+        const patch: Partial<AppearanceConfig> = {};
+        if (s["appearance.theme"]) patch.theme = s["appearance.theme"];
+        if (s["appearance.fontSize"]) patch.fontSize = s["appearance.fontSize"];
+        if (s["appearance.accentColor"] !== undefined) patch.accentColor = String(s["appearance.accentColor"] || "");
+        if (s["appearance.wallpaper"] !== undefined) patch.wallpaper = String(s["appearance.wallpaper"] || "");
+        if (typeof s["appearance.wallpaperOpacity"] === "number") patch.wallpaperOpacity = s["appearance.wallpaperOpacity"];
+        if (typeof s["appearance.wallpaperBlur"] === "number") patch.wallpaperBlur = s["appearance.wallpaperBlur"];
+        if (s["appearance.customIcon"] !== undefined) patch.customIcon = String(s["appearance.customIcon"] || "");
+        if (s["appearance.customBrandName"]) patch.customBrandName = String(s["appearance.customBrandName"]);
+        if (Object.keys(patch).length > 0) {
+          const synced = saveAppearanceConfig(patch);
+          setAppearance(synced);
+        }
+      })
+      .catch(() => {});
+
     const onAppearance = (e: Event) => {
       const detail = (e as CustomEvent<AppearanceConfig>).detail;
       const next = detail || loadAppearanceConfig();
