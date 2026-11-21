@@ -181,6 +181,10 @@ namespace Sanctum {
                 HandleUpdatesCheck(req, res);
                 return true;
             }
+            if (path == "/api/updates/install" && method == "POST") {
+                HandleUpdatesInstall(req, res);
+                return true;
+            }
             if (path == "/api/ide/detect" && method == "GET") {
                 HandleIdeDetect(req, res);
                 return true;
@@ -2194,47 +2198,223 @@ namespace Sanctum {
             }
         }
 
+        private static string FetchGitHubText(string url, int timeoutMs) {
+            ServicePointManager.SecurityProtocol = SecurityProtocolType.Tls12 | SecurityProtocolType.Tls11 | SecurityProtocolType.Tls;
+            var r = (HttpWebRequest)WebRequest.Create(url);
+            r.Method = "GET";
+            r.UserAgent = "Sanctum-Updater/1.0";
+            r.Accept = "application/vnd.github+json";
+            r.Timeout = timeoutMs;
+            r.ReadWriteTimeout = timeoutMs;
+            using (var resp = (HttpWebResponse)r.GetResponse())
+            using (var sr = new StreamReader(resp.GetResponseStream(), Encoding.UTF8)) {
+                return sr.ReadToEnd();
+            }
+        }
+
         private void HandleUpdatesCheck(HttpListenerRequest req, HttpListenerResponse res) {
             try {
-                const string currentVersion = "1.0.0";
+                const string currentVersion = BuildVersion;
+                string currentCommit = BuildCommit;
                 string simulatedLatest = req.Headers["X-Sanctum-Test-Latest-Version"];
                 string latestVersion = currentVersion;
-                string releaseNotes = "Sanctum Desktop 1.0.0 is up to date.";
+                string latestCommit = currentCommit;
+                string releaseNotes = "Sanctum Desktop " + currentVersion + " (" + currentCommit + ") is up to date.";
+                string downloadUrl = "https://github.com/avirooppal/Sanctum/raw/main/Sanctum.exe";
+                string expectedSha256 = "";
                 bool signedRelease = true;
+                bool updateAvailable = false;
+                string checkSource = "github";
 
                 if (!string.IsNullOrWhiteSpace(simulatedLatest)) {
                     latestVersion = simulatedLatest.Trim();
+                    updateAvailable = !string.Equals(latestVersion, currentVersion, StringComparison.OrdinalIgnoreCase);
+                    releaseNotes = updateAvailable
+                        ? "Signed release v" + latestVersion + " is available with updated local runtime and security fixes."
+                        : releaseNotes;
+                    checkSource = "simulated";
                 } else {
-                    string localManifest = Path.Combine(_appDataDir, "release-manifest.json");
-                    if (File.Exists(localManifest)) {
-                        try {
-                            var parsed = new JavaScriptSerializer().Deserialize<Dictionary<string, object>>(File.ReadAllText(localManifest, Encoding.UTF8));
-                            if (parsed != null && parsed.ContainsKey("latestVersion")) {
-                                latestVersion = Convert.ToString(parsed["latestVersion"]);
+                    var serializer = new JavaScriptSerializer();
+                    // 1. Check latest commit on main
+                    try {
+                        string commitJson = FetchGitHubText("https://api.github.com/repos/avirooppal/Sanctum/commits/main", 8000);
+                        var commitObj = serializer.Deserialize<Dictionary<string, object>>(commitJson);
+                        if (commitObj != null && commitObj.ContainsKey("sha")) {
+                            string fullSha = Convert.ToString(commitObj["sha"]);
+                            if (!string.IsNullOrEmpty(fullSha) && fullSha.Length >= 7) {
+                                latestCommit = fullSha.Substring(0, 7);
                             }
-                            if (parsed != null && parsed.ContainsKey("releaseNotes")) {
-                                releaseNotes = Convert.ToString(parsed["releaseNotes"]);
+                            var commitInner = commitObj.ContainsKey("commit") ? (commitObj["commit"] as Dictionary<string, object>) : null;
+                            if (commitInner != null && commitInner.ContainsKey("message")) {
+                                string msg = Convert.ToString(commitInner["message"]);
+                                int nl = msg.IndexOf('\n');
+                                if (nl > 0) msg = msg.Substring(0, nl);
+                                releaseNotes = msg.Trim();
                             }
-                        } catch { }
+                        }
+                    } catch {
+                        checkSource = "offline";
                     }
-                }
 
-                bool updateAvailable = !string.Equals(latestVersion, currentVersion, StringComparison.OrdinalIgnoreCase);
-                if (updateAvailable && releaseNotes == "Sanctum Desktop 1.0.0 is up to date.") {
-                    releaseNotes = "Signed release v" + latestVersion + " is available with updated local runtime and security fixes.";
+                    // 2. Check SHA256SUMS for Sanctum.exe integrity hash
+                    try {
+                        string sums = FetchGitHubText("https://raw.githubusercontent.com/avirooppal/Sanctum/main/SHA256SUMS", 6000);
+                        foreach (string rawLine in sums.Split(new[] { "\r\n", "\n" }, StringSplitOptions.RemoveEmptyEntries)) {
+                            string line = rawLine.Trim();
+                            if (line.IndexOf("Sanctum.exe", StringComparison.OrdinalIgnoreCase) >= 0) {
+                                string[] parts = line.Split(new[] { ' ', '\t' }, StringSplitOptions.RemoveEmptyEntries);
+                                if (parts.Length >= 1 && parts[0].Length == 64) {
+                                    expectedSha256 = parts[0].ToLowerInvariant();
+                                    break;
+                                }
+                            }
+                        }
+                    } catch { }
+
+                    // 3. Also check GitHub Releases if published
+                    try {
+                        string relJson = FetchGitHubText("https://api.github.com/repos/avirooppal/Sanctum/releases/latest", 6000);
+                        var relObj = serializer.Deserialize<Dictionary<string, object>>(relJson);
+                        if (relObj != null && relObj.ContainsKey("tag_name")) {
+                            string tag = Convert.ToString(relObj["tag_name"]).TrimStart('v', 'V');
+                            if (!string.IsNullOrEmpty(tag)) latestVersion = tag;
+                            if (relObj.ContainsKey("body") && !string.IsNullOrWhiteSpace(Convert.ToString(relObj["body"]))) {
+                                releaseNotes = Convert.ToString(relObj["body"]).Trim();
+                            }
+                            if (relObj.ContainsKey("assets") && relObj["assets"] is object[]) {
+                                foreach (object aObj in (object[])relObj["assets"]) {
+                                    var a = aObj as Dictionary<string, object>;
+                                    if (a != null && string.Equals(Convert.ToString(a["name"]), "Sanctum.exe", StringComparison.OrdinalIgnoreCase)) {
+                                        string bUrl = Convert.ToString(a["browser_download_url"]);
+                                        if (!string.IsNullOrEmpty(bUrl)) downloadUrl = bUrl;
+                                    }
+                                }
+                            }
+                        }
+                    } catch { }
+
+                    bool versionDiff = !string.Equals(latestVersion, currentVersion, StringComparison.OrdinalIgnoreCase);
+                    bool commitDiff = !string.IsNullOrEmpty(latestCommit)
+                        && !string.IsNullOrEmpty(currentCommit)
+                        && currentCommit != "__GIT_COMMIT__"
+                        && !string.Equals(latestCommit, currentCommit, StringComparison.OrdinalIgnoreCase);
+
+                    updateAvailable = versionDiff || commitDiff;
+                    if (!updateAvailable) {
+                        releaseNotes = "Sanctum " + currentVersion + " (" + currentCommit + ") is up to date.";
+                    } else if (string.IsNullOrWhiteSpace(releaseNotes)) {
+                        releaseNotes = "New build " + latestVersion + " (" + latestCommit + ") is available on GitHub.";
+                    }
                 }
 
                 WriteJson(res, 200, new {
                     status = "ok",
                     currentVersion = currentVersion,
-                    latestVersion = latestVersion,
+                    currentCommit = currentCommit,
+                    latestVersion = updateAvailable && latestCommit != currentCommit ? (latestVersion + "+" + latestCommit) : latestVersion,
+                    latestCommit = latestCommit,
                     updateAvailable = updateAvailable,
                     signed = signedRelease,
+                    canSelfInstall = true,
+                    downloadUrl = downloadUrl,
+                    expectedSha256 = expectedSha256,
+                    checkSource = checkSource,
                     checkedAt = DateTime.UtcNow.ToString("o"),
                     releaseNotes = releaseNotes
                 });
             } catch (Exception ex) {
                 WriteJson(res, 500, new { error = ex.Message });
+            }
+        }
+
+        private void HandleUpdatesInstall(HttpListenerRequest req, HttpListenerResponse res) {
+            var serializer = new JavaScriptSerializer();
+            try {
+                string body = ReadRequestBodyUtf8(req, 65536);
+                var payload = serializer.Deserialize<Dictionary<string, object>>(string.IsNullOrEmpty(body) ? "{}" : body);
+                string downloadUrl = payload != null && payload.ContainsKey("downloadUrl")
+                    ? Convert.ToString(payload["downloadUrl"])
+                    : "https://github.com/avirooppal/Sanctum/raw/main/Sanctum.exe";
+                string expectedSha256 = payload != null && payload.ContainsKey("expectedSha256")
+                    ? Convert.ToString(payload["expectedSha256"]).Trim().ToLowerInvariant()
+                    : "";
+
+                if (!downloadUrl.StartsWith("https://github.com/avirooppal/Sanctum/", StringComparison.OrdinalIgnoreCase) &&
+                    !downloadUrl.StartsWith("https://raw.githubusercontent.com/avirooppal/Sanctum/", StringComparison.OrdinalIgnoreCase)) {
+                    WriteJson(res, 400, new { error = "Update URL must point to the official Sanctum GitHub repository." });
+                    return;
+                }
+
+                res.StatusCode = 200;
+                res.ContentType = "application/x-ndjson";
+                res.SendChunked = true;
+
+                Action<object> emit = (obj) => {
+                    try {
+                        byte[] b = Encoding.UTF8.GetBytes(serializer.Serialize(obj) + "\n");
+                        res.OutputStream.Write(b, 0, b.Length);
+                        res.OutputStream.Flush();
+                    } catch { }
+                };
+
+                string tempExe = Path.Combine(Path.GetTempPath(), "Sanctum-Update-" + DateTime.UtcNow.ToString("yyyyMMddHHmmss") + ".exe");
+                try {
+                    ServicePointManager.SecurityProtocol = SecurityProtocolType.Tls12 | SecurityProtocolType.Tls11 | SecurityProtocolType.Tls;
+                    emit(new { status = "Downloading latest Sanctum.exe...", percent = 2 });
+
+                    var dlReq = (HttpWebRequest)WebRequest.Create(downloadUrl);
+                    dlReq.Method = "GET";
+                    dlReq.UserAgent = "Sanctum-Updater/1.0";
+                    dlReq.AllowAutoRedirect = true;
+                    dlReq.Timeout = 120000;
+                    dlReq.ReadWriteTimeout = 120000;
+
+                    long downloaded = 0;
+                    long total = 0;
+                    DateTime lastEmit = DateTime.MinValue;
+                    byte[] buf = new byte[131072];
+
+                    using (var dlResp = (HttpWebResponse)dlReq.GetResponse())
+                    using (var netStream = dlResp.GetResponseStream())
+                    using (var outStream = new FileStream(tempExe, FileMode.Create, FileAccess.Write, FileShare.None)) {
+                        total = dlResp.ContentLength > 0 ? dlResp.ContentLength : 4600000L;
+                        int read;
+                        while ((read = netStream.Read(buf, 0, buf.Length)) > 0) {
+                            outStream.Write(buf, 0, read);
+                            downloaded += read;
+                            DateTime now = DateTime.UtcNow;
+                            if ((now - lastEmit).TotalMilliseconds >= 150) {
+                                lastEmit = now;
+                                int pct = (int)Math.Min(92, Math.Max(3, (downloaded * 92L) / Math.Max(1L, total)));
+                                emit(new { status = "Downloading Sanctum.exe...", percent = pct, completed = downloaded, total = total });
+                            }
+                        }
+                    }
+
+                    if (!string.IsNullOrEmpty(expectedSha256) && expectedSha256.Length == 64) {
+                        emit(new { status = "Verifying SHA-256 signature...", percent = 95 });
+                        using (var sha = SHA256.Create())
+                        using (var fs = File.OpenRead(tempExe)) {
+                            byte[] hash = sha.ComputeHash(fs);
+                            string actual = BitConverter.ToString(hash).Replace("-", "").ToLowerInvariant();
+                            if (!string.Equals(actual, expectedSha256, StringComparison.OrdinalIgnoreCase)) {
+                                try { File.Delete(tempExe); } catch { }
+                                throw new Exception("SHA-256 verification failed. Update aborted for safety.");
+                            }
+                        }
+                    }
+
+                    emit(new { status = "Launching updated Sanctum.exe (your chats & models are preserved)...", percent = 100, installing = true });
+                    Process.Start(new ProcessStartInfo {
+                        FileName = tempExe,
+                        UseShellExecute = true
+                    });
+                } catch (Exception dlEx) {
+                    emit(new { status = "error", error = dlEx.Message });
+                }
+                res.Close();
+            } catch (Exception ex) {
+                try { WriteJson(res, 500, new { error = ex.Message }); } catch { }
             }
         }
     }

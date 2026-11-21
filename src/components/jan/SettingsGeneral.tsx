@@ -52,20 +52,145 @@ export const SettingsGeneral: React.FC = () => {
   const importFileInputRef = useRef<HTMLInputElement | null>(null);
 
   const [dataFolderPath, setDataFolderPath] = useState<string>(
-    "%APPDATA%\\Sanctum\\data"
+    "%APPDATA%\\Sanctum"
   );
-  const appVersion = "1.0.0+fd23990 (2026-10-26)";
+  const [appVersion, setAppVersion] = useState<string>("1.0.0");
+  const [checkingUpdate, setCheckingUpdate] = useState<boolean>(false);
+  const [updateCheckResult, setUpdateCheckResult] = useState<{
+    updateAvailable: boolean;
+    latestVersion: string;
+    releaseNotes: string;
+    downloadUrl: string;
+    expectedSha256?: string;
+    canSelfInstall?: boolean;
+    checkSource?: string;
+  } | null>(null);
+  const [installingUpdate, setInstallingUpdate] = useState<boolean>(false);
+  const [installProgress, setInstallProgress] = useState<{ percent: number; status: string } | null>(null);
+
+  const runUpdateCheck = async (silent = false) => {
+    setCheckingUpdate(true);
+    try {
+      const res = await fetch("/api/updates/check");
+      const data = await res.json();
+      if (data?.currentVersion && data?.currentCommit) {
+        setAppVersion(`${data.currentVersion}+${data.currentCommit}`);
+      }
+      if (data?.checkSource === "offline") {
+        if (!silent) toast.error("Could not reach GitHub to check for updates. Check your internet connection.");
+        return;
+      }
+      if (data?.updateAvailable) {
+        const info = {
+          updateAvailable: true,
+          latestVersion: String(data.latestVersion || ""),
+          releaseNotes: String(data.releaseNotes || ""),
+          downloadUrl: String(data.downloadUrl || "https://github.com/avirooppal/Sanctum/raw/main/Sanctum.exe"),
+          expectedSha256: data.expectedSha256 ? String(data.expectedSha256) : "",
+          canSelfInstall: Boolean(data.canSelfInstall),
+          checkSource: data.checkSource,
+        };
+        setUpdateCheckResult(info);
+        setUpdateAvailableInfo({
+          latestVersion: info.latestVersion,
+          releaseNotes: info.releaseNotes,
+        });
+        if (!silent) toast.info(`Update available: v${info.latestVersion}`);
+      } else {
+        setUpdateCheckResult({
+          updateAvailable: false,
+          latestVersion: String(data?.latestVersion || appVersion),
+          releaseNotes: String(data?.releaseNotes || `Sanctum ${appVersion} is up to date.`),
+          downloadUrl: String(data?.downloadUrl || "https://github.com/avirooppal/Sanctum/raw/main/Sanctum.exe"),
+          canSelfInstall: Boolean(data?.canSelfInstall),
+          checkSource: data?.checkSource,
+        });
+        setUpdateAvailableInfo(null);
+        if (!silent) toast.success(`Sanctum ${data?.currentVersion || appVersion} is up to date.`);
+      }
+    } catch {
+      if (!silent) toast.error("Failed to check for updates.");
+    } finally {
+      setCheckingUpdate(false);
+    }
+  };
+
+  const handleInstallUpdate = async () => {
+    if (!updateCheckResult) return;
+    if (!updateCheckResult.canSelfInstall) {
+      window.open(updateCheckResult.downloadUrl, "_blank", "noopener,noreferrer");
+      toast.info("Downloading latest Sanctum.exe in browser...");
+      return;
+    }
+    setInstallingUpdate(true);
+    setInstallProgress({ percent: 2, status: "Starting update download..." });
+    try {
+      const res = await fetch("/api/updates/install", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          downloadUrl: updateCheckResult.downloadUrl,
+          expectedSha256: updateCheckResult.expectedSha256 || "",
+        }),
+      });
+      if (!res.ok || !res.body) {
+        const err = await res.json().catch(() => ({}));
+        throw new Error(err.error || `Update download failed (HTTP ${res.status})`);
+      }
+      const reader = res.body.getReader();
+      const decoder = new TextDecoder();
+      let buf = "";
+      while (true) {
+        const { done, value } = await reader.read();
+        if (done) break;
+        buf += decoder.decode(value, { stream: true });
+        const lines = buf.split(/\r?\n/);
+        buf = lines.pop() ?? "";
+        for (const line of lines) {
+          if (!line.trim()) continue;
+          try {
+            const evt = JSON.parse(line);
+            if (evt.error) throw new Error(evt.error);
+            if (typeof evt.percent === "number") {
+              setInstallProgress({ percent: evt.percent, status: evt.status || "Updating..." });
+            }
+            if (evt.installing) {
+              toast.success("Update verified! Restarting Sanctum...");
+            }
+          } catch (parseErr: any) {
+            if (parseErr?.message && !String(parseErr.message).includes("JSON")) throw parseErr;
+          }
+        }
+      }
+    } catch (err: any) {
+      toast.error(err?.message || "Update installation failed.");
+      setInstallProgress(null);
+    } finally {
+      setInstallingUpdate(false);
+    }
+  };
 
   useEffect(() => {
     setMemoryEnabled(globalMemoryStore.isEnabled());
     setMemoryFacts(globalMemoryStore.listFacts());
+
+    fetch("/api/health")
+      .then((r) => (r.ok ? r.json() : null))
+      .then((h) => {
+        if (h?.version) {
+          setAppVersion(h.commit && h.commit !== "__GIT_COMMIT__" ? `${h.version}+${h.commit}` : String(h.version));
+        }
+      })
+      .catch(() => {});
 
     fetch("/api/settings")
       .then((r) => r.json())
       .then((data) => {
         if (data?.settings) {
           if (data.settings["general.autoUpdateCheck"] !== undefined) {
-            setAutoUpdateCheck(Boolean(data.settings["general.autoUpdateCheck"]));
+            const enabled = Boolean(data.settings["general.autoUpdateCheck"]);
+            setAutoUpdateCheck(enabled);
+            if (enabled) void runUpdateCheck(true);
           }
           if (data.settings["general.spellCheck"] !== undefined) {
             setSpellCheck(Boolean(data.settings["general.spellCheck"]));
@@ -336,29 +461,57 @@ export const SettingsGeneral: React.FC = () => {
             <Button
               variant="outline"
               size="sm"
-              onClick={async () => {
-                try {
-                  const res = await fetch("/api/updates/check");
-                  const data = await res.json();
-                  if (data?.updateAvailable && data?.signed) {
-                    setUpdateAvailableInfo({
-                      latestVersion: String(data.latestVersion),
-                      releaseNotes: String(data.releaseNotes || ""),
-                    });
-                    toast.info(`Update available: v${data.latestVersion} (signed release)`);
-                  } else {
-                    setUpdateAvailableInfo(null);
-                    toast.success(`Sanctum ${appVersion} is up to date.`);
-                  }
-                } catch {
-                  toast.success(`Sanctum ${appVersion} is up to date.`);
-                }
-              }}
-              className="rounded-xl text-xs h-8"
+              disabled={checkingUpdate || installingUpdate}
+              onClick={() => void runUpdateCheck(false)}
+              className="rounded-xl text-xs h-8 gap-1.5 shrink-0"
             >
-              Check for updates
+              <IconRefresh size={13} className={cn(checkingUpdate && "animate-spin")} />
+              <span>{checkingUpdate ? "Checking..." : "Check for updates"}</span>
             </Button>
           </div>
+
+          {updateCheckResult?.updateAvailable && (
+            <div className="rounded-xl border border-primary/40 bg-primary/[0.05] p-3.5 space-y-2.5">
+              <div className="flex flex-wrap items-center justify-between gap-2">
+                <div className="space-y-0.5 min-w-0 flex-1">
+                  <p className="text-xs font-semibold text-foreground">
+                    Update Available: v{updateCheckResult.latestVersion}
+                  </p>
+                  <p className="text-[11px] text-muted-foreground leading-snug">
+                    {updateCheckResult.releaseNotes}
+                  </p>
+                </div>
+                <div className="flex items-center gap-2 shrink-0">
+                  <Button
+                    size="sm"
+                    disabled={installingUpdate}
+                    onClick={() => void handleInstallUpdate()}
+                    className="h-7 rounded-lg text-xs gap-1.5"
+                  >
+                    <IconDownload size={13} />
+                    <span>{installingUpdate ? "Updating..." : "Download & Install"}</span>
+                  </Button>
+                </div>
+              </div>
+              {installProgress && (
+                <div className="space-y-1">
+                  <div className="flex items-center justify-between text-[11px]">
+                    <span className="text-muted-foreground">{installProgress.status}</span>
+                    <span className="font-mono text-primary font-medium">{installProgress.percent}%</span>
+                  </div>
+                  <div className="w-full h-1.5 rounded-full bg-muted overflow-hidden">
+                    <div
+                      className="h-full bg-primary transition-all duration-200"
+                      style={{ width: `${installProgress.percent}%` }}
+                    />
+                  </div>
+                </div>
+              )}
+              <p className="text-[10px] text-muted-foreground">
+                Your chats, downloaded models, and MCP connectors in %APPDATA%\Sanctum are preserved across updates.
+              </p>
+            </div>
+          )}
 
           <div className="flex items-center justify-between pt-3 border-t border-border/50">
             <div>

@@ -28,6 +28,8 @@ using Microsoft.Web.WebView2.WinForms;
 
 namespace Sanctum {
     public partial class DesktopHost : Form {
+        private const string BuildVersion = "1.0.0";
+        private const string BuildCommit = "__GIT_COMMIT__";
         [DllImport("kernel32.dll", SetLastError = true)]
         static extern bool SetDefaultDllDirectories(uint DirectoryFlags);
         private const uint LOAD_LIBRARY_SEARCH_SYSTEM32 = 0x00000800;
