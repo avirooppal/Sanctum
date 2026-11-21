@@ -11,12 +11,18 @@ def compile_desktop_host(output_path: str):
     root_dir = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
     wv2_dir = os.path.join(root_dir, "vendor", "webview2")
 
-    # Ensure WebView2 DLLs are copied beside the output executable
+    # Ensure WebView2 & Newtonsoft.Json DLLs are copied beside the output executable
     for dll_name in ["Microsoft.Web.WebView2.Core.dll", "Microsoft.Web.WebView2.WinForms.dll", "WebView2Loader.dll"]:
         src_dll = os.path.join(wv2_dir, dll_name)
         dst_dll = os.path.join(out_dir, dll_name)
         if os.path.exists(src_dll) and os.path.abspath(src_dll) != os.path.abspath(dst_dll):
             shutil.copy2(src_dll, dst_dll)
+
+    newtonsoft_dll = os.path.abspath(os.path.join(root_dir, "vendor", "newtonsoft", "Newtonsoft.Json.dll"))
+    if os.path.exists(newtonsoft_dll):
+        dst_nj = os.path.join(out_dir, "Newtonsoft.Json.dll")
+        if os.path.abspath(newtonsoft_dll) != os.path.abspath(dst_nj):
+            shutil.copy2(newtonsoft_dll, dst_nj)
 
     git_commit = "1d382e3"
     try:
@@ -62,34 +68,47 @@ def compile_desktop_host(output_path: str):
     with open(manifest_path, "w", encoding="utf-8") as f:
         f.write(manifest_xml)
 
-    csc_path = r"C:\Windows\Microsoft.NET\Framework64\v4.0.30319\csc.exe"
+    roslyn_csc = os.path.abspath(os.path.join(root_dir, "vendor", "roslyn", "csc.exe"))
+    inbox_csc = r"C:\Windows\Microsoft.NET\Framework64\v4.0.30319\csc.exe"
+    csc_path = roslyn_csc if os.path.exists(roslyn_csc) else inbox_csc
+    use_roslyn = (csc_path == roslyn_csc)
     icon_path = os.path.abspath("deploy/installer/app-icon.ico")
     wv2_core_dll = os.path.abspath(os.path.join(wv2_dir, "Microsoft.Web.WebView2.Core.dll"))
     wv2_winforms_dll = os.path.abspath(os.path.join(wv2_dir, "Microsoft.Web.WebView2.WinForms.dll"))
 
     if os.path.exists(csc_path):
+        fx_dir = r"C:\Windows\Microsoft.NET\Framework64\v4.0.30319"
         refs = [
-            "System.dll",
-            "System.Core.dll",
-            "System.IO.Compression.dll",
-            "System.IO.Compression.FileSystem.dll",
+            os.path.join(fx_dir, "mscorlib.dll"),
+            os.path.join(fx_dir, "System.dll"),
+            os.path.join(fx_dir, "System.Core.dll"),
+            os.path.join(fx_dir, "System.IO.Compression.dll"),
+            os.path.join(fx_dir, "System.IO.Compression.FileSystem.dll"),
             r"C:\Windows\Microsoft.NET\assembly\GAC_MSIL\System.Speech\v4.0_4.0.0.0__31bf3856ad364e35\System.Speech.dll",
-            "System.Web.Extensions.dll",
-            "System.Management.dll",
-            "System.Drawing.dll",
-            "System.Windows.Forms.dll",
+            os.path.join(fx_dir, "System.Web.Extensions.dll"),
+            os.path.join(fx_dir, "System.Management.dll"),
+            os.path.join(fx_dir, "System.Drawing.dll"),
+            os.path.join(fx_dir, "System.Windows.Forms.dll"),
+            os.path.join(fx_dir, "System.Runtime.Serialization.dll"),
             wv2_core_dll,
             wv2_winforms_dll,
         ]
+        if os.path.exists(newtonsoft_dll):
+            refs.append(newtonsoft_dll)
         cmd = [
             csc_path,
+            "/nostdlib+" if use_roslyn else "/nologo",
+            "/nologo",
             "/target:winexe",
             f"/out:{output_path}",
             f"/win32manifest:{manifest_path}",
             "/optimize+",
             "/platform:x64",
-            f"/reference:{','.join(refs)}",
         ]
+        if use_roslyn:
+            cmd.append("/langversion:12.0")
+        for r in refs:
+            cmd.append(f"/reference:{r}")
         if os.path.exists(icon_path):
             cmd.append(f"/win32icon:{icon_path}")
         cmd.append(temp_cs)
@@ -97,7 +116,13 @@ def compile_desktop_host(output_path: str):
         cmd.append(os.path.abspath("tools/native/DesktopWorkspaceEndpoints.cs"))
         cmd.append(os.path.abspath("tools/native/DesktopBrowserEndpoints.cs"))
         cmd.append(os.path.abspath("tools/native/DesktopMcpEndpoints.cs"))
-        print(f"Compiling Sanctum Standalone Embedded WebView2 host using csc.exe to {output_path}...")
+        harness_dir = os.path.abspath(os.path.join(root_dir, "tools", "native", "harness"))
+        if os.path.isdir(harness_dir):
+            for fname in sorted(os.listdir(harness_dir)):
+                if fname.endswith(".cs"):
+                    cmd.append(os.path.join(harness_dir, fname))
+        compiler_label = "vendored Roslyn 5.12.0 (C# 12 -> net472)" if use_roslyn else "inbox csc.exe"
+        print(f"Compiling Sanctum Standalone Embedded WebView2 host using {compiler_label} to {output_path}...")
         res = subprocess.run(cmd, capture_output=True, text=True)
     else:
         ps_script = f'''
