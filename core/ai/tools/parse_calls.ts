@@ -135,6 +135,9 @@ export function normalizeToolName(rawName: string): string {
   if (TOOL_NAME_ALIASES[lower]) {
     return TOOL_NAME_ALIASES[lower];
   }
+  if (TOOL_NAME_ALIASES[cleaned.toLowerCase()]) {
+    return TOOL_NAME_ALIASES[cleaned.toLowerCase()];
+  }
   return cleaned;
 }
 
