@@ -63,24 +63,6 @@ export const createModelsSlice: StateCreator<any, [], [], ModelsSlice> = (set, g
             ...s,
             modelId: realModels.some((m: any) => m.id === s.modelId) ? s.modelId : activeId,
           })),
-          arenaPanes: [
-            {
-              modelId: realModels[0].id,
-              temperature: 0.7,
-              gpuOffloadRatio: 1.0,
-              isGenerating: false,
-              currentResponse: "",
-              metrics: { tps: 0, ttftMs: 0, totalTokens: 0, vramUsedGB: realModels[0].vramRequiredGB },
-            },
-            {
-              modelId: realModels[1]?.id || realModels[0].id,
-              temperature: 0.7,
-              gpuOffloadRatio: 1.0,
-              isGenerating: false,
-              currentResponse: "",
-              metrics: { tps: 0, ttftMs: 0, totalTokens: 0, vramUsedGB: (realModels[1] || realModels[0]).vramRequiredGB },
-            },
-          ],
         }));
       } else {
         set({ isFetchingModels: false, models: [], activeModelId: "" });

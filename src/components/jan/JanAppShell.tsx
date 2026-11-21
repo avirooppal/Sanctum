@@ -6,21 +6,11 @@ import { SetupScreen } from "@/components/jan/SetupScreen";
 import { HubView } from "@/components/jan/HubView";
 import { SettingsMenu, SettingsSection } from "@/components/jan/SettingsMenu";
 import { SettingsGeneral } from "@/components/jan/SettingsGeneral";
-import { SettingsHardware } from "@/components/jan/sections/SettingsHardware";
-import { SettingsLocalApi } from "@/components/jan/sections/SettingsLocalApi";
-import { SettingsProxy } from "@/components/jan/sections/SettingsProxy";
-import { SettingsAssistants } from "@/components/jan/sections/SettingsAssistants";
-import { SettingsAttachments } from "@/components/jan/sections/SettingsAttachments";
 import { SettingsShortcuts } from "@/components/jan/sections/SettingsShortcuts";
 import { SettingsAppearance } from "@/components/jan/sections/SettingsAppearance";
-import { SettingsPrivacy } from "@/components/jan/sections/SettingsPrivacy";
-import { SettingsWebSearch } from "@/components/jan/sections/SettingsWebSearch";
-import { SettingsProviders } from "@/components/jan/sections/SettingsProviders";
 import { SettingsMcp } from "@/components/jan/sections/SettingsMcp";
-import { SettingsClaudeCode } from "@/components/jan/sections/SettingsClaudeCode";
 import { SettingsLogs } from "@/components/jan/sections/SettingsLogs";
 import { SettingsMonitor } from "@/components/jan/sections/SettingsMonitor";
-import { SettingsDeveloper } from "@/components/jan/sections/SettingsDeveloper";
 import { SettingsCapabilities } from "@/components/jan/sections/SettingsCapabilities";
 import { JanUpdateToast } from "@/components/jan/JanUpdateToast";
 import { ChatScreen } from "@/components/screens/ChatScreen";
@@ -53,8 +43,6 @@ export const JanAppShell: React.FC = () => {
   const [hydrated, setHydrated] = useState(false);
   const [activeModule, setActiveModule] = useState<"chat" | "hub" | "settings">("chat");
   const [activeSettingsSection, setActiveSettingsSection] = useState<SettingsSection>("general");
-  const [selectedProviderId, setSelectedProviderId] = useState<string>("llamacpp");
-  const [isAddProviderOpen, setIsAddProviderOpen] = useState<boolean>(false);
   const [isProjectDialogOpen, setIsProjectDialogOpen] = useState(false);
   const [isSearchDialogOpen, setIsSearchDialogOpen] = useState(false);
   const [appearance, setAppearance] = useState<AppearanceConfig>(() => loadAppearanceConfig());
@@ -254,9 +242,6 @@ export const JanAppShell: React.FC = () => {
             <SettingsMenu
               activeSection={activeSettingsSection}
               onSelectSection={setActiveSettingsSection}
-              selectedProviderId={selectedProviderId}
-              onSelectProvider={setSelectedProviderId}
-              onAddProvider={() => setIsAddProviderOpen(true)}
             />
             <div className="flex-1 overflow-y-auto pt-4">
               {activeSettingsSection === "logs" && <SettingsLogs />}
@@ -264,25 +249,8 @@ export const JanAppShell: React.FC = () => {
               {activeSettingsSection === "general" && <SettingsGeneral />}
               {activeSettingsSection === "capabilities" && <SettingsCapabilities />}
               {activeSettingsSection === "appearance" && <SettingsAppearance />}
-              {activeSettingsSection === "assistants" && <SettingsAssistants />}
-              {activeSettingsSection === "attachments" && <SettingsAttachments />}
-              {activeSettingsSection === "local-api-server" && <SettingsLocalApi />}
-              {activeSettingsSection === "https-proxy" && <SettingsProxy />}
-              {activeSettingsSection === "web-search" && <SettingsWebSearch />}
               {activeSettingsSection === "shortcuts" && <SettingsShortcuts />}
-              {activeSettingsSection === "hardware" && <SettingsHardware />}
-              {activeSettingsSection === "privacy" && <SettingsPrivacy />}
-              {activeSettingsSection === "developer" && <SettingsDeveloper />}
               {activeSettingsSection === "mcp-servers" && <SettingsMcp />}
-              {activeSettingsSection === "claude-code" && <SettingsClaudeCode />}
-              {activeSettingsSection === "providers" && (
-                <SettingsProviders
-                  selectedProviderId={selectedProviderId}
-                  onSelectProvider={setSelectedProviderId}
-                  openAddModal={isAddProviderOpen}
-                  onOpenAddModalChange={setIsAddProviderOpen}
-                />
-              )}
             </div>
           </div>
         )}

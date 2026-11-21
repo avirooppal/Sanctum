@@ -4,8 +4,6 @@ import { persist, createJSONStorage } from "zustand/middleware";
 import { NavigationSlice, createNavigationSlice } from "./slices/navigationSlice";
 import { ModelsSlice, createModelsSlice } from "./slices/modelsSlice";
 import { ChatSlice, createChatSlice } from "./slices/chatSlice";
-import { ArenaSlice, createArenaSlice } from "./slices/arenaSlice";
-import { ResearchSlice, createResearchSlice } from "./slices/researchSlice";
 import { RagSlice, createRagSlice } from "./slices/ragSlice";
 import { TelemetrySlice, createTelemetrySlice } from "./slices/telemetrySlice";
 import { AgentSlice, createAgentSlice } from "./slices/agentSlice";
@@ -21,8 +19,6 @@ import {
 export type AppState = NavigationSlice &
   ModelsSlice &
   ChatSlice &
-  ArenaSlice &
-  ResearchSlice &
   RagSlice &
   TelemetrySlice &
   AgentSlice &
@@ -65,8 +61,6 @@ export const useAppStore = create<AppState>()(
       ...createNavigationSlice(set, get, api),
       ...createModelsSlice(set, get, api),
       ...createChatSlice(set, get, api),
-      ...createArenaSlice(set, get, api),
-      ...createResearchSlice(set, get, api),
       ...createRagSlice(set, get, api),
       ...createTelemetrySlice(set, get, api),
       ...createAgentSlice(set, get, api),
@@ -110,7 +104,6 @@ export const useAppStore = create<AppState>()(
           toolsEnabled: false,
           thinkEnabled: false,
           documents: [],
-          dossiers: [],
           agentRuns: [],
           activeRunId: "",
         });
@@ -138,7 +131,6 @@ export const useAppStore = create<AppState>()(
           projects: s.projects,
           collections: s.collections,
           documents: s.documents,
-          dossiers: s.dossiers,
           agentRuns: s.agentRuns,
           memory: globalMemoryStore.exportData(),
         };
@@ -160,7 +152,6 @@ export const useAppStore = create<AppState>()(
           projects: Array.isArray(parsed.projects) ? parsed.projects : state.projects,
           collections: Array.isArray(parsed.collections) ? parsed.collections : state.collections,
           documents: Array.isArray(parsed.documents) ? parsed.documents : state.documents,
-          dossiers: Array.isArray(parsed.dossiers) ? parsed.dossiers : state.dossiers,
           agentRuns: Array.isArray(parsed.agentRuns) ? parsed.agentRuns : state.agentRuns,
         }));
       },
@@ -212,11 +203,6 @@ export const useAppStore = create<AppState>()(
         thinkEnabled: state.thinkEnabled,
         activeModelId: state.activeModelId,
         models: state.models,
-        arenaPrompt: state.arenaPrompt,
-        arenaSplitMode: state.arenaSplitMode,
-        arenaPanes: state.arenaPanes,
-        dossiers: state.dossiers,
-        activeDossierId: state.activeDossierId,
         collections: state.collections,
         activeCollectionId: state.activeCollectionId,
         documents: stripped.documents,
@@ -257,8 +243,6 @@ export const useAppStore = create<AppState>()(
 export * from "./slices/navigationSlice";
 export * from "./slices/modelsSlice";
 export * from "./slices/chatSlice";
-export * from "./slices/arenaSlice";
-export * from "./slices/researchSlice";
 export * from "./slices/ragSlice";
 export * from "./slices/telemetrySlice";
 export * from "./slices/agentSlice";

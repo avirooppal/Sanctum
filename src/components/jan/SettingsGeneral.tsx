@@ -33,8 +33,6 @@ export const SettingsGeneral: React.FC = () => {
     }))
   );
   const [autoUpdateCheck, setAutoUpdateCheck] = useState<boolean>(false);
-  const [spellCheck, setSpellCheck] = useState<boolean>(true);
-  const [language, setLanguage] = useState<string>("en");
   const [copied, setCopied] = useState<boolean>(false);
   const [isResetSettingsOpen, setIsResetSettingsOpen] = useState<boolean>(false);
   const [isEraseAllOpen, setIsEraseAllOpen] = useState<boolean>(false);
@@ -192,12 +190,6 @@ export const SettingsGeneral: React.FC = () => {
             setAutoUpdateCheck(enabled);
             if (enabled) void runUpdateCheck(true);
           }
-          if (data.settings["general.spellCheck"] !== undefined) {
-            setSpellCheck(Boolean(data.settings["general.spellCheck"]));
-          }
-          if (data.settings["general.language"]) {
-            setLanguage(String(data.settings["general.language"]));
-          }
           if (data.settings["general.dataFolder"]) {
             setDataFolderPath(String(data.settings["general.dataFolder"]));
           }
@@ -259,17 +251,6 @@ export const SettingsGeneral: React.FC = () => {
       next,
       `Automatic update check ${next ? "enabled" : "disabled"}`
     );
-  };
-
-  const handleToggleSpellCheck = () => {
-    const next = !spellCheck;
-    setSpellCheck(next);
-    saveSetting("general.spellCheck", next, `Spell check ${next ? "enabled" : "disabled"}`);
-  };
-
-  const handleChangeLanguage = (nextLang: string) => {
-    setLanguage(nextLang);
-    saveSetting("general.language", nextLang, `Interface language set to ${nextLang.toUpperCase()}`);
   };
 
   const handleSelectDataFolder = () => {
@@ -435,7 +416,7 @@ export const SettingsGeneral: React.FC = () => {
           General Settings
         </h1>
         <p className="mt-1 text-xs text-muted-foreground">
-          Application configuration, update behavior, language, local memory, and storage directories.
+          Application configuration, update behavior, local memory, and storage directories.
         </p>
       </div>
 
@@ -537,27 +518,6 @@ export const SettingsGeneral: React.FC = () => {
                 )}
               />
             </button>
-          </div>
-
-          <div className="flex items-center justify-between pt-3 border-t border-border/50">
-            <div>
-              <span className="text-xs font-medium text-foreground">Language</span>
-              <p className="text-[11px] text-muted-foreground">
-                Display language for menus, labels, and system dialogs.
-              </p>
-            </div>
-            <select
-              value={language}
-              onChange={(e) => handleChangeLanguage(e.target.value)}
-              className="px-3 py-1.5 rounded-xl border border-border bg-background text-xs text-foreground"
-            >
-              <option value="en">English (US)</option>
-              <option value="es">Español</option>
-              <option value="fr">Français</option>
-              <option value="de">Deutsch</option>
-              <option value="ja">日本語</option>
-              <option value="zh">中文 (简体)</option>
-            </select>
           </div>
         </div>
       </section>
@@ -802,39 +762,6 @@ export const SettingsGeneral: React.FC = () => {
       </section>
 
       {/* Other Preferences */}
-      <section className="space-y-4">
-        <h2 className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">
-          Other
-        </h2>
-        <div className="rounded-2xl border border-border/70 bg-card p-5 space-y-4">
-          <div className="flex items-center justify-between">
-            <div>
-              <span className="text-xs font-medium text-foreground">Spell Check</span>
-              <p className="text-[11px] text-muted-foreground">
-                Highlight spelling errors inside the chat message composer.
-              </p>
-            </div>
-            <button
-              type="button"
-              role="switch"
-              aria-checked={spellCheck}
-              onClick={handleToggleSpellCheck}
-              className={cn(
-                "relative inline-flex h-5 w-9 shrink-0 cursor-pointer rounded-full border-2 border-transparent transition-colors duration-200 focus:outline-none",
-                spellCheck ? "bg-primary" : "bg-muted"
-              )}
-            >
-              <span
-                className={cn(
-                  "pointer-events-none inline-block size-4 transform rounded-full bg-background shadow-lg transition duration-200",
-                  spellCheck ? "translate-x-4" : "translate-x-0"
-                )}
-              />
-            </button>
-          </div>
-        </div>
-      </section>
-
       {/* Application Logs Modal */}
       {isLogsOpen && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm p-4">
