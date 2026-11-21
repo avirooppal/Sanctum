@@ -167,7 +167,7 @@ export const STT_MODEL_CATALOG: SttModelSpec[] = [
     provider: "NVIDIA",
     tier: "heavy",
     badge: "Heavy & Super Accurate",
-    hfRepo: "nvidia/nemotron-3.5-transcribe",
+    hfRepo: "nvidia/nemotron-3.5-asr-streaming-0.6b",
     backend: "nemo",
     parameters: "1.1B",
     sizeGB: 2.8,

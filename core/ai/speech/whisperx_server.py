@@ -32,7 +32,7 @@ app.add_middleware(
 STT_CACHE_DIR = Path.home() / ".cache" / "sanctum" / "stt"
 STT_MODEL_REPOS = {
     "qwen3-asr-0.6b": "Qwen/Qwen3-ASR-0.6B",
-    "nemotron-3.5-transcribe": "nvidia/nemotron-3.5-transcribe",
+    "nemotron-3.5-transcribe": "nvidia/nemotron-3.5-asr-streaming-0.6b",
     "whisper-base": "base",
     "whisper-small": "small",
 }

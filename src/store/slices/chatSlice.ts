@@ -679,6 +679,7 @@ export const createChatSlice: StateCreator<any, [], [], ChatSlice> = (set, get) 
         : LocalEngineClient.streamChat.bind(LocalEngineClient);
       for await (const chunk of stream(activeModel.id, historyPayload, {
         endpoint: DEFAULT_OLLAMA_ENDPOINT,
+        planMode: isPlanMode,
         onApprovalRequest: ({ toolName, arguments: toolArgs }) =>
           new Promise<ToolApprovalResponse>((resolve) => {
             set({

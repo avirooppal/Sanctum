@@ -1,7 +1,7 @@
 import { StateCreator } from "zustand";
 import { LocalModel, ModelCategory } from "@/types";
 import { LocalEngineClient } from "@/lib/engine";
-import { DEFAULT_OLLAMA_ENDPOINT, JAN_STYLE_DOWNLOAD_CATALOG } from "@/lib/constants";
+import { DEFAULT_OLLAMA_ENDPOINT, JAN_STYLE_DOWNLOAD_CATALOG, STT_MODEL_CATALOG } from "@/lib/constants";
 
 export interface DownloadProgress {
   percent: number;
@@ -119,7 +119,8 @@ export const createModelsSlice: StateCreator<any, [], [], ModelsSlice> = (set, g
     }));
 
     const isAudioModel =
-      JAN_STYLE_DOWNLOAD_CATALOG.some((m) => m.id === modelName && m.type === "audio");
+      JAN_STYLE_DOWNLOAD_CATALOG.some((m) => m.id === modelName && m.type === "audio") ||
+      STT_MODEL_CATALOG.some((m) => m.id === modelName);
 
     const onProgress = (pct: number, status: string) => {
       if (controller.signal.aborted) return;
@@ -151,7 +152,13 @@ export const createModelsSlice: StateCreator<any, [], [], ModelsSlice> = (set, g
         ...state.downloadProgressMap,
         [modelName]: {
           percent: success ? 100 : state.downloadProgressMap[modelName]?.percent || 0,
-          status: success ? "Installed successfully" : (state.downloadProgressMap[modelName]?.status?.startsWith("Download failed") ? state.downloadProgressMap[modelName].status : "Download failed. Check Ollama and retry."),
+          status: success
+            ? "Installed successfully"
+            : state.downloadProgressMap[modelName]?.status?.startsWith("Download failed")
+              ? state.downloadProgressMap[modelName].status
+              : isAudioModel
+                ? "Download failed. Check internet connection and retry."
+                : "Download failed. Check Ollama and retry.",
           isDownloading: false,
         },
       },

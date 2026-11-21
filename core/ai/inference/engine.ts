@@ -304,6 +304,7 @@ export class LocalEngineClient {
       threads?: number;
       ragContext?: string;
       imageAttached?: string; // base64
+      planMode?: boolean;
     } = {}
   ): AsyncGenerator<StreamChunkEvent> {
     const endpoint = options.endpoint || "http://127.0.0.1:11434";

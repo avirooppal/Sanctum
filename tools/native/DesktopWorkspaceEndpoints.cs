@@ -1571,7 +1571,13 @@ namespace Sanctum {
                     string body = ReadRequestBodyUtf8(req, 65536);
                     var payload = serializer.Deserialize<Dictionary<string, object>>(body);
                     string modelId = payload != null && payload.ContainsKey("modelId") ? Convert.ToString(payload["modelId"]) : "";
-                    if (modelId != "qwen3-asr-0.6b" && modelId != "nemotron-3.5-transcribe") {
+                    string repoId = null;
+                    if (modelId == "qwen3-asr-0.6b") repoId = "Qwen/Qwen3-ASR-0.6B";
+                    else if (modelId == "nemotron-3.5-transcribe") repoId = "nvidia/nemotron-3.5-asr-streaming-0.6b";
+                    else if (modelId == "whisper-base") repoId = "Systran/faster-whisper-base";
+                    else if (modelId == "whisper-small") repoId = "Systran/faster-whisper-small";
+
+                    if (string.IsNullOrEmpty(repoId)) {
                         WriteJson(res, 400, new { error = "Unknown STT model ID." });
                         return;
                     }
@@ -1580,53 +1586,129 @@ namespace Sanctum {
                     res.ContentType = "application/x-ndjson";
                     res.SendChunked = true;
 
-                    string scriptPath = Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "core", "ai", "speech", "stt_download.py");
-                    if (!File.Exists(scriptPath)) {
-                        scriptPath = Path.GetFullPath(Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "..", "..", "core", "ai", "speech", "stt_download.py"));
-                    }
+                    Action<object> emitNdjson = (obj) => {
+                        try {
+                            byte[] b = Encoding.UTF8.GetBytes(serializer.Serialize(obj) + "\n");
+                            res.OutputStream.Write(b, 0, b.Length);
+                            res.OutputStream.Flush();
+                        } catch { }
+                    };
 
-                    if (File.Exists(scriptPath)) {
-                        var psi = new ProcessStartInfo {
-                            FileName = "python",
-                            Arguments = "\"" + scriptPath + "\" --model-id " + modelId + " --target-dir \"" + sttDir + "\"",
-                            UseShellExecute = false,
-                            RedirectStandardOutput = true,
-                            RedirectStandardError = true,
-                            CreateNoWindow = true
-                        };
-                        using (var proc = Process.Start(psi)) {
-                            if (_jobHandle != IntPtr.Zero) {
-                                try { AssignProcessToJobObject(_jobHandle, proc.Handle); } catch { }
-                            }
-                            string line;
-                            while ((line = proc.StandardOutput.ReadLine()) != null) {
-                                byte[] bytes = Encoding.UTF8.GetBytes(line + "\n");
-                                res.OutputStream.Write(bytes, 0, bytes.Length);
-                                res.OutputStream.Flush();
-                            }
-                            proc.WaitForExit(600000);
-                        }
-                    } else {
+                    try {
+                        ServicePointManager.SecurityProtocol = SecurityProtocolType.Tls12 | SecurityProtocolType.Tls11 | SecurityProtocolType.Tls;
                         string mDir = Path.Combine(sttDir, modelId);
                         Directory.CreateDirectory(mDir);
+
+                        emitNdjson(new { status = "Preparing download for " + modelId + " (" + repoId + ")..." });
+
+                        string manifestUrl = "https://huggingface.co/api/models/" + repoId + "/tree/main?recursive=1";
+                        var manifestReq = (HttpWebRequest)WebRequest.Create(manifestUrl);
+                        manifestReq.Method = "GET";
+                        manifestReq.UserAgent = "Sanctum-STT-Downloader/2.0";
+                        manifestReq.Timeout = 30000;
+                        string manifestJson;
+                        using (var manifestResp = (HttpWebResponse)manifestReq.GetResponse())
+                        using (var sr = new StreamReader(manifestResp.GetResponseStream(), Encoding.UTF8)) {
+                            manifestJson = sr.ReadToEnd();
+                        }
+
+                        var rawItems = serializer.Deserialize<object[]>(manifestJson);
+                        var filesToDownload = new List<Dictionary<string, object>>();
+                        long totalBytes = 0;
+                        if (rawItems != null) {
+                            foreach (object objItem in rawItems) {
+                                var dict = objItem as Dictionary<string, object>;
+                                if (dict == null) continue;
+                                string itemType = dict.ContainsKey("type") ? Convert.ToString(dict["type"]) : "";
+                                string itemPath = dict.ContainsKey("path") ? Convert.ToString(dict["path"]) : "";
+                                if (itemType == "file" && !string.IsNullOrEmpty(itemPath)) {
+                                    long sz = dict.ContainsKey("size") && dict["size"] != null ? Convert.ToInt64(dict["size"]) : 0;
+                                    totalBytes += sz;
+                                    filesToDownload.Add(dict);
+                                }
+                            }
+                        }
+
+                        if (filesToDownload.Count == 0) {
+                            throw new Exception("No downloadable files found in " + repoId);
+                        }
+                        if (totalBytes <= 0) totalBytes = filesToDownload.Count * 1024L;
+
+                        long downloadedBytes = 0;
+                        DateTime lastEmit = DateTime.MinValue;
+                        byte[] buf = new byte[131072];
+
+                        foreach (var item in filesToDownload) {
+                            string relPath = Convert.ToString(item["path"]);
+                            long expectedSize = item.ContainsKey("size") && item["size"] != null ? Convert.ToInt64(item["size"]) : 0;
+                            string[] segments = relPath.Split('/');
+                            string targetPath = mDir;
+                            var encodedSegments = new List<string>();
+                            foreach (string seg in segments) {
+                                if (string.IsNullOrEmpty(seg) || seg == "." || seg == "..") continue;
+                                targetPath = Path.Combine(targetPath, seg);
+                                encodedSegments.Add(Uri.EscapeDataString(seg));
+                            }
+                            string parentDir = Path.GetDirectoryName(targetPath);
+                            if (!string.IsNullOrEmpty(parentDir)) Directory.CreateDirectory(parentDir);
+
+                            if (expectedSize > 0 && File.Exists(targetPath) && new FileInfo(targetPath).Length == expectedSize) {
+                                downloadedBytes += expectedSize;
+                                emitNdjson(new { status = "Verified " + relPath, completed = Math.Min(downloadedBytes, totalBytes), total = totalBytes });
+                                continue;
+                            }
+
+                            string fileUrl = "https://huggingface.co/" + repoId + "/resolve/main/" + string.Join("/", encodedSegments.ToArray());
+                            emitNdjson(new { status = "Downloading " + relPath + "...", completed = Math.Min(downloadedBytes, totalBytes), total = totalBytes });
+
+                            string tmpPath = targetPath + ".part";
+                            try {
+                                var fileReq = (HttpWebRequest)WebRequest.Create(fileUrl);
+                                fileReq.Method = "GET";
+                                fileReq.UserAgent = "Sanctum-STT-Downloader/2.0";
+                                fileReq.AllowAutoRedirect = true;
+                                fileReq.Timeout = 120000;
+                                fileReq.ReadWriteTimeout = 120000;
+
+                                using (var fileResp = (HttpWebResponse)fileReq.GetResponse())
+                                using (var netStream = fileResp.GetResponseStream())
+                                using (var outStream = new FileStream(tmpPath, FileMode.Create, FileAccess.Write, FileShare.None)) {
+                                    int read;
+                                    while ((read = netStream.Read(buf, 0, buf.Length)) > 0) {
+                                        outStream.Write(buf, 0, read);
+                                        downloadedBytes += read;
+                                        DateTime now = DateTime.UtcNow;
+                                        if ((now - lastEmit).TotalMilliseconds >= 150) {
+                                            lastEmit = now;
+                                            emitNdjson(new { status = "Downloading " + relPath + "...", completed = Math.Min(downloadedBytes, totalBytes), total = totalBytes });
+                                        }
+                                    }
+                                }
+
+                                if (File.Exists(targetPath)) File.Delete(targetPath);
+                                File.Move(tmpPath, targetPath);
+                            } catch {
+                                try { if (File.Exists(tmpPath)) File.Delete(tmpPath); } catch { }
+                                throw;
+                            }
+                        }
+
                         File.WriteAllText(Path.Combine(mDir, ".sanctum_stt_ready.json"), serializer.Serialize(new {
-                            modelId = modelId,
-                            status = "ready",
+                            id = modelId,
+                            repo = repoId,
+                            bytes = totalBytes,
+                            ready = true,
                             completedAt = DateTime.UtcNow.ToString("o")
                         }), Encoding.UTF8);
-                        byte[] doneBytes = Encoding.UTF8.GetBytes(serializer.Serialize(new {
-                            status = "success",
-                            completed = 100,
-                            total = 100,
-                            modelId = modelId
-                        }) + "\n");
-                        res.OutputStream.Write(doneBytes, 0, doneBytes.Length);
-                        res.OutputStream.Flush();
-                    }
 
-                    string activeMetaFile = Path.Combine(sttDir, "active_model.json");
-                    if (!File.Exists(activeMetaFile)) {
-                        WriteAtomicText(activeMetaFile, serializer.Serialize(new { activeModelId = modelId }));
+                        string activeMetaFile = Path.Combine(sttDir, "active_model.json");
+                        if (!File.Exists(activeMetaFile)) {
+                            WriteAtomicText(activeMetaFile, serializer.Serialize(new { activeModelId = modelId }));
+                        }
+
+                        emitNdjson(new { status = "success", completed = totalBytes, total = totalBytes, modelId = modelId });
+                    } catch (Exception dlEx) {
+                        emitNdjson(new { status = "error", error = dlEx.Message });
                     }
                     res.Close();
                 } catch (Exception ex) {

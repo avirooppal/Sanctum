@@ -13,7 +13,7 @@ from pathlib import Path
 
 STT_REPOS = {
     "qwen3-asr-0.6b": "Qwen/Qwen3-ASR-0.6B",
-    "nemotron-3.5-transcribe": "nvidia/nemotron-3.5-transcribe",
+    "nemotron-3.5-transcribe": "nvidia/nemotron-3.5-asr-streaming-0.6b",
     "whisper-base": "Systran/faster-whisper-base",
     "whisper-small": "Systran/faster-whisper-small",
 }
@@ -78,8 +78,8 @@ def download_via_http(repo_id: str, dest_dir: Path):
 
 def main():
     parser = argparse.ArgumentParser(description="Download Sanctum STT model weights")
-    parser.add_argument("--model", required=True, help="Model ID (e.g. qwen3-asr-0.6b, nemotron-3.5-transcribe)")
-    parser.add_argument("--dest", required=True, help="Destination directory for model files")
+    parser.add_argument("--model", "--model-id", dest="model", required=True, help="Model ID (e.g. qwen3-asr-0.6b, nemotron-3.5-transcribe)")
+    parser.add_argument("--dest", "--target-dir", dest="dest", required=True, help="Destination directory for model files")
     args = parser.parse_args()
 
     model_id = args.model.strip()

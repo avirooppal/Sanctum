@@ -2047,6 +2047,21 @@ namespace Sanctum {
                 return;
             }
 
+            if (path == "/api/mcp/tools" && method == "GET") {
+                HandleMcpTools(req, res);
+                return;
+            }
+
+            if (path == "/api/mcp/test" && method == "POST") {
+                HandleMcpTest(req, res);
+                return;
+            }
+
+            if (path == "/api/mcp/call" && method == "POST") {
+                HandleMcpCall(req, res);
+                return;
+            }
+
             if (path == "/api/audit/logs") {
                 HandleAuditLogs(req, res);
                 return;
@@ -3253,18 +3268,25 @@ private void HandleTerminal(HttpListenerRequest req, HttpListenerResponse res) {
             string mcpFile = Path.Combine(_appDataDir, "mcp_servers.json");
             try {
                 if (req.HttpMethod == "GET") {
-                    object servers = null;
-                    lock (_dataLock) {
-                        if (File.Exists(mcpFile)) {
-                            try { servers = new JavaScriptSerializer().DeserializeObject(File.ReadAllText(mcpFile, Encoding.UTF8)); } catch { }
-                        }
-                    }
-                    WriteJson(res, 200, new { servers = servers, plugins = new object[0] });
+                    var servers = ReadMcpServersList();
+                    WriteJson(res, 200, new {
+                        servers = servers.Count > 0 ? (object)servers : null,
+                        plugins = new object[0],
+                        presets = GetMcpConnectorPresets()
+                    });
                     return;
                 }
                 if (req.HttpMethod == "POST") {
                     string body = ReadRequestBodyUtf8(req);
-                    EnqueueAtomicWrite(mcpFile, body);
+                    var serializer = new JavaScriptSerializer();
+                    object parsed = serializer.DeserializeObject(body);
+                    object toSave = parsed;
+                    var dict = parsed as Dictionary<string, object>;
+                    if (dict != null && dict.ContainsKey("servers")) {
+                        toSave = dict["servers"];
+                    }
+                    EnqueueAtomicWrite(mcpFile, serializer.Serialize(toSave ?? new object[0]));
+                    lock (_mcpLock) { _mcpToolsCache.Clear(); }
                     WriteJson(res, 200, new { status = "saved" });
                     return;
                 }
