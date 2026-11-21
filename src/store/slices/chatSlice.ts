@@ -8,6 +8,13 @@ import { globalMemoryStore, LocalMemoryStore } from "../../../core/ai/memory/mem
 import { LocalEngineClient } from "../../../core/ai/inference/engine.ts";
 import { DEFAULT_OLLAMA_ENDPOINT } from "../../../contracts/constants/index.ts";
 import { RequestStatusTracker } from "../../../core/ai/request_status.ts";
+import {
+  probeHarness,
+  listHarnessSessions,
+  getHarnessSession,
+  interruptHarnessRun,
+  streamHarnessEvents,
+} from "../../lib/harnessClient.ts";
 
 export interface PendingToolApproval {
   id: string;
@@ -411,6 +418,10 @@ export const createChatSlice: StateCreator<any, [], [], ChatSlice> = (set, get) 
     }),
 
   stopInference: () => {
+    const activeId = get().activeSessionId;
+    if (activeId && activeId.startsWith("s_")) {
+      void interruptHarnessRun(activeId);
+    }
     get().pendingToolApproval?.resolve({ decision: "denied", scope: "once" });
     set({ pendingToolApproval: null });
     get().activeAbortController?.abort();
@@ -899,6 +910,82 @@ export const createChatSlice: StateCreator<any, [], [], ChatSlice> = (set, get) 
 
   syncThreadsFromHost: async () => {
     if (typeof window === "undefined" || !(window as any).chrome?.webview) return;
+    // Phase 1c temporary adapter (removal scheduled in Phase 5): host harness session store always wins when online
+    try {
+      const probe = await probeHarness();
+      if (probe.available) {
+        const hostSessions = await listHarnessSessions();
+        if (hostSessions.length > 0) {
+          const projected: ChatSession[] = [];
+          for (const hs of hostSessions.slice(0, 50)) {
+            const snap = await getHarnessSession(hs.sessionId);
+            const msgs: ChatMessage[] = [];
+            for (const ev of snap?.events || []) {
+              if (ev.type === "user_message") {
+                msgs.push({
+                  id: `ev-${ev.seq}`,
+                  role: "user",
+                  content: String(ev.payload?.content || ""),
+                  timestamp: ev.ts,
+                });
+              } else if (ev.type === "assistant_message") {
+                msgs.push({
+                  id: `ev-${ev.seq}`,
+                  role: "assistant",
+                  content: String(ev.payload?.content || ""),
+                  timestamp: ev.ts,
+                  modelId: hs.model,
+                });
+              }
+            }
+            projected.push({
+              id: hs.sessionId,
+              title: hs.title || "New Chat",
+              modelId: hs.model || get().activeModelId || "",
+              createdAt: hs.createdAt,
+              updatedAt: hs.updatedAt,
+              systemPrompt: "You are a private local assistant running entirely on-device.",
+              temperature: 0.7,
+              topP: 0.9,
+              pinned: false,
+              messages: msgs,
+            });
+          }
+          const currentActive = get().activeSessionId;
+          const activeExists = projected.some((s) => s.id === currentActive);
+          set({
+            chatSessions: projected,
+            activeSessionId: activeExists ? currentActive : projected[0].id,
+          });
+
+          // Live reattach to any session that has an active host-side run (window-close survival!)
+          for (const hs of hostSessions) {
+            if (!hs.activeRunId) continue;
+            const ctrl = new AbortController();
+            let liveBuf = "";
+            void streamHarnessEvents(hs.sessionId, hs.lastSeq, ctrl.signal, (ev) => {
+              if (ev.type === "message_delta") {
+                liveBuf += String(ev.payload?.delta || "");
+                set((state: any) => ({
+                  chatSessions: state.chatSessions.map((s: ChatSession) => {
+                    if (s.id !== hs.sessionId) return s;
+                    const existing = s.messages.find((m) => m.id === `live-${hs.activeRunId}`);
+                    const nextMsgs = existing
+                      ? s.messages.map((m) => (m.id === `live-${hs.activeRunId}` ? { ...m, content: liveBuf } : m))
+                      : [...s.messages, { id: `live-${hs.activeRunId}`, role: "assistant" as const, content: liveBuf, timestamp: ev.ts, modelId: hs.model }];
+                    return { ...s, messages: nextMsgs };
+                  }),
+                }));
+              } else if (ev.type === "run_finished") {
+                void get().syncThreadsFromHost();
+              }
+            }).catch(() => {});
+          }
+          return;
+        }
+      }
+    } catch {}
+
     try {
       const res = await fetch("/api/threads");
       if (!res.ok) return;

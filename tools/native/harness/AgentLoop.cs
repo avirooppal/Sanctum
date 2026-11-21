@@ -92,6 +92,7 @@ namespace Sanctum.Harness {
             _permissions = new PermissionEngine(dataRoot);
             RegisterPhase1aTools();
             BuiltinTools.RegisterAll(this, dataRoot);
+            ThreadMigration.MigrateLegacyThreadsIfNeeded(dataRoot, _store);
             _store.RecoverAllSessionsOnStartup();
         }
 

@@ -210,7 +210,7 @@ namespace Sanctum.Harness {
             }
         }
 
-        private void HandleHttpSse(HttpListenerResponse res, string sessionId, long afterSeq) {
+        public void HandleHttpSse(HttpListenerResponse res, string sessionId, long afterSeq) {
             if (!_engine.Store.SessionExists(sessionId)) {
                 WriteHttpJson(res, 404, new JObject { ["error"] = "Session not found." });
                 return;

@@ -28,6 +28,57 @@ using Microsoft.Web.WebView2.WinForms;
 
 namespace Sanctum {
     public partial class DesktopHost : Form {
+        private static Sanctum.Harness.HarnessEngine _embeddedHarnessEngine;
+        private static Sanctum.Harness.HarnessServer _embeddedHarnessServer;
+        private static NotifyIcon _harnessTrayIcon;
+        private static volatile bool _forceQuit;
+
+        private static void EnsureEmbeddedHarnessStarted() {
+            if (_embeddedHarnessServer != null) return;
+            lock (_dataLock) {
+                if (_embeddedHarnessServer != null) return;
+                try {
+                    var store = new Sanctum.Harness.SessionLogStore(_appDataDir);
+                    Sanctum.Harness.IModelProvider provider = new Sanctum.Harness.OllamaModelProvider("http://127.0.0.1:" + _enginePort);
+                    _embeddedHarnessEngine = new Sanctum.Harness.HarnessEngine(store, provider, _appDataDir);
+                    _embeddedHarnessServer = new Sanctum.Harness.HarnessServer(_appDataDir, _embeddedHarnessEngine);
+                    _embeddedHarnessServer.Start();
+                    LogEvent("info", "harness", "Embedded host harness started (pipe=" + _embeddedHarnessServer.PipeName + ", port=" + _embeddedHarnessServer.HttpPort + ")");
+                } catch (Exception ex) {
+                    LogEvent("error", "harness", "Failed to start embedded harness: " + ex.Message);
+                }
+            }
+        }
+
+        private void HideToTrayForActiveRuns() {
+            try {
+                if (_harnessTrayIcon == null) {
+                    _harnessTrayIcon = new NotifyIcon {
+                        Icon = this.Icon ?? SystemIcons.Application,
+                        Text = "Sanctum Harness (run active)",
+                        Visible = true
+                    };
+                    var menu = new ContextMenuStrip();
+                    menu.Items.Add("Open Sanctum", null, (s, ev) => {
+                        try { this.Show(); this.WindowState = FormWindowState.Normal; this.Activate(); } catch { }
+                    });
+                    menu.Items.Add("Quit Sanctum", null, (s, ev) => {
+                        _forceQuit = true;
+                        try { _embeddedHarnessServer?.Dispose(); } catch { }
+                        try { _harnessTrayIcon.Visible = false; _harnessTrayIcon.Dispose(); _harnessTrayIcon = null; } catch { }
+                        try { this.Close(); Application.Exit(); } catch { }
+                    });
+                    _harnessTrayIcon.ContextMenuStrip = menu;
+                    _harnessTrayIcon.DoubleClick += (s, ev) => {
+                        try { this.Show(); this.WindowState = FormWindowState.Normal; this.Activate(); } catch { }
+                    };
+                } else {
+                    _harnessTrayIcon.Visible = true;
+                }
+                this.Hide();
+            } catch { }
+        }
+
         private const string BuildVersion = "1.0.0";
         private const string BuildCommit = "__GIT_COMMIT__";
         [DllImport("kernel32.dll", SetLastError = true)]
@@ -847,7 +898,14 @@ namespace Sanctum {
             };
 
             this.FormClosing += (s, e) => {
+                if (!_forceQuit && _embeddedHarnessEngine != null && _embeddedHarnessEngine.ActiveRunCount > 0) {
+                    e.Cancel = true;
+                    HideToTrayForActiveRuns();
+                    return;
+                }
                 if (_installerRunning && MessageBox.Show(this, "A runtime installer is running. Close Sanctum and interrupt setup?", "Installation in progress", MessageBoxButtons.YesNo, MessageBoxIcon.Warning) != DialogResult.Yes) { e.Cancel = true; return; }
+                try { _embeddedHarnessServer?.Dispose(); _embeddedHarnessServer = null; } catch { }
+                try { if (_harnessTrayIcon != null) { _harnessTrayIcon.Visible = false; _harnessTrayIcon.Dispose(); _harnessTrayIcon = null; } } catch { }
                 if (_setupCancellation != null) _setupCancellation.Cancel();
                 if (_speech != null) { try { _speech.RecognizeAsyncCancel(); _speech.Dispose(); } catch { } _speech = null; }
                 StopPtySession();
@@ -1934,6 +1992,38 @@ namespace Sanctum {
 
             if (req.Headers["X-Sanctum-Auth"] != _authToken && req.Headers["Authorization"] != "Bearer " + _authToken) {
                 WriteJson(res, 401, new { error = "Authentication required" });
+                return;
+            }
+
+            if (path.StartsWith("/v1/", StringComparison.Ordinal)) {
+                EnsureEmbeddedHarnessStarted();
+                if (_embeddedHarnessServer == null) {
+                    WriteJson(res, 503, new { error = "Host harness unavailable." });
+                    return;
+                }
+                string normPath = path.TrimEnd('/');
+                if (method == "GET" && normPath.StartsWith("/v1/sessions/") && normPath.EndsWith("/events")) {
+                    string sid = normPath.Substring("/v1/sessions/".Length, normPath.Length - "/v1/sessions/".Length - "/events".Length).Trim('/');
+                    long afterSeq = 0;
+                    long.TryParse(req.QueryString["after"] ?? "0", out afterSeq);
+                    var sseThread = new Thread(() => _embeddedHarnessServer.HandleHttpSse(res, sid, afterSeq)) { IsBackground = true };
+                    sseThread.Start();
+                    return;
+                }
+                string rawBody = "";
+                if (method == "POST" || method == "PUT") {
+                    rawBody = ReadRequestBodyUtf8(req);
+                }
+                Newtonsoft.Json.Linq.JObject bodyObj = string.IsNullOrWhiteSpace(rawBody)
+                    ? new Newtonsoft.Json.Linq.JObject()
+                    : Sanctum.Harness.CanonicalJson.ParseObject(rawBody);
+                var (stCode, respJson) = _embeddedHarnessServer.DispatchProtocolCommand(method, normPath, bodyObj, viaTrustedChannel: false);
+                byte[] outBytes = Encoding.UTF8.GetBytes(Sanctum.Harness.CanonicalJson.Serialize(respJson));
+                res.StatusCode = stCode;
+                res.ContentType = "application/json; charset=utf-8";
+                res.ContentLength64 = outBytes.Length;
+                res.OutputStream.Write(outBytes, 0, outBytes.Length);
+                res.Close();
                 return;
             }
 
