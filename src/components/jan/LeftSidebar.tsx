@@ -487,11 +487,11 @@ export const LeftSidebar: React.FC<LeftSidebarProps> = ({
                   : "text-muted-foreground hover:bg-muted/50 hover:text-foreground"
               )}
             >
-              <IconMessageCircle size={16} className="text-primary shrink-0" />
+              <IconMessageCircle size={15} className="text-muted-foreground shrink-0" />
               {!isExplorerCollapsed && (
                 <>
                   <span className="flex-1">New Chat</span>
-                  <span className="text-[10px] font-mono text-muted-foreground/70">Ctrl+N</span>
+                  <span className="text-[10px] font-mono text-muted-foreground/60">Ctrl N</span>
                 </>
               )}
             </button>

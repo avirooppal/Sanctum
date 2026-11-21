@@ -5,7 +5,7 @@
   "name": "Sanctum Desktop SBOM",
   "documentNamespace": "https://github.com/avirooppal/Sanctum/spdxdocs/sanctum-1.0.0",
   "creationInfo": {
-    "created": "2026-11-21T14:33:00Z",
+    "created": "2026-11-21T14:46:16Z",
     "creators": [
       "Organization: Sanctum Contributors"
     ]
@@ -21,7 +21,7 @@
       "checksums": [
         {
           "algorithm": "SHA256",
-          "checksumValue": "32a8244cc750673bcff7c503a48cabdc7bdb4144a0ad156d9d50a274917a7a16"
+          "checksumValue": "044bebfa94f24dac1dacf4bde48d28ba2f3c7168f83374df7dd66f0bc5ee27cb"
         }
       ]
     },

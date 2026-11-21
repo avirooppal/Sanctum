@@ -539,12 +539,12 @@ export const ChatScreen: React.FC<ChatScreenProps> = ({ onNavigate, onOpenMcpSet
     endRef.current?.scrollIntoView({ behavior: "smooth" });
   }, [messages]);
 
-  // Auto-grow composer
+  // Auto-grow composer (Jan-style generous comfortable height)
   useEffect(() => {
     const el = textareaRef.current;
     if (!el) return;
     el.style.height = "auto";
-    el.style.height = `${Math.min(el.scrollHeight, 200)}px`;
+    el.style.height = `${Math.min(Math.max(el.scrollHeight, 56), 220)}px`;
   }, [prompt]);
 
   useEffect(() => {
@@ -1197,7 +1197,8 @@ export const ChatScreen: React.FC<ChatScreenProps> = ({ onNavigate, onOpenMcpSet
           onDoubleClick={handleTitleBarDoubleClick}
           onContextMenu={handleTitleBarContextMenu}
           className={cn(
-            "flex items-center justify-between gap-2 px-3 sm:px-4 h-11 shrink-0 border-b border-border/40",
+            "flex items-center justify-between gap-2 px-3 sm:px-5 h-12 shrink-0",
+            !isEmptyChat && "border-b border-border/35",
             !isViewerOpen && "pr-32 sm:pr-36"
           )}
         >
@@ -1292,16 +1293,16 @@ export const ChatScreen: React.FC<ChatScreenProps> = ({ onNavigate, onOpenMcpSet
           </div>
         )}
 
-        {/* Messages + Centered-to-Bottom Composer Flow */}
+        {/* Messages + Centered-to-Bottom Composer Flow (Jan full-width max-w-3xl) */}
         <div
           className={cn(
             "transition-all duration-300",
             isEmptyChat
-              ? "flex-1 flex flex-col justify-end pb-2"
+              ? "flex-1 flex flex-col justify-end pb-3"
               : "flex-1 overflow-y-auto"
           )}
         >
-          <div className={cn("mx-auto w-full max-w-2xl px-6", isEmptyChat ? "py-3" : "py-6 space-y-6")}>
+          <div className={cn("mx-auto w-full max-w-3xl px-6", isEmptyChat ? "py-3" : "py-6 space-y-6")}>
             {isEmptyChat ? (
               <div className="flex flex-col items-center text-center gap-3.5">
                 <img
@@ -1370,11 +1371,11 @@ export const ChatScreen: React.FC<ChatScreenProps> = ({ onNavigate, onOpenMcpSet
           </div>
         </div>
 
-        {/* Composer (Centered vertically on empty chat, glides smoothly to bottom once messages exist) */}
+        {/* Composer (Jan-style wide max-w-3xl tactile card; centered when empty, bottom when active) */}
         <div
           className={cn(
-            "w-full px-4 sm:px-6 transition-all duration-300",
-            isEmptyChat ? "flex-1 flex flex-col justify-start pt-2 pb-12" : "shrink-0 pt-2",
+            "w-full px-4 sm:px-8 transition-all duration-300",
+            isEmptyChat ? "flex-1 flex flex-col items-center justify-start pt-3 pb-12" : "shrink-0 pt-2",
             !isEmptyChat && (isTerminalOpen ? "pb-3" : "pb-5")
           )}
         >
@@ -1401,8 +1402,9 @@ export const ChatScreen: React.FC<ChatScreenProps> = ({ onNavigate, onOpenMcpSet
                 handleFiles(e.dataTransfer.files);
               }
             }}
+            style={{ width: "100%", maxWidth: "768px" }}
             className={cn(
-              "relative mx-auto w-full max-w-2xl rounded-2xl border border-border/80 bg-card/90 backdrop-blur-md focus-within:border-primary/40 transition-colors shadow-xl",
+              "relative mx-auto w-full max-w-3xl rounded-[20px] border border-border/80 bg-card/90 backdrop-blur-md focus-within:border-primary/45 transition-all shadow-xl",
               isRecording && "border-destructive ring-1 ring-destructive/20"
             )}
           >
@@ -1562,7 +1564,7 @@ export const ChatScreen: React.FC<ChatScreenProps> = ({ onNavigate, onOpenMcpSet
             <WorkspacePendingPlanBanner />
             <textarea
               ref={textareaRef}
-              rows={1}
+              rows={2}
               value={prompt}
               onChange={(e) => setPrompt(e.target.value)}
               onKeyDown={(e) => {
@@ -1613,7 +1615,7 @@ export const ChatScreen: React.FC<ChatScreenProps> = ({ onNavigate, onOpenMcpSet
                   : "Waiting for a local model…"
               }
               disabled={!model}
-              className="block w-full resize-none bg-transparent px-4 pt-3.5 pb-1.5 text-sm outline-none placeholder:text-muted-foreground/70 disabled:opacity-50"
+              className="block w-full min-h-[58px] resize-none bg-transparent px-4 pt-4 pb-2 text-[14.5px] leading-relaxed outline-none placeholder:text-muted-foreground/65 disabled:opacity-50"
             />
 
             <div className="flex flex-wrap items-center justify-between gap-2 px-2.5 pb-2.5 pt-1">
