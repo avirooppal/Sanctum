@@ -22,6 +22,7 @@ import { SettingsLogs } from "@/components/jan/sections/SettingsLogs";
 import { SettingsMonitor } from "@/components/jan/sections/SettingsMonitor";
 import { SettingsDeveloper } from "@/components/jan/sections/SettingsDeveloper";
 import { SettingsCapabilities } from "@/components/jan/sections/SettingsCapabilities";
+import { JanUpdateToast } from "@/components/jan/JanUpdateToast";
 import { ChatScreen } from "@/components/screens/ChatScreen";
 import { WindowControls, handleTitleBarMouseDown, handleTitleBarDoubleClick, handleTitleBarContextMenu } from "@/components/jan/WindowControls";
 import { useAppStore } from "@/store/useAppStore";
@@ -182,7 +183,15 @@ export const JanAppShell: React.FC = () => {
           />
         )}
 
-        {activeModule === "chat" && <ChatScreen onNavigate={setActiveModule} />}
+        {activeModule === "chat" && (
+          <ChatScreen
+            onNavigate={setActiveModule}
+            onOpenMcpSettings={() => {
+              setActiveSettingsSection("mcp-servers");
+              setActiveModule("settings");
+            }}
+          />
+        )}
 
         {activeModule === "hub" && <HubView />}
 
@@ -224,6 +233,7 @@ export const JanAppShell: React.FC = () => {
           </div>
         )}
       </main>
+      <JanUpdateToast />
     </div>
   );
 };

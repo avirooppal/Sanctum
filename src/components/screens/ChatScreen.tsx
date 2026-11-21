@@ -39,6 +39,8 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { DownloadPopover } from "@/components/jan/DownloadPopover";
+import { JanModelHeaderPill } from "@/components/jan/JanModelHeaderPill";
+import { McpQuickToggle } from "@/components/jan/McpQuickToggle";
 import { handleTitleBarMouseDown, handleTitleBarDoubleClick, handleTitleBarContextMenu } from "@/components/jan/WindowControls";
 import { useAppStore } from "@/store/useAppStore";
 import { useShallow } from "zustand/react/shallow";
@@ -62,6 +64,7 @@ import { detectCandidateFilePaths } from "@core/infra/security/content_sanitizer
 
 interface ChatScreenProps {
   onNavigate?: (module: "chat" | "hub" | "settings") => void;
+  onOpenMcpSettings?: () => void;
 }
 
 const MessageRow: React.FC<{
@@ -418,7 +421,7 @@ const MessageRow: React.FC<{
 });
 MessageRow.displayName = "MessageRow";
 
-export const ChatScreen: React.FC<ChatScreenProps> = ({ onNavigate }) => {
+export const ChatScreen: React.FC<ChatScreenProps> = ({ onNavigate, onOpenMcpSettings }) => {
   const {
     chatSessions,
     activeSessionId,
@@ -914,57 +917,130 @@ export const ChatScreen: React.FC<ChatScreenProps> = ({ onNavigate }) => {
     if (fileInputRef.current) fileInputRef.current.value = "";
   };
 
-  // --- WHISPERX & MICROPHONE RECORDING ---
+  // --- NEURAL STT & MICROPHONE RECORDING ---
   const startRecording = async () => {
     setWhisperStatus(null);
     const savedSttMode =
       typeof window !== "undefined" ? localStorage.getItem("sanctum.sttMode") || "recommended" : "recommended";
     const desktop = (window as any).chrome?.webview;
 
-    // Use native Windows/C# offline speech recognition unless user explicitly selected a custom HTTP STT endpoint
-    if (desktop && savedSttMode !== "custom") {
-      setWhisperStatus("Starting offline voice dictation…");
+    // 1. Check if local neural HTTP STT server (Qwen3-ASR / Nemotron / WhisperX) is online
+    let httpServerOnline = false;
+    let activeSttModel = "qwen3-asr-0.6b";
+    try {
+      const probe = await fetch("/api/audio/whisperx", { signal: AbortSignal.timeout(1200) });
+      if (probe.ok) {
+        const info = await probe.json();
+        httpServerOnline = Boolean(info?.httpServerOnline);
+        if (info?.model) activeSttModel = String(info.model);
+      }
+    } catch {}
+
+    // 2. Priority 1: Use local neural HTTP STT server or Custom STT endpoint via MediaRecorder
+    if (httpServerOnline || savedSttMode === "custom") {
+      try {
+        const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+        audioChunksRef.current = [];
+        const mimeType = MediaRecorder.isTypeSupported("audio/webm") ? "audio/webm" : "";
+        const mediaRecorder = mimeType ? new MediaRecorder(stream, { mimeType }) : new MediaRecorder(stream);
+        mediaRecorderRef.current = mediaRecorder;
+
+        mediaRecorder.ondataavailable = (event) => {
+          if (event.data.size > 0) audioChunksRef.current.push(event.data);
+        };
+        mediaRecorder.onstop = async () => {
+          const audioBlob = new Blob(audioChunksRef.current, { type: mimeType || "audio/webm" });
+          stream.getTracks().forEach((track) => track.stop());
+          await processAudioWithWhisperX(audioBlob);
+        };
+
+        mediaRecorder.start(250);
+        setIsRecording(true);
+        setRecordingSeconds(0);
+        setWhisperStatus(`Recording for ${activeSttModel}… Click mic again to transcribe.`);
+        timerRef.current = setInterval(() => setRecordingSeconds((prev) => prev + 1), 1000);
+        return;
+      } catch {
+        // Fall through to Chromium neural speech recognition
+      }
+    }
+
+    // 3. Priority 2: Modern Chromium/WebView2 Neural SpeechRecognition (vastly more accurate than legacy Windows SAPI)
+    const SpeechRecCtor =
+      typeof window !== "undefined"
+        ? (window as any).SpeechRecognition || (window as any).webkitSpeechRecognition
+        : null;
+    if (SpeechRecCtor && savedSttMode !== "webspeech_legacy") {
+      try {
+        const recognition = new SpeechRecCtor();
+        recognition.continuous = true;
+        recognition.interimResults = true;
+        recognition.lang = navigator.language || "en-US";
+        const basePrompt = prompt;
+        let finalTranscript = "";
+
+        recognition.onstart = () => {
+          setIsRecording(true);
+          setRecordingSeconds(0);
+          setWhisperStatus("Listening (Neural Speech)… Click mic to stop.");
+          timerRef.current = setInterval(() => setRecordingSeconds((prev) => prev + 1), 1000);
+        };
+
+        recognition.onresult = (event: any) => {
+          let interim = "";
+          for (let i = event.resultIndex; i < event.results.length; i++) {
+            const transcript = event.results[i][0]?.transcript || "";
+            if (event.results[i].isFinal) {
+              finalTranscript += transcript + " ";
+            } else {
+              interim += transcript;
+            }
+          }
+          const combined = [basePrompt.trim(), (finalTranscript + interim).trim()].filter(Boolean).join(" ");
+          setPrompt(combined);
+        };
+
+        recognition.onerror = (event: any) => {
+          const errCode = event?.error || "unknown";
+          if (timerRef.current) {
+            clearInterval(timerRef.current);
+            timerRef.current = null;
+          }
+          setIsRecording(false);
+          speechRecognitionRef.current = null;
+          if ((errCode === "network" || errCode === "service-not-allowed") && desktop) {
+            setWhisperStatus("Offline mode: falling back to Windows Offline Speech…");
+            desktop.postMessage(JSON.stringify({ type: "speechStart" }));
+          } else if (errCode !== "aborted" && errCode !== "no-speech") {
+            setWhisperStatus(`Voice input error (${errCode}).`);
+          }
+        };
+
+        recognition.onend = () => {
+          if (timerRef.current) {
+            clearInterval(timerRef.current);
+            timerRef.current = null;
+          }
+          setIsRecording(false);
+          speechRecognitionRef.current = null;
+        };
+
+        speechRecognitionRef.current = recognition;
+        recognition.start();
+        return;
+      } catch {
+        // Fall through to Windows SAPI
+      }
+    }
+
+    // 4. Priority 3: Offline Windows SAPI fallback
+    if (desktop) {
+      setWhisperStatus("Offline Windows Speech active (start local Qwen3-ASR server on :8000 for neural offline accuracy).");
       desktop.postMessage(JSON.stringify({ type: "speechStart" }));
       return;
     }
 
-    try {
-      const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
-      audioChunksRef.current = [];
-
-      const mimeType = MediaRecorder.isTypeSupported("audio/webm") ? "audio/webm" : "";
-      const mediaRecorder = mimeType ? new MediaRecorder(stream, { mimeType }) : new MediaRecorder(stream);
-      mediaRecorderRef.current = mediaRecorder;
-
-      mediaRecorder.ondataavailable = (event) => {
-        if (event.data.size > 0) {
-          audioChunksRef.current.push(event.data);
-        }
-      };
-
-      mediaRecorder.onstop = async () => {
-        const audioBlob = new Blob(audioChunksRef.current, { type: mimeType || "audio/webm" });
-        stream.getTracks().forEach((track) => track.stop());
-        await processAudioWithWhisperX(audioBlob);
-      };
-
-      mediaRecorder.start(250);
-      setIsRecording(true);
-      setRecordingSeconds(0);
-      setWhisperStatus("Recording audio… Click the microphone again to transcribe.");
-
-      timerRef.current = setInterval(() => {
-        setRecordingSeconds((prev) => prev + 1);
-      }, 1000);
-    } catch (err) {
-      if (desktop) {
-        setWhisperStatus("Starting offline voice dictation…");
-        desktop.postMessage(JSON.stringify({ type: "speechStart" }));
-        return;
-      }
-      console.error("Microphone access denied or not supported:", err);
-      setWhisperStatus("Microphone access denied. Check microphone permissions in Settings.");
-    }
+    setWhisperStatus("Microphone / Speech Recognition not available in this environment.");
   };
 
   const stopRecording = () => {
@@ -1122,6 +1198,11 @@ export const ChatScreen: React.FC<ChatScreenProps> = ({ onNavigate }) => {
                 </button>
               </div>
             )}
+
+            <JanModelHeaderPill
+              onToggleDetails={() => setDetailsOpen((v) => !v)}
+              detailsOpen={detailsOpen}
+            />
 
             <AccessScopeBadge />
 
@@ -1519,6 +1600,9 @@ export const ChatScreen: React.FC<ChatScreenProps> = ({ onNavigate }) => {
 
                 {/* Inline Model + Effort + Tools + Fast/Plan Pills */}
                 <WorkspaceTools />
+
+                {/* External MCP Connectors Quick-Toggle */}
+                <McpQuickToggle onOpenMcpSettings={onOpenMcpSettings} />
 
                 {/* My documents (RAG) Toggle — only shown when documents exist */}
                 {(documents.length > 0 || attachedDocuments.length > 0) && (

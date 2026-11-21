@@ -421,13 +421,18 @@ export const LeftSidebar: React.FC<LeftSidebarProps> = ({
           )}
         >
           <div className="flex flex-col gap-2.5 h-full min-h-0">
-            {/* Top Header (Draggable in-window titlebar strip, no redundant 'Sanctum' label) */}
+            {/* Top Header (Jan-style brand label + download popover + sidebar toggle) */}
             <div
               onMouseDown={handleTitleBarMouseDown}
               onDoubleClick={handleTitleBarDoubleClick}
               onContextMenu={handleTitleBarContextMenu}
-              className="flex items-center justify-end px-1 h-8 shrink-0"
+              className="flex items-center justify-between px-1.5 h-8 shrink-0"
             >
+              {!isExplorerCollapsed && (
+                <span className="text-[13px] font-semibold tracking-tight text-foreground select-none">
+                  Sanctum
+                </span>
+              )}
               <div className="flex items-center gap-1 ml-auto">
                 <DownloadPopover />
                 <button
