@@ -33,6 +33,7 @@ import { useAppStore } from "@/store/useAppStore";
 import { useShallow } from "zustand/react/shallow";
 import { ChatSession } from "@/types";
 import { cn } from "@/lib/utils";
+import { loadAppearanceConfig, type AppearanceConfig } from "@/lib/appearance";
 import { toast } from "sonner";
 
 interface LeftSidebarProps {
@@ -93,6 +94,21 @@ export const LeftSidebar: React.FC<LeftSidebarProps> = ({
       toggleExplorer: s.toggleExplorer,
     }))
   );
+
+  const [brandName, setBrandName] = useState<string>("Sanctum");
+  const [customIcon, setCustomIcon] = useState<string>("");
+
+  React.useEffect(() => {
+    const sync = (cfg?: AppearanceConfig) => {
+      const c = cfg || loadAppearanceConfig();
+      setBrandName((c.customBrandName || "").trim() || "Sanctum");
+      setCustomIcon(c.customIcon || "");
+    };
+    sync();
+    const handler = (e: Event) => sync((e as CustomEvent<AppearanceConfig>).detail);
+    window.addEventListener("sanctum-appearance-updated", handler);
+    return () => window.removeEventListener("sanctum-appearance-updated", handler);
+  }, []);
 
   const [internalProjectOpen, setInternalProjectOpen] = useState(false);
   const [internalSearchOpen, setInternalSearchOpen] = useState(false);
@@ -429,9 +445,18 @@ export const LeftSidebar: React.FC<LeftSidebarProps> = ({
               className="flex items-center justify-between px-1.5 h-8 shrink-0"
             >
               {!isExplorerCollapsed && (
-                <span className="text-[13px] font-semibold tracking-tight text-foreground select-none">
-                  Sanctum
-                </span>
+                <div className="flex items-center gap-2 min-w-0">
+                  {customIcon && (
+                    <img
+                      src={customIcon}
+                      alt={brandName}
+                      className="size-4 rounded object-cover shrink-0"
+                    />
+                  )}
+                  <span className="text-[13px] font-semibold tracking-tight text-foreground select-none truncate">
+                    {brandName}
+                  </span>
+                </div>
               )}
               <div className="flex items-center gap-1 ml-auto">
                 <DownloadPopover />

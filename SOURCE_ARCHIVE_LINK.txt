@@ -1,4 +1,4 @@
 Sanctum Complete Corresponding Source Code:
 Repository: https://github.com/avirooppal/Sanctum
-Commit: c011391
+Commit: 25789e2
 License: MIT License per LICENSE file

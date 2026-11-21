@@ -50,6 +50,7 @@ import { splitThinking, PromptTemplates } from "@core/ai/index.ts";
 import { RequestStatusLine } from "@/components/chat/RequestStatusLine";
 import { determineDocumentType } from "@core/domain/documents.ts";
 import { toast } from "sonner";
+import { loadAppearanceConfig, type AppearanceConfig } from "@/lib/appearance";
 import { WorkspaceTools, WorkspacePendingPlanBanner } from "@/components/chat/WorkspaceTools";
 import { extractAttachmentText } from "@/lib/attachments";
 import { AccessScopeBadge } from "@/components/access/AccessScopeBadge";
@@ -498,6 +499,15 @@ export const ChatScreen: React.FC<ChatScreenProps> = ({ onNavigate, onOpenMcpSet
   const [isTerminalOpen, setIsTerminalOpen] = useState(false);
   const [bookmarksOnly, setBookmarksOnly] = useState(false);
   const [isRecording, setIsRecording] = useState(false);
+  const [appearanceCfg, setAppearanceCfg] = useState<AppearanceConfig>(() => loadAppearanceConfig());
+
+  useEffect(() => {
+    const sync = (cfg?: AppearanceConfig) => setAppearanceCfg(cfg || loadAppearanceConfig());
+    sync();
+    const handler = (e: Event) => sync((e as CustomEvent<AppearanceConfig>).detail);
+    window.addEventListener("sanctum-appearance-updated", handler);
+    return () => window.removeEventListener("sanctum-appearance-updated", handler);
+  }, []);
   const [recordingSeconds, setRecordingSeconds] = useState(0);
   const [isTranscribing, setIsTranscribing] = useState(false);
   const [whisperStatus, setWhisperStatus] = useState<string | null>(null);
@@ -1170,8 +1180,16 @@ export const ChatScreen: React.FC<ChatScreenProps> = ({ onNavigate, onOpenMcpSet
     };
   }, [prompt]);
 
+  const isEmptyChat = messages.length === 0;
+  const hasWallpaper = Boolean((appearanceCfg.wallpaper || "").trim());
+
   return (
-    <main className="relative flex flex-1 min-h-0 w-full overflow-hidden bg-background">
+    <main
+      className={cn(
+        "relative flex flex-1 min-h-0 w-full overflow-hidden",
+        hasWallpaper ? "bg-transparent" : "bg-background"
+      )}
+    >
       <section className="relative flex flex-col flex-1 min-w-0 min-h-0">
         {/* Minimal Top Header Bar (no overlapping duplicate model selector; dynamic right padding only when viewer is closed) */}
         <div
@@ -1274,14 +1292,21 @@ export const ChatScreen: React.FC<ChatScreenProps> = ({ onNavigate, onOpenMcpSet
           </div>
         )}
 
-        {/* Messages */}
-        <div className="flex-1 overflow-y-auto">
+        {/* Messages + Centered-to-Bottom Composer Flow */}
+        <div
+          className={cn(
+            "transition-all duration-300",
+            isEmptyChat
+              ? "flex-1 flex flex-col justify-end pb-6"
+              : "flex-1 overflow-y-auto"
+          )}
+        >
           <div className="mx-auto w-full max-w-2xl px-6 py-6 space-y-6">
-            {messages.length === 0 ? (
-              <div className="flex flex-col items-center text-center pt-[14vh] gap-4">
+            {isEmptyChat ? (
+              <div className="flex flex-col items-center text-center gap-3.5">
                 <img
-                  src="/logo.jpg"
-                  alt="Sanctum Logo"
+                  src={appearanceCfg.customIcon || "/logo.jpg"}
+                  alt={appearanceCfg.customBrandName || "Sanctum Logo"}
                   width={56}
                   height={56}
                   style={{ width: "56px", height: "56px", maxWidth: "56px", maxHeight: "56px" }}
@@ -1295,8 +1320,8 @@ export const ChatScreen: React.FC<ChatScreenProps> = ({ onNavigate, onOpenMcpSet
                     }
                   }}
                 />
-                <div className="space-y-1.5">
-                  <h2 className="text-lg font-semibold tracking-tight text-foreground">
+                <div className="space-y-1">
+                  <h2 className="text-xl font-semibold tracking-tight text-foreground">
                     What would you like to explore?
                   </h2>
                   <p className="text-xs text-muted-foreground">
@@ -1345,8 +1370,14 @@ export const ChatScreen: React.FC<ChatScreenProps> = ({ onNavigate, onOpenMcpSet
           </div>
         </div>
 
-        {/* Composer (Matches Screenshot 2026-10-25 190854.png) */}
-        <div className={cn("px-2 sm:px-6 pt-2 shrink-0", isTerminalOpen ? "pb-3" : "pb-5")}>
+        {/* Composer (Centered vertically on empty chat, glides smoothly to bottom once messages exist) */}
+        <div
+          className={cn(
+            "px-2 sm:px-6 pt-2 transition-all duration-300",
+            isEmptyChat ? "flex-1 flex flex-col justify-start pb-10" : "shrink-0",
+            !isEmptyChat && (isTerminalOpen ? "pb-3" : "pb-5")
+          )}
+        >
           {/* Hidden File Input */}
           <input
             type="file"

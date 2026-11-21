@@ -1,135 +1,457 @@
 "use client";
 
-import React, { useState, useEffect } from "react";
-import { IconDeviceFloppy } from "@tabler/icons-react";
+import React, { useState, useEffect, useRef } from "react";
+import {
+  IconDeviceFloppy,
+  IconPhoto,
+  IconUpload,
+  IconTrash,
+  IconSparkles,
+  IconRefresh,
+  IconPalette,
+} from "@tabler/icons-react";
 import { Button } from "@/components/ui/button";
 import { fetchWithApproval } from "@/lib/hostBridge";
+import {
+  ACCENT_SWATCHES,
+  DEFAULT_APPEARANCE,
+  WALLPAPER_PRESETS,
+  applyAppearanceConfig,
+  loadAppearanceConfig,
+  saveAppearanceConfig,
+  type AppearanceConfig,
+} from "@/lib/appearance";
 import { cn } from "@/lib/utils";
 import { toast } from "sonner";
 
 export function applyAppearanceToDocument(settings: {
   theme?: string;
   fontSize?: string;
+  accentColor?: string;
 }) {
-  if (typeof document === "undefined") return;
-  const html = document.documentElement;
-  if (settings.theme) {
-    const resolvedDark =
-      settings.theme === "system"
-        ? window.matchMedia("(prefers-color-scheme: dark)").matches
-        : settings.theme !== "light";
-    html.classList.toggle("dark", resolvedDark);
-    html.classList.toggle("light", !resolvedDark);
-  }
-  if (settings.fontSize) {
-    const px =
-      settings.fontSize === "small"
-        ? "13px"
-        : settings.fontSize === "large"
-        ? "16px"
-        : "14px";
-    html.style.fontSize = px;
-  }
+  applyAppearanceConfig({
+    theme: settings.theme as AppearanceConfig["theme"] | undefined,
+    fontSize: settings.fontSize as AppearanceConfig["fontSize"] | undefined,
+    accentColor: settings.accentColor,
+  });
+}
+
+function readImageFileAsDataUrl(file: File, maxSizeMB = 4): Promise<string> {
+  return new Promise((resolve, reject) => {
+    if (!file.type.startsWith("image/")) {
+      reject(new Error("Please select an image file (PNG, JPG, WebP, GIF, SVG)."));
+      return;
+    }
+    if (file.size > maxSizeMB * 1024 * 1024) {
+      reject(new Error(`Image must be smaller than ${maxSizeMB} MB.`));
+      return;
+    }
+    const reader = new FileReader();
+    reader.onload = () => resolve(String(reader.result || ""));
+    reader.onerror = () => reject(new Error("Could not read image file."));
+    reader.readAsDataURL(file);
+  });
 }
 
 export const SettingsAppearance: React.FC = () => {
-  const [theme, setTheme] = useState<string>("dark");
-  const [fontSize, setFontSize] = useState<string>("medium");
-  const [showTokenSpeed, setShowTokenSpeed] = useState<boolean>(true);
-  const [coloredUserBubble, setColoredUserBubble] = useState<boolean>(false);
+  const [cfg, setCfg] = useState<AppearanceConfig>(() => loadAppearanceConfig());
+  const [wallpaperUrlInput, setWallpaperUrlInput] = useState<string>("");
   const [isSaving, setIsSaving] = useState<boolean>(false);
+  const wallpaperInputRef = useRef<HTMLInputElement | null>(null);
+  const iconInputRef = useRef<HTMLInputElement | null>(null);
 
   useEffect(() => {
+    const local = loadAppearanceConfig();
+    setCfg(local);
+    if (local.wallpaper && !local.wallpaper.startsWith("data:") && !local.wallpaper.startsWith("preset:")) {
+      setWallpaperUrlInput(local.wallpaper);
+    }
+
     fetch("/api/settings")
-      .then((r) => r.json())
+      .then((r) => (r.ok ? r.json() : null))
       .then((data) => {
         if (data?.settings) {
-          if (data.settings["appearance.theme"]) setTheme(data.settings["appearance.theme"]);
-          if (data.settings["appearance.fontSize"]) setFontSize(data.settings["appearance.fontSize"]);
-          if (data.settings["appearance.showTokenSpeed"] !== undefined) {
-            setShowTokenSpeed(Boolean(data.settings["appearance.showTokenSpeed"]));
-          }
-          if (data.settings["appearance.coloredUserBubble"] !== undefined) {
-            setColoredUserBubble(Boolean(data.settings["appearance.coloredUserBubble"]));
+          const s = data.settings;
+          const merged: Partial<AppearanceConfig> = {};
+          if (s["appearance.theme"]) merged.theme = s["appearance.theme"];
+          if (s["appearance.fontSize"]) merged.fontSize = s["appearance.fontSize"];
+          if (s["appearance.accentColor"] !== undefined) merged.accentColor = String(s["appearance.accentColor"] || "");
+          if (s["appearance.customBrandName"]) merged.customBrandName = String(s["appearance.customBrandName"]);
+          if (s["appearance.showTokenSpeed"] !== undefined) merged.showTokenSpeed = Boolean(s["appearance.showTokenSpeed"]);
+          if (s["appearance.coloredUserBubble"] !== undefined) merged.coloredUserBubble = Boolean(s["appearance.coloredUserBubble"]);
+          if (Object.keys(merged).length > 0) {
+            const next = saveAppearanceConfig(merged);
+            setCfg(next);
           }
         }
       })
       .catch(() => {});
   }, []);
 
-  const persistPatch = async (patch: Record<string, any>, toastMsg?: string) => {
-    applyAppearanceToDocument({
-      theme: patch["appearance.theme"] ?? theme,
-      fontSize: patch["appearance.fontSize"] ?? fontSize,
-    });
-    window.dispatchEvent(new CustomEvent("sanctum-settings-updated", { detail: patch }));
+  const updateAndPersist = async (patch: Partial<AppearanceConfig>, toastMsg?: string) => {
+    const next = saveAppearanceConfig(patch);
+    setCfg(next);
+
+    const serverPatch: Record<string, any> = {};
+    if (patch.theme !== undefined) serverPatch["appearance.theme"] = patch.theme;
+    if (patch.fontSize !== undefined) serverPatch["appearance.fontSize"] = patch.fontSize;
+    if (patch.accentColor !== undefined) serverPatch["appearance.accentColor"] = patch.accentColor;
+    if (patch.customBrandName !== undefined) serverPatch["appearance.customBrandName"] = patch.customBrandName;
+    if (patch.showTokenSpeed !== undefined) serverPatch["appearance.showTokenSpeed"] = patch.showTokenSpeed;
+    if (patch.coloredUserBubble !== undefined) serverPatch["appearance.coloredUserBubble"] = patch.coloredUserBubble;
+
+    if (Object.keys(serverPatch).length > 0) {
+      window.dispatchEvent(new CustomEvent("sanctum-settings-updated", { detail: serverPatch }));
+      try {
+        await fetchWithApproval(
+          "/api/settings",
+          {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify(serverPatch),
+          },
+          "settings_write"
+        );
+      } catch {}
+    }
+
+    if (toastMsg) toast.success(toastMsg);
+  };
+
+  const handleWallpaperUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
     try {
-      const res = await fetchWithApproval("/api/settings", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(patch),
-      }, "settings_write");
-      if (res.ok && toastMsg) {
-        toast.success(toastMsg);
-      }
-    } catch {
-      // ignore
+      const dataUrl = await readImageFileAsDataUrl(file, 5);
+      setWallpaperUrlInput("");
+      await updateAndPersist({ wallpaper: dataUrl }, "Custom wallpaper applied");
+    } catch (err: any) {
+      toast.error(err?.message || "Failed to load wallpaper");
+    } finally {
+      if (wallpaperInputRef.current) wallpaperInputRef.current.value = "";
     }
   };
 
-  const handleSave = async () => {
+  const handleIconUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    try {
+      const dataUrl = await readImageFileAsDataUrl(file, 2);
+      await updateAndPersist({ customIcon: dataUrl }, "Custom app icon updated");
+    } catch (err: any) {
+      toast.error(err?.message || "Failed to load icon");
+    } finally {
+      if (iconInputRef.current) iconInputRef.current.value = "";
+    }
+  };
+
+  const handleSaveAll = async () => {
     setIsSaving(true);
-    await persistPatch(
-      {
-        "appearance.theme": theme,
-        "appearance.fontSize": fontSize,
-        "appearance.showTokenSpeed": showTokenSpeed,
-        "appearance.coloredUserBubble": coloredUserBubble,
-      },
-      "Appearance settings saved"
-    );
+    await updateAndPersist(cfg, "Appearance & Studio customization saved");
     setIsSaving(false);
+  };
+
+  const handleResetDefaults = async () => {
+    setWallpaperUrlInput("");
+    await updateAndPersist({ ...DEFAULT_APPEARANCE }, "Appearance reset to Sanctum defaults");
   };
 
   return (
     <div className="flex-1 overflow-y-auto p-8 space-y-8 max-w-3xl">
-      <div className="flex items-center justify-between">
+      <div className="flex flex-wrap items-center justify-between gap-3">
         <div>
           <h1 className="text-xl font-bold tracking-tight text-foreground font-sans">
-            Appearance & Studio
+            Appearance &amp; UI Studio
           </h1>
           <p className="mt-1 text-xs text-muted-foreground">
-            Customize interface themes, typographical scales, and message presentation.
+            Customize wallpapers, brand icon, app title, accent colors, themes, and typography.
           </p>
         </div>
-        <Button
-          size="sm"
-          onClick={handleSave}
-          disabled={isSaving}
-          className="rounded-xl text-xs flex items-center gap-1.5"
-        >
-          <IconDeviceFloppy size={14} />
-          <span>Save Changes</span>
-        </Button>
+        <div className="flex items-center gap-2">
+          <Button
+            variant="outline"
+            size="sm"
+            onClick={handleResetDefaults}
+            className="rounded-xl text-xs gap-1.5"
+          >
+            <IconRefresh size={13} />
+            <span>Reset</span>
+          </Button>
+          <Button
+            size="sm"
+            onClick={handleSaveAll}
+            disabled={isSaving}
+            className="rounded-xl text-xs gap-1.5"
+          >
+            <IconDeviceFloppy size={14} />
+            <span>Save Changes</span>
+          </Button>
+        </div>
       </div>
 
-      <section className="space-y-4">
-        <h2 className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">
-          Theme & Styling
+      {/* 1. Custom Wallpaper & Background */}
+      <section className="space-y-3">
+        <h2 className="text-xs font-semibold uppercase tracking-wider text-muted-foreground flex items-center gap-1.5">
+          <IconPhoto size={13} />
+          Background &amp; Wallpaper
         </h2>
         <div className="rounded-2xl border border-border/70 bg-card p-5 space-y-4">
-          <div className="flex items-center justify-between">
+          <input
+            ref={wallpaperInputRef}
+            type="file"
+            accept="image/png,image/jpeg,image/webp,image/gif"
+            onChange={handleWallpaperUpload}
+            className="hidden"
+          />
+
+          <div className="grid grid-cols-2 sm:grid-cols-5 gap-2">
+            {WALLPAPER_PRESETS.map((preset) => {
+              const active = cfg.wallpaper === preset.id;
+              return (
+                <button
+                  key={preset.id || "none"}
+                  type="button"
+                  onClick={() => {
+                    setWallpaperUrlInput("");
+                    void updateAndPersist({ wallpaper: preset.id }, `Background: ${preset.label}`);
+                  }}
+                  className={cn(
+                    "rounded-xl border p-1.5 text-left transition-all space-y-1.5",
+                    active ? "border-primary ring-1 ring-primary/40" : "border-border/70 hover:border-primary/40"
+                  )}
+                >
+                  <div
+                    className="h-11 w-full rounded-lg border border-border/40 bg-background"
+                    style={preset.css ? { background: preset.css } : undefined}
+                  />
+                  <span className="block text-[10px] font-medium text-foreground truncate px-0.5">
+                    {preset.label}
+                  </span>
+                </button>
+              );
+            })}
+          </div>
+
+          <div className="flex flex-wrap items-center gap-2 pt-2 border-t border-border/50">
+            <Button
+              type="button"
+              variant="outline"
+              size="sm"
+              onClick={() => wallpaperInputRef.current?.click()}
+              className="rounded-xl text-xs gap-1.5"
+            >
+              <IconUpload size={13} />
+              <span>Upload Wallpaper</span>
+            </Button>
+
+            <div className="flex-1 flex items-center gap-1.5 min-w-[200px]">
+              <input
+                type="url"
+                placeholder="Or paste wallpaper image URL (https://...)"
+                value={wallpaperUrlInput}
+                onChange={(e) => setWallpaperUrlInput(e.target.value)}
+                className="flex-1 px-3 py-1.5 rounded-xl border border-border bg-background text-xs text-foreground"
+              />
+              <Button
+                type="button"
+                variant="secondary"
+                size="sm"
+                disabled={!wallpaperUrlInput.trim()}
+                onClick={() => void updateAndPersist({ wallpaper: wallpaperUrlInput.trim() }, "Wallpaper URL applied")}
+                className="rounded-xl text-xs"
+              >
+                Apply
+              </Button>
+            </div>
+
+            {cfg.wallpaper && (
+              <Button
+                type="button"
+                variant="ghost"
+                size="sm"
+                onClick={() => {
+                  setWallpaperUrlInput("");
+                  void updateAndPersist({ wallpaper: "" }, "Wallpaper cleared");
+                }}
+                className="rounded-xl text-xs text-destructive hover:text-destructive gap-1"
+              >
+                <IconTrash size={13} />
+                <span>Clear</span>
+              </Button>
+            )}
+          </div>
+
+          {cfg.wallpaper && (
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 pt-2 border-t border-border/50">
+              <div className="space-y-1.5">
+                <div className="flex items-center justify-between text-xs">
+                  <span className="font-medium text-foreground">Wallpaper Opacity</span>
+                  <span className="font-mono text-muted-foreground">{Math.round(cfg.wallpaperOpacity * 100)}%</span>
+                </div>
+                <input
+                  type="range"
+                  min={5}
+                  max={85}
+                  value={Math.round(cfg.wallpaperOpacity * 100)}
+                  onChange={(e) => void updateAndPersist({ wallpaperOpacity: Number(e.target.value) / 100 })}
+                  className="w-full accent-primary"
+                />
+              </div>
+
+              <div className="space-y-1.5">
+                <div className="flex items-center justify-between text-xs">
+                  <span className="font-medium text-foreground">Background Blur</span>
+                  <span className="font-mono text-muted-foreground">{cfg.wallpaperBlur}px</span>
+                </div>
+                <input
+                  type="range"
+                  min={0}
+                  max={24}
+                  value={cfg.wallpaperBlur}
+                  onChange={(e) => void updateAndPersist({ wallpaperBlur: Number(e.target.value) })}
+                  className="w-full accent-primary"
+                />
+              </div>
+            </div>
+          )}
+        </div>
+      </section>
+
+      {/* 2. Custom Brand Icon & Identity */}
+      <section className="space-y-3">
+        <h2 className="text-xs font-semibold uppercase tracking-wider text-muted-foreground flex items-center gap-1.5">
+          <IconSparkles size={13} />
+          Custom Icon &amp; Branding
+        </h2>
+        <div className="rounded-2xl border border-border/70 bg-card p-5 space-y-4">
+          <input
+            ref={iconInputRef}
+            type="file"
+            accept="image/png,image/jpeg,image/webp,image/svg+xml,image/gif"
+            onChange={handleIconUpload}
+            className="hidden"
+          />
+
+          <div className="flex flex-wrap items-center justify-between gap-4">
+            <div className="flex items-center gap-3">
+              <img
+                src={cfg.customIcon || "/logo.jpg"}
+                alt="App Icon Preview"
+                className="size-12 rounded-xl object-cover border border-border/80 bg-background"
+              />
+              <div>
+                <span className="text-xs font-medium text-foreground">Custom App Icon</span>
+                <p className="text-[11px] text-muted-foreground">
+                  Displayed on the centered home screen and sidebar header.
+                </p>
+              </div>
+            </div>
+            <div className="flex items-center gap-2">
+              <Button
+                type="button"
+                variant="outline"
+                size="sm"
+                onClick={() => iconInputRef.current?.click()}
+                className="rounded-xl text-xs gap-1.5"
+              >
+                <IconUpload size={13} />
+                <span>Upload Icon</span>
+              </Button>
+              {cfg.customIcon && (
+                <Button
+                  type="button"
+                  variant="ghost"
+                  size="sm"
+                  onClick={() => void updateAndPersist({ customIcon: "" }, "Restored default Sanctum icon")}
+                  className="rounded-xl text-xs text-muted-foreground"
+                >
+                  Reset
+                </Button>
+              )}
+            </div>
+          </div>
+
+          <div className="flex flex-wrap items-center justify-between gap-3 pt-3 border-t border-border/50">
+            <div>
+              <span className="text-xs font-medium text-foreground">Workspace Title</span>
+              <p className="text-[11px] text-muted-foreground">
+                Rename the top-left brand label in the sidebar.
+              </p>
+            </div>
+            <input
+              type="text"
+              value={cfg.customBrandName}
+              onChange={(e) => void updateAndPersist({ customBrandName: e.target.value })}
+              placeholder="Sanctum"
+              maxLength={28}
+              className="w-48 px-3 py-1.5 rounded-xl border border-border bg-background text-xs text-foreground"
+            />
+          </div>
+        </div>
+      </section>
+
+      {/* 3. Accent Color, Theme & Typography */}
+      <section className="space-y-3">
+        <h2 className="text-xs font-semibold uppercase tracking-wider text-muted-foreground flex items-center gap-1.5">
+          <IconPalette size={13} />
+          Accent Color, Theme &amp; Typography
+        </h2>
+        <div className="rounded-2xl border border-border/70 bg-card p-5 space-y-4">
+          <div className="space-y-2">
+            <div className="flex items-center justify-between">
+              <span className="text-xs font-medium text-foreground">Accent Color</span>
+              <div className="flex items-center gap-2">
+                <input
+                  type="color"
+                  value={cfg.accentColor || "#d96b43"}
+                  onChange={(e) => void updateAndPersist({ accentColor: e.target.value })}
+                  aria-label="Custom accent color picker"
+                  className="size-6 rounded cursor-pointer border border-border bg-transparent"
+                />
+                <span className="text-[11px] font-mono text-muted-foreground">
+                  {cfg.accentColor || "Default"}
+                </span>
+              </div>
+            </div>
+            <div className="flex flex-wrap gap-2">
+              {ACCENT_SWATCHES.map((sw) => {
+                const active = (cfg.accentColor || "") === sw.hex;
+                return (
+                  <button
+                    key={sw.id}
+                    type="button"
+                    onClick={() => void updateAndPersist({ accentColor: sw.hex }, `Accent: ${sw.label}`)}
+                    className={cn(
+                      "inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full border text-[11px] transition-colors",
+                      active
+                        ? "border-primary bg-primary/15 text-foreground font-medium"
+                        : "border-border/70 text-muted-foreground hover:text-foreground"
+                    )}
+                  >
+                    <span
+                      className="size-2.5 rounded-full"
+                      style={{ backgroundColor: sw.hex || "#d96b43" }}
+                    />
+                    <span>{sw.label}</span>
+                  </button>
+                );
+              })}
+            </div>
+          </div>
+
+          <div className="flex items-center justify-between pt-3 border-t border-border/50">
             <div>
               <span className="text-xs font-medium text-foreground">Color Theme</span>
               <p className="text-[11px] text-muted-foreground">Select interface color palette.</p>
             </div>
             <select
-              value={theme}
-              onChange={(e) => {
-                const next = e.target.value;
-                setTheme(next);
-                persistPatch({ "appearance.theme": next }, `Theme switched to ${next}`);
-              }}
+              value={cfg.theme}
+              onChange={(e) =>
+                void updateAndPersist(
+                  { theme: e.target.value as AppearanceConfig["theme"] },
+                  `Theme switched to ${e.target.value}`
+                )
+              }
               className="px-3 py-1.5 rounded-xl border border-border bg-background text-xs text-foreground"
             >
               <option value="dark">Dark Theme</option>
@@ -144,12 +466,13 @@ export const SettingsAppearance: React.FC = () => {
               <p className="text-[11px] text-muted-foreground">Interface text scale.</p>
             </div>
             <select
-              value={fontSize}
-              onChange={(e) => {
-                const next = e.target.value;
-                setFontSize(next);
-                persistPatch({ "appearance.fontSize": next }, `Font size set to ${next}`);
-              }}
+              value={cfg.fontSize}
+              onChange={(e) =>
+                void updateAndPersist(
+                  { fontSize: e.target.value as AppearanceConfig["fontSize"] },
+                  `Font size set to ${e.target.value}`
+                )
+              }
               className="px-3 py-1.5 rounded-xl border border-border bg-background text-xs text-foreground"
             >
               <option value="small">Compact (13px)</option>
@@ -168,24 +491,17 @@ export const SettingsAppearance: React.FC = () => {
             <button
               type="button"
               role="switch"
-              aria-checked={showTokenSpeed}
-              onClick={() => {
-                const next = !showTokenSpeed;
-                setShowTokenSpeed(next);
-                persistPatch(
-                  { "appearance.showTokenSpeed": next },
-                  `Token speed display ${next ? "enabled" : "disabled"}`
-                );
-              }}
+              aria-checked={cfg.showTokenSpeed}
+              onClick={() => void updateAndPersist({ showTokenSpeed: !cfg.showTokenSpeed })}
               className={cn(
                 "relative inline-flex h-5 w-9 shrink-0 cursor-pointer rounded-full border-2 border-transparent transition-colors duration-200 focus:outline-none",
-                showTokenSpeed ? "bg-primary" : "bg-muted"
+                cfg.showTokenSpeed ? "bg-primary" : "bg-muted"
               )}
             >
               <span
                 className={cn(
                   "pointer-events-none inline-block size-4 transform rounded-full bg-background shadow-lg transition duration-200",
-                  showTokenSpeed ? "translate-x-4" : "translate-x-0"
+                  cfg.showTokenSpeed ? "translate-x-4" : "translate-x-0"
                 )}
               />
             </button>
@@ -201,24 +517,17 @@ export const SettingsAppearance: React.FC = () => {
             <button
               type="button"
               role="switch"
-              aria-checked={coloredUserBubble}
-              onClick={() => {
-                const next = !coloredUserBubble;
-                setColoredUserBubble(next);
-                persistPatch(
-                  { "appearance.coloredUserBubble": next },
-                  `Colored user bubble ${next ? "enabled" : "disabled"}`
-                );
-              }}
+              aria-checked={cfg.coloredUserBubble}
+              onClick={() => void updateAndPersist({ coloredUserBubble: !cfg.coloredUserBubble })}
               className={cn(
                 "relative inline-flex h-5 w-9 shrink-0 cursor-pointer rounded-full border-2 border-transparent transition-colors duration-200 focus:outline-none",
-                coloredUserBubble ? "bg-primary" : "bg-muted"
+                cfg.coloredUserBubble ? "bg-primary" : "bg-muted"
               )}
             >
               <span
                 className={cn(
                   "pointer-events-none inline-block size-4 transform rounded-full bg-background shadow-lg transition duration-200",
-                  coloredUserBubble ? "translate-x-4" : "translate-x-0"
+                  cfg.coloredUserBubble ? "translate-x-4" : "translate-x-0"
                 )}
               />
             </button>

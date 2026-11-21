@@ -28,6 +28,12 @@ import { WindowControls, handleTitleBarMouseDown, handleTitleBarDoubleClick, han
 import { useAppStore } from "@/store/useAppStore";
 import { useShallow } from "zustand/react/shallow";
 import { globalMemoryStore } from "@core/ai/memory/memory_store.ts";
+import {
+  applyAppearanceConfig,
+  loadAppearanceConfig,
+  resolveWallpaperStyle,
+  type AppearanceConfig,
+} from "@/lib/appearance";
 
 export const JanAppShell: React.FC = () => {
   const {
@@ -50,6 +56,21 @@ export const JanAppShell: React.FC = () => {
   const [isAddProviderOpen, setIsAddProviderOpen] = useState<boolean>(false);
   const [isProjectDialogOpen, setIsProjectDialogOpen] = useState(false);
   const [isSearchDialogOpen, setIsSearchDialogOpen] = useState(false);
+  const [appearance, setAppearance] = useState<AppearanceConfig>(() => loadAppearanceConfig());
+
+  React.useEffect(() => {
+    const initial = loadAppearanceConfig();
+    setAppearance(initial);
+    applyAppearanceConfig(initial);
+    const onAppearance = (e: Event) => {
+      const detail = (e as CustomEvent<AppearanceConfig>).detail;
+      const next = detail || loadAppearanceConfig();
+      setAppearance(next);
+      applyAppearanceConfig(next);
+    };
+    window.addEventListener("sanctum-appearance-updated", onAppearance);
+    return () => window.removeEventListener("sanctum-appearance-updated", onAppearance);
+  }, []);
 
   React.useEffect(() => {
     Promise.resolve(useAppStore.persist.rehydrate())
@@ -153,8 +174,17 @@ export const JanAppShell: React.FC = () => {
     );
   }
 
+  const wallpaperStyle = resolveWallpaperStyle(appearance);
+
   return (
     <div className="relative flex h-screen w-screen overflow-hidden bg-background text-foreground select-none font-sans">
+      {wallpaperStyle && (
+        <div
+          aria-hidden="true"
+          className="pointer-events-none fixed inset-0 z-0 transition-all duration-300"
+          style={wallpaperStyle}
+        />
+      )}
       {/* Top-right in-window native controls (Minimize, Maximize, Close) */}
       <div
         className="fixed top-0 right-0 h-10 z-50 flex items-center justify-end pr-2 pl-2 pointer-events-auto"
@@ -172,7 +202,7 @@ export const JanAppShell: React.FC = () => {
       />
 
       {/* Main Surface View */}
-      <main className="min-w-0 flex-1 flex flex-col overflow-hidden relative">
+      <main className="relative z-10 min-w-0 flex-1 flex flex-col overflow-hidden">
         {/* Top draggable strip across views */}
         {activeModule === "settings" && (
           <div
