@@ -911,7 +911,7 @@ export async function* streamWorkspaceChat(
       : "";
   const modeGuidance = options.planMode
     ? "PLAN MODE ACTIVE: Inspect the workspace, write a concise step-by-step plan to PLAN.md, call present_file({ path: 'PLAN.md' }), then STOP and wait for user approval. Do NOT create, edit, or delete any file other than PLAN.md."
-    : "Call the appropriate tools directly rather than narrating a plan.";
+    : "CRITICAL: When the user asks to create, edit, read, list, search, move, or delete files/folders, ALWAYS invoke the matching tool directly via structured tool_calls right now. NEVER output bash/shell commands or explain how to call create_directory/create_file manually.";
 
   history.unshift({
     role: "system",
@@ -972,9 +972,9 @@ export async function* streamWorkspaceChat(
         stream: true,
         think: Boolean(options.think),
         options: {
-          temperature: options.temperature,
+          temperature: withTools ? Math.min(options.temperature ?? 0.2, 0.25) : options.temperature,
           top_p: options.topP,
-          num_ctx: options.contextSize,
+          num_ctx: withTools ? Math.max(options.contextSize || 4096, 8192) : options.contextSize,
           num_gpu: options.gpuLayers,
           num_thread: options.threads,
           num_predict: 4096,
