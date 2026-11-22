@@ -65,6 +65,7 @@ import { detectCandidateFilePaths } from "@core/infra/security/content_sanitizer
 import { MarkdownRenderer } from "@/components/chat/MarkdownRenderer";
 import { ComposerWorkspacePicker } from "@/components/chat/ComposerWorkspacePicker";
 import { SplitChatPane } from "@/components/chat/SplitChatPane";
+import { normalizeChecklistItems } from "@core/ai/tools/agent_workflows.ts";
 
 interface ChatScreenProps {
   onNavigate?: (module: "chat" | "hub" | "settings") => void;
@@ -282,6 +283,68 @@ const MessageRow: React.FC<{
             )}
           </div>
         )}
+
+        {/* Live Task Checklist Card (from latest set_checklist tool call) */}
+        {(() => {
+          const latestChecklist = [...(msg.toolActivities || [])]
+            .reverse()
+            .find((a) => a.name === "set_checklist");
+          if (!latestChecklist) return null;
+          let items = normalizeChecklistItems(latestChecklist.arguments?.items);
+          if (items.length === 0 && latestChecklist.output) {
+            try {
+              const parsed = JSON.parse(latestChecklist.output);
+              items = normalizeChecklistItems(parsed?.items);
+            } catch {}
+          }
+          if (items.length === 0) return null;
+          const doneCount = items.filter((it) => it.status === "done").length;
+          return (
+            <div className="mb-2.5 rounded-xl border border-border/70 bg-card/80 px-3.5 py-2.5 text-xs space-y-1.5">
+              <div className="flex items-center justify-between text-[11px] font-semibold text-foreground/90">
+                <span>Task Checklist</span>
+                <span className="font-mono text-[10px] text-muted-foreground">
+                  {doneCount}/{items.length} done
+                </span>
+              </div>
+              <ul className="space-y-1">
+                {items.map((it) => (
+                  <li key={it.id} className="flex items-start gap-2 text-xs">
+                    <span
+                      className={cn(
+                        "font-mono shrink-0",
+                        it.status === "done"
+                          ? "text-emerald-400"
+                          : it.status === "in_progress"
+                          ? "text-amber-400"
+                          : it.status === "failed"
+                          ? "text-rose-400"
+                          : "text-muted-foreground"
+                      )}
+                    >
+                      {it.status === "done"
+                        ? "[✓]"
+                        : it.status === "in_progress"
+                        ? "[•]"
+                        : it.status === "failed"
+                        ? "[×]"
+                        : "[ ]"}
+                    </span>
+                    <span
+                      className={cn(
+                        it.status === "done"
+                          ? "line-through text-muted-foreground"
+                          : "text-foreground/90"
+                      )}
+                    >
+                      {it.text}
+                    </span>
+                  </li>
+                ))}
+              </ul>
+            </div>
+          );
+        })()}
 
         {answer ? (
           <MarkdownRenderer content={answer} />

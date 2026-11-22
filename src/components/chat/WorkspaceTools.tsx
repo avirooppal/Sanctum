@@ -117,6 +117,8 @@ export function WorkspaceTools() {
     setThinkingEffort,
     agentExecutionMode,
     setAgentExecutionMode,
+    autoVerifyEnabled,
+    setAutoVerifyEnabled,
     activeTracker,
   } = useAppStore(
     useShallow((s) => ({
@@ -131,6 +133,8 @@ export function WorkspaceTools() {
       setThinkingEffort: s.setThinkingEffort,
       agentExecutionMode: s.agentExecutionMode,
       setAgentExecutionMode: s.setAgentExecutionMode,
+      autoVerifyEnabled: s.autoVerifyEnabled,
+      setAutoVerifyEnabled: s.setAutoVerifyEnabled,
       activeTracker: s.activeTracker,
     }))
   );
@@ -254,6 +258,28 @@ export function WorkspaceTools() {
           </>
         )}
       </button>
+
+      {/* Auto-Verify Toggle (Evaluator-Optimizer loop for runnable scripts) */}
+      {toolsEnabled && agentExecutionMode === "fast" && (
+        <button
+          type="button"
+          onClick={() => setAutoVerifyEnabled(!autoVerifyEnabled)}
+          aria-pressed={autoVerifyEnabled}
+          title={
+            autoVerifyEnabled
+              ? "Auto-Verify ON: automatically runs created/edited Python/JS/TS scripts and fixes errors."
+              : "Auto-Verify OFF: click to auto-run and verify scripts after edits."
+          }
+          className={cn(
+            "flex items-center gap-1 h-6 px-2 rounded-full text-[11px] border transition-colors shrink-0",
+            autoVerifyEnabled
+              ? "border-emerald-500/40 bg-emerald-500/15 text-emerald-300 font-medium"
+              : "border-transparent text-muted-foreground hover:text-foreground hover:bg-accent/50"
+          )}
+        >
+          <span>{autoVerifyEnabled ? "Verify on" : "Verify off"}</span>
+        </button>
+      )}
     </div>
   );
 }

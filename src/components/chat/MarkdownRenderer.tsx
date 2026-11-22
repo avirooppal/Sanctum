@@ -1,7 +1,8 @@
 "use client";
 
 import React, { useState, useMemo } from "react";
-import { Check, Copy } from "lucide-react";
+import { Check, Copy, Play, Loader2 } from "lucide-react";
+import { fetchWithApproval } from "@/lib/hostBridge";
 import { cn } from "@/lib/utils";
 
 interface MarkdownRendererProps {
@@ -9,8 +10,35 @@ interface MarkdownRendererProps {
   className?: string;
 }
 
+const RUNNABLE_LANGS = new Set(["python", "py", "javascript", "js", "node", "bash", "sh", "powershell", "ps1"]);
+
+function buildRunCommand(lang: string, code: string): string | null {
+  const l = lang.toLowerCase();
+  const b64 = typeof window !== "undefined" ? btoa(unescape(encodeURIComponent(code))) : "";
+  if (!b64) return null;
+  if (l === "python" || l === "py") {
+    return `python -c "import base64; exec(base64.b64decode('${b64}').decode('utf-8'))"`;
+  }
+  if (l === "javascript" || l === "js" || l === "node") {
+    return `node -e "eval(Buffer.from('${b64}','base64').toString('utf8'))"`;
+  }
+  if (l === "powershell" || l === "ps1" || l === "bash" || l === "sh") {
+    return code.trim();
+  }
+  return null;
+}
+
 const CodeBlock: React.FC<{ language: string; code: string }> = ({ language, code }) => {
   const [copied, setCopied] = useState(false);
+  const [running, setRunning] = useState(false);
+  const [runResult, setRunResult] = useState<{
+    exitCode?: number;
+    stdout?: string;
+    stderr?: string;
+    error?: string;
+  } | null>(null);
+
+  const canRun = RUNNABLE_LANGS.has(language.toLowerCase());
 
   const handleCopy = () => {
     try {
@@ -20,34 +48,107 @@ const CodeBlock: React.FC<{ language: string; code: string }> = ({ language, cod
     } catch {}
   };
 
+  const handleRun = async () => {
+    const cmd = buildRunCommand(language, code);
+    if (!cmd || running) return;
+    setRunning(true);
+    setRunResult(null);
+    try {
+      const res = await fetchWithApproval(
+        "/api/terminal/execute",
+        {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ action: "run_command", command: cmd }),
+        },
+        "run_command"
+      );
+      const data = await res.json().catch(() => ({}));
+      if (!res.ok) {
+        setRunResult({ error: data?.error || `Execution failed (HTTP ${res.status})` });
+      } else {
+        setRunResult({
+          exitCode: typeof data.exitCode === "number" ? data.exitCode : 0,
+          stdout: String(data.stdout || ""),
+          stderr: String(data.stderr || ""),
+        });
+      }
+    } catch (err: any) {
+      setRunResult({ error: err?.message || "Failed to execute code." });
+    } finally {
+      setRunning(false);
+    }
+  };
+
   return (
     <div className="my-3 overflow-hidden rounded-xl border border-border/70 bg-zinc-950/90 shadow-xs">
       <div className="flex items-center justify-between border-b border-border/50 bg-muted/30 px-3 py-1.5 text-[11px] text-muted-foreground">
         <span className="font-mono uppercase tracking-wider text-[10px]">
           {language || "code"}
         </span>
-        <button
-          type="button"
-          onClick={handleCopy}
-          className="flex items-center gap-1 rounded-md px-1.5 py-0.5 text-[11px] text-muted-foreground hover:bg-muted/60 hover:text-foreground transition-colors"
-          aria-label="Copy code"
-        >
-          {copied ? (
-            <>
-              <Check className="size-3 text-emerald-400" />
-              <span className="text-emerald-400">Copied</span>
-            </>
-          ) : (
-            <>
-              <Copy className="size-3" />
-              <span>Copy</span>
-            </>
+        <div className="flex items-center gap-1">
+          {canRun && (
+            <button
+              type="button"
+              onClick={() => void handleRun()}
+              disabled={running}
+              className="flex items-center gap-1 rounded-md px-2 py-0.5 text-[11px] text-emerald-400 hover:bg-emerald-500/15 transition-colors disabled:opacity-50"
+              aria-label="Run code"
+              title="Run locally in workspace"
+            >
+              {running ? (
+                <Loader2 className="size-3 animate-spin" />
+              ) : (
+                <Play className="size-3 fill-current" />
+              )}
+              <span>{running ? "Running..." : "Run"}</span>
+            </button>
           )}
-        </button>
+          <button
+            type="button"
+            onClick={handleCopy}
+            className="flex items-center gap-1 rounded-md px-1.5 py-0.5 text-[11px] text-muted-foreground hover:bg-muted/60 hover:text-foreground transition-colors"
+            aria-label="Copy code"
+          >
+            {copied ? (
+              <>
+                <Check className="size-3 text-emerald-400" />
+                <span className="text-emerald-400">Copied</span>
+              </>
+            ) : (
+              <>
+                <Copy className="size-3" />
+                <span>Copy</span>
+              </>
+            )}
+          </button>
+        </div>
       </div>
       <pre className="overflow-x-auto p-3.5 text-[12.5px] leading-relaxed font-mono text-zinc-100">
         <code>{code}</code>
       </pre>
+      {runResult && (
+        <div className="border-t border-border/50 bg-black/50 px-3.5 py-2.5 text-xs font-mono space-y-1">
+          <div className="flex items-center justify-between text-[10px] uppercase tracking-wider">
+            <span className={runResult.error || (runResult.exitCode ?? 0) !== 0 ? "text-rose-400" : "text-emerald-400"}>
+              {runResult.error ? "Error" : `Output · Exit ${runResult.exitCode ?? 0}`}
+            </span>
+            <button
+              type="button"
+              onClick={() => setRunResult(null)}
+              className="text-muted-foreground hover:text-foreground"
+            >
+              Clear
+            </button>
+          </div>
+          {runResult.error && <pre className="whitespace-pre-wrap text-rose-300">{runResult.error}</pre>}
+          {runResult.stdout && <pre className="whitespace-pre-wrap text-zinc-100">{runResult.stdout}</pre>}
+          {runResult.stderr && <pre className="whitespace-pre-wrap text-amber-300">{runResult.stderr}</pre>}
+          {!runResult.error && !runResult.stdout && !runResult.stderr && (
+            <span className="text-muted-foreground italic">(No stdout output)</span>
+          )}
+        </div>
+      )}
     </div>
   );
 };

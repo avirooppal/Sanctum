@@ -7,6 +7,9 @@ import { ToolPermissionGate, type ApprovalDecision, type ApprovalScope } from ".
 import { ToolExecutor } from "./executor.ts";
 import { globalVectorStore } from "../rag/vectorStore.ts";
 import { globalMemoryStore, type MemoryCategory } from "../memory/memory_store.ts";
+import { selectToolsForPrompt, budgetToolOutput, formatPokaYokeError } from "./tool_router.ts";
+import { normalizeChecklistItems, inferVerifyCommandForFile } from "./agent_workflows.ts";
+import { compactConversationHistory } from "./context_compactor.ts";
 
 export interface WorkspaceOperation {
   action: string;
@@ -429,6 +432,18 @@ export const operations: Record<string, WorkspaceOperation> = {
     safety: "read",
     parallelSafe: false,
   },
+  set_checklist: {
+    action: "set_checklist",
+    description: "Create or update a live task checklist shown to the user for multi-step tasks.",
+    required: ["items"],
+    safety: "read",
+    parallelSafe: false,
+    localHandler: async (args) => {
+      const items = normalizeChecklistItems(args.items);
+      const completed = items.filter((i) => i.status === "done").length;
+      return { items, completed, total: items.length };
+    },
+  },
 };
 
 const properties: Record<string, { type: string; description: string }> = {
@@ -460,6 +475,7 @@ const properties: Record<string, { type: string; description: string }> = {
   tail: { type: "number", description: "Number of most recent log lines to read (default 100)" },
   time_start: { type: "string", description: "ISO timestamp start filter" },
   time_end: { type: "string", description: "ISO timestamp end filter" },
+  items: { type: "string", description: "Checklist items as JSON array [{text, status}] or markdown lines (- [x] step)" },
 };
 
 export const workspaceTools = Object.entries(operations).map(([name, operation]) => {
@@ -735,11 +751,29 @@ export async function executeWorkspaceToolCall(
         }),
       });
       const termBody = await termRes.json();
-      ok = termRes.ok;
+      const exitCode = typeof termBody.exitCode === "number" ? termBody.exitCode : undefined;
+      ok = termRes.ok && (exitCode === undefined || exitCode === 0);
       parsedResult = termBody;
-      output = termBody.stdout !== undefined
-        ? (termBody.stderr ? termBody.stdout + "\n[STDERR]: " + termBody.stderr : termBody.stdout)
-        : JSON.stringify(termBody);
+      if (termBody.stdout !== undefined || termBody.stderr !== undefined || exitCode !== undefined) {
+        const parts: string[] = [];
+        if (exitCode !== undefined) {
+          parts.push(`Exit code: ${exitCode}${termBody.cwd ? ` (cwd: ${termBody.cwd})` : ""}`);
+        }
+        const outStr = String(termBody.stdout || "").trimEnd();
+        const errStr = String(termBody.stderr || "").trimEnd();
+        if (outStr) parts.push(`STDOUT:\n${outStr}`);
+        if (errStr) parts.push(`STDERR:\n${errStr}`);
+        if (!outStr && !errStr) {
+          parts.push(
+            exitCode === 0
+              ? "(Command succeeded with no stdout/stderr output. If the script only defines functions or has commented-out example code, add/uncomment runnable print statements and re-run.)"
+              : "(Command produced no stdout/stderr output.)"
+          );
+        }
+        output = parts.join("\n\n");
+      } else {
+        output = JSON.stringify(termBody);
+      }
       onActivity({ ...activity, status: ok ? "success" : "error", output });
       return { toolName: activity.name, id, output, ok, result: parsedResult };
     }
@@ -837,6 +871,7 @@ export async function* streamWorkspaceChat(
     threads?: number;
     think?: boolean;
     planMode?: boolean;
+    autoVerify?: boolean;
     enableMcp?: boolean;
     ragContext?: string;
     imageAttached?: string;
@@ -902,7 +937,16 @@ export async function* streamWorkspaceChat(
     }
   }
 
-  const activeTools = [...workspaceTools, ...externalToolDefs];
+  const lastUserMsg = [...history].reverse().find((m) => m.role === "user");
+  const recentToolNames = history
+    .filter((m) => m.role === "tool" && typeof m.tool_name === "string")
+    .map((m) => String(m.tool_name));
+  const activeTools = selectToolsForPrompt([...workspaceTools, ...externalToolDefs], {
+    userPrompt: String(lastUserMsg?.content || ""),
+    planMode: options.planMode,
+    recentToolNames,
+    hasAttachedDocs: Boolean(options.ragContext),
+  });
   const coreMemoryBlock = globalMemoryStore.formatCoreMemoriesForPrompt(workspace.id);
   const thinkSuffix = options.think ? "" : " /no_think";
   const mcpPromptNote =
@@ -911,7 +955,7 @@ export async function* streamWorkspaceChat(
       : "";
   const modeGuidance = options.planMode
     ? "PLAN MODE ACTIVE: Inspect the workspace, write a concise step-by-step plan to PLAN.md, call present_file({ path: 'PLAN.md' }), then STOP and wait for user approval. Do NOT create, edit, or delete any file other than PLAN.md."
-    : "CRITICAL: When the user asks to create, edit, read, list, search, move, or delete files/folders, ALWAYS invoke the matching tool directly via structured tool_calls right now. NEVER output bash/shell commands or explain how to call create_directory/create_file manually.";
+    : "CRITICAL: When the user asks to create, edit, read, list, search, move, delete, or run files/folders, ALWAYS invoke the matching tool directly via structured tool_calls right now. NEVER output bash/shell instructions telling the user to call tools manually. When writing runnable scripts (Python/JS/etc.), include an active runnable test/demo with print output (do not comment out the usage example). When running code with run_command, report the exact exit code and stdout/stderr returned; if exit code is 0 with no stdout, inspect the file instead of claiming it was not found.";
 
   history.unshift({
     role: "system",
@@ -948,6 +992,9 @@ export async function* streamWorkspaceChat(
   const recentCallSignatures: string[] = [];
   let planWritten = false;
   let planPresented = false;
+  const unverifiedRunnableFiles = new Set<string>();
+  let verifyAttempts = 0;
+  const MAX_VERIFY_RETRIES = 2;
 
   const MAX_TOOL_ROUNDS = 16;
   const MAX_TOTAL_CALLS = 32;
@@ -961,6 +1008,18 @@ export async function* streamWorkspaceChat(
 
   const streamSinglePass = async function* (withTools: boolean) {
     options.signal.throwIfAborted();
+    const effectiveNumCtx = withTools
+      ? Math.max(options.contextSize || 4096, 8192)
+      : options.contextSize || 8192;
+    const compacted = compactConversationHistory(history, {
+      maxContextTokens: effectiveNumCtx,
+      thresholdRatio: 0.7,
+      keepRecentMessages: 6,
+    });
+    if (compacted.compacted) {
+      history.splice(0, history.length, ...compacted.messages);
+    }
+
     const response = await fetch("/api/chat", {
       method: "POST",
       signal: options.signal,
@@ -974,7 +1033,7 @@ export async function* streamWorkspaceChat(
         options: {
           temperature: withTools ? Math.min(options.temperature ?? 0.2, 0.25) : options.temperature,
           top_p: options.topP,
-          num_ctx: withTools ? Math.max(options.contextSize || 4096, 8192) : options.contextSize,
+          num_ctx: effectiveNumCtx,
           num_gpu: options.gpuLayers,
           num_thread: options.threads,
           num_predict: 4096,
@@ -1061,6 +1120,48 @@ export async function* streamWorkspaceChat(
     const parsedCalls = parseModelToolCalls({ content, tool_calls: rawToolCalls }, round + 1);
 
     if (!parsedCalls.length) {
+      // Evaluator-Optimizer Auto-Verify: if enabled and runnable scripts were created/edited without running them yet
+      if (
+        options.autoVerify &&
+        !options.planMode &&
+        unverifiedRunnableFiles.size > 0 &&
+        verifyAttempts < MAX_VERIFY_RETRIES
+      ) {
+        const targetFile = Array.from(unverifiedRunnableFiles)[unverifiedRunnableFiles.size - 1];
+        const verifyCmd = inferVerifyCommandForFile(targetFile);
+        if (verifyCmd) {
+          verifyAttempts++;
+          const verifyId = `auto-verify-${verifyAttempts}-${Date.now()}`;
+          history.push({ role: "assistant", content, thinking });
+          const verifyRes = await executeWorkspaceToolCall(
+            { name: "run_command", arguments: { command: verifyCmd }, id: verifyId },
+            workspace,
+            options.signal,
+            options.onActivity,
+            {
+              sessionId: workspace.id || "default",
+              planMode: false,
+              externalMcpTools,
+              onApprovalRequest: options.onApprovalRequest,
+              getApprovalToken: options.getApprovalToken,
+            }
+          );
+          if (verifyRes.ok) {
+            unverifiedRunnableFiles.delete(targetFile);
+            history.push({
+              role: "user",
+              content: `[Auto-Verify Passed] Executed \`${verifyCmd}\`:\n${budgetToolOutput(verifyRes.output, 4000, "run_command")}\n\nBriefly report the verified execution output to the user.`,
+            });
+          } else {
+            history.push({
+              role: "user",
+              content: `[Auto-Verify Failed] Executed \`${verifyCmd}\`:\n${budgetToolOutput(formatPokaYokeError("run_command", verifyRes.output), 4000, "run_command")}\n\nFix the error in ${targetFile} using edit_file, then re-verify.`,
+            });
+          }
+          text += "\n\n";
+          continue;
+        }
+      }
       yield { text, isFinished: true, metrics: metrics() };
       return;
     }
@@ -1163,11 +1264,26 @@ export async function* streamWorkspaceChat(
             planPresented = true;
           }
         }
+        if (r.ok && (r.toolName === "create_file" || r.toolName === "edit_file")) {
+          const p = String(call?.arguments?.path || "");
+          if (p && inferVerifyCommandForFile(p)) {
+            unverifiedRunnableFiles.add(p);
+          }
+        }
+        if (r.ok && r.toolName === "run_command") {
+          const cmdStr = String(call?.arguments?.command || "");
+          for (const f of Array.from(unverifiedRunnableFiles)) {
+            if (cmdStr.includes(f) || cmdStr.includes(f.split(/[\\/]/).pop() || "")) {
+              unverifiedRunnableFiles.delete(f);
+            }
+          }
+        }
+        const rawContent = r.ok ? r.output : formatPokaYokeError(r.toolName, r.output);
         history.push({
           role: "tool",
           tool_name: r.toolName,
           tool_call_id: r.id,
-          content: r.output,
+          content: budgetToolOutput(rawContent, 8000, r.toolName),
         });
       }
     }

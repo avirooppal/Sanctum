@@ -42,11 +42,13 @@ export interface ChatSlice {
   thinkEnabled: boolean;
   thinkingEffort: "off" | "low" | "medium" | "high";
   agentExecutionMode: "fast" | "plan";
+  autoVerifyEnabled: boolean;
   pendingPlanApproval: { sessionId: string; planPath: string; originalPrompt: string } | null;
   setToolsEnabled: (enabled: boolean) => void;
   setThinkEnabled: (enabled: boolean) => void;
   setThinkingEffort: (effort: "off" | "low" | "medium" | "high") => void;
   setAgentExecutionMode: (mode: "fast" | "plan") => void;
+  setAutoVerifyEnabled: (enabled: boolean) => void;
   approvePlanAndExecute: () => Promise<void>;
   dismissPlanApproval: () => void;
   attachedImage: { src: string; name: string; width: number; height: number } | null;
@@ -150,6 +152,7 @@ export const createChatSlice: StateCreator<any, [], [], ChatSlice> = (set, get) 
   thinkEnabled: false,
   thinkingEffort: "off",
   agentExecutionMode: "fast",
+  autoVerifyEnabled: true,
   pendingPlanApproval: null,
   setToolsEnabled: (enabled) => set({ toolsEnabled: enabled }),
   setThinkEnabled: (enabled) =>
@@ -167,6 +170,7 @@ export const createChatSlice: StateCreator<any, [], [], ChatSlice> = (set, get) 
       agentExecutionMode: mode,
       toolsEnabled: mode === "plan" ? true : state.toolsEnabled,
     })),
+  setAutoVerifyEnabled: (enabled) => set({ autoVerifyEnabled: enabled }),
   approvePlanAndExecute: async () => {
     const pending = get().pendingPlanApproval;
     set({ pendingPlanApproval: null, agentExecutionMode: "fast", toolsEnabled: true });
@@ -740,6 +744,7 @@ export const createChatSlice: StateCreator<any, [], [], ChatSlice> = (set, get) 
       for await (const chunk of stream(activeModel.id, historyPayload, {
         endpoint: DEFAULT_OLLAMA_ENDPOINT,
         planMode: isPlanMode,
+        autoVerify: get().autoVerifyEnabled,
         onApprovalRequest: ({ toolName, arguments: toolArgs }) =>
           new Promise<ToolApprovalResponse>((resolve) => {
             set({
