@@ -19,6 +19,7 @@ import { useShallow } from "zustand/react/shallow";
 import { cn } from "@/lib/utils";
 import { toast } from "sonner";
 import { SttModelSelector } from "@/components/speech/SttModelSelector";
+import { OcrModelSelector } from "@/components/ocr/OcrModelSelector";
 
 type Setup = {
   phase: string;
@@ -89,6 +90,7 @@ export const SetupScreen = ({
 
   // 3. Browser Agent Capability Configuration State
   const [isBrowserConfigOpen, setIsBrowserConfigOpen] = useState(false);
+  const [isOcrConfigOpen, setIsOcrConfigOpen] = useState(false);
   const [browserMode, setBrowserMode] = useState<BrowserMode>("builtin");
   const [customBrowserPath, setCustomBrowserPath] = useState("");
   const [browserTest, setBrowserTest] = useState<CapabilityTestState>({
@@ -744,7 +746,44 @@ export const SetupScreen = ({
           )}
         </div>
 
-        {/* CAPABILITY 3: BROWSER AGENT (BUILT-IN WEB NAVIGATION) */}
+        {/* CAPABILITY 3: DOCUMENT OCR (WINDOWS NATIVE + PADDLEOCR-VL-1.6) */}
+        <div className="rounded-xl border border-border/70 bg-muted/20 overflow-hidden">
+          <button
+            type="button"
+            onClick={() => setIsOcrConfigOpen((prev) => !prev)}
+            className="w-full flex items-center justify-between p-3.5 text-left hover:bg-muted/40 transition-colors"
+          >
+            <div className="flex items-center gap-2.5">
+              <div className="size-7 rounded-lg bg-primary/10 text-primary flex items-center justify-center shrink-0">
+                <IconCpu size={15} />
+              </div>
+              <div>
+                <div className="flex items-center gap-2">
+                  <span className="text-xs font-semibold text-foreground">
+                    Document OCR (Scanned PDFs)
+                  </span>
+                  <span className="text-[10px] font-mono px-1.5 py-0.2 rounded-full font-medium border bg-emerald-500/10 text-emerald-400 border-emerald-500/20">
+                    Built-in + Pro Model
+                  </span>
+                </div>
+                <p className="text-[11px] text-muted-foreground">
+                  Windows Offline OCR ready out of the box · Optional PaddleOCR-VL-1.6 (0.9B) download for tables &amp; formulas
+                </p>
+              </div>
+            </div>
+            <div className="text-muted-foreground">
+              {isOcrConfigOpen ? <IconChevronUp size={16} /> : <IconChevronDown size={16} />}
+            </div>
+          </button>
+
+          {isOcrConfigOpen && (
+            <div className="p-4 pt-2 border-t border-border/60 space-y-3">
+              <OcrModelSelector compact />
+            </div>
+          )}
+        </div>
+
+        {/* CAPABILITY 4: BROWSER AGENT (BUILT-IN WEB NAVIGATION) */}
         <div className="rounded-xl border border-border/70 bg-muted/20 overflow-hidden">
           <button
             type="button"

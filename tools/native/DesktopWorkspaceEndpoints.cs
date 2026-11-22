@@ -217,6 +217,14 @@ namespace Sanctum {
                 HandleLocalOcr(req, res, method);
                 return true;
             }
+            if (path == "/api/ocr/models" && (method == "GET" || method == "POST")) {
+                HandleOcrModels(req, res, method);
+                return true;
+            }
+            if (path == "/api/ocr/download" && (method == "POST" || method == "DELETE")) {
+                HandleOcrDownload(req, res, method);
+                return true;
+            }
             if (path == "/api/capabilities/test" && method == "POST") {
                 HandleCapabilitiesTest(req, res);
                 return true;
@@ -2700,6 +2708,198 @@ namespace Sanctum {
                 WriteJson(res, 500, new { success = false, error = "Windows offline OCR error: " + ex.Message });
             } finally {
                 try { if (Directory.Exists(tempDir)) Directory.Delete(tempDir, true); } catch { }
+            }
+        }
+
+        private void HandleOcrModels(HttpListenerRequest req, HttpListenerResponse res, string method) {
+            string ocrDir = Path.Combine(_modelsDir, "ocr");
+            if (!Directory.Exists(ocrDir)) {
+                try { Directory.CreateDirectory(ocrDir); } catch { }
+            }
+            string activeFile = Path.Combine(ocrDir, "active.json");
+            var serializer = new JavaScriptSerializer();
+
+            if (method == "GET") {
+                string activeId = "windows-native";
+                if (File.Exists(activeFile)) {
+                    try {
+                        var parsed = serializer.Deserialize<Dictionary<string, object>>(File.ReadAllText(activeFile, Encoding.UTF8));
+                        if (parsed != null && parsed.ContainsKey("activeModelId")) {
+                            activeId = Convert.ToString(parsed["activeModelId"]) ?? "windows-native";
+                        }
+                    } catch { }
+                }
+
+                bool paddleInstalled = File.Exists(Path.Combine(ocrDir, "paddleocr-vl-1.6", ".sanctum_ocr_ready.json"));
+                bool sidecarOnline = false;
+                try {
+                    string ep = (Environment.GetEnvironmentVariable("SANCTUM_OCR_ENDPOINT") ?? "http://127.0.0.1:8010").Trim().TrimEnd('/');
+                    var hReq = (HttpWebRequest)WebRequest.Create(ep + "/health");
+                    hReq.Proxy = null;
+                    hReq.Method = "GET";
+                    hReq.Timeout = 1500;
+                    using (var hRes = (HttpWebResponse)hReq.GetResponse()) {
+                        sidecarOnline = hRes.StatusCode == HttpStatusCode.OK;
+                    }
+                } catch { }
+
+                WriteJson(res, 200, new {
+                    activeModel = activeId,
+                    models = new object[] {
+                        new { id = "windows-native", installed = true, active = activeId == "windows-native" },
+                        new { id = "paddleocr-vl-1.6", installed = paddleInstalled, active = activeId == "paddleocr-vl-1.6", sidecarOnline = sidecarOnline }
+                    }
+                });
+                return;
+            }
+
+            if (method == "POST") {
+                if (!ConsumeApprovalToken(req.Headers["X-Sanctum-Approval"], "settings_write")) {
+                    WriteJson(res, 403, new { error = "User approval required to change OCR engine." });
+                    return;
+                }
+                try {
+                    string body = ReadRequestBodyUtf8(req, 65536);
+                    var payload = serializer.Deserialize<Dictionary<string, object>>(body);
+                    string modelId = payload != null && payload.ContainsKey("modelId") ? Convert.ToString(payload["modelId"]) : "";
+                    if (modelId != "windows-native" && modelId != "paddleocr-vl-1.6") {
+                        WriteJson(res, 400, new { error = "Unknown OCR engine ID." });
+                        return;
+                    }
+                    WriteAtomicText(activeFile, serializer.Serialize(new { activeModelId = modelId, updatedAt = DateTime.UtcNow.ToString("o") }));
+                    WriteJson(res, 200, new { ok = true, activeModel = modelId });
+                } catch (Exception ex) {
+                    WriteJson(res, 500, new { error = ex.Message });
+                }
+            }
+        }
+
+        private void HandleOcrDownload(HttpListenerRequest req, HttpListenerResponse res, string method) {
+            string ocrDir = Path.Combine(_modelsDir, "ocr");
+            if (!Directory.Exists(ocrDir)) {
+                try { Directory.CreateDirectory(ocrDir); } catch { }
+            }
+            var serializer = new JavaScriptSerializer();
+
+            if (method == "DELETE") {
+                if (!ConsumeApprovalToken(req.Headers["X-Sanctum-Approval"], "settings_write")) {
+                    WriteJson(res, 403, new { error = "User approval required to remove OCR weights." });
+                    return;
+                }
+                try {
+                    string targetDir = Path.Combine(ocrDir, "paddleocr-vl-1.6");
+                    if (Directory.Exists(targetDir)) Directory.Delete(targetDir, true);
+                    string activeFile = Path.Combine(ocrDir, "active.json");
+                    WriteAtomicText(activeFile, serializer.Serialize(new { activeModelId = "windows-native", updatedAt = DateTime.UtcNow.ToString("o") }));
+                    WriteJson(res, 200, new { ok = true });
+                } catch (Exception ex) {
+                    WriteJson(res, 500, new { error = ex.Message });
+                }
+                return;
+            }
+
+            if (method == "POST") {
+                if (!ConsumeApprovalToken(req.Headers["X-Sanctum-Approval"], "model_download")) {
+                    WriteJson(res, 403, new { error = "User approval required to download OCR model." });
+                    return;
+                }
+
+                string mDir = Path.Combine(ocrDir, "paddleocr-vl-1.6");
+                Directory.CreateDirectory(mDir);
+
+                res.StatusCode = 200;
+                res.ContentType = "application/x-ndjson; charset=utf-8";
+                res.SendChunked = true;
+                Action<object> emit = (obj) => {
+                    try {
+                        byte[] b = Encoding.UTF8.GetBytes(serializer.Serialize(obj) + "\n");
+                        res.OutputStream.Write(b, 0, b.Length);
+                        res.OutputStream.Flush();
+                    } catch { }
+                };
+
+                try {
+                    ServicePointManager.SecurityProtocol = SecurityProtocolType.Tls12 | SecurityProtocolType.Tls11 | SecurityProtocolType.Tls;
+                    string repoId = "PaddlePaddle/PaddleOCR-VL-1.6";
+                    emit(new { status = "Fetching PaddleOCR-VL-1.6 manifest...", percent = 3 });
+
+                    var metaReq = (HttpWebRequest)WebRequest.Create("https://huggingface.co/api/models/" + repoId);
+                    metaReq.UserAgent = "Sanctum-OCR-Downloader/1.0";
+                    metaReq.Timeout = 30000;
+                    string metaJson;
+                    using (var metaRes = (HttpWebResponse)metaReq.GetResponse())
+                    using (var sr = new StreamReader(metaRes.GetResponseStream(), Encoding.UTF8)) {
+                        metaJson = sr.ReadToEnd();
+                    }
+
+                    var meta = serializer.Deserialize<Dictionary<string, object>>(metaJson);
+                    var siblings = meta != null && meta.ContainsKey("siblings") ? meta["siblings"] as System.Collections.ArrayList : null;
+                    var filesToDownload = new List<string>();
+                    if (siblings != null) {
+                        foreach (var item in siblings) {
+                            var dict = item as Dictionary<string, object>;
+                            if (dict == null || !dict.ContainsKey("rfilename")) continue;
+                            string rf = Convert.ToString(dict["rfilename"]) ?? "";
+                            if (string.IsNullOrEmpty(rf) || rf.StartsWith(".")) continue;
+                            if (rf.EndsWith(".json", StringComparison.OrdinalIgnoreCase) ||
+                                rf.EndsWith(".txt", StringComparison.OrdinalIgnoreCase) ||
+                                rf.EndsWith(".py", StringComparison.OrdinalIgnoreCase) ||
+                                rf.EndsWith(".model", StringComparison.OrdinalIgnoreCase) ||
+                                rf.EndsWith(".safetensors", StringComparison.OrdinalIgnoreCase)) {
+                                filesToDownload.Add(rf);
+                            }
+                        }
+                    }
+
+                    if (filesToDownload.Count == 0) {
+                        throw new Exception("No downloadable model files found in " + repoId);
+                    }
+
+                    int totalFiles = filesToDownload.Count;
+                    byte[] buf = new byte[131072];
+                    for (int idx = 0; idx < totalFiles; idx++) {
+                        string rel = filesToDownload[idx];
+                        string dest = Path.Combine(mDir, rel.Replace('/', Path.DirectorySeparatorChar));
+                        Directory.CreateDirectory(Path.GetDirectoryName(dest));
+                        int basePct = 5 + (idx * 90) / totalFiles;
+                        emit(new { status = "Downloading " + rel + " (" + (idx + 1) + "/" + totalFiles + ")", percent = basePct });
+
+                        string url = "https://huggingface.co/" + repoId + "/resolve/main/" + Uri.EscapeUriString(rel);
+                        var dlReq = (HttpWebRequest)WebRequest.Create(url);
+                        dlReq.UserAgent = "Sanctum-OCR-Downloader/1.0";
+                        dlReq.AllowAutoRedirect = true;
+                        dlReq.Timeout = 180000;
+                        dlReq.ReadWriteTimeout = 180000;
+
+                        using (var dlRes = (HttpWebResponse)dlReq.GetResponse())
+                        using (var net = dlRes.GetResponseStream())
+                        using (var fs = new FileStream(dest, FileMode.Create, FileAccess.Write, FileShare.None)) {
+                            long fileTotal = dlRes.ContentLength;
+                            long fileDone = 0;
+                            DateTime lastEmit = DateTime.UtcNow;
+                            int read;
+                            while ((read = net.Read(buf, 0, buf.Length)) > 0) {
+                                fs.Write(buf, 0, read);
+                                fileDone += read;
+                                if (fileTotal > 0 && (DateTime.UtcNow - lastEmit).TotalMilliseconds >= 300) {
+                                    lastEmit = DateTime.UtcNow;
+                                    int subPct = basePct + (int)((fileDone * (90L / Math.Max(1, totalFiles))) / fileTotal);
+                                    emit(new { status = "Downloading " + rel + "...", percent = Math.Min(98, subPct) });
+                                }
+                            }
+                        }
+                    }
+
+                    WriteAtomicText(
+                        Path.Combine(mDir, ".sanctum_ocr_ready.json"),
+                        serializer.Serialize(new { modelId = "paddleocr-vl-1.6", repoId = repoId, downloadedAt = DateTime.UtcNow.ToString("o"), files = totalFiles })
+                    );
+                    emit(new { status = "PaddleOCR-VL-1.6 ready", percent = 100, done = true });
+                } catch (Exception ex) {
+                    emit(new { error = ex.Message });
+                } finally {
+                    try { res.Close(); } catch { }
+                }
             }
         }
     }

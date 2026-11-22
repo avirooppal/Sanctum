@@ -14,6 +14,7 @@ import {
 import { Button } from "@/components/ui/button";
 import { fetchWithApproval } from "@/lib/hostBridge";
 import { SttModelSelector } from "@/components/speech/SttModelSelector";
+import { OcrModelSelector } from "@/components/ocr/OcrModelSelector";
 import { cn } from "@/lib/utils";
 import { toast } from "sonner";
 
@@ -578,10 +579,23 @@ export const SettingsCapabilities: React.FC = () => {
         </div>
       </section>
 
-      {/* 3. Browser Agent Capability (Built-in Workspace Feature) */}
+      {/* 3. Document OCR Capability */}
       <section className="space-y-4">
         <h2 className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">
-          3. Browser Agent (Web Navigation Capability)
+          3. Document OCR (Scanned PDFs &amp; Tables)
+        </h2>
+        <div className="rounded-2xl border border-border/70 bg-card p-5 space-y-4">
+          <p className="text-xs text-muted-foreground leading-relaxed">
+            Extract text from scanned PDFs completely offline. Windows Built-in Offline OCR works out of the box, or download PaddleOCR-VL-1.6 (0.9B) for Markdown tables, headings, and formulas.
+          </p>
+          <OcrModelSelector />
+        </div>
+      </section>
+
+      {/* 4. Browser Agent Capability (Built-in Workspace Feature) */}
+      <section className="space-y-4">
+        <h2 className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">
+          4. Browser Agent (Web Navigation Capability)
         </h2>
         <div className="rounded-2xl border border-border/70 bg-card p-5 space-y-4">
           <div className="flex items-start justify-between gap-4">
