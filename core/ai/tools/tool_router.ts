@@ -81,6 +81,56 @@ const BACKGROUND_LOG_INTENT_RE =
 const KNOWLEDGE_UTILITY_INTENT_RE =
   /\b(remember|memory|recall|vault|document|pdf|calc|calculate|math|date|time|today|now)\b/i;
 
+const ACTION_TOOL_INTENT_RE =
+  /\b(create|make|write|edit|update|modify|fix|refactor|patch|delete|remove|rename|move|list|show\s+files|read\s+file|open\s+file|search\s+files|find\s+files|run|execute|compile|build|test|debug|install|check\s+logs|inspect\s+workspace|checklist)\b.*\b(file|folder|dir|directory|project|workspace|code|script|app|test|log|logs|command|terminal|checklist|[a-z0-9_-]+\.(?:py|js|ts|tsx|jsx|json|md|txt|html|css|sh|ps1|cs|go|rs|cpp|c|java))\b|\b(run|execute)\s+([a-z0-9_./\\-]+\.(?:py|js|ts|mjs|sh|ps1)|the\s+(?:code|script|file|tests?))\b|\b(list\s+(?:the\s+)?(?:files|folder|directory|workspace)|what\s+files\s+are)\b/i;
+
+export interface AutoActivationContext {
+  planMode?: boolean;
+  noProjectMode?: boolean;
+  hasAttachedDocs?: boolean;
+  recentToolNames?: string[];
+}
+
+/**
+ * Smart automatic activation: decides whether a prompt needs the agent tool loop
+ * or can run directly as fast, zero-overhead chat.
+ */
+export function shouldActivateAgentTools(
+  userPrompt: string,
+  ctx: AutoActivationContext = {}
+): boolean {
+  if (ctx.planMode) return true;
+  const prompt = (userPrompt || "").trim();
+  if (!prompt) return false;
+
+  // Browser, logs, or explicit memory/math tool intents work even in No Project mode
+  if (BROWSER_INTENT_RE.test(prompt)) return true;
+  if (BACKGROUND_LOG_INTENT_RE.test(prompt)) return true;
+  if (/\b(remember\s+that|save\s+to\s+memory|recall\s+my|calculate\s+\d)\b/i.test(prompt)) return true;
+
+  // If user explicitly chose "No Project", never auto-activate local filesystem tools
+  if (ctx.noProjectMode) return false;
+
+  // Pure Q&A on an attached PDF/document without file-editing verbs stays fast direct chat
+  if (ctx.hasAttachedDocs && !ACTION_TOOL_INTENT_RE.test(prompt)) return false;
+
+  if (ACTION_TOOL_INTENT_RE.test(prompt)) return true;
+  if (ADVANCED_FILE_INTENT_RE.test(prompt) && /\b(file|folder|dir|workspace|\.[a-z]{1,4}\b)/i.test(prompt)) {
+    return true;
+  }
+
+  // Continue tool mode seamlessly if the immediately preceding turn used tools and user gives a follow-up action
+  if (
+    Array.isArray(ctx.recentToolNames) &&
+    ctx.recentToolNames.length > 0 &&
+    /\b(run\s+it|fix\s+it|test\s+it|try\s+again|show\s+me|update\s+it|check\s+it|now\s+run|re-?run)\b/i.test(prompt)
+  ) {
+    return true;
+  }
+
+  return false;
+}
+
 /**
  * Dynamically select the minimal relevant subset of tools for a turn.
  * External MCP tools (`mcp__*`) and tools already invoked earlier in the thread are preserved.

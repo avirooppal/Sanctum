@@ -2,6 +2,7 @@ import { describe, test } from "node:test";
 import assert from "node:assert/strict";
 import {
   selectToolsForPrompt,
+  shouldActivateAgentTools,
   budgetToolOutput,
   formatPokaYokeError,
   type ToolDefLike,
@@ -103,5 +104,18 @@ describe("Anthropic Agent Guidelines — Dynamic Tool Routing & Poka-Yoke ACI", 
 
     const runHint = formatPokaYokeError("run_command", "Exit code: 1\nSTDERR: NameError: name 'x' is not defined");
     assert.ok(runHint.includes("edit_file"), "failed run_command should suggest fixing source with edit_file");
+  });
+
+  test("9. shouldActivateAgentTools stays off for casual chat and auto-activates for file/run/browser tasks", () => {
+    assert.equal(shouldActivateAgentTools("hi"), false);
+    assert.equal(shouldActivateAgentTools("explain how a linked list works"), false);
+    assert.equal(shouldActivateAgentTools("what is this ticket for", { hasAttachedDocs: true }), false);
+
+    assert.equal(shouldActivateAgentTools("Create a folder named DOGS and write dogs.py"), true);
+    assert.equal(shouldActivateAgentTools("can you run dogs.py and show me the result"), true);
+    assert.equal(shouldActivateAgentTools("open https://example.com and summarize"), true);
+    assert.equal(shouldActivateAgentTools("run it", { recentToolNames: ["create_file"] }), true);
+    assert.equal(shouldActivateAgentTools("Create dogs.py", { noProjectMode: true }), false);
+    assert.equal(shouldActivateAgentTools("anything", { planMode: true }), true);
   });
 });

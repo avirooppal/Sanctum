@@ -208,26 +208,8 @@ export function WorkspaceTools() {
       : thinkingEffort.charAt(0).toUpperCase() + thinkingEffort.slice(1);
 
   return (
-    <div className="flex items-center gap-1.5 min-w-0" data-no-drag>
-      {/* Compact Tools Toggle Pill */}
-      <button
-        type="button"
-        aria-pressed={toolsEnabled}
-        disabled={!!activeTracker}
-        onClick={() => setToolsEnabled(!toolsEnabled)}
-        title="Enable/disable workspace file, terminal, and browser tools"
-        className={cn(
-          "flex items-center gap-1 h-6 px-2 rounded-full text-[11px] border transition-colors shrink-0",
-          toolsEnabled
-            ? "border-primary/40 bg-primary/15 text-primary font-medium"
-            : "border-transparent text-muted-foreground hover:text-foreground hover:bg-accent/50"
-        )}
-      >
-        <Wrench className="size-3" />
-        <span>Tools {toolsEnabled ? "on" : "off"}</span>
-      </button>
-
-      {/* Compact Fast vs Plan Pill (cycles Fast <-> Plan on click) */}
+    <div className="flex items-center gap-1 min-w-0" data-no-drag>
+      {/* Minimal Mode Toggle: Auto (smart chat + auto-tools + auto-verify) vs Plan */}
       <button
         type="button"
         disabled={!!activeTracker}
@@ -236,8 +218,8 @@ export function WorkspaceTools() {
         }
         title={
           agentExecutionMode === "fast"
-            ? "Fast mode: act directly. Click to switch to Plan mode (PLAN.md first)."
-            : "Plan mode: writes PLAN.md and waits for approval. Click to switch to Fast mode."
+            ? "Auto mode: smartly activates file tools, browser, and Auto-Verify only when needed. Click for Plan mode."
+            : "Plan mode: writes PLAN.md and waits for approval before edits. Click for Auto mode."
         }
         className={cn(
           "flex items-center gap-1 h-6 px-2 rounded-full text-[11px] border transition-colors shrink-0",
@@ -249,7 +231,7 @@ export function WorkspaceTools() {
         {agentExecutionMode === "fast" ? (
           <>
             <Zap className="size-3 text-amber-400" />
-            <span>Fast</span>
+            <span>Auto</span>
           </>
         ) : (
           <>
@@ -258,28 +240,6 @@ export function WorkspaceTools() {
           </>
         )}
       </button>
-
-      {/* Auto-Verify Toggle (Evaluator-Optimizer loop for runnable scripts) */}
-      {toolsEnabled && agentExecutionMode === "fast" && (
-        <button
-          type="button"
-          onClick={() => setAutoVerifyEnabled(!autoVerifyEnabled)}
-          aria-pressed={autoVerifyEnabled}
-          title={
-            autoVerifyEnabled
-              ? "Auto-Verify ON: automatically runs created/edited Python/JS/TS scripts and fixes errors."
-              : "Auto-Verify OFF: click to auto-run and verify scripts after edits."
-          }
-          className={cn(
-            "flex items-center gap-1 h-6 px-2 rounded-full text-[11px] border transition-colors shrink-0",
-            autoVerifyEnabled
-              ? "border-emerald-500/40 bg-emerald-500/15 text-emerald-300 font-medium"
-              : "border-transparent text-muted-foreground hover:text-foreground hover:bg-accent/50"
-          )}
-        >
-          <span>{autoVerifyEnabled ? "Verify on" : "Verify off"}</span>
-        </button>
-      )}
     </div>
   );
 }

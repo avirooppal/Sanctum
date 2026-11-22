@@ -1,4 +1,5 @@
 import { streamWorkspaceChat, type ToolApprovalResponse } from "../../../core/ai/tools/workspace_chat.ts";
+import { shouldActivateAgentTools } from "../../../core/ai/tools/tool_router.ts";
 import type { StateCreator } from "zustand";
 import type { ChatSession, ChatMessage, ChatProject, RequestStatusEvent } from "../../../contracts/types/index.ts";
 import { reconcileThreadSnapshots } from "../../../core/domain/threads.ts";
@@ -737,8 +738,22 @@ export const createChatSlice: StateCreator<any, [], [], ChatSlice> = (set, get) 
     if (!isSecondaryPane) {
       set({ attachedImage: null, attachedDocuments: [] });
     }
+    const noProjectMode =
+      typeof window !== "undefined" && localStorage.getItem("sanctum.noProjectMode.v1") === "1";
+    const recentToolNames = session.messages
+      .slice(-4)
+      .flatMap((m: ChatMessage) => (m.toolActivities || []).map((a) => a.name));
+    const shouldUseTools =
+      get().toolsEnabled ||
+      shouldActivateAgentTools(content, {
+        planMode: isPlanMode,
+        noProjectMode,
+        hasAttachedDocs: attachedDocs.length > 0,
+        recentToolNames,
+      });
+
     try {
-      const stream = get().toolsEnabled
+      const stream = shouldUseTools
         ? streamWorkspaceChat
         : LocalEngineClient.streamChat.bind(LocalEngineClient);
       for await (const chunk of stream(activeModel.id, historyPayload, {
