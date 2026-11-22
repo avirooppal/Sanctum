@@ -9,17 +9,23 @@ import { cn } from "@/lib/utils";
 interface JanModelHeaderPillProps {
   onToggleDetails: () => void;
   detailsOpen?: boolean;
+  placement?: "bottom" | "top";
+  sessionId?: string;
 }
 
 export const JanModelHeaderPill: React.FC<JanModelHeaderPillProps> = ({
   onToggleDetails,
   detailsOpen = false,
+  placement = "bottom",
+  sessionId,
 }) => {
-  const { models, activeModelId, setActiveModelId } = useAppStore(
+  const { models, activeModelId, setActiveModelId, chatSessions, updateSessionParams } = useAppStore(
     useShallow((s) => ({
       models: s.models,
       activeModelId: s.activeModelId,
       setActiveModelId: s.setActiveModelId,
+      chatSessions: s.chatSessions,
+      updateSessionParams: s.updateSessionParams,
     }))
   );
 
@@ -38,23 +44,33 @@ export const JanModelHeaderPill: React.FC<JanModelHeaderPillProps> = ({
   }, [open]);
 
   const installedModels = models.filter((m) => m.downloaded);
+  const scopedSession = sessionId ? chatSessions.find((s) => s.id === sessionId) : null;
+  const effectiveModelId = scopedSession?.modelId || activeModelId;
   const activeModel =
-    installedModels.find((m) => m.id === activeModelId) || installedModels[0] || models[0];
+    installedModels.find((m) => m.id === effectiveModelId) || installedModels[0] || models[0];
   const label = activeModel?.name || activeModel?.id || "Select model";
   const isReady = Boolean(activeModel && (activeModel.downloaded || activeModel.isLoaded));
 
   return (
     <div ref={containerRef} className="relative shrink-0">
-      <div className="inline-flex items-center gap-1 rounded-xl border border-border/70 bg-card/90 px-2.5 py-1 shadow-xs">
+      <div
+        className={cn(
+          "inline-flex items-center gap-1 rounded-full border border-border/70 bg-card/90 shadow-xs",
+          placement === "top" ? "h-6 px-2" : "rounded-xl px-2.5 py-1"
+        )}
+      >
         <button
           type="button"
           onClick={() => setOpen((v) => !v)}
           title="Switch active model"
-          className="inline-flex items-center gap-1.5 text-xs font-medium text-foreground hover:text-primary transition-colors max-w-[180px]"
+          className={cn(
+            "inline-flex items-center gap-1 font-medium text-foreground hover:text-primary transition-colors max-w-[160px]",
+            placement === "top" ? "text-[11px]" : "gap-1.5 text-xs max-w-[180px]"
+          )}
         >
-          <IconFlame size={14} className="text-primary shrink-0" />
+          <IconFlame size={placement === "top" ? 12 : 14} className="text-primary shrink-0" />
           <span className="truncate">{label}</span>
-          <IconSelector size={13} className="text-muted-foreground shrink-0" />
+          <IconSelector size={placement === "top" ? 11 : 13} className="text-muted-foreground shrink-0" />
         </button>
 
         <span className="h-3.5 w-px bg-border/70 mx-0.5" />
@@ -86,7 +102,12 @@ export const JanModelHeaderPill: React.FC<JanModelHeaderPillProps> = ({
       </div>
 
       {open && (
-        <div className="absolute left-0 top-full mt-1.5 z-50 w-64 rounded-xl border border-border/80 bg-card/98 backdrop-blur-md shadow-xl p-1.5 space-y-0.5 max-h-72 overflow-y-auto">
+        <div
+          className={cn(
+            "absolute left-0 z-50 w-64 rounded-xl border border-border bg-popover shadow-2xl p-1.5 space-y-0.5 max-h-72 overflow-y-auto",
+            placement === "top" ? "bottom-full mb-2" : "top-full mt-1.5"
+          )}
+        >
           <div className="px-2 py-1 text-[10px] font-semibold uppercase tracking-wider text-muted-foreground">
             Local Models ({installedModels.length})
           </div>
@@ -102,7 +123,11 @@ export const JanModelHeaderPill: React.FC<JanModelHeaderPillProps> = ({
                   key={m.id}
                   type="button"
                   onClick={() => {
-                    setActiveModelId(m.id);
+                    if (sessionId) {
+                      updateSessionParams(sessionId, { modelId: m.id });
+                    } else {
+                      setActiveModelId(m.id);
+                    }
                     setOpen(false);
                   }}
                   className={cn(

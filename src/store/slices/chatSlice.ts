@@ -34,6 +34,7 @@ export interface ChatSlice {
   threadsRevision: number;
   threadsUpdatedAt: number;
   activeSessionId: string;
+  splitSessionId: string | null;
   projects: ChatProject[];
   activeProjectId: string | null;
   enableRagInChat: boolean;
@@ -52,11 +53,14 @@ export interface ChatSlice {
   attachedDocuments: AttachedDoc[];
   activeTracker: RequestStatusTracker | null;
   activeAbortController: AbortController | null;
+  activeTrackersBySession: Record<string, RequestStatusTracker>;
+  activeAbortControllersBySession: Record<string, AbortController>;
   pendingToolApproval: PendingToolApproval | null;
   resolveToolApproval: (decision: "approved" | "denied", scope?: "once" | "session", approvalToken?: string) => void;
   toggleMessageBookmark: (sessionId: string, messageId: string) => void;
 
   setActiveSessionId: (id: string) => void;
+  setSplitSessionId: (id: string | null) => void;
   setActiveProjectId: (id: string | null) => void;
   createNewChatSession: (projectId?: string) => void;
   deleteChatSession: (id: string) => void;
@@ -75,8 +79,8 @@ export interface ChatSlice {
   setAttachedImage: (img: { src: string; name: string; width: number; height: number } | null) => void;
   addAttachedDocument: (doc: AttachedDoc) => void;
   removeAttachedDocument: (name: string) => void;
-  sendMessage: (content: string) => Promise<void>;
-  stopInference: () => void;
+  sendMessage: (content: string, targetSessionId?: string, overrideAttachments?: AttachedDoc[]) => Promise<void>;
+  stopInference: (targetSessionId?: string) => void;
   regenerateLastMessage: () => void;
   syncThreadsFromHost: () => Promise<void>;
 }
@@ -132,6 +136,7 @@ export const createChatSlice: StateCreator<any, [], [], ChatSlice> = (set, get) 
   threadsRevision: 0,
   threadsUpdatedAt: 0,
   activeSessionId: "chat-default",
+  splitSessionId: null,
   projects: [
     {
       id: "proj-default",
@@ -173,6 +178,8 @@ export const createChatSlice: StateCreator<any, [], [], ChatSlice> = (set, get) 
   attachedDocuments: [],
   activeTracker: null,
   activeAbortController: null,
+  activeTrackersBySession: {},
+  activeAbortControllersBySession: {},
   pendingToolApproval: null,
   resolveToolApproval: (decision, scope = "once", approvalToken) => {
     const pending = get().pendingToolApproval;
@@ -204,6 +211,7 @@ export const createChatSlice: StateCreator<any, [], [], ChatSlice> = (set, get) 
     const session = get().chatSessions.find((s: ChatSession) => s.id === id);
     if (session) set({ activeSessionId: id, activeModelId: session.modelId });
   },
+  setSplitSessionId: (id) => set({ splitSessionId: id }),
   setActiveProjectId: (id) => set({ activeProjectId: id }),
   setEnableRagInChat: (enabled) => set({ enableRagInChat: enabled }),
   setAttachedImage: (img) => set({ attachedImage: img }),
@@ -417,25 +425,46 @@ export const createChatSlice: StateCreator<any, [], [], ChatSlice> = (set, get) 
       };
     }),
 
-  stopInference: () => {
-    const activeId = get().activeSessionId;
-    if (activeId && activeId.startsWith("s_")) {
-      void interruptHarnessRun(activeId);
+  stopInference: (targetSessionId) => {
+    const targetId = targetSessionId || get().activeSessionId;
+    if (targetId && targetId.startsWith("s_")) {
+      void interruptHarnessRun(targetId);
     }
     get().pendingToolApproval?.resolve({ decision: "denied", scope: "once" });
     set({ pendingToolApproval: null });
-    get().activeAbortController?.abort();
-    const tracker = get().activeTracker;
+    const ctrl =
+      (targetId ? get().activeAbortControllersBySession?.[targetId] : null) ||
+      get().activeAbortController;
+    ctrl?.abort();
+    const tracker =
+      (targetId ? get().activeTrackersBySession?.[targetId] : null) ||
+      get().activeTracker;
     if (tracker) {
       tracker.transition("stopped", { detail: "User stopped generation" });
       tracker.destroy();
-      set({ activeTracker: null });
     }
+    set((state: any) => {
+      const nextTrackers = { ...(state.activeTrackersBySession || {}) };
+      const nextControllers = { ...(state.activeAbortControllersBySession || {}) };
+      if (targetId) {
+        delete nextTrackers[targetId];
+        delete nextControllers[targetId];
+      }
+      const remainingTrackers = Object.values(nextTrackers) as RequestStatusTracker[];
+      const remainingControllers = Object.values(nextControllers) as AbortController[];
+      return {
+        activeTrackersBySession: nextTrackers,
+        activeAbortControllersBySession: nextControllers,
+        activeTracker: remainingTrackers[0] || null,
+        activeAbortController: remainingControllers[0] || null,
+      };
+    });
   },
 
-  sendMessage: async (content) => {
-    if (get().activeTracker || !content.trim()) return;
-    const session = get().chatSessions.find((s: ChatSession) => s.id === get().activeSessionId);
+  sendMessage: async (content, targetSessionId, overrideAttachments) => {
+    const resolvedSessionId = targetSessionId || get().activeSessionId;
+    if (get().activeTrackersBySession?.[resolvedSessionId] || !content.trim()) return;
+    const session = get().chatSessions.find((s: ChatSession) => s.id === resolvedSessionId);
     if (!session) return;
 
     const requestId = `req-${crypto.randomUUID()}`;
@@ -466,7 +495,12 @@ export const createChatSlice: StateCreator<any, [], [], ChatSlice> = (set, get) 
 
     tracker.subscribe(updateAssistantStatus);
     const controller = new AbortController();
-    set({ activeTracker: tracker, activeAbortController: controller });
+    set((state: any) => ({
+      activeTracker: tracker,
+      activeAbortController: controller,
+      activeTrackersBySession: { ...(state.activeTrackersBySession || {}), [session.id]: tracker },
+      activeAbortControllersBySession: { ...(state.activeAbortControllersBySession || {}), [session.id]: controller },
+    }));
 
     // Auto-extract explicit memory instructions (e.g. "Remember that...", "Always use...")
     const memoryScope = session.projectId || "default";
@@ -483,7 +517,14 @@ export const createChatSlice: StateCreator<any, [], [], ChatSlice> = (set, get) 
     }
 
     // Step 1: Optimistic render of user message + initial assistant message
-    const attachedImg = get().attachedImage;
+    const isSecondaryPane = Boolean(targetSessionId && targetSessionId !== get().activeSessionId);
+    const effectiveAttachments =
+      overrideAttachments !== undefined
+        ? overrideAttachments
+        : isSecondaryPane
+        ? []
+        : get().attachedDocuments || [];
+    const attachedImg = isSecondaryPane ? null : get().attachedImage;
     if (attachedImg?.src && attachedImg.src.startsWith("data:")) {
       void saveImageToVaultDb({
         id: `idb:${userMsgId}`,
@@ -494,7 +535,7 @@ export const createChatSlice: StateCreator<any, [], [], ChatSlice> = (set, get) 
       });
     }
     const userMsg: ChatMessage = {
-      attachments: get().attachedDocuments || [],
+      attachments: effectiveAttachments,
       image: attachedImg || undefined,
       id: userMsgId,
       role: "user",
@@ -529,11 +570,17 @@ export const createChatSlice: StateCreator<any, [], [], ChatSlice> = (set, get) 
 
     tracker.transition("reading_message");
     let ragContextSnippet = "";
-    const attachedDocs = get().attachedDocuments || [];
+    const attachedDocs = effectiveAttachments;
+    const MAX_ATTACHED_DOC_CHARS = 12000;
+    const formatDocForPrompt = (doc: AttachedDoc) => {
+      const body =
+        doc.content.length > MAX_ATTACHED_DOC_CHARS
+          ? `${doc.content.slice(0, MAX_ATTACHED_DOC_CHARS)}\n\n[Truncated remaining boilerplate beyond ${MAX_ATTACHED_DOC_CHARS} chars]`
+          : doc.content;
+      return `[Attached Document: ${doc.name}]\n${body}`;
+    };
     if (attachedDocs.length > 0) {
-      ragContextSnippet += attachedDocs
-        .map((doc: AttachedDoc) => `[Attached Document: ${doc.name}]\n${doc.content}`)
-        .join("\n\n");
+      ragContextSnippet += attachedDocs.map(formatDocForPrompt).join("\n\n");
     }
 
     if (get().enableRagInChat) {
@@ -582,7 +629,7 @@ export const createChatSlice: StateCreator<any, [], [], ChatSlice> = (set, get) 
       }
     }
 
-    const effectiveModelId = get().activeModelId || session.modelId;
+    const effectiveModelId = session.modelId || get().activeModelId;
     const activeModel =
       get().models.find((m: any) => m.id === effectiveModelId) ||
       get().models.find((m: any) => m.id === session.modelId) ||
@@ -647,7 +694,7 @@ export const createChatSlice: StateCreator<any, [], [], ChatSlice> = (set, get) 
         ...(m.image?.src ? { images: [m.image.src.replace(/^data:image\/[^;]+;base64,/, "")] } : {}),
         content: m.attachments?.length
           ? `${m.content}\n\n${m.attachments
-              .map((d: AttachedDoc) => `[Attached Document: ${d.name}]\n${d.content}`)
+              .map(formatDocForPrompt)
               .join("\n\n")}`
           : m.content,
       };
@@ -678,12 +725,14 @@ export const createChatSlice: StateCreator<any, [], [], ChatSlice> = (set, get) 
     }
     historyPayload.push({ role: "user", content });
 
-    const imageBase64 = get().attachedImage?.src;
+    const imageBase64 = attachedImg?.src;
     let finalAssistantText = "";
     let writeToolsExecuted = false;
     let planArtifactWritten = false;
 
-    set({ attachedImage: null, attachedDocuments: [] });
+    if (!isSecondaryPane) {
+      set({ attachedImage: null, attachedDocuments: [] });
+    }
     try {
       const stream = get().toolsEnabled
         ? streamWorkspaceChat
@@ -756,7 +805,10 @@ export const createChatSlice: StateCreator<any, [], [], ChatSlice> = (set, get) 
         topP: session.topP,
         think: get().thinkEnabled,
         signal: controller.signal,
-        contextSize: activeModel.config.contextSize,
+        contextSize:
+          ragContextSnippet || session.messages.some((m: ChatMessage) => (m.attachments?.length || 0) > 0)
+            ? Math.max(activeModel.config.contextSize || 4096, 8192)
+            : activeModel.config.contextSize,
         gpuLayers: activeModel.config.gpuLayers,
         threads: activeModel.config.threads,
         ragContext: ragContextSnippet,
@@ -898,9 +950,23 @@ export const createChatSlice: StateCreator<any, [], [], ChatSlice> = (set, get) 
     } finally {
       get().pendingToolApproval?.resolve({ decision: "denied", scope: "once" });
       tracker.destroy();
-      if (get().activeAbortController === controller) {
-        set({ activeTracker: null, activeAbortController: null, pendingToolApproval: null });
-      }
+      set((state: any) => {
+        const nextTrackers = { ...(state.activeTrackersBySession || {}) };
+        const nextControllers = { ...(state.activeAbortControllersBySession || {}) };
+        if (nextControllers[session.id] === controller) {
+          delete nextTrackers[session.id];
+          delete nextControllers[session.id];
+        }
+        const remainingTrackers = Object.values(nextTrackers) as RequestStatusTracker[];
+        const remainingControllers = Object.values(nextControllers) as AbortController[];
+        return {
+          activeTrackersBySession: nextTrackers,
+          activeAbortControllersBySession: nextControllers,
+          activeTracker: remainingTrackers[0] || null,
+          activeAbortController: remainingControllers[0] || null,
+          pendingToolApproval: state.activeAbortController === controller ? null : state.pendingToolApproval,
+        };
+      });
       const nextRev = (get().threadsRevision || 0) + 1;
       const nextTs = Date.now();
       set({ threadsRevision: nextRev, threadsUpdatedAt: nextTs });

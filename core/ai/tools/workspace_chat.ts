@@ -919,10 +919,19 @@ export async function* streamWorkspaceChat(
   });
 
   if (options.ragContext) {
-    history.unshift({
-      role: "system",
-      content: `Attached reference material:\n${options.ragContext}`,
-    });
+    const lastIdx = history.length - 1;
+    if (lastIdx >= 0 && history[lastIdx].role === "user") {
+      history[lastIdx] = {
+        ...history[lastIdx],
+        content:
+          `Answer strictly using the attached reference material below. Quote exact values (flight numbers, codes, dates, names, totals) verbatim and do NOT guess or invent details from boilerplate terms.\n\n${options.ragContext}\n\nUser question:\n${history[lastIdx].content}`,
+      };
+    } else {
+      history.unshift({
+        role: "system",
+        content: `Answer strictly using the attached reference material below:\n${options.ragContext}`,
+      });
+    }
   }
 
   if (options.imageAttached) {

@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState, useRef, useEffect } from "react";
+import React, { useState, useRef, useEffect, useCallback } from "react";
 import {
   ArrowUp,
   ChevronRight,
@@ -29,7 +29,7 @@ import {
   PackageCheck,
   HelpCircle,
 } from "lucide-react";
-import { IconChevronRight } from "@tabler/icons-react";
+import { IconChevronLeft, IconChevronRight } from "@tabler/icons-react";
 import { Button } from "@/components/ui/button";
 import {
   Select,
@@ -62,6 +62,9 @@ import { ArtifactViewerPanel } from "@/components/viewer/ArtifactViewerPanel";
 import { WorkspaceHeaderActions } from "@/components/viewer/WorkspaceHeaderActions";
 import { TurnChangesSummaryCard, DiffReviewModal } from "@/components/viewer/DiffReviewModal";
 import { detectCandidateFilePaths } from "@core/infra/security/content_sanitizer.ts";
+import { MarkdownRenderer } from "@/components/chat/MarkdownRenderer";
+import { ComposerWorkspacePicker } from "@/components/chat/ComposerWorkspacePicker";
+import { SplitChatPane } from "@/components/chat/SplitChatPane";
 
 interface ChatScreenProps {
   onNavigate?: (module: "chat" | "hub" | "settings") => void;
@@ -281,7 +284,7 @@ const MessageRow: React.FC<{
         )}
 
         {answer ? (
-          <div className="text-sm leading-7 whitespace-pre-wrap text-foreground/95">{answer}</div>
+          <MarkdownRenderer content={answer} />
         ) : (
           !thinking && !msg.requestStatus && <div className="text-sm text-muted-foreground animate-pulse">…</div>
         )}
@@ -426,6 +429,9 @@ export const ChatScreen: React.FC<ChatScreenProps> = ({ onNavigate, onOpenMcpSet
   const {
     chatSessions,
     activeSessionId,
+    setActiveSessionId,
+    splitSessionId,
+    setSplitSessionId,
     models,
     activeModelId,
     setActiveModelId,
@@ -435,6 +441,7 @@ export const ChatScreen: React.FC<ChatScreenProps> = ({ onNavigate, onOpenMcpSet
     deleteChatMessage,
     toggleMessageBookmark,
     activeTracker,
+    activeTrackersBySession,
     updateSessionParams,
     enableRagInChat,
     setEnableRagInChat,
@@ -454,12 +461,16 @@ export const ChatScreen: React.FC<ChatScreenProps> = ({ onNavigate, onOpenMcpSet
     openFileTab,
     setActiveDiffCheckpointId,
     createNewChatSession,
+    duplicateChatSession,
     agentExecutionMode,
     setAgentExecutionMode,
   } = useAppStore(
     useShallow((s) => ({
       chatSessions: s.chatSessions,
       activeSessionId: s.activeSessionId,
+      setActiveSessionId: s.setActiveSessionId,
+      splitSessionId: s.splitSessionId,
+      setSplitSessionId: s.setSplitSessionId,
       models: s.models,
       activeModelId: s.activeModelId,
       setActiveModelId: s.setActiveModelId,
@@ -469,6 +480,7 @@ export const ChatScreen: React.FC<ChatScreenProps> = ({ onNavigate, onOpenMcpSet
       deleteChatMessage: s.deleteChatMessage,
       toggleMessageBookmark: s.toggleMessageBookmark,
       activeTracker: s.activeTracker,
+      activeTrackersBySession: s.activeTrackersBySession,
       updateSessionParams: s.updateSessionParams,
       enableRagInChat: s.enableRagInChat,
       setEnableRagInChat: s.setEnableRagInChat,
@@ -488,6 +500,7 @@ export const ChatScreen: React.FC<ChatScreenProps> = ({ onNavigate, onOpenMcpSet
       openFileTab: s.openFileTab,
       setActiveDiffCheckpointId: s.setActiveDiffCheckpointId,
       createNewChatSession: s.createNewChatSession,
+      duplicateChatSession: s.duplicateChatSession,
       agentExecutionMode: s.agentExecutionMode,
       setAgentExecutionMode: s.setAgentExecutionMode,
     }))
@@ -497,6 +510,10 @@ export const ChatScreen: React.FC<ChatScreenProps> = ({ onNavigate, onOpenMcpSet
   const [visibleLimit, setVisibleLimit] = useState(80);
   const [detailsOpen, setDetailsOpen] = useState(false);
   const [isTerminalOpen, setIsTerminalOpen] = useState(false);
+
+  const splitSession = splitSessionId
+    ? chatSessions.find((s) => s.id === splitSessionId) || null
+    : null;
   const [bookmarksOnly, setBookmarksOnly] = useState(false);
   const [isRecording, setIsRecording] = useState(false);
   const [appearanceCfg, setAppearanceCfg] = useState<AppearanceConfig>(() => loadAppearanceConfig());
@@ -527,7 +544,7 @@ export const ChatScreen: React.FC<ChatScreenProps> = ({ onNavigate, onOpenMcpSet
   const session = chatSessions.find((s) => s.id === activeSessionId) || chatSessions[0];
   const model = models.find((m) => m.id === (activeModelId || session?.modelId)) || models[0];
   const messages = session?.messages ?? [];
-  const isStreaming = Boolean(activeTracker);
+  const isStreaming = Boolean(activeTrackersBySession?.[activeSessionId]);
 
   // Estimate context window usage %
   const totalSessionChars = messages.reduce((acc, m) => acc + (m.content?.length || 0), 0) + prompt.length;
@@ -1042,74 +1059,67 @@ export const ChatScreen: React.FC<ChatScreenProps> = ({ onNavigate, onOpenMcpSet
       )}
     >
       <section className="relative flex flex-col flex-1 min-w-0 min-h-0">
-        {/* Minimal Top Header Bar (no overlapping duplicate model selector; dynamic right padding only when viewer is closed) */}
+        {/* Left-Edge Hover Reveal Zone (opens collapsed sidebar automatically on hover) */}
+        {isExplorerCollapsed && (
+          <div
+            onMouseEnter={toggleExplorer}
+            onClick={toggleExplorer}
+            aria-label="Hover left edge to open sidebar"
+            title="Hover or click to open sidebar (Ctrl+B)"
+            className="fixed left-0 top-10 bottom-0 w-3.5 z-30 group cursor-e-resize flex items-center"
+          >
+            <div className="h-14 w-1 rounded-r-full bg-primary/0 group-hover:bg-primary/60 transition-all duration-200" />
+          </div>
+        )}
+
+        {/* Ultra-Clean Top Drag Bar (zero distracting pills; model selector lives in composer) */}
         <div
           onMouseDown={handleTitleBarMouseDown}
           onDoubleClick={handleTitleBarDoubleClick}
           onContextMenu={handleTitleBarContextMenu}
           className={cn(
-            "flex items-center justify-between gap-2 px-3 sm:px-5 h-12 shrink-0",
-            !isEmptyChat && "border-b border-border/35",
-            !isViewerOpen && "pr-32 sm:pr-36"
+            "flex items-center justify-between gap-2 px-3 sm:px-5 h-11 shrink-0",
+            !isViewerOpen && !splitSession && "pr-32 sm:pr-36"
           )}
         >
           <div className="flex items-center gap-2 min-w-0 flex-1">
-            {isExplorerCollapsed && (
-              <div className="flex items-center gap-0.5 rounded-xl bg-card/90 border border-border/60 px-1.5 py-0.5 shadow-xs shrink-0">
-                <DownloadPopover />
-                <button
-                  type="button"
-                  onClick={toggleExplorer}
-                  aria-label="Expand sidebar"
-                  title="Expand Sidebar (Ctrl+B)"
-                  className="p-1.5 rounded-lg text-muted-foreground hover:text-foreground hover:bg-muted/50 transition-colors"
-                >
-                  <IconChevronRight size={15} />
-                </button>
-              </div>
-            )}
+            <div className="shrink-0" data-no-drag>
+              <WorkspaceHeaderActions
+                onOpenSettings={() => onNavigate?.("settings")}
+                sessionTitle={session?.title}
+                expanded={false}
+                hideBreadcrumb
+              />
+            </div>
 
-            <JanModelHeaderPill
-              onToggleDetails={() => setDetailsOpen((v) => !v)}
-              detailsOpen={detailsOpen}
-            />
-
-            <AccessScopeBadge />
-
-            <WorkspaceHeaderActions
-              onOpenSettings={() => onNavigate?.("settings")}
-              sessionTitle={session?.title}
-            />
-
-            <div className="flex items-center gap-1 shrink-0">
+            <div className="ml-auto flex items-center gap-1 shrink-0" data-no-drag>
               <button
                 type="button"
                 onClick={() => setIsTerminalOpen((v) => !v)}
                 aria-label="Toggle terminal"
                 title="Toggle Interactive Terminal"
                 className={cn(
-                  "p-1.5 rounded-lg text-muted-foreground hover:text-foreground hover:bg-accent/60 transition-colors",
-                  isTerminalOpen && "bg-accent text-primary"
+                  "p-1.5 rounded-lg text-muted-foreground hover:text-foreground hover:bg-muted/50 transition-colors",
+                  isTerminalOpen && "bg-primary/15 text-primary"
                 )}
               >
                 <TerminalIcon className="size-3.5" />
               </button>
-
               <button
                 type="button"
                 onClick={toggleViewer}
                 aria-label="Toggle workspace viewer panel"
                 title="Toggle Artifact & Workspace Viewer (Ctrl+\\)"
                 className={cn(
-                  "flex items-center gap-1.5 rounded-lg border px-2 py-1 text-[11px] font-medium transition-colors",
+                  "flex items-center gap-1 p-1.5 rounded-lg transition-colors",
                   isViewerOpen
-                    ? "border-primary/40 bg-primary/10 text-primary"
-                    : "border-border/60 bg-card/80 text-muted-foreground hover:text-foreground"
+                    ? "bg-primary/15 text-primary"
+                    : "text-muted-foreground hover:text-foreground hover:bg-muted/50"
                 )}
               >
                 {isViewerOpen ? <PanelRightClose className="size-3.5" /> : <PanelRightOpen className="size-3.5" />}
                 {viewerTabs.length > 0 && (
-                  <span className="rounded-full bg-primary/20 px-1.5 py-0.2 text-[10px] font-mono text-primary">
+                  <span className="rounded-full bg-primary/20 px-1.5 text-[10px] font-mono text-primary">
                     {viewerTabs.length}
                   </span>
                 )}
@@ -1259,6 +1269,9 @@ export const ChatScreen: React.FC<ChatScreenProps> = ({ onNavigate, onOpenMcpSet
               isRecording && "border-destructive ring-1 ring-destructive/20"
             )}
           >
+            {/* Docked Project / Workspace Selector Strip */}
+            <ComposerWorkspacePicker />
+
             {/* Slash Command Autocomplete Popover (Minimal, icon-free) */}
             {slashQuery !== null && matchingSlashCommands.length > 0 && (
               <div className="absolute bottom-full left-3 mb-2 z-40 w-80 max-w-[calc(100vw-3rem)] rounded-xl border border-border/80 bg-popover/95 backdrop-blur-md p-1 shadow-2xl">
@@ -1468,6 +1481,14 @@ export const ChatScreen: React.FC<ChatScreenProps> = ({ onNavigate, onOpenMcpSet
                   <Plus className="size-4" />
                 </button>
 
+                {/* Active Model Selector Pill (in chat composer, opens upward) */}
+                <JanModelHeaderPill
+                  onToggleDetails={() => setDetailsOpen((v) => !v)}
+                  detailsOpen={detailsOpen}
+                  placement="top"
+                  sessionId={activeSessionId}
+                />
+
                 {/* Inline Model + Effort + Tools + Fast/Plan Pills */}
                 <WorkspaceTools />
 
@@ -1557,7 +1578,7 @@ export const ChatScreen: React.FC<ChatScreenProps> = ({ onNavigate, onOpenMcpSet
                     (!prompt.trim() && !attachedImage && attachedDocuments.length === 0) ||
                     !model
                   )}
-                  onClick={isStreaming ? stopInference : send}
+                  onClick={isStreaming ? () => stopInference(activeSessionId) : send}
                   aria-label={isStreaming ? "Stop generation" : "Send message"}
                 >
                   {isStreaming ? <Square className="size-3.5" /> : <ArrowUp className="size-3.5" />}
@@ -1658,6 +1679,22 @@ export const ChatScreen: React.FC<ChatScreenProps> = ({ onNavigate, onOpenMcpSet
             </div>
           )}
         </aside>
+      )}
+      {splitSession && (
+        <SplitChatPane
+          splitSession={splitSession}
+          hasWallpaper={hasWallpaper}
+          isViewerOpen={isViewerOpen}
+          onToggleDetails={() => setDetailsOpen((v) => !v)}
+          detailsOpen={detailsOpen}
+          onOpenMcpSettings={onOpenMcpSettings}
+          onSwap={() => {
+            const prevActive = activeSessionId;
+            setActiveSessionId(splitSession.id);
+            setSplitSessionId(prevActive);
+          }}
+          onClose={() => setSplitSessionId(null)}
+        />
       )}
       <ArtifactViewerPanel />
       <DiffReviewModal />

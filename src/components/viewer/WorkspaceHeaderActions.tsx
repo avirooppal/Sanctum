@@ -27,7 +27,9 @@ interface DetectedIde {
 export const WorkspaceHeaderActions: React.FC<{
   onOpenSettings?: () => void;
   sessionTitle?: string;
-}> = ({ onOpenSettings, sessionTitle }) => {
+  expanded?: boolean;
+  hideBreadcrumb?: boolean;
+}> = ({ onOpenSettings, sessionTitle, expanded = false, hideBreadcrumb = false }) => {
   const {
     viewerTabs,
     activeViewerTabId,
@@ -288,25 +290,27 @@ export const WorkspaceHeaderActions: React.FC<{
       <div className="flex items-center justify-between gap-2 min-w-0 flex-1" data-no-drag>
         {/* Left: Minimal Workspace / Session Title Breadcrumb */}
         <div className="flex items-center gap-1.5 min-w-0 truncate text-xs">
-          <button
-            type="button"
-            onClick={handleSelectWorkspaceFolder}
-            title={
-              workspaceRoot
-                ? `Workspace: ${workspaceRoot}\nClick to change folder`
-                : "Select workspace folder"
-            }
-            className="flex items-center gap-1.5 rounded-lg px-2 py-1 text-muted-foreground hover:text-foreground hover:bg-muted/50 transition-colors shrink-0"
-          >
-            <FolderGit2 className="size-3.5 text-primary/80 shrink-0" />
-            <span className="font-medium text-foreground/90 max-w-[120px] truncate">
-              {workspaceName}
-            </span>
-          </button>
-          {sessionTitle && (
+          {expanded && (
+            <button
+              type="button"
+              onClick={handleSelectWorkspaceFolder}
+              title={
+                workspaceRoot
+                  ? `Workspace: ${workspaceRoot}\nClick to change folder`
+                  : "Select workspace folder"
+              }
+              className="flex items-center gap-1.5 rounded-lg px-2 py-1 text-muted-foreground hover:text-foreground hover:bg-muted/50 transition-colors shrink-0"
+            >
+              <FolderGit2 className="size-3.5 text-primary/80 shrink-0" />
+              <span className="font-medium text-foreground/90 max-w-[120px] truncate">
+                {workspaceName}
+              </span>
+            </button>
+          )}
+          {!hideBreadcrumb && sessionTitle && (
             <>
-              <span className="text-muted-foreground/40">/</span>
-              <span className="text-muted-foreground truncate max-w-[200px]">
+              {expanded && <span className="text-muted-foreground/40">/</span>}
+              <span className="text-muted-foreground truncate max-w-[240px]">
                 {sessionTitle}
               </span>
             </>
@@ -384,53 +388,55 @@ export const WorkspaceHeaderActions: React.FC<{
             </div>
           )}
 
-          {/* Open IDE Button */}
-          <div className="relative flex items-center rounded-lg border border-border/60 bg-card/80">
-            <button
-              type="button"
-              onClick={() => void handleOpenIde()}
-              title={`Open ${workspaceName} in ${selectedIdeId}`}
-              className="flex items-center gap-1.5 px-2.5 py-1 text-[11px] font-medium text-muted-foreground hover:text-foreground transition-colors"
-            >
-              <Code2 className="size-3.5 text-muted-foreground" />
-              <span>Open IDE</span>
-            </button>
-            {detectedIdes.length > 1 && (
+          {/* Open IDE Button (shown when header workspace controls are expanded) */}
+          {expanded && (
+            <div className="relative flex items-center rounded-lg border border-border/60 bg-card/80">
               <button
                 type="button"
-                onClick={() => setIdeMenuOpen((v) => !v)}
-                aria-label="Choose IDE"
-                className="px-1 py-1 border-l border-border/60 text-muted-foreground hover:text-foreground"
+                onClick={() => void handleOpenIde()}
+                title={`Open ${workspaceName} in ${selectedIdeId}`}
+                className="flex items-center gap-1.5 px-2.5 py-1 text-[11px] font-medium text-muted-foreground hover:text-foreground transition-colors"
               >
-                <ChevronDown className="size-3" />
+                <Code2 className="size-3.5 text-muted-foreground" />
+                <span>Open IDE</span>
               </button>
-            )}
+              {detectedIdes.length > 1 && (
+                <button
+                  type="button"
+                  onClick={() => setIdeMenuOpen((v) => !v)}
+                  aria-label="Choose IDE"
+                  className="px-1 py-1 border-l border-border/60 text-muted-foreground hover:text-foreground"
+                >
+                  <ChevronDown className="size-3" />
+                </button>
+              )}
 
-            {ideMenuOpen && (
-              <div className="absolute right-0 top-full mt-1 z-40 w-44 rounded-xl border border-border/80 bg-popover p-1 shadow-xl text-xs">
-                {detectedIdes.map((ide) => (
-                  <button
-                    key={ide.id}
-                    type="button"
-                    onClick={() => {
-                      setSelectedIdeId(ide.id);
-                      setIdeMenuOpen(false);
-                      void handleOpenIde(ide.id);
-                    }}
-                    className={cn(
-                      "flex w-full items-center justify-between rounded-lg px-2.5 py-1.5 text-left hover:bg-muted/70",
-                      selectedIdeId === ide.id && "text-primary font-medium"
-                    )}
-                  >
-                    <span>{ide.name}</span>
-                    <span className="text-[10px] font-mono text-muted-foreground">
-                      {ide.id}
-                    </span>
-                  </button>
-                ))}
-              </div>
-            )}
-          </div>
+              {ideMenuOpen && (
+                <div className="absolute right-0 top-full mt-1 z-40 w-44 rounded-xl border border-border/80 bg-popover p-1 shadow-xl text-xs">
+                  {detectedIdes.map((ide) => (
+                    <button
+                      key={ide.id}
+                      type="button"
+                      onClick={() => {
+                        setSelectedIdeId(ide.id);
+                        setIdeMenuOpen(false);
+                        void handleOpenIde(ide.id);
+                      }}
+                      className={cn(
+                        "flex w-full items-center justify-between rounded-lg px-2.5 py-1.5 text-left hover:bg-muted/70",
+                        selectedIdeId === ide.id && "text-primary font-medium"
+                      )}
+                    >
+                      <span>{ide.name}</span>
+                      <span className="text-[10px] font-mono text-muted-foreground">
+                        {ide.id}
+                      </span>
+                    </button>
+                  ))}
+                </div>
+              )}
+            </div>
+          )}
         </div>
       </div>
 

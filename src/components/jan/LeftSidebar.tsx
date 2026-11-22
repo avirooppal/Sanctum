@@ -24,8 +24,8 @@ import {
   IconCheck,
   IconX,
   IconFolderSymlink,
+  IconLayoutColumns,
 } from "@tabler/icons-react";
-import { DownloadPopover } from "./DownloadPopover";
 import { AddProjectDialog } from "./AddProjectDialog";
 import { SearchDialog } from "./SearchDialog";
 import { handleTitleBarMouseDown, handleTitleBarDoubleClick, handleTitleBarContextMenu } from "./WindowControls";
@@ -57,6 +57,8 @@ export const LeftSidebar: React.FC<LeftSidebarProps> = ({
     chatSessions,
     activeSessionId,
     setActiveSessionId,
+    splitSessionId,
+    setSplitSessionId,
     createNewChatSession,
     deleteChatSession,
     renameChatSession,
@@ -77,6 +79,8 @@ export const LeftSidebar: React.FC<LeftSidebarProps> = ({
       chatSessions: s.chatSessions,
       activeSessionId: s.activeSessionId,
       setActiveSessionId: s.setActiveSessionId,
+      splitSessionId: s.splitSessionId,
+      setSplitSessionId: s.setSplitSessionId,
       createNewChatSession: s.createNewChatSession,
       deleteChatSession: s.deleteChatSession,
       renameChatSession: s.renameChatSession,
@@ -333,6 +337,25 @@ export const LeftSidebar: React.FC<LeftSidebarProps> = ({
               type="button"
               onClick={(e) => {
                 e.stopPropagation();
+                if (splitSessionId === session.id) {
+                  setSplitSessionId(null);
+                  toast.info("Closed split view");
+                } else {
+                  setSplitSessionId(session.id);
+                  onNavigate("chat");
+                  toast.success("Opened in split view");
+                }
+                setMenuOpenChatId(null);
+              }}
+              className="w-full flex items-center gap-2 px-2 py-1.5 rounded-lg hover:bg-accent text-foreground text-left"
+            >
+              <IconLayoutColumns size={13} className="text-muted-foreground" />
+              <span>{splitSessionId === session.id ? "Close Split View" : "Open in Split View"}</span>
+            </button>
+            <button
+              type="button"
+              onClick={(e) => {
+                e.stopPropagation();
                 togglePinChatSession(session.id);
                 setMenuOpenChatId(null);
                 toast.success(session.pinned ? "Chat unpinned" : "Chat pinned to top");
@@ -459,7 +482,6 @@ export const LeftSidebar: React.FC<LeftSidebarProps> = ({
                 </div>
               )}
               <div className="flex items-center gap-1 ml-auto">
-                <DownloadPopover />
                 <button
                   type="button"
                   onClick={toggleExplorer}

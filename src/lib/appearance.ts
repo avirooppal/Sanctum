@@ -182,7 +182,7 @@ export function applyAppearanceConfig(config: Partial<AppearanceConfig>): void {
     html.classList.toggle("light", !resolvedDark);
   }
   if (config.fontSize) {
-    const px = config.fontSize === "small" ? "13px" : config.fontSize === "large" ? "16px" : "14px";
+    const px = config.fontSize === "small" ? "14px" : config.fontSize === "large" ? "18px" : "16px";
     html.style.fontSize = px;
   }
   if (config.accentColor !== undefined) {

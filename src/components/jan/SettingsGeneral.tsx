@@ -21,6 +21,7 @@ import { toast } from "sonner";
 import { useAppStore } from "@/store/useAppStore";
 import { useShallow } from "zustand/react/shallow";
 import { fetchWithApproval } from "@/lib/hostBridge";
+import { DownloadPopover } from "@/components/jan/DownloadPopover";
 import { globalMemoryStore, type MemoryFact } from "@core/ai/memory/memory_store.ts";
 
 export const SettingsGeneral: React.FC = () => {
@@ -411,13 +412,19 @@ export const SettingsGeneral: React.FC = () => {
 
   return (
     <div className="flex-1 overflow-y-auto p-8 space-y-8 max-w-3xl">
-      <div>
-        <h1 className="text-xl font-bold tracking-tight text-foreground font-sans">
-          General Settings
-        </h1>
-        <p className="mt-1 text-xs text-muted-foreground">
-          Application configuration, update behavior, local memory, and storage directories.
-        </p>
+      <div className="flex items-start justify-between gap-4">
+        <div>
+          <h1 className="text-xl font-bold tracking-tight text-foreground font-sans">
+            General Settings
+          </h1>
+          <p className="mt-1 text-xs text-muted-foreground">
+            Application configuration, update behavior, local memory, and storage directories.
+          </p>
+        </div>
+        <div className="flex items-center gap-1.5 rounded-xl border border-border/70 bg-card/80 px-2.5 py-1 text-xs text-muted-foreground shrink-0">
+          <span>Downloads</span>
+          <DownloadPopover />
+        </div>
       </div>
 
       {/* App Version & Updates */}

@@ -213,6 +213,10 @@ namespace Sanctum {
                 HandleAudioTranscribe(req, res);
                 return true;
             }
+            if (path == "/api/ocr" && (method == "GET" || method == "POST")) {
+                HandleLocalOcr(req, res, method);
+                return true;
+            }
             if (path == "/api/capabilities/test" && method == "POST") {
                 HandleCapabilitiesTest(req, res);
                 return true;
@@ -2423,16 +2427,26 @@ namespace Sanctum {
                     emit(new { status = "Closing Sanctum and installing update...", percent = 100, installing = true });
                     res.Close();
 
-                    // Launch detached updater with --update (forces unpack + relaunches new Sanctum-Desktop.exe),
-                    // then cleanly close and exit the current process so file locks are released immediately.
+                    // Spawn a detached helper that waits for this process + WebView2 to fully exit
+                    // and release file locks/mutex before launching the downloaded updater with --update.
+                    string updaterBat = Path.Combine(Path.GetTempPath(), "sanctum_apply_update_" + Guid.NewGuid().ToString("N") + ".cmd");
+                    string batContent =
+                        "@echo off\r\n" +
+                        "ping 127.0.0.1 -n 3 > nul\r\n" +
+                        "start \"\" \"" + tempExe + "\" --update\r\n" +
+                        "del \"%~f0\" > nul 2>&1\r\n";
+                    File.WriteAllText(updaterBat, batContent, Encoding.ASCII);
+
                     Process.Start(new ProcessStartInfo {
-                        FileName = tempExe,
-                        Arguments = "--update",
-                        UseShellExecute = true
+                        FileName = "cmd.exe",
+                        Arguments = "/c \"" + updaterBat + "\"",
+                        UseShellExecute = false,
+                        CreateNoWindow = true,
+                        WindowStyle = ProcessWindowStyle.Hidden
                     });
 
                     ThreadPool.QueueUserWorkItem((_) => {
-                        try { Thread.Sleep(350); } catch { }
+                        try { Thread.Sleep(250); } catch { }
                         try {
                             if (!IsDisposed && IsHandleCreated) {
                                 BeginInvoke((Action)(() => {
@@ -2441,7 +2455,7 @@ namespace Sanctum {
                                 }));
                             }
                         } catch { }
-                        try { Thread.Sleep(500); } catch { }
+                        try { Thread.Sleep(400); } catch { }
                         Environment.Exit(0);
                     });
                     return;
@@ -2451,6 +2465,241 @@ namespace Sanctum {
                 res.Close();
             } catch (Exception ex) {
                 try { WriteJson(res, 500, new { error = ex.Message }); } catch { }
+            }
+        }
+
+        private void HandleLocalOcr(HttpListenerRequest req, HttpListenerResponse res, string method) {
+            string endpoint = (Environment.GetEnvironmentVariable("SANCTUM_OCR_ENDPOINT") ?? "http://127.0.0.1:8010").Trim().TrimEnd('/');
+            try {
+                var uri = new Uri(endpoint);
+                string host = (uri.Host ?? "").ToLowerInvariant();
+                if (host != "127.0.0.1" && host != "localhost" && host != "::1") {
+                    WriteJson(res, 403, new { success = false, error = "Offline OCR policy blocks non-loopback OCR endpoints." });
+                    return;
+                }
+            } catch {
+                endpoint = "http://127.0.0.1:8010";
+            }
+
+            if (method == "GET") {
+                try {
+                    var healthReq = (HttpWebRequest)WebRequest.Create(endpoint + "/health");
+                    healthReq.Proxy = null;
+                    healthReq.Method = "GET";
+                    healthReq.Timeout = 3000;
+                    using (var healthRes = (HttpWebResponse)healthReq.GetResponse())
+                    using (var sr = new StreamReader(healthRes.GetResponseStream(), Encoding.UTF8)) {
+                        string body = sr.ReadToEnd();
+                        var parsed = new JavaScriptSerializer().Deserialize<Dictionary<string, object>>(body) ?? new Dictionary<string, object>();
+                        parsed["available"] = true;
+                        parsed["endpoint"] = endpoint;
+                        WriteJson(res, 200, parsed);
+                        return;
+                    }
+                } catch {
+                    WriteJson(res, 200, new { available = false, endpoint = endpoint });
+                    return;
+                }
+            }
+
+            string ct = (req.ContentType ?? "").ToLowerInvariant();
+            if (ct.Contains("application/json")) {
+                HandleWindowsNativeOcr(req, res);
+                return;
+            }
+
+            try {
+                byte[] bodyBytes;
+                using (var ms = new MemoryStream()) {
+                    req.InputStream.CopyTo(ms);
+                    bodyBytes = ms.ToArray();
+                }
+
+                var upReq = (HttpWebRequest)WebRequest.Create(endpoint + "/ocr");
+                upReq.Proxy = null;
+                upReq.Method = "POST";
+                upReq.Timeout = 180000;
+                upReq.ContentType = req.ContentType;
+                upReq.ContentLength = bodyBytes.Length;
+                using (var os = upReq.GetRequestStream()) {
+                    os.Write(bodyBytes, 0, bodyBytes.Length);
+                }
+
+                using (var upRes = (HttpWebResponse)upReq.GetResponse())
+                using (var sr = new StreamReader(upRes.GetResponseStream(), Encoding.UTF8)) {
+                    string raw = sr.ReadToEnd();
+                    var parsed = new JavaScriptSerializer().Deserialize<Dictionary<string, object>>(raw) ?? new Dictionary<string, object>();
+                    parsed["success"] = true;
+                    parsed["ocrAvailable"] = true;
+                    WriteJson(res, (int)upRes.StatusCode, parsed);
+                }
+            } catch (WebException wex) {
+                if (wex.Response is HttpWebResponse errRes) {
+                    using (var sr = new StreamReader(errRes.GetResponseStream(), Encoding.UTF8)) {
+                        string errBody = sr.ReadToEnd();
+                        WriteJson(res, (int)errRes.StatusCode, new { success = false, ocrAvailable = true, error = errBody });
+                        return;
+                    }
+                }
+                WriteJson(res, 503, new {
+                    success = false,
+                    ocrAvailable = false,
+                    error = "Local PaddleOCR-VL-1.6 sidecar is not running on 127.0.0.1:8010."
+                });
+            } catch (Exception ex) {
+                WriteJson(res, 500, new { success = false, error = ex.Message });
+            }
+        }
+
+        private void HandleWindowsNativeOcr(HttpListenerRequest req, HttpListenerResponse res) {
+            string tempDir = Path.Combine(Path.GetTempPath(), "sanctum_ocr_" + Guid.NewGuid().ToString("N"));
+            try {
+                string body;
+                using (var sr = new StreamReader(req.InputStream, Encoding.UTF8)) {
+                    body = sr.ReadToEnd();
+                }
+                var payload = new JavaScriptSerializer { MaxJsonLength = 64 * 1024 * 1024 }
+                    .Deserialize<Dictionary<string, object>>(body);
+                if (payload == null || !payload.ContainsKey("images") || !(payload["images"] is System.Collections.ArrayList rawImages) || rawImages.Count == 0) {
+                    WriteJson(res, 400, new { success = false, error = "No rendered page images provided for Windows OCR." });
+                    return;
+                }
+
+                Directory.CreateDirectory(tempDir);
+                int maxPages = Math.Min(rawImages.Count, 25);
+                var imgPaths = new List<string>();
+                for (int i = 0; i < maxPages; i++) {
+                    string b64 = Convert.ToString(rawImages[i] ?? "").Trim();
+                    if (string.IsNullOrEmpty(b64)) continue;
+                    int comma = b64.IndexOf(',');
+                    if (comma >= 0) b64 = b64.Substring(comma + 1);
+                    byte[] pngBytes = Convert.FromBase64String(b64);
+                    string p = Path.Combine(tempDir, string.Format("page_{0:D3}.png", i + 1));
+                    File.WriteAllBytes(p, pngBytes);
+                    imgPaths.Add(p);
+                }
+
+                if (imgPaths.Count == 0) {
+                    WriteJson(res, 400, new { success = false, error = "No valid PNG pages decoded." });
+                    return;
+                }
+
+                string scriptPath = Path.Combine(tempDir, "run_ocr.ps1");
+                string psScript =
+                    "param([string]$Dir)\n" +
+                    "Add-Type -AssemblyName System.Runtime.WindowsRuntime\n" +
+                    "$asTaskGeneric = ([System.WindowsRuntimeSystemExtensions].GetMethods() | Where-Object { $_.Name -eq 'AsTask' -and $_.GetParameters().Count -eq 1 -and $_.GetParameters()[0].ParameterType.Name -eq 'IAsyncOperation`1' })[0]\n" +
+                    "function Await($WinRtTask, $ResultType) {\n" +
+                    "  $asTask = $asTaskGeneric.MakeGenericMethod($ResultType)\n" +
+                    "  $netTask = $asTask.Invoke($null, @($WinRtTask))\n" +
+                    "  $netTask.Wait(-1) | Out-Null\n" +
+                    "  return $netTask.Result\n" +
+                    "}\n" +
+                    "[Windows.Storage.StorageFile, Windows.Storage, ContentType=WindowsRuntime] | Out-Null\n" +
+                    "[Windows.Graphics.Imaging.BitmapDecoder, Windows.Graphics.Imaging, ContentType=WindowsRuntime] | Out-Null\n" +
+                    "[Windows.Graphics.Imaging.SoftwareBitmap, Windows.Graphics.Imaging, ContentType=WindowsRuntime] | Out-Null\n" +
+                    "[Windows.Media.Ocr.OcrEngine, Windows.Foundation, ContentType=WindowsRuntime] | Out-Null\n" +
+                    "[Windows.Media.Ocr.OcrResult, Windows.Foundation, ContentType=WindowsRuntime] | Out-Null\n" +
+                    "$engine = [Windows.Media.Ocr.OcrEngine]::TryCreateFromUserProfileLanguages()\n" +
+                    "if ($null -eq $engine) { $engine = [Windows.Media.Ocr.OcrEngine]::TryCreateFromLanguage(([Windows.Media.Ocr.OcrEngine]::AvailableRecognizerLanguages | Select-Object -First 1)) }\n" +
+                    "if ($null -eq $engine) { throw 'No Windows OCR language pack installed.' }\n" +
+                    "$pages = @()\n" +
+                    "$files = Get-ChildItem -Path $Dir -Filter 'page_*.png' | Sort-Object Name\n" +
+                    "foreach ($f in $files) {\n" +
+                    "  $sf = Await ([Windows.Storage.StorageFile]::GetFileFromPathAsync($f.FullName)) ([Windows.Storage.StorageFile])\n" +
+                    "  $st = Await ($sf.OpenAsync([Windows.Storage.FileAccessMode]::Read)) ([Windows.Storage.Streams.IRandomAccessStream])\n" +
+                    "  try {\n" +
+                    "    $dec = Await ([Windows.Graphics.Imaging.BitmapDecoder]::CreateAsync($st)) ([Windows.Graphics.Imaging.BitmapDecoder])\n" +
+                    "    $bmp = Await ($dec.GetSoftwareBitmapAsync()) ([Windows.Graphics.Imaging.SoftwareBitmap])\n" +
+                    "    $ocr = Await ($engine.RecognizeAsync($bmp)) ([Windows.Media.Ocr.OcrResult])\n" +
+                    "    $items = @()\n" +
+                    "    foreach ($ln in $ocr.Lines) {\n" +
+                    "      $firstWord = $ln.Words | Select-Object -First 1\n" +
+                    "      if ($null -ne $firstWord) {\n" +
+                    "        $r = $firstWord.BoundingRect\n" +
+                    "        $items += [PSCustomObject]@{ Top = [double]$r.Y; Left = [double]$r.X; Height = [double]$r.Height; Text = [string]$ln.Text }\n" +
+                    "      }\n" +
+                    "    }\n" +
+                    "    $sorted = $items | Sort-Object Top, Left\n" +
+                    "    $rows = @(); $curRow = @(); $curTop = -1.0; $curH = 16.0\n" +
+                    "    foreach ($it in $sorted) {\n" +
+                    "      if ($curRow.Count -eq 0) {\n" +
+                    "        $curRow = @($it); $curTop = $it.Top; $curH = [Math]::Max(12.0, $it.Height)\n" +
+                    "      } elseif ([Math]::Abs($it.Top - $curTop) -le ($curH * 0.6)) {\n" +
+                    "        $curRow += $it\n" +
+                    "      } else {\n" +
+                    "        $rows += ((($curRow | Sort-Object Left) | ForEach-Object { $_.Text }) -join '  |  ')\n" +
+                    "        $curRow = @($it); $curTop = $it.Top; $curH = [Math]::Max(12.0, $it.Height)\n" +
+                    "      }\n" +
+                    "    }\n" +
+                    "    if ($curRow.Count -gt 0) {\n" +
+                    "      $rows += ((($curRow | Sort-Object Left) | ForEach-Object { $_.Text }) -join '  |  ')\n" +
+                    "    }\n" +
+                    "    $pageText = if ($rows.Count -gt 0) { $rows -join \"`n\" } else { [string]$ocr.Text }\n" +
+                    "    $pages += $pageText\n" +
+                    "  } finally { $st.Dispose() }\n" +
+                    "}\n" +
+                    "[Console]::OutputEncoding = [System.Text.Encoding]::UTF8\n" +
+                    "ConvertTo-Json -InputObject $pages -Compress\n";
+                File.WriteAllText(scriptPath, psScript, new UTF8Encoding(false));
+
+                var psi = new ProcessStartInfo {
+                    FileName = "powershell.exe",
+                    Arguments = "-NoProfile -NonInteractive -ExecutionPolicy Bypass -File \"" + scriptPath + "\" -Dir \"" + tempDir + "\"",
+                    UseShellExecute = false,
+                    RedirectStandardOutput = true,
+                    RedirectStandardError = true,
+                    CreateNoWindow = true,
+                    StandardOutputEncoding = Encoding.UTF8,
+                    StandardErrorEncoding = Encoding.UTF8
+                };
+
+                string stdout = "";
+                string stderr = "";
+                using (var proc = Process.Start(psi)) {
+                    stdout = proc.StandardOutput.ReadToEnd();
+                    stderr = proc.StandardError.ReadToEnd();
+                    proc.WaitForExit(120000);
+                    if (proc.ExitCode != 0) {
+                        WriteJson(res, 500, new { success = false, error = string.IsNullOrWhiteSpace(stderr) ? "Windows offline OCR failed." : stderr.Trim() });
+                        return;
+                    }
+                }
+
+                var pageTexts = new List<string>();
+                string trimmedOut = (stdout ?? "").Trim();
+                if (!string.IsNullOrEmpty(trimmedOut)) {
+                    var parsed = new JavaScriptSerializer().DeserializeObject(trimmedOut);
+                    if (parsed is object[] arr) {
+                        foreach (var item in arr) pageTexts.Add(Convert.ToString(item ?? "").Trim());
+                    } else if (parsed is string single) {
+                        pageTexts.Add(single.Trim());
+                    }
+                }
+
+                var nonEmpty = new List<string>();
+                for (int i = 0; i < pageTexts.Count; i++) {
+                    if (string.IsNullOrWhiteSpace(pageTexts[i])) continue;
+                    nonEmpty.Add(pageTexts.Count > 1 ? ("<!-- Page " + (i + 1) + " -->\n\n" + pageTexts[i]) : pageTexts[i]);
+                }
+
+                string markdown = string.Join("\n\n---\n\n", nonEmpty).Trim();
+                if (string.IsNullOrEmpty(markdown)) {
+                    WriteJson(res, 200, new { success = false, error = "Windows offline OCR found no readable text in this PDF." });
+                    return;
+                }
+
+                WriteJson(res, 200, new {
+                    success = true,
+                    ocrAvailable = true,
+                    backend = "windows-ocr",
+                    pages_total = imgPaths.Count,
+                    markdown = markdown
+                });
+            } catch (Exception ex) {
+                WriteJson(res, 500, new { success = false, error = "Windows offline OCR error: " + ex.Message });
+            } finally {
+                try { if (Directory.Exists(tempDir)) Directory.Delete(tempDir, true); } catch { }
             }
         }
     }
