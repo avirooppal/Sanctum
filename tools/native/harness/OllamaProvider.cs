@@ -88,8 +88,14 @@ namespace Sanctum.Harness {
             JArray tools,
             Action<string> onReasoningDelta,
             Action<string> onContentDelta,
-            CancellationToken ct) {
+            CancellationToken ct,
+            ProviderRequestOptions options = null) {
             ct.ThrowIfCancellationRequested();
+
+            var caps = GetCapabilities(model);
+            int effectiveNumCtx = options != null && options.NumCtx > 0
+                ? options.NumCtx
+                : ContextEngine.ComputeEffectiveNumCtx(caps.ContextLength, 0);
 
             var ollamaTools = new JArray();
             if (tools != null) {
@@ -108,8 +114,17 @@ namespace Sanctum.Harness {
             var payload = new JObject {
                 ["model"] = model,
                 ["messages"] = new JArray(messages),
-                ["stream"] = true
+                ["stream"] = true,
+                ["options"] = new JObject {
+                    ["num_ctx"] = effectiveNumCtx
+                }
             };
+            if (caps.Thinking && options?.Think != null) {
+                payload["think"] = options.Think.Value;
+            }
+            if (options?.FormatSchema != null && caps.StructuredOutput) {
+                payload["format"] = options.FormatSchema;
+            }
             if (ollamaTools.Count > 0) {
                 payload["tools"] = ollamaTools;
             }

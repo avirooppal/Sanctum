@@ -30,6 +30,12 @@ namespace Sanctum.Harness {
         public int CompletionTokens { get; set; }
     }
 
+    public sealed class ProviderRequestOptions {
+        public int NumCtx { get; set; }
+        public bool? Think { get; set; }
+        public JObject FormatSchema { get; set; }
+    }
+
     public interface IModelProvider {
         string Name { get; }
         ProviderCapabilities GetCapabilities(string model);
@@ -39,7 +45,8 @@ namespace Sanctum.Harness {
             JArray tools,
             Action<string> onReasoningDelta,
             Action<string> onContentDelta,
-            CancellationToken ct);
+            CancellationToken ct,
+            ProviderRequestOptions options = null);
     }
 
     /// <summary>
@@ -73,7 +80,8 @@ namespace Sanctum.Harness {
             JArray tools,
             Action<string> onReasoningDelta,
             Action<string> onContentDelta,
-            CancellationToken ct) {
+            CancellationToken ct,
+            ProviderRequestOptions options = null) {
             ct.ThrowIfCancellationRequested();
 
             string lastUser = "";
@@ -291,7 +299,8 @@ namespace Sanctum.Harness {
             JArray tools,
             Action<string> onReasoningDelta,
             Action<string> onContentDelta,
-            CancellationToken ct) {
+            CancellationToken ct,
+            ProviderRequestOptions options = null) {
             ct.ThrowIfCancellationRequested();
 
             var oaiMessages = new JArray();

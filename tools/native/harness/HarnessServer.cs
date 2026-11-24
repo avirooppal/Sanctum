@@ -628,6 +628,9 @@ namespace Sanctum.Harness {
                         body["autonomy"]?.Value<string>(),
                         body["model"]?.Value<string>(),
                         body["unattended"]?.Value<bool>() ?? false);
+                    int reqNumCtx = body["numCtx"]?.Value<int>() ?? 0;
+                    if (reqNumCtx > 0) _engine.SetSessionNumCtx(s.SessionId, reqNumCtx);
+                    if (body["think"] != null) _engine.SetSessionThink(s.SessionId, body["think"].Value<bool>());
                     return (201, JObject.FromObject(s));
                 }
 
@@ -670,9 +673,15 @@ namespace Sanctum.Harness {
                             var sum = _engine.GetSessionSummary(sessionId);
                             if (sum == null) return (404, new JObject { ["error"] = "Session not found." });
                             bool wsTrusted = _engine.WorkspaceTrust.IsWorkspaceTrusted(sum.Workspace);
+                            var budget = _engine.GetContextBudgetInfo(sessionId);
                             return (200, new JObject {
                                 ["sessionId"] = sessionId,
                                 ["workspaceTrusted"] = wsTrusted,
+                                ["numCtx"] = budget["numCtx"],
+                                ["modelMaxContext"] = budget["modelMaxContext"],
+                                ["estimatedTokens"] = budget["estimatedTokens"],
+                                ["utilizationPct"] = budget["utilizationPct"],
+                                ["nearTruncation"] = budget["nearTruncation"],
                                 ["instructions"] = wsTrusted ? ContextEngine.LoadInstructions(sum.Workspace) : new JObject { ["files"] = new JArray(), ["combined"] = "", ["blockedUntrusted"] = true },
                                 ["repoMap"] = ContextEngine.BuildRepoMap(sum.Workspace, 120),
                                 ["todos"] = _engine.GetTodos(sessionId)

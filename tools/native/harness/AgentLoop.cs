@@ -87,6 +87,9 @@ namespace Sanctum.Harness {
         private readonly HostMemoryService _memory;
         private readonly HarnessScheduler _scheduler;
         private readonly ConcurrentDictionary<string, JArray> _todos = new ConcurrentDictionary<string, JArray>(StringComparer.OrdinalIgnoreCase);
+        private readonly ConcurrentDictionary<string, int> _sessionNumCtx = new ConcurrentDictionary<string, int>(StringComparer.OrdinalIgnoreCase);
+        private readonly ConcurrentDictionary<string, bool?> _sessionThink = new ConcurrentDictionary<string, bool?>(StringComparer.OrdinalIgnoreCase);
+        private readonly ConcurrentDictionary<string, string> _sessionTierOverride = new ConcurrentDictionary<string, string>(StringComparer.OrdinalIgnoreCase);
         private readonly Dictionary<string, HarnessToolDescriptor> _tools = new Dictionary<string, HarnessToolDescriptor>(StringComparer.OrdinalIgnoreCase);
         private readonly ConcurrentDictionary<string, CancellationTokenSource> _activeRuns = new ConcurrentDictionary<string, CancellationTokenSource>(StringComparer.OrdinalIgnoreCase);
         private readonly ConcurrentDictionary<string, string> _activeRunIds = new ConcurrentDictionary<string, string>(StringComparer.OrdinalIgnoreCase);
@@ -190,6 +193,42 @@ namespace Sanctum.Harness {
         public void RegisterTool(HarnessToolDescriptor tool) {
             _tools[tool.Name] = tool;
             _permissions.RegisterKnownTool(tool.Name);
+        }
+
+        public int GetEffectiveNumCtx(string sessionId, string model) {
+            var caps = _provider.GetCapabilities(model);
+            _sessionNumCtx.TryGetValue(sessionId ?? "", out int reqCtx);
+            return ContextEngine.ComputeEffectiveNumCtx(caps.ContextLength, reqCtx);
+        }
+
+        public void SetSessionNumCtx(string sessionId, int numCtx) {
+            if (!string.IsNullOrEmpty(sessionId) && numCtx > 0) _sessionNumCtx[sessionId] = numCtx;
+        }
+
+        public void SetSessionThink(string sessionId, bool? think) {
+            if (!string.IsNullOrEmpty(sessionId)) _sessionThink[sessionId] = think;
+        }
+
+        public bool? GetSessionThink(string sessionId) {
+            if (string.IsNullOrEmpty(sessionId)) return null;
+            return _sessionThink.TryGetValue(sessionId, out var t) ? t : null;
+        }
+
+        public JObject GetContextBudgetInfo(string sessionId) {
+            var sum = _store.BuildSummary(sessionId);
+            string model = sum?.Model ?? "mock";
+            var caps = _provider.GetCapabilities(model);
+            int numCtx = GetEffectiveNumCtx(sessionId, model);
+            var msgs = BuildModelMessagesFromLog(sessionId);
+            int est = ContextEngine.EstimateTokens(msgs);
+            double pct = numCtx > 0 ? Math.Round((est * 100.0) / numCtx, 1) : 0;
+            return new JObject {
+                ["numCtx"] = numCtx,
+                ["modelMaxContext"] = caps.ContextLength,
+                ["estimatedTokens"] = est,
+                ["utilizationPct"] = pct,
+                ["nearTruncation"] = est >= (int)(numCtx * 0.80)
+            };
         }
 
         public JArray ListToolsJson() {
@@ -675,10 +714,29 @@ namespace Sanctum.Harness {
                         break;
                     }
 
+                    int effectiveNumCtx = GetEffectiveNumCtx(sessionId, model);
+                    int estPromptTokens = ContextEngine.EstimateTokens(history);
+                    if (estPromptTokens >= (int)(effectiveNumCtx * 0.80)) {
+                        AppendAndBroadcast(sessionId, "context_warning", new JObject {
+                            ["estimatedTokens"] = estPromptTokens,
+                            ["numCtx"] = effectiveNumCtx,
+                            ["willTruncate"] = true,
+                            ["autoCompacted"] = true
+                        }, runId, durableFlush: false);
+                        CompactSession(sessionId, keepRecentMessages: 2);
+                        history = BuildModelMessagesFromLog(sessionId);
+                        estPromptTokens = ContextEngine.EstimateTokens(history);
+                    }
+
                     var contentBuf = new StringBuilder();
                     var reasoningBuf = new StringBuilder();
                     DateTime lastCheckpoint = DateTime.UtcNow;
                     int charsSinceCheckpoint = 0;
+
+                    var reqOpts = new ProviderRequestOptions {
+                        NumCtx = effectiveNumCtx,
+                        Think = GetSessionThink(sessionId)
+                    };
 
                     var turn = _provider.StreamChat(
                         model,
@@ -700,13 +758,16 @@ namespace Sanctum.Harness {
                                 }, runId, durableFlush: false);
                             }
                         },
-                        cts.Token);
+                        cts.Token,
+                        reqOpts);
 
                     totalTokens += turn.PromptTokens + turn.CompletionTokens;
                     AppendAndBroadcast(sessionId, "context_usage", new JObject {
                         ["promptTokens"] = turn.PromptTokens,
                         ["completionTokens"] = turn.CompletionTokens,
-                        ["totalTokens"] = totalTokens
+                        ["totalTokens"] = totalTokens,
+                        ["numCtx"] = effectiveNumCtx,
+                        ["estimatedPromptTokens"] = estPromptTokens
                     }, runId, durableFlush: false);
 
                     if (!string.IsNullOrEmpty(turn.Content) || !string.IsNullOrEmpty(turn.Reasoning)) {

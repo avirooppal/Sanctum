@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Diagnostics;
 using System.IO;
 using System.Linq;
+using System.Runtime.InteropServices;
 using System.Text;
 using System.Text.RegularExpressions;
 using Newtonsoft.Json.Linq;
@@ -23,6 +24,52 @@ namespace Sanctum.Harness {
         private static readonly Regex MentionRegex = new Regex(
             @"(?:^|\s)@(file:|folder:|git:)?([A-Za-z0-9_./\\:-]+)",
             RegexOptions.Compiled);
+
+        [StructLayout(LayoutKind.Sequential, CharSet = CharSet.Auto)]
+        private struct MEMORYSTATUSEX {
+            public uint dwLength;
+            public uint dwMemoryLoad;
+            public ulong ullTotalPhys;
+            public ulong ullAvailPhys;
+            public ulong ullTotalPageFile;
+            public ulong ullAvailPageFile;
+            public ulong ullTotalVirtual;
+            public ulong ullAvailVirtual;
+            public ulong ullAvailExtendedVirtual;
+        }
+
+        [DllImport("kernel32.dll", CharSet = CharSet.Auto, SetLastError = true)]
+        private static extern bool GlobalMemoryStatusEx(ref MEMORYSTATUSEX lpBuffer);
+
+        public static long GetTotalPhysicalMemoryBytes() {
+            try {
+                var mem = new MEMORYSTATUSEX { dwLength = (uint)Marshal.SizeOf(typeof(MEMORYSTATUSEX)) };
+                if (GlobalMemoryStatusEx(ref mem)) return (long)mem.ullTotalPhys;
+            } catch { }
+            return 16L * 1024 * 1024 * 1024;
+        }
+
+        /// <summary>
+        /// Phase 3.1: Explicitly computes num_ctx from model max context length and system RAM/VRAM budget.
+        /// Never relies on Ollama's 2048/4096 default.
+        /// </summary>
+        public static int ComputeEffectiveNumCtx(int modelMaxContext, int requestedNumCtx = 0) {
+            int maxModel = modelMaxContext > 0 ? modelMaxContext : 8192;
+            long ramGb = GetTotalPhysicalMemoryBytes() / (1024L * 1024 * 1024);
+            int hwCap = ramGb < 8 ? 8192 : (ramGb < 16 ? 16384 : 32768);
+            int target = requestedNumCtx > 0 ? requestedNumCtx : Math.Min(maxModel, hwCap);
+            return Math.Max(2048, Math.Min(target, Math.Min(maxModel, hwCap)));
+        }
+
+        public static int EstimateTokens(List<JObject> messages) {
+            if (messages == null || messages.Count == 0) return 0;
+            int totalChars = 0;
+            foreach (var m in messages) {
+                totalChars += (m["content"]?.Value<string>() ?? "").Length + 24;
+                if (m["tool_calls"] != null) totalChars += m["tool_calls"].ToString().Length;
+            }
+            return (int)Math.Ceiling(totalChars / 3.8);
+        }
 
         public static JObject LoadInstructions(string workspaceRoot) {
             var files = new JArray();
