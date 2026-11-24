@@ -50,7 +50,7 @@ export const createModelsSlice: StateCreator<any, [], [], ModelsSlice> = (set, g
     if (get().isFetchingModels) return;
     set({ isFetchingModels: true, modelError: null });
     try {
-      const realModels = await LocalEngineClient.fetchOllamaModels(DEFAULT_OLLAMA_ENDPOINT);
+      const realModels: LocalModel[] = await LocalEngineClient.fetchOllamaModels(DEFAULT_OLLAMA_ENDPOINT);
       if (realModels.length > 0) {
         const currentActive = get().activeModelId;
         const isValid = realModels.some((m: any) => m.id === currentActive);

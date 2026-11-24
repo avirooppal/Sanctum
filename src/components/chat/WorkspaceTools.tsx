@@ -26,11 +26,7 @@ function modelSupportsThinking(modelId?: string, modelName?: string): boolean {
     s.includes("deepseek") ||
     s.includes("r1") ||
     s.includes("qwq") ||
-    s.includes("think") ||
-    s.includes("o1") ||
-    s.includes("o3") ||
-    s.includes("claude-3-7") ||
-    s.includes("gemini-2.5")
+    s.includes("think")
   );
 }
 
@@ -145,9 +141,6 @@ export function WorkspaceTools() {
   const activeModel =
     models.find((m: any) => m.id === activeModelId) || models[0] || null;
   const supportsThinking = modelSupportsThinking(activeModel?.id, activeModel?.name);
-
-  const localModels = models.filter((m: any) => !m.isCloud);
-  const cloudModels = models.filter((m: any) => Boolean(m.isCloud));
 
   useEffect(() => {
     let live = true;

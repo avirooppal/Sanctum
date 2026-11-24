@@ -95,8 +95,8 @@ namespace Sanctum.Harness {
 
         public HarnessEngine(SessionLogStore store, IModelProvider provider, string appDataDir = null) {
             _store = store;
-            _provider = provider;
             string dataRoot = appDataDir ?? Path.GetDirectoryName(store.SessionsDir);
+            _provider = provider;
             _audit = new HarnessAuditLog(dataRoot);
             _permissions = new PermissionEngine(dataRoot, _audit);
             _checkpoints = new CheckpointService(dataRoot);
@@ -728,9 +728,21 @@ namespace Sanctum.Harness {
                         break;
                     }
 
+                    var wireToolCalls = new JArray();
+                    foreach (var tc in turn.ToolCalls) {
+                        wireToolCalls.Add(new JObject {
+                            ["id"] = tc.Id,
+                            ["type"] = "function",
+                            ["function"] = new JObject {
+                                ["name"] = tc.Name,
+                                ["arguments"] = (tc.Arguments ?? new JObject()).ToString(Newtonsoft.Json.Formatting.None)
+                            }
+                        });
+                    }
                     history.Add(new JObject {
                         ["role"] = "assistant",
-                        ["content"] = turn.Content ?? ""
+                        ["content"] = turn.Content ?? "",
+                        ["tool_calls"] = wireToolCalls
                     });
 
                     foreach (var call in turn.ToolCalls) {
@@ -758,7 +770,7 @@ namespace Sanctum.Harness {
                                 ["denied"] = true,
                                 ["error"] = decision.Reason
                             }, runId, durableFlush: true);
-                            history.Add(new JObject { ["role"] = "tool", ["tool_call_id"] = call.Id, ["content"] = "Permission denied: " + decision.Reason });
+                            history.Add(new JObject { ["role"] = "tool", ["tool_call_id"] = call.Id, ["name"] = call.Name, ["content"] = "Permission denied: " + decision.Reason });
                             continue;
                         }
 
@@ -794,7 +806,7 @@ namespace Sanctum.Harness {
                                         ["denied"] = true,
                                         ["error"] = waitIdx == 0 ? "User denied tool execution." : "Approval timed out."
                                     }, runId, durableFlush: true);
-                                    history.Add(new JObject { ["role"] = "tool", ["tool_call_id"] = call.Id, ["content"] = "Tool execution denied by user." });
+                                    history.Add(new JObject { ["role"] = "tool", ["tool_call_id"] = call.Id, ["name"] = call.Name, ["content"] = "Tool execution denied by user." });
                                     continue;
                                 }
                             } finally {
@@ -852,6 +864,7 @@ namespace Sanctum.Harness {
                         history.Add(new JObject {
                             ["role"] = "tool",
                             ["tool_call_id"] = call.Id,
+                            ["name"] = call.Name,
                             ["content"] = stored["inline"]?.Value<string>() ?? stored["preview"]?.Value<string>() ?? ""
                         });
                     }

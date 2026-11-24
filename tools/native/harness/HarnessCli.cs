@@ -78,6 +78,17 @@ namespace Sanctum.Harness {
                     string autonomy = GetArg(args, "--autonomy") ?? "auto_reads";
                     string workspace = GetArg(args, "--workspace") ?? Environment.CurrentDirectory;
                     string model = GetArg(args, "--model") ?? "mock";
+                    string provArg = GetArg(args, "--provider");
+                    if (!string.IsNullOrWhiteSpace(provArg)) {
+                        string pNorm = provArg.Trim().ToLowerInvariant();
+                        if (pNorm != "ollama" && pNorm != "mock" && pNorm != "openai-local") {
+                            Console.Error.WriteLine(JsonConvert.SerializeObject(new {
+                                error = $"Unsupported provider '{provArg}'. Sanctum is local-only; allowed providers: ollama, openai-local, mock."
+                            }));
+                            exitCode = 2;
+                            return true;
+                        }
+                    }
                     bool jsonOut = HasFlag(args, "--json");
 
                     var (st1, created) = SendPipeCommand(runtime.PipeName, "POST", "/v1/sessions", new JObject {
@@ -132,9 +143,20 @@ namespace Sanctum.Harness {
                 var store = new SessionLogStore(dataDir);
                 string providerName = (GetArg(args, "--provider") ?? "mock").ToLowerInvariant();
                 string ollamaEndpoint = GetArg(args, "--ollama-endpoint") ?? "http://127.0.0.1:11434";
-                IModelProvider provider = providerName == "ollama"
-                    ? (IModelProvider)new OllamaModelProvider(ollamaEndpoint)
-                    : new MockModelProvider(mockScript);
+                string localBaseUrl = GetArg(args, "--base-url") ?? "http://127.0.0.1:1234/v1";
+                IModelProvider provider;
+                if (providerName == "ollama") {
+                    provider = new OllamaModelProvider(ollamaEndpoint);
+                } else if (providerName == "openai-local") {
+                    provider = new LocalOpenAiCompatibleProvider(localBaseUrl);
+                } else if (providerName == "mock") {
+                    provider = new MockModelProvider(mockScript);
+                } else {
+                    Console.Error.WriteLine(JsonConvert.SerializeObject(new {
+                        error = $"Unsupported provider '{providerName}'. Sanctum is local-only; allowed providers: ollama, openai-local, mock."
+                    }));
+                    return 2;
+                }
                 var engine = new HarnessEngine(store, provider, dataDir);
                 using (var server = new HarnessServer(dataDir, engine, port, pipeName)) {
                     server.Start();

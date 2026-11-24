@@ -336,7 +336,7 @@ namespace Sanctum.Harness {
                         ["protocolVersion"] = ProtocolConstants.Version,
                         ["harnessVersion"] = ProtocolConstants.HarnessVersion,
                         ["pid"] = Process.GetCurrentProcess().Id,
-                        ["capabilities"] = new JArray("sessions", "sse", "fork", "idempotency", "blobs", "mock_provider"),
+                        ["capabilities"] = new JArray("sessions", "sse", "fork", "idempotency", "blobs", "mock_provider", "local_only"),
                         ["transports"] = new JArray("pipe", "http"),
                         ["authMode"] = viaTrustedChannel ? "pipe_acl" : "bearer"
                     });

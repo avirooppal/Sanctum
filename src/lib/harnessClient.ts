@@ -199,3 +199,188 @@ export async function streamHarnessEvents(
     }
   }
 }
+
+const uiToHarnessSessionMap = new Map<string, { harnessId: string; lastSeq: number; model: string; mode: string }>();
+
+/**
+ * Async-generator adapter that runs a UI chat turn through the native C# Agent Harness
+ * (/v1/sessions + SSE stream) with live streaming, thinking blocks, tool activity cards,
+ * and approval prompts.
+ */
+export async function* streamHarnessChat(
+  modelId: string,
+  messages: Array<{ role: string; content: string }>,
+  opts: {
+    uiSessionId?: string;
+    planMode?: boolean;
+    ragContext?: string;
+    signal?: AbortSignal;
+    onActivity?: (activity: any) => void;
+    onApprovalRequest?: (req: { toolName: string; arguments: Record<string, any> }) => Promise<{ decision?: string; approved?: boolean } | boolean>;
+  } = {}
+): AsyncGenerator<{
+  text: string;
+  isFinished: boolean;
+  metrics: { tps: number; ttftMs: number; totalTokens: number; vramUsedGB: number };
+}> {
+  const mode = opts.planMode ? "plan" : "build";
+  const cacheKey = opts.uiSessionId || `ephemeral-${Date.now()}`;
+  let mapping = uiToHarnessSessionMap.get(cacheKey);
+
+  if (!mapping || mapping.model !== modelId || mapping.mode !== mode) {
+    let workspace = "";
+    try {
+      const wsRes = await fetch("/api/workspace");
+      if (wsRes.ok) {
+        const ws = await wsRes.json();
+        workspace = ws?.root || "";
+      }
+    } catch {}
+    const created = await createHarnessSession({
+      title: `Chat (${modelId})`,
+      workspace,
+      mode,
+      autonomy: "auto_reads",
+      model: modelId,
+    });
+    mapping = { harnessId: created.sessionId, lastSeq: created.lastSeq || 0, model: modelId, mode };
+    uiToHarnessSessionMap.set(cacheKey, mapping);
+  }
+
+  const lastUser = [...messages].reverse().find((m) => m.role === "user")?.content || "";
+  const promptText = opts.ragContext
+    ? `[Context]\n${opts.ragContext}\n\n[User Request]\n${lastUser}`
+    : lastUser;
+
+  const started = await sendHarnessMessage(mapping.harnessId, promptText);
+  const startSeq = Math.max(0, (started.seq || mapping.lastSeq) - 1);
+
+  const res = await fetch(
+    `/v1/sessions/${encodeURIComponent(mapping.harnessId)}/events?after=${startSeq}`,
+    { signal: opts.signal }
+  );
+  if (!res.ok || !res.body) {
+    throw new Error(`Harness event stream failed (${res.status})`);
+  }
+
+  const reader = res.body.getReader();
+  const decoder = new TextDecoder();
+  let buf = "";
+  let reasoningBuf = "";
+  let contentBuf = "";
+  let totalTokens = 0;
+  let firstTokenAt = 0;
+  const startedAt = Date.now();
+  const activeTools = new Map<string, { name: string; arguments: Record<string, any> }>();
+
+  const formatCombined = () => {
+    if (reasoningBuf && contentBuf) return `<think>${reasoningBuf}</think>\n\n${contentBuf}`;
+    if (reasoningBuf) return `<think>${reasoningBuf}</think>`;
+    return contentBuf;
+  };
+
+  const makeMetrics = () => {
+    const elapsedSec = Math.max(0.05, (Date.now() - startedAt) / 1000);
+    return {
+      tps: totalTokens > 0 ? Math.round((totalTokens / elapsedSec) * 10) / 10 : 0,
+      ttftMs: firstTokenAt ? firstTokenAt - startedAt : 0,
+      totalTokens,
+      vramUsedGB: 0,
+    };
+  };
+
+  while (true) {
+    const { done, value } = await reader.read();
+    if (done) break;
+    buf += decoder.decode(value, { stream: true });
+    const lines = buf.split(/\r?\n/);
+    buf = lines.pop() ?? "";
+
+    for (const line of lines) {
+      if (!line.startsWith("data:")) continue;
+      const raw = line.slice(5).trim();
+      if (!raw) continue;
+      let evt: HarnessProtocolEvent;
+      try {
+        evt = JSON.parse(raw) as HarnessProtocolEvent;
+      } catch {
+        continue;
+      }
+      if (evt.seq > mapping.lastSeq) mapping.lastSeq = evt.seq;
+
+      if (evt.type === "reasoning_delta") {
+        if (!firstTokenAt) firstTokenAt = Date.now();
+        reasoningBuf += String(evt.payload?.delta || "");
+        yield { text: formatCombined(), isFinished: false, metrics: makeMetrics() };
+      } else if (evt.type === "message_delta") {
+        if (!firstTokenAt) firstTokenAt = Date.now();
+        contentBuf += String(evt.payload?.delta || "");
+        yield { text: formatCombined(), isFinished: false, metrics: makeMetrics() };
+      } else if (evt.type === "context_usage") {
+        totalTokens = Number(evt.payload?.totalTokens || totalTokens);
+      } else if (evt.type === "tool_call_requested") {
+        const callId = String(evt.payload?.callId || `tc-${Date.now()}`);
+        const toolName = String(evt.payload?.tool || "tool");
+        const toolArgs = (evt.payload?.arguments || {}) as Record<string, any>;
+        activeTools.set(callId, { name: toolName, arguments: toolArgs });
+        opts.onActivity?.({
+          id: callId,
+          callId,
+          name: toolName,
+          arguments: toolArgs,
+          status: "running",
+        });
+      } else if (evt.type === "approval_requested") {
+        const approvalId = String(evt.payload?.approvalId || "");
+        const callId = String(evt.payload?.callId || "");
+        const toolName = String(evt.payload?.tool || "tool");
+        const argsSha256 = String(evt.payload?.argsSha256 || "");
+        const meta = activeTools.get(callId);
+        let approved = false;
+        if (opts.onApprovalRequest) {
+          const resp = await opts.onApprovalRequest({
+            toolName,
+            arguments: meta?.arguments || { reason: evt.payload?.reason || "" },
+          });
+          approved =
+            typeof resp === "boolean"
+              ? resp
+              : Boolean(resp?.approved || resp?.decision === "allow_once" || resp?.decision === "allow_session");
+        }
+        if (approvalId) {
+          await resolveHarnessApproval(approvalId, {
+            approved,
+            scope: "once",
+            callId,
+            argsSha256,
+          }).catch(() => {});
+        }
+      } else if (evt.type === "tool_finished") {
+        const callId = String(evt.payload?.callId || "");
+        const toolName = String(evt.payload?.tool || activeTools.get(callId)?.name || "tool");
+        const ok = Boolean(evt.payload?.ok);
+        const outObj = evt.payload?.output;
+        const output =
+          typeof outObj === "string"
+            ? outObj
+            : outObj?.inline || outObj?.preview || evt.payload?.error || "";
+        opts.onActivity?.({
+          id: callId || `tc-${Date.now()}`,
+          callId,
+          name: toolName,
+          arguments: activeTools.get(callId)?.arguments || {},
+          status: ok ? "success" : "error",
+          output: String(output),
+        });
+      } else if (evt.type === "error") {
+        throw new Error(String(evt.payload?.message || "Harness cloud run failed"));
+      } else if (evt.type === "run_finished") {
+        totalTokens = Number(evt.payload?.totalTokens || totalTokens);
+        yield { text: formatCombined(), isFinished: true, metrics: makeMetrics() };
+        return;
+      }
+    }
+  }
+
+  yield { text: formatCombined(), isFinished: true, metrics: makeMetrics() };
+}

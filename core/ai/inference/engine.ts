@@ -5,7 +5,6 @@
  */
 
 import { readStreamRecords } from "./stream.ts";
-import { globalEgressBroker } from "../cloud/egress_broker.ts";
 
 import type { LocalModel } from "../../../contracts/types/index.ts";
 
@@ -26,13 +25,6 @@ export interface StreamChunkEvent {
     totalTokens: number;
     vramUsedGB: number;
   };
-}
-
-export interface WikipediaSearchResult {
-  title: string;
-  snippet: string;
-  pageid: number;
-  url: string;
 }
 
 export class LocalEngineClient {
@@ -409,51 +401,5 @@ export class LocalEngineClient {
       if (finished) return;
     }
     throw new Error("The engine stream ended before completion. Retry to generate a complete response.");
-  }
-
-  /**
-   * Search Wikipedia via public API (Zero API key required)
-   */
-  public static async searchWikipedia(query: string, limit: number = 4): Promise<WikipediaSearchResult[]> {
-    const url = `https://en.wikipedia.org/w/api.php?action=query&list=search&srsearch=${encodeURIComponent(
-      query
-    )}&format=json&origin=*&srlimit=${limit}`;
-    globalEgressBroker.assertEgressAllowed(url);
-    try {
-      const res = await fetch(url);
-      if (!res.ok) return [];
-
-      const data = await res.json();
-      const items = data?.query?.search || [];
-
-      return items.map((item: any) => ({
-        title: item.title,
-        snippet: item.snippet.replace(/<[^>]*>/g, ""), // Strip HTML tags
-        pageid: item.pageid,
-        url: `https://en.wikipedia.org/?curid=${item.pageid}`,
-      }));
-    } catch {
-      return [];
-    }
-  }
-
-  /**
-   * Fetch full article summary from Wikipedia
-   */
-  public static async fetchWikipediaSummary(title: string): Promise<string> {
-    const url = `https://en.wikipedia.org/api/rest_v1/page/summary/${encodeURIComponent(title)}`;
-    globalEgressBroker.assertEgressAllowed(url);
-    try {
-      const res = await fetch(url);
-      if (!res.ok) return "";
-      const data = await res.json();
-      return data.extract || "";
-    } catch {
-      return "";
-    }
-  }
-
-  public static async fetchWikipediaExtract(title: string): Promise<string> {
-    return this.fetchWikipediaSummary(title);
   }
 }

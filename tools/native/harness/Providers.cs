@@ -1,6 +1,8 @@
 using System;
 using System.Collections.Generic;
 using System.IO;
+using System.Net;
+using System.Text;
 using System.Threading;
 using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
@@ -234,6 +236,205 @@ namespace Sanctum.Harness {
                 }
             }
             return res;
+        }
+    }
+
+    /// <summary>
+    /// Loopback-only OpenAI-compatible local model provider (llama.cpp server, LM Studio, vLLM local).
+    /// Rejects any base URL that is not loopback (127.0.0.1, localhost, ::1).
+    /// </summary>
+    public sealed class LocalOpenAiCompatibleProvider : IModelProvider {
+        private static readonly UTF8Encoding Utf8NoBom = new UTF8Encoding(false);
+        private readonly string _baseUrl;
+
+        public LocalOpenAiCompatibleProvider(string baseUrl = "http://127.0.0.1:1234/v1") {
+            _baseUrl = ValidateLoopbackBaseUrl(baseUrl);
+        }
+
+        public string Name => "openai-local";
+        public string BaseUrl => _baseUrl;
+
+        public static string ValidateLoopbackBaseUrl(string rawUrl) {
+            string trimmed = (rawUrl ?? "").Trim().TrimEnd('/');
+            if (string.IsNullOrEmpty(trimmed)) {
+                throw new InvalidOperationException("LocalOpenAiCompatibleProvider requires a loopback base URL.");
+            }
+            if (!Uri.TryCreate(trimmed, UriKind.Absolute, out var uri)) {
+                throw new InvalidOperationException("Invalid local OpenAI-compatible base URL: " + trimmed);
+            }
+            if (!string.Equals(uri.Scheme, "http", StringComparison.OrdinalIgnoreCase) &&
+                !string.Equals(uri.Scheme, "https", StringComparison.OrdinalIgnoreCase)) {
+                throw new InvalidOperationException("LocalOpenAiCompatibleProvider only permits http:// or https:// loopback URLs.");
+            }
+            if (!string.IsNullOrEmpty(uri.UserInfo)) {
+                throw new InvalidOperationException("Userinfo in base URL is not allowed.");
+            }
+            string host = (uri.Host ?? "").ToLowerInvariant();
+            bool isLoopback = uri.IsLoopback && (host == "127.0.0.1" || host == "localhost" || host == "::1" || host == "[::1]");
+            if (!isLoopback) {
+                throw new InvalidOperationException("LocalOpenAiCompatibleProvider strictly rejects non-loopback base URL: " + uri.Host);
+            }
+            return trimmed;
+        }
+
+        public ProviderCapabilities GetCapabilities(string model) => new ProviderCapabilities {
+            Tools = true,
+            Vision = false,
+            Thinking = false,
+            StructuredOutput = true,
+            ContextLength = 8192
+        };
+
+        public ProviderTurnResult StreamChat(
+            string model,
+            List<JObject> messages,
+            JArray tools,
+            Action<string> onReasoningDelta,
+            Action<string> onContentDelta,
+            CancellationToken ct) {
+            ct.ThrowIfCancellationRequested();
+
+            var oaiMessages = new JArray();
+            foreach (var m in messages) {
+                string role = (m["role"]?.Value<string>() ?? "user").ToLowerInvariant();
+                if (role == "tool") {
+                    oaiMessages.Add(new JObject {
+                        ["role"] = "tool",
+                        ["tool_call_id"] = m["tool_call_id"]?.Value<string>() ?? ("call_" + oaiMessages.Count),
+                        ["content"] = m["content"]?.Value<string>() ?? ""
+                    });
+                } else {
+                    var msgObj = new JObject {
+                        ["role"] = role,
+                        ["content"] = m["content"]?.Value<string>() ?? ""
+                    };
+                    if (m["tool_calls"] is JArray tc && tc.Count > 0) msgObj["tool_calls"] = tc;
+                    oaiMessages.Add(msgObj);
+                }
+            }
+
+            var payload = new JObject {
+                ["model"] = model,
+                ["messages"] = oaiMessages,
+                ["stream"] = true
+            };
+            if (tools != null && tools.Count > 0) {
+                var oaiTools = new JArray();
+                foreach (JObject t in tools) {
+                    oaiTools.Add(new JObject {
+                        ["type"] = "function",
+                        ["function"] = new JObject {
+                            ["name"] = t["name"],
+                            ["description"] = t["description"],
+                            ["parameters"] = t["inputSchema"] ?? new JObject { ["type"] = "object", ["properties"] = new JObject() }
+                        }
+                    });
+                }
+                payload["tools"] = oaiTools;
+            }
+
+            byte[] bodyBytes = Utf8NoBom.GetBytes(payload.ToString(Formatting.None));
+            var req = (HttpWebRequest)WebRequest.Create(_baseUrl + "/chat/completions");
+            req.Proxy = null;
+            req.Method = "POST";
+            req.ContentType = "application/json";
+            req.Timeout = 60000;
+            req.ReadWriteTimeout = 60000;
+            req.ContentLength = bodyBytes.Length;
+
+            using (ct.Register(() => { try { req.Abort(); } catch { } })) {
+                using (var rs = req.GetRequestStream()) rs.Write(bodyBytes, 0, bodyBytes.Length);
+                using (var resp = (HttpWebResponse)req.GetResponse())
+                using (var sr = new StreamReader(resp.GetResponseStream(), Utf8NoBom)) {
+                    var contentSb = new StringBuilder();
+                    var reasoningSb = new StringBuilder();
+                    var tcByIndex = new Dictionary<int, (string id, string name, StringBuilder args)>();
+                    int promptTokens = 0;
+                    int completionTokens = 0;
+
+                    string line;
+                    while ((line = sr.ReadLine()) != null) {
+                        ct.ThrowIfCancellationRequested();
+                        if (!line.StartsWith("data:", StringComparison.OrdinalIgnoreCase)) continue;
+                        string data = line.Substring(5).Trim();
+                        if (string.IsNullOrEmpty(data) || data == "[DONE]") continue;
+
+                        JObject chunk;
+                        try { chunk = CanonicalJson.ParseObject(data); } catch { continue; }
+                        if (chunk["usage"] is JObject usage) {
+                            promptTokens = usage["prompt_tokens"]?.Value<int>() ?? promptTokens;
+                            completionTokens = usage["completion_tokens"]?.Value<int>() ?? completionTokens;
+                        }
+                        var choices = chunk["choices"] as JArray;
+                        if (choices == null || choices.Count == 0) continue;
+                        var delta = choices[0]?["delta"] as JObject;
+                        if (delta == null) continue;
+
+                        string reasoning = delta["reasoning_content"]?.Value<string>() ?? delta["reasoning"]?.Value<string>();
+                        if (!string.IsNullOrEmpty(reasoning)) {
+                            reasoningSb.Append(reasoning);
+                            onReasoningDelta(reasoning);
+                        }
+                        string content = delta["content"]?.Value<string>();
+                        if (!string.IsNullOrEmpty(content)) {
+                            contentSb.Append(content);
+                            onContentDelta(content);
+                        }
+                        if (delta["tool_calls"] is JArray tcs) {
+                            foreach (JObject tc in tcs) {
+                                int idx = tc["index"]?.Value<int>() ?? 0;
+                                if (!tcByIndex.TryGetValue(idx, out var acc)) {
+                                    acc = ("call_" + idx, "", new StringBuilder());
+                                }
+                                string id = tc["id"]?.Value<string>();
+                                if (!string.IsNullOrEmpty(id)) acc.id = id;
+                                var fn = tc["function"] as JObject;
+                                if (fn != null) {
+                                    string fnName = fn["name"]?.Value<string>();
+                                    if (!string.IsNullOrEmpty(fnName)) acc.name = fnName;
+                                    string argChunk = fn["arguments"]?.Value<string>();
+                                    if (!string.IsNullOrEmpty(argChunk)) acc.args.Append(argChunk);
+                                }
+                                tcByIndex[idx] = acc;
+                            }
+                        }
+                    }
+
+                    var parsedCalls = new List<ProviderToolCall>();
+                    foreach (var kv in tcByIndex) {
+                        if (string.IsNullOrWhiteSpace(kv.Value.name)) continue;
+                        JObject argsObj;
+                        try {
+                            argsObj = string.IsNullOrWhiteSpace(kv.Value.args.ToString())
+                                ? new JObject()
+                                : CanonicalJson.ParseObject(kv.Value.args.ToString());
+                        } catch {
+                            argsObj = new JObject { ["raw"] = kv.Value.args.ToString() };
+                        }
+                        parsedCalls.Add(new ProviderToolCall {
+                            Id = kv.Value.id,
+                            Name = kv.Value.name,
+                            Arguments = argsObj
+                        });
+                    }
+
+                    string finalContent = contentSb.ToString();
+                    if (parsedCalls.Count == 0 && !string.IsNullOrWhiteSpace(finalContent)) {
+                        var fallback = ToolCallParser.Parse(finalContent, new JArray());
+                        foreach (var c in fallback) {
+                            parsedCalls.Add(c);
+                        }
+                    }
+
+                    return new ProviderTurnResult {
+                        Content = finalContent,
+                        Reasoning = reasoningSb.ToString(),
+                        ToolCalls = parsedCalls,
+                        PromptTokens = promptTokens,
+                        CompletionTokens = completionTokens
+                    };
+                }
+            }
         }
     }
 }
