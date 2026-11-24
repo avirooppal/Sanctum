@@ -89,6 +89,7 @@ namespace Sanctum.Harness {
         private readonly HostVaultService _vault;
         private readonly HostMemoryService _memory;
         private readonly FeedHostService _feed;
+        private readonly FeedAttentionEngine _feedAttention;
         private readonly ModelTierManager _tierManager;
         private readonly HarnessScheduler _scheduler;
         private readonly ConcurrentDictionary<string, JArray> _todos = new ConcurrentDictionary<string, JArray>(StringComparer.OrdinalIgnoreCase);
@@ -122,6 +123,7 @@ namespace Sanctum.Harness {
             _vault = new HostVaultService(_workspaces);
             _memory = new HostMemoryService(dataRoot);
             _feed = new FeedHostService(dataRoot, _audit);
+            _feedAttention = new FeedAttentionEngine(dataRoot, _feed, _audit);
             _tierManager = new ModelTierManager(dataRoot);
             _scheduler = new HarnessScheduler(dataRoot, this);
             RegisterPhase1aTools();
@@ -148,6 +150,7 @@ namespace Sanctum.Harness {
         public HostVaultService Vault => _vault;
         public HostMemoryService Memory => _memory;
         public FeedHostService Feed => _feed;
+        public FeedAttentionEngine FeedAttention => _feedAttention;
         public ModelTierManager TierManager => _tierManager;
         public HarnessScheduler Scheduler => _scheduler;
         public int ActiveRunCount => _activeRuns.Count;
@@ -395,7 +398,25 @@ namespace Sanctum.Harness {
         private HarnessEvent AppendAndBroadcast(string sessionId, string type, JObject payload, string runId = null, bool durableFlush = true) {
             var evt = _store.Append(sessionId, type, payload, runId, durableFlush);
             BroadcastEvent(evt);
+            try {
+                if (type == "approval_requested" || type == "approval_resolved" || type == "plan_updated" ||
+                    type == "user_input_requested" || type == "a2ui_surface" || type == "run_finished") {
+                    var sum = _store.BuildSummary(sessionId);
+                    string wsName = !string.IsNullOrEmpty(sum?.WorkspaceId) ? (_workspaces.GetById(sum.WorkspaceId)?.Name ?? "Default") : "Default";
+                    _feedAttention.OnHarnessEvent(evt, sum, wsName);
+                }
+            } catch { }
             return evt;
+        }
+
+        public JObject EmitUserInputRequested(string sessionId, string prompt) {
+            if (!_store.SessionExists(sessionId)) throw new KeyNotFoundException("Session not found.");
+            string reqId = "uin_" + Guid.NewGuid().ToString("N").Substring(0, 10);
+            var evt = AppendAndBroadcast(sessionId, "user_input_requested", new JObject {
+                ["requestId"] = reqId,
+                ["prompt"] = string.IsNullOrWhiteSpace(prompt) ? "Assistant needs your input." : prompt.Trim()
+            }, durableFlush: true);
+            return new JObject { ["ok"] = true, ["requestId"] = reqId, ["seq"] = evt.Seq };
         }
 
         public SessionSummary CreateSession(

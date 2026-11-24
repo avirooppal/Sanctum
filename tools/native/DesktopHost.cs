@@ -1777,6 +1777,18 @@ namespace Sanctum {
                         EnsureEmbeddedHarnessStarted();
                         if (_feedPane == null && _embeddedHarnessEngine != null) {
                             _feedPane = new FeedPaneController(this, _embeddedHarnessEngine.Feed, null);
+                            _embeddedHarnessEngine.FeedAttention.OnStateChanged += (newState, snap) => {
+                                try {
+                                    this.BeginInvoke((Action)(() => {
+                                        if (_feedPane == null) return;
+                                        if (newState == "PausedAttention" || newState == "PausedByUser" || newState == "Suspended" || newState == "Off") {
+                                            _ = _feedPane.PauseForAttentionAsync();
+                                        } else if (newState == "Active") {
+                                            _feedPane.ResumeFromAttention();
+                                        }
+                                    }));
+                                } catch { }
+                            };
                         }
                         var serializer = new JavaScriptSerializer();
                         var msg = serializer.Deserialize<Dictionary<string, object>>(raw);

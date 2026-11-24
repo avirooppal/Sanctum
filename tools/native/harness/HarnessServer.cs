@@ -448,6 +448,45 @@ namespace Sanctum.Harness {
                     }
                     return (200, dec.ToJson());
                 }
+
+                // Part B3: Host-Side Feed Attention & Pause Engine API
+                if (method == "GET" && path == "/v1/feed/attention") {
+                    return (200, _engine.FeedAttention.GetSnapshot());
+                }
+                if (method == "POST" && path == "/v1/feed/attention/settings") {
+                    return (200, _engine.FeedAttention.UpdateSettings(body));
+                }
+                if (method == "POST" && path == "/v1/feed/attention/pause") {
+                    return (200, _engine.FeedAttention.PauseByUser());
+                }
+                if (method == "POST" && path == "/v1/feed/attention/resume") {
+                    return (200, _engine.FeedAttention.ResumeByUser());
+                }
+                if (method == "POST" && path == "/v1/feed/attention/clear") {
+                    string id = body["id"]?.Value<string>() ?? "*";
+                    return (200, _engine.FeedAttention.ClearAttention(id));
+                }
+                if (method == "POST" && path == "/v1/feed/attention/suspend") {
+                    bool susp = body["suspended"]?.Value<bool>() ?? true;
+                    string reason = body["reason"]?.Value<string>() ?? "window_hidden";
+                    return (200, _engine.FeedAttention.SetSuspended(susp, reason));
+                }
+                if (method == "POST" && path == "/v1/feed/attention/trigger") {
+                    string id = body["id"]?.Value<string>() ?? ("trig_" + Guid.NewGuid().ToString("N").Substring(0, 8));
+                    string trig = body["trigger"]?.Value<string>() ?? "present_file";
+                    string sid = body["sessionId"]?.Value<string>() ?? "";
+                    string wsId = body["workspaceId"]?.Value<string>() ?? "";
+                    string wsName = body["workspaceName"]?.Value<string>() ?? "Default";
+                    string summary = body["summary"]?.Value<string>() ?? "Attention required";
+                    return (200, _engine.FeedAttention.TriggerAttention(id, trig, sid, wsId, wsName, summary));
+                }
+                if (method == "POST" && path == "/v1/feed/wellbeing/tick") {
+                    double mins = body["deltaMinutes"]?.Value<double>() ?? 1.0;
+                    return (200, _engine.FeedAttention.RecordWellbeingMinutes(mins));
+                }
+                if (method == "DELETE" && path == "/v1/feed/wellbeing") {
+                    return (200, _engine.FeedAttention.ClearWellbeing());
+                }
                 if (method == "GET" && path == "/v1/workspaces") {
                     bool includeArchived = body["includeArchived"]?.Value<bool>() ?? false;
                     return (200, _engine.Workspaces.ListWorkspaces(includeArchived));
@@ -711,7 +750,7 @@ namespace Sanctum.Harness {
                         "migration_notices.json", "approved_hooks.json", "permission_rules.json",
                         "schedules.json", "mcp_servers.json", "encryption_config.json",
                         "workspaces.json", "workspaces.json.bak", "migration_state.json",
-                        "feed_config.json", "feed_presets.json"
+                        "feed_config.json", "feed_presets.json", "feed_attention_settings.json", "feed_wellbeing.json"
                     };
                     foreach (string f in filesToWipe) {
                         try {
@@ -934,6 +973,9 @@ namespace Sanctum.Harness {
                                 ["verification"] = check
                             });
                         }
+                        if (action == "user-input-requested") {
+                            return (200, _engine.EmitUserInputRequested(sessionId, body["prompt"]?.Value<string>() ?? ""));
+                        }
                         if (action == "subagents") {
                             string role = body["role"]?.Value<string>() ?? "worker";
                             string prompt = body["prompt"]?.Value<string>() ?? "";
@@ -1040,6 +1082,15 @@ namespace Sanctum.Harness {
                 ("POST", "/v1/feed/presets/custom", "trusted_channel_only"),
                 ("POST", "/v1/feed/profile/clear", "bearer_low_risk"),
                 ("POST", "/v1/feed/policy/check", "bearer_low_risk"),
+                ("POST", "/v1/feed/attention/settings", "bearer_low_risk"),
+                ("POST", "/v1/feed/attention/pause", "bearer_low_risk"),
+                ("POST", "/v1/feed/attention/resume", "bearer_low_risk"),
+                ("POST", "/v1/feed/attention/clear", "bearer_low_risk"),
+                ("POST", "/v1/feed/attention/suspend", "bearer_low_risk"),
+                ("POST", "/v1/feed/attention/trigger", "bearer_low_risk"),
+                ("POST", "/v1/feed/wellbeing/tick", "bearer_low_risk"),
+                ("DELETE", "/v1/feed/wellbeing", "bearer_low_risk"),
+                ("POST", "/v1/sessions/:id/user-input-requested", "bearer_low_risk"),
                 ("POST", "/v1/workspaces", "bearer_low_risk"),
                 ("PUT", "/v1/workspaces/:id", "bearer_low_risk"),
                 ("PATCH", "/v1/workspaces/:id", "bearer_low_risk"),
