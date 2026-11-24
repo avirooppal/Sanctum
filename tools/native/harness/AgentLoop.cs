@@ -85,6 +85,7 @@ namespace Sanctum.Harness {
         private readonly ExtensionsManager _extensions;
         private readonly WorkspaceTrustManager _workspaceTrust;
         private readonly HostMemoryService _memory;
+        private readonly ModelTierManager _tierManager;
         private readonly HarnessScheduler _scheduler;
         private readonly ConcurrentDictionary<string, JArray> _todos = new ConcurrentDictionary<string, JArray>(StringComparer.OrdinalIgnoreCase);
         private readonly ConcurrentDictionary<string, int> _sessionNumCtx = new ConcurrentDictionary<string, int>(StringComparer.OrdinalIgnoreCase);
@@ -113,6 +114,7 @@ namespace Sanctum.Harness {
             _extensions = new ExtensionsManager(dataRoot);
             _workspaceTrust = new WorkspaceTrustManager(dataRoot);
             _memory = new HostMemoryService(dataRoot);
+            _tierManager = new ModelTierManager(dataRoot);
             _scheduler = new HarnessScheduler(dataRoot, this);
             RegisterPhase1aTools();
             BuiltinTools.RegisterAll(this, dataRoot);
@@ -133,6 +135,7 @@ namespace Sanctum.Harness {
         public ExtensionsManager Extensions => _extensions;
         public WorkspaceTrustManager WorkspaceTrust => _workspaceTrust;
         public HostMemoryService Memory => _memory;
+        public ModelTierManager TierManager => _tierManager;
         public HarnessScheduler Scheduler => _scheduler;
         public int ActiveRunCount => _activeRuns.Count;
 
@@ -212,6 +215,20 @@ namespace Sanctum.Harness {
         public bool? GetSessionThink(string sessionId) {
             if (string.IsNullOrEmpty(sessionId)) return null;
             return _sessionThink.TryGetValue(sessionId, out var t) ? t : null;
+        }
+
+        public void SetSessionTierOverride(string sessionId, string tier) {
+            if (string.IsNullOrEmpty(sessionId)) return;
+            string t = (tier ?? "auto").Trim().ToLowerInvariant();
+            if (t == "auto" || string.IsNullOrEmpty(t)) _sessionTierOverride.TryRemove(sessionId, out _);
+            else _sessionTierOverride[sessionId] = t;
+        }
+
+        public ModelTierProfile GetEffectiveTier(string sessionId, string model) {
+            var caps = _provider.GetCapabilities(model);
+            string ov = null;
+            if (!string.IsNullOrEmpty(sessionId)) _sessionTierOverride.TryGetValue(sessionId, out ov);
+            return _tierManager.ResolveTier(model, caps, ov);
         }
 
         public JObject GetContextBudgetInfo(string sessionId) {
@@ -704,10 +721,12 @@ namespace Sanctum.Harness {
             try {
                 var summary = _store.BuildSummary(sessionId);
                 string model = summary?.Model ?? "mock";
+                var tierProfile = GetEffectiveTier(sessionId, model);
+                int effectiveMaxSteps = Math.Min(budgets.MaxSteps, tierProfile.MaxSteps);
                 var history = BuildModelMessagesFromLog(sessionId);
-                var toolsJson = ListToolsJson();
+                var toolsJson = _tierManager.FilterToolsForTier(ListToolsJson(), tierProfile);
 
-                for (int step = 0; step < budgets.MaxSteps; step++) {
+                for (int step = 0; step < effectiveMaxSteps; step++) {
                     cts.Token.ThrowIfCancellationRequested();
                     if (sw.ElapsedMilliseconds > budgets.MaxWallTimeMs) {
                         stopReason = "max_wall_time";

@@ -600,11 +600,23 @@ namespace Sanctum.Harness {
                 if (method == "GET" && path.StartsWith("/v1/capabilities/")) {
                     string model = Uri.UnescapeDataString(path.Substring("/v1/capabilities/".Length).Trim('/'));
                     var caps = _engine.Provider.GetCapabilities(model);
+                    var tier = _engine.TierManager.ResolveTier(model, caps, null);
                     return (200, new JObject {
                         ["provider"] = _engine.Provider.Name,
                         ["model"] = model,
-                        ["capabilities"] = JObject.FromObject(caps)
+                        ["capabilities"] = JObject.FromObject(caps),
+                        ["tierProfile"] = JObject.FromObject(tier)
                     });
+                }
+
+                if (method == "GET" && path == "/v1/evals") {
+                    return (200, new JObject { ["models"] = _engine.TierManager.LoadAllEvals() });
+                }
+                if (method == "POST" && path == "/v1/evals/record") {
+                    string model = body["model"]?.Value<string>() ?? "";
+                    if (string.IsNullOrWhiteSpace(model)) return (400, new JObject { ["error"] = "model is required" });
+                    _engine.TierManager.SaveModelEval(model, body);
+                    return (200, new JObject { ["ok"] = true, ["model"] = model });
                 }
 
                 if (method == "POST" && path.StartsWith("/v1/approvals/")) {
@@ -771,6 +783,13 @@ namespace Sanctum.Harness {
                             _engine.SetModel(sessionId, body["model"]?.Value<string>() ?? "");
                             return (200, new JObject { ["sessionId"] = sessionId, ["model"] = body["model"] });
                         }
+                        if (action == "tier") {
+                            string tierVal = body["tier"]?.Value<string>() ?? "auto";
+                            _engine.SetSessionTierOverride(sessionId, tierVal);
+                            var sumT = _engine.GetSessionSummary(sessionId);
+                            var prof = _engine.GetEffectiveTier(sessionId, sumT?.Model ?? "mock");
+                            return (200, JObject.FromObject(prof));
+                        }
                         if (action == "fork") {
                             long afterSeq = body["forkAfterSeq"]?.Value<long>() ?? 1;
                             var forked = _engine.ForkSession(sessionId, afterSeq, body["title"]?.Value<string>());
@@ -823,6 +842,8 @@ namespace Sanctum.Harness {
                 ("POST", "/v1/sessions/:id/mode", "bearer_low_risk"),
                 ("POST", "/v1/sessions/:id/autonomy", "trusted_channel_on_full_auto"),
                 ("POST", "/v1/sessions/:id/model", "bearer_low_risk"),
+                ("POST", "/v1/sessions/:id/tier", "bearer_low_risk"),
+                ("POST", "/v1/evals/record", "bearer_low_risk"),
                 ("POST", "/v1/sessions/:id/fork", "bearer_low_risk"),
                 ("POST", "/v1/sessions/:id/compact", "bearer_low_risk"),
                 ("POST", "/v1/sessions/:id/checkpoints", "bearer_low_risk"),
