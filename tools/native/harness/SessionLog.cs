@@ -1,4 +1,5 @@
 using System;
+using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
@@ -22,6 +23,7 @@ namespace Sanctum.Harness {
         private readonly Dictionary<string, object> _sessionLocks = new Dictionary<string, object>(StringComparer.OrdinalIgnoreCase);
         private readonly Dictionary<string, string> _lastHashBySession = new Dictionary<string, string>(StringComparer.OrdinalIgnoreCase);
         private readonly Dictionary<string, long> _lastSeqBySession = new Dictionary<string, long>(StringComparer.OrdinalIgnoreCase);
+        private readonly ConcurrentDictionary<string, SessionSummary> _summaryCache = new ConcurrentDictionary<string, SessionSummary>(StringComparer.OrdinalIgnoreCase);
 
         public SessionLogStore(string appDataDir) {
             _sessionsDir = Path.Combine(appDataDir, "sessions");
@@ -161,6 +163,7 @@ namespace Sanctum.Harness {
 
                 _lastSeqBySession[safe] = nextSeq;
                 _lastHashBySession[safe] = chainHash;
+                _summaryCache.TryRemove(safe, out _);
                 return evt;
             }
         }
@@ -334,12 +337,14 @@ namespace Sanctum.Harness {
         }
 
         public SessionSummary BuildSummary(string sessionId) {
-            if (!SessionExists(sessionId)) return null;
-            var events = ReadEvents(sessionId, 0);
+            string safe = SanitizeSessionId(sessionId);
+            if (_summaryCache.TryGetValue(safe, out var cached)) return cached;
+            if (!SessionExists(safe)) return null;
+            var events = ReadEvents(safe, 0);
             if (events.Count == 0) return null;
 
             var summary = new SessionSummary {
-                SessionId = sessionId,
+                SessionId = safe,
                 CreatedAt = events[0].Ts,
                 UpdatedAt = events[events.Count - 1].Ts,
                 LastSeq = events[events.Count - 1].Seq
@@ -348,7 +353,7 @@ namespace Sanctum.Harness {
             foreach (var e in events) {
                 summary.UpdatedAt = e.Ts;
                 if (e.Seq > summary.LastSeq) summary.LastSeq = e.Seq;
-                if (e.Type == "session_started" && e.SessionId == sessionId) {
+                if (e.Type == "session_started" && e.SessionId == safe) {
                     summary.WorkspaceId = e.Payload?["workspaceId"]?.Value<string>() ?? summary.WorkspaceId;
                     summary.Title = e.Payload?["title"]?.Value<string>() ?? summary.Title;
                     summary.Workspace = e.Payload?["workspace"]?.Value<string>() ?? summary.Workspace;
@@ -368,6 +373,7 @@ namespace Sanctum.Harness {
                     summary.Model = e.Payload?["model"]?.Value<string>() ?? summary.Model;
                 }
             }
+            _summaryCache[safe] = summary;
             return summary;
         }
 
@@ -448,6 +454,7 @@ namespace Sanctum.Harness {
             }
             _lastSeqBySession.Clear();
             _lastHashBySession.Clear();
+            _summaryCache.Clear();
             return new JObject {
                 ["deletedSessions"] = deletedSessions,
                 ["deletedBlobs"] = deletedBlobs

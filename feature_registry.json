@@ -182,6 +182,19 @@
       "status": "verified",
       "uiEntryPoint": "Settings -> Capabilities & Chat mic/upload",
       "tests": ["tests/phase5_speech_ocr_local_only.test.ts"]
+    },
+    {
+      "id": "FEAT-WORKSPACES",
+      "name": "Isolated switchable Workspaces with canonical root validation, host-layer data isolation, attention inbox, CLI & reversible migration",
+      "status": "verified",
+      "uiEntryPoint": "Sidebar Workspace Switcher (Ctrl+Shift+W) / SearchDialog (Ctrl+K) / CLI workspaces",
+      "tests": [
+        "tests/part_a1_workspace_registry_and_migration.test.ts",
+        "tests/part_a2_workspace_isolation.test.ts",
+        "tests/part_a3_attention_transfer_cli.test.ts",
+        "tests/part_a4_workspace_ui.test.ts",
+        "tests/part_a5_scale_and_log_hygiene.test.ts"
+      ]
     }
   ]
 }

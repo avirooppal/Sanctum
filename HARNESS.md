@@ -26,6 +26,11 @@ Sanctum-Desktop.exe run "Summarize src/" --workspace . --model qwen3:1.7b --json
 Sanctum-Desktop.exe sessions
 Sanctum-Desktop.exe resume <sessionId>
 Sanctum-Desktop.exe attach <sessionId> --after 0 --json
+# Manage workspaces (list, create, rename, remove, export, import)
+Sanctum-Desktop.exe workspaces list
+Sanctum-Desktop.exe workspaces create --name "Backend" --path "C:\Projects\backend"
+Sanctum-Desktop.exe run "Summarize src/" --workspace "Backend" --model qwen3:1.7b --json
+Sanctum-Desktop.exe run "Summarize src/" --workspace "C:\Projects\new" --create --json
 ```
 
 ## Protocol v1 Endpoints

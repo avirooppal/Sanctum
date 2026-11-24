@@ -39,6 +39,18 @@ Discovery file: `%APPDATA%\Sanctum\runtime.json` (user-only ACL):
 | `POST /v1/sessions/:id/fork` | `{ forkAfterSeq, title? }` | Reference-based O(1) fork (`201`) storing `{ parentSessionId, forkAfterSeq }` |
 | `GET /v1/sessions/:id/events?after=<seq>` | — | SSE stream: replays durable events `seq > after`, then streams live events. Bounded 256-event buffer; slow clients receive `event: slow_consumer` and reconnect via `?after=<lastSeq>` |
 | `GET /v1/blobs/:sha256` | — | Reads offloaded large tool output (> 16 KiB, capped at 4 MiB) |
+| `GET /v1/workspaces` | `?includeArchived=true` | Lists workspaces with `id`, `name`, `color`, `icon`, `rootPath`, `rootStatus`, `settingsOverrides` |
+| `POST /v1/workspaces` | `{ name, rootPath?, color?, icon?, copySettingsFromId?, settingsOverrides? }` | Creates workspace (`201`); validates canonical root (`409 workspace_root_overlap` on overlap) |
+| `POST /v1/workspaces/validate-root` | `{ rootPath, excludeWorkspaceId? }` | Canonicalizes path (symlinks/junctions/8.3), checks blocked roots/overlaps, returns cloud-sync warnings |
+| `POST /v1/workspaces/:id/{rename,relocate,archive}` | `{ name }` / `{ rootPath }` / `{ archived }` | Updates workspace metadata or relocates missing root |
+| `POST /v1/workspaces/:id/delete` | `{ confirmName }` | **Trusted channel only** + exact typed-name match; deletes only `%APPDATA%\Sanctum\workspaces\<id>`, never user folder |
+| `GET/POST /v1/workspaces/:id/ui-state` | `{ activeSessionId, splitSessionId, projects, viewerTabs, ... }` | Host-persisted per-workspace UI state |
+| `GET/POST/DELETE /v1/workspaces/:id/vault*` | `{ title, collection, content }` / `{ query }` | Workspace-isolated Document Vault storage & search |
+| `POST /v1/workspaces/transfer` | `{ kind: "memory"\|"vault", sourceWorkspaceId, targetWorkspaceId, itemId }` | **Trusted channel only** cross-workspace transfer/share |
+| `GET /v1/workspaces/:id/export` & `POST /v1/workspaces/import` | bundle JSON | Portable export/import of Sanctum data only (never user project files) |
+| `GET /v1/attention` | — | Global attention inbox + per-workspace `runningCount` & `attentionCount` |
+
+- **Workspace Ownership Enforcement**: `GET /v1/sessions` filters by `workspaceId` (defaulting to last-used workspace) unless `allWorkspaces=true` is explicitly passed. Every `/v1/sessions/:id/*` command verifies caller-supplied `workspaceId` (query, body, or `X-Sanctum-Workspace` header) against `session.workspaceId` (`403 workspace_mismatch`).
 
 ## 3. Event Envelope & Session Log Format
 
