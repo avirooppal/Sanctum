@@ -3,7 +3,7 @@
 ## 1. Production Architecture
 - **Production Backend**: Standalone Windows C# WebView2 host (`tools/native/DesktopHost.cs`, `DesktopServices.cs`, `DesktopWorkspaceEndpoints.cs`, `DesktopBrowserEndpoints.cs`) compiled via `tools/compile_desktop_host.py` into `Sanctum.exe` / `Sanctum-Desktop.exe`.
 - **Static Frontend**: Next.js static export (`out/`) served over WebView2 virtual host `https://sanctum.app` with an authenticated loopback HTTP API (`http://127.0.0.1:<port>/api/*`) and single-use `X-Sanctum-Approval` tokens issued exclusively via native `WebMessageReceived`.
-- **Zero Unconsented Cloud Egress**: Enforced by WebView2 `WebResourceRequested` barrier and host-side security rules.
+- **Host-Enforced Local-Only Egress**: Outbound HTTP is routed through a single C# `EgressHttpFactory` with a deny-by-default allowlist, append-only redacted egress ledger, WebView2 `WebResourceRequested` barrier, and a global Offline mode switch.
 
 ---
 
@@ -42,7 +42,7 @@
 
 ## 4. Phase 3 — Supporting Workspace UX & Local STT Models
 - **Composer Model + Effort Picker & Fast vs Plan Mode (`src/components/chat/WorkspaceTools.tsx`)**:
-  - Grouped Local (Ollama/GGUF) vs Cloud model selector showing size, quantization, context window, and capability tags (`Tools`, `Vision`, `Thinking`).
+  - Local model selector (Ollama / loopback OpenAI-compatible) showing size, quantization, context window, and capability tags (`Tools`, `Vision`, `Thinking`).
   - Reasoning Effort picker (`Off`, `Low`, `Medium`, `High`) disabled with tooltip when the selected model does not support thinking.
   - **Fast** vs **Plan** execution toggle: Plan mode writes `PLAN.md` first, opens it in the right viewer panel via `present_file`, and waits for `[Approve & Execute]` before modifying source files.
 - **Open IDE, Deliverables ZIP Export & Manual Update Check (`src/components/viewer/WorkspaceHeaderActions.tsx`)**:

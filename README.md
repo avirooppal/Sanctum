@@ -5,7 +5,7 @@
 <h1 align="center">Sanctum</h1>
 
 <p align="center">
-  A private, offline-first local AI workspace for Windows.
+  A strictly local, private AI workspace and agent harness for Windows.
 </p>
 
 <p align="center">

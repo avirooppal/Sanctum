@@ -15,8 +15,8 @@ Sanctum's Agent Harness is a headless, model-agnostic runtime embedded in `Sanct
 
 ## CLI Commands
 ```powershell
-# Start headless daemon
-Sanctum-Desktop.exe --harness --data-dir "<dir>" [--provider ollama|mock] [--port 0]
+# Start headless daemon (strictly local providers: ollama, openai-local, mock)
+Sanctum-Desktop.exe --harness --data-dir "<dir>" [--provider ollama|openai-local|mock] [--base-url http://127.0.0.1:1234/v1] [--port 0]
 
 # Run a task (auto-starts daemon if needed)
 Sanctum-Desktop.exe run "Summarize src/" --workspace . --model qwen3:1.7b --json
@@ -47,6 +47,9 @@ Sanctum-Desktop.exe attach <sessionId> --after 0 --json
 | `/v1/mcp/servers/:id/{discover,restart}` | `POST` | Discover MCP tools (`mcp:<id>:<tool>`) or restart server |
 | `/v1/extensions`, `/v1/extensions/hooks/approve` | `GET`, `POST` | Discover `.sanctum/` agents/skills/commands/hooks/packs; approve hooks (trusted only) |
 | `/v1/schedules`, `/v1/schedules/:id/run` | `GET`, `POST`, `DELETE` | Manage & trigger fail-closed `unattended: true` scheduled jobs |
+| `/v1/network/policy`, `/v1/network/offline`, `/v1/network/features` | `GET`, `POST` | Inspect/update host egress allowlist & global Offline mode (disabling Offline / enabling features: trusted only) |
+| `/v1/network/ledger`, `/v1/network/ledger/export` | `GET` | Read & export redacted append-only non-loopback egress ledger |
+| `/v1/migration/notices`, `/v1/migration/notices/dismiss` | `GET`, `POST` | One-time migration notices (e.g. cloud provider removal) |
 
 ## Workspace Extensions (`.sanctum/`)
 - `AGENTS.md`, `.sanctum/AGENTS.md`, `.sanctum/rules/*.md`: auto-loaded as untrusted workspace instructions.
