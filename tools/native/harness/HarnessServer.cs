@@ -721,8 +721,28 @@ namespace Sanctum.Harness {
                             return (200, new JObject { ["sessionId"] = sessionId, ["items"] = _engine.GetTodos(sessionId) });
                         }
                         if (action == "verify") {
-                            string cmd = body["command"]?.Value<string>() ?? "git status";
+                            string cmd = body["command"]?.Value<string>();
+                            if (string.IsNullOrWhiteSpace(cmd)) {
+                                var sumV = _engine.GetSessionSummary(sessionId);
+                                if (sumV == null) return (404, new JObject { ["error"] = "Session not found." });
+                                return (200, ProjectVerifier.DiscoverCommands(sumV.Workspace));
+                            }
                             return _engine.VerifySession(sessionId, cmd, viaTrustedChannel);
+                        }
+                        if (action == "plan") {
+                            var sumP = _engine.GetSessionSummary(sessionId);
+                            if (sumP == null) return (404, new JObject { ["error"] = "Session not found." });
+                            string planText = body["content"]?.Value<string>() ?? "";
+                            if (string.IsNullOrWhiteSpace(planText)) return (400, new JObject { ["error"] = "Plan content is required." });
+                            string planPath = PermissionEngine.ResolveToolPath(sumP.Workspace, "PLAN.md", allowRoot: false);
+                            File.WriteAllText(planPath, planText, Utf8NoBom);
+                            var check = ProjectVerifier.VerifyPlanAgainstChanges(planText, new string[0]);
+                            return (200, new JObject {
+                                ["saved"] = true,
+                                ["path"] = "PLAN.md",
+                                ["sha256"] = CanonicalJson.Sha256Hex(planText),
+                                ["verification"] = check
+                            });
                         }
                         if (action == "subagents") {
                             string role = body["role"]?.Value<string>() ?? "worker";
@@ -855,6 +875,7 @@ namespace Sanctum.Harness {
                 ("POST", "/v1/sessions/:id/tasks", "call_bound_command_rules"),
                 ("POST", "/v1/sessions/:id/todos", "bearer_low_risk"),
                 ("POST", "/v1/sessions/:id/verify", "call_bound_command_rules"),
+                ("POST", "/v1/sessions/:id/plan", "bearer_low_risk"),
                 ("POST", "/v1/sessions/:id/subagents", "bearer_low_risk"),
                 ("POST", "/v1/sessions/:id/worktree", "bearer_low_risk"),
                 ("POST", "/v1/sessions/:id/mentions", "bearer_low_risk"),

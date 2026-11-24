@@ -19,6 +19,18 @@ namespace Sanctum.Harness {
         public WorktreeManager(string appDataDir) {
             _worktreesRoot = Path.Combine(appDataDir, "worktrees");
             WindowsAclHelper.ApplyUserOnlyDirectoryAcl(_worktreesRoot);
+            CleanupOrphanedWorktreesOnStartup();
+        }
+
+        public int CleanupOrphanedWorktreesOnStartup() {
+            int removed = 0;
+            try {
+                if (!Directory.Exists(_worktreesRoot)) return 0;
+                foreach (string dir in Directory.GetDirectories(_worktreesRoot)) {
+                    try { Directory.Delete(dir, true); removed++; } catch { }
+                }
+            } catch { }
+            return removed;
         }
 
         public string GetWorktreePath(string sessionId) {
