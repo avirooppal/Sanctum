@@ -195,6 +195,18 @@
         "tests/part_a4_workspace_ui.test.ts",
         "tests/part_a5_scale_and_log_hygiene.test.ts"
       ]
+    },
+    {
+      "id": "FEAT-FEED-PANE",
+      "name": "Isolated side Feed Pane (Instagram default preset, separate WebView2 profile, host attention/pause engine, Offline-aware, agent-blind)",
+      "status": "verified",
+      "uiEntryPoint": "Right panel -> Feed tab (Ctrl+Shift+F)",
+      "tests": [
+        "tests/part_b2_feed_host_isolation.test.ts",
+        "tests/part_b3_feed_attention_engine.test.ts",
+        "tests/part_b4_feed_ui.test.ts",
+        "tests/part_b5_feed_privacy_and_docs.test.ts"
+      ]
     }
   ]
 }

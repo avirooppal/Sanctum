@@ -49,6 +49,12 @@ Discovery file: `%APPDATA%\Sanctum\runtime.json` (user-only ACL):
 | `POST /v1/workspaces/transfer` | `{ kind: "memory"\|"vault", sourceWorkspaceId, targetWorkspaceId, itemId }` | **Trusted channel only** cross-workspace transfer/share |
 | `GET /v1/workspaces/:id/export` & `POST /v1/workspaces/import` | bundle JSON | Portable export/import of Sanctum data only (never user project files) |
 | `GET /v1/attention` | — | Global attention inbox + per-workspace `runningCount` & `attentionCount` |
+| `POST /v1/sessions/:id/user-input-requested` | `{ prompt }` | Emits durable `user_input_requested` attention event |
+| `GET /v1/feed/status` | — | Feed Pane enabled/offline state, active preset, InPrivate flag, presets |
+| `POST /v1/feed/enable` & `/v1/feed/disable` | `{ consentAccepted, inPrivateMode?, presetId? }` | **Enable is trusted-channel only** + explicit consent required |
+| `POST /v1/feed/presets/custom` | `{ name, startUrl, allowedHosts[] }` | **Trusted-channel only** custom domain/preset addition |
+| `POST /v1/feed/profile/clear` | — | Deletes `%APPDATA%\Sanctum\feed-profile` |
+| `GET/POST /v1/feed/attention*` | `{ settings / id / suspended }` | Host-side Feed attention state machine (`Off`/`Active`/`PausedAttention`/`PausedByUser`/`Suspended`), queue, rate limits, wellbeing |
 
 - **Workspace Ownership Enforcement**: `GET /v1/sessions` filters by `workspaceId` (defaulting to last-used workspace) unless `allWorkspaces=true` is explicitly passed. Every `/v1/sessions/:id/*` command verifies caller-supplied `workspaceId` (query, body, or `X-Sanctum-Workspace` header) against `session.workspaceId` (`403 workspace_mismatch`).
 
