@@ -88,10 +88,92 @@ namespace Sanctum.Harness {
     public sealed class CheckpointService {
         private static readonly UTF8Encoding Utf8NoBom = new UTF8Encoding(false);
         private readonly string _checkpointsDir;
+        private readonly string _shadowGitRoot;
 
         public CheckpointService(string appDataDir) {
             _checkpointsDir = Path.Combine(appDataDir, "sessions", "checkpoints");
+            _shadowGitRoot = Path.Combine(appDataDir, "shadow-git");
             WindowsAclHelper.ApplyUserOnlyDirectoryAcl(_checkpointsDir);
+            WindowsAclHelper.ApplyUserOnlyDirectoryAcl(_shadowGitRoot);
+        }
+
+        private string GetShadowGitDir(string workspaceRoot) {
+            string norm = Path.GetFullPath(workspaceRoot).TrimEnd(Path.DirectorySeparatorChar).ToLowerInvariant();
+            string hash = CanonicalJson.Sha256Hex(norm).Substring(0, 12);
+            return Path.Combine(_shadowGitRoot, hash);
+        }
+
+        private static (int exitCode, string stdout, string stderr) RunShadowGit(string gitDir, string workTree, string args, int timeoutMs = 15000) {
+            var psi = new ProcessStartInfo {
+                FileName = "git",
+                Arguments = $"--git-dir=\"{gitDir}\" --work-tree=\"{workTree}\" {args}",
+                RedirectStandardOutput = true,
+                RedirectStandardError = true,
+                UseShellExecute = false,
+                CreateNoWindow = true
+            };
+            using (var p = Process.Start(psi)) {
+                string stdout = p.StandardOutput.ReadToEnd();
+                string stderr = p.StandardError.ReadToEnd();
+                if (!p.WaitForExit(timeoutMs)) {
+                    try { p.Kill(); } catch { }
+                    return (-1, stdout, "shadow-git timeout");
+                }
+                return (p.ExitCode, stdout.Trim(), stderr.Trim());
+            }
+        }
+
+        private string TryCreateShadowGitSnapshot(string workspaceRoot, string label) {
+            try {
+                string gitDir = GetShadowGitDir(workspaceRoot);
+                if (!Directory.Exists(gitDir) || !File.Exists(Path.Combine(gitDir, "HEAD"))) {
+                    Directory.CreateDirectory(gitDir);
+                    WindowsAclHelper.ApplyUserOnlyDirectoryAcl(gitDir);
+                    var initPsi = new ProcessStartInfo {
+                        FileName = "git",
+                        Arguments = $"init --bare \"{gitDir}\"",
+                        RedirectStandardOutput = true,
+                        RedirectStandardError = true,
+                        UseShellExecute = false,
+                        CreateNoWindow = true
+                    };
+                    using (var ip = Process.Start(initPsi)) {
+                        ip.WaitForExit(10000);
+                        if (ip.ExitCode != 0) return "";
+                    }
+                    RunShadowGit(gitDir, workspaceRoot, "config core.longpaths true");
+                    RunShadowGit(gitDir, workspaceRoot, "config core.autocrlf false");
+                    RunShadowGit(gitDir, workspaceRoot, "config user.name \"Sanctum Shadow\"");
+                    RunShadowGit(gitDir, workspaceRoot, "config user.email \"shadow@sanctum.local\"");
+                }
+
+                // Always enforce exclude patterns (ignore dirs + secrets + large binaries > 5 MB)
+                string excludePath = Path.Combine(gitDir, "info", "exclude");
+                Directory.CreateDirectory(Path.GetDirectoryName(excludePath));
+                var excludes = new List<string> {
+                    ".git/", "node_modules/", ".next/", "dist/", "out/", ".venv/", "__pycache__/",
+                    ".env", ".env.*", "*.env", "*.pem", "*.key", "*.pfx", "*.p12", "id_rsa*", "credentials.json"
+                };
+                if (Directory.Exists(workspaceRoot)) {
+                    foreach (string f in Directory.EnumerateFiles(workspaceRoot, "*", SearchOption.AllDirectories)) {
+                        if (f.Contains("\\.git\\") || f.Contains("\\node_modules\\")) continue;
+                        try {
+                            if (new FileInfo(f).Length > 5 * 1024 * 1024) {
+                                string rel = f.Substring(workspaceRoot.Length).TrimStart('\\', '/').Replace('\\', '/');
+                                excludes.Add("/" + rel);
+                            }
+                        } catch { }
+                    }
+                }
+                File.WriteAllText(excludePath, string.Join("\n", excludes) + "\n", Utf8NoBom);
+
+                RunShadowGit(gitDir, workspaceRoot, "add -A");
+                RunShadowGit(gitDir, workspaceRoot, $"commit --allow-empty -m \"checkpoint:{(label ?? "auto").Replace("\"", "")}\"");
+                var rev = RunShadowGit(gitDir, workspaceRoot, "rev-parse HEAD");
+                return rev.exitCode == 0 ? rev.stdout.Trim() : "";
+            } catch {
+                return "";
+            }
         }
 
         public JObject CreateCheckpoint(string sessionId, string workspaceRoot, string label = null) {
@@ -101,6 +183,7 @@ namespace Sanctum.Harness {
             Directory.CreateDirectory(filesDir);
 
             string root = Path.GetFullPath(workspaceRoot).TrimEnd(Path.DirectorySeparatorChar);
+            string shadowCommit = Directory.Exists(root) ? TryCreateShadowGitSnapshot(root, label) : "";
             var manifest = new JObject();
             int fileCount = 0;
 
@@ -108,6 +191,8 @@ namespace Sanctum.Harness {
                 foreach (string file in Directory.EnumerateFiles(root, "*", SearchOption.AllDirectories)) {
                     if (fileCount >= 500) break;
                     if (file.Contains("\\.git\\") || file.Contains("\\node_modules\\") || file.Contains("\\.next\\")) continue;
+                    string fname = Path.GetFileName(file).ToLowerInvariant();
+                    if (fname == ".env" || fname.StartsWith(".env.") || fname.EndsWith(".pem") || fname.EndsWith(".key") || fname.EndsWith(".pfx")) continue;
                     try {
                         var fi = new FileInfo(file);
                         if (fi.Length > 2 * 1024 * 1024) continue;
@@ -126,6 +211,8 @@ namespace Sanctum.Harness {
                 ["sessionId"] = sessionId,
                 ["workspace"] = root,
                 ["label"] = label ?? "auto",
+                ["shadowCommit"] = shadowCommit,
+                ["shadowGitDir"] = string.IsNullOrEmpty(shadowCommit) ? "" : GetShadowGitDir(root),
                 ["createdAt"] = DateTime.UtcNow.ToString("o"),
                 ["fileCount"] = fileCount,
                 ["files"] = manifest
@@ -198,6 +285,23 @@ namespace Sanctum.Harness {
             if (!File.Exists(metaPath)) throw new KeyNotFoundException("Checkpoint not found: " + checkpointId);
             var meta = CanonicalJson.ParseObject(File.ReadAllText(metaPath, Utf8NoBom));
             string root = Path.GetFullPath(string.IsNullOrEmpty(workspaceRoot) ? meta["workspace"].Value<string>() : workspaceRoot).TrimEnd(Path.DirectorySeparatorChar);
+
+            // Prefer shadow-git rewind when available (restores files rewritten/deleted by ANY tool or shell command)
+            string shadowCommit = meta["shadowCommit"]?.Value<string>() ?? "";
+            string shadowGitDir = meta["shadowGitDir"]?.Value<string>() ?? GetShadowGitDir(root);
+            if (!string.IsNullOrEmpty(shadowCommit) && Directory.Exists(shadowGitDir)) {
+                var co = RunShadowGit(shadowGitDir, root, $"checkout {shadowCommit} -- .");
+                var cl = RunShadowGit(shadowGitDir, root, "clean -fd");
+                if (co.exitCode == 0) {
+                    return new JObject {
+                        ["checkpointId"] = checkpointId,
+                        ["engine"] = "shadow_git",
+                        ["shadowCommit"] = shadowCommit,
+                        ["cleaned"] = cl.exitCode == 0
+                    };
+                }
+            }
+
             string filesDir = Path.Combine(cpDir, "files");
             var prevFiles = meta["files"] as JObject ?? new JObject();
             var keepSet = new HashSet<string>(prevFiles.Properties().Select(p => p.Name), StringComparer.OrdinalIgnoreCase);
