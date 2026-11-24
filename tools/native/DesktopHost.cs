@@ -31,6 +31,7 @@ namespace Sanctum {
         private static Sanctum.Harness.HarnessEngine _embeddedHarnessEngine;
         private static Sanctum.Harness.HarnessServer _embeddedHarnessServer;
         private static NotifyIcon _harnessTrayIcon;
+        private static NotifyIcon _mainTrayIcon;
         private static volatile bool _forceQuit;
 
         private static void EnsureEmbeddedHarnessStarted() {
@@ -777,6 +778,7 @@ namespace Sanctum {
 
             // System Tray Controller (owns same process identity, focuses existing native window)
             NotifyIcon trayIcon = new NotifyIcon();
+            _mainTrayIcon = trayIcon;
             string iconPath = Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "app-icon.ico");
             if (File.Exists(iconPath)) {
                 try { trayIcon.Icon = new Icon(iconPath); } catch { trayIcon.Icon = SystemIcons.Application; }
@@ -1769,6 +1771,19 @@ namespace Sanctum {
                 }
                 if (raw.Contains("\"exportLogs\"")) {
                     ExportLogs();
+                } else if (raw.Contains("\"setWorkspaceTitle\"")) {
+                    try {
+                        var serializer = new JavaScriptSerializer();
+                        var msg = serializer.Deserialize<Dictionary<string, object>>(raw);
+                        string wsName = msg != null && msg.ContainsKey("name") ? (Convert.ToString(msg["name"]) ?? "").Trim() : "";
+                        string title = string.IsNullOrEmpty(wsName) ? "Sanctum" : ("Sanctum — " + wsName);
+                        this.BeginInvoke((Action)(() => {
+                            this.Text = title;
+                            if (_mainTrayIcon != null) {
+                                _mainTrayIcon.Text = title.Length > 63 ? title.Substring(0, 63) : title;
+                            }
+                        }));
+                    } catch { }
                 } else if (raw.Contains("\"openLogs\"")) {
                     Directory.CreateDirectory(Path.GetDirectoryName(LogPath));
                     Process.Start(new ProcessStartInfo("explorer.exe", "\"" + Path.GetDirectoryName(LogPath) + "\"") { UseShellExecute = true });
@@ -3172,7 +3187,7 @@ private void HandleTerminal(HttpListenerRequest req, HttpListenerResponse res) {
             "localApi.enable", "localApi.host", "localApi.port", "localApi.apiKeyRequired", "localApi.corsEnabled",
             "httpsProxy.enable", "httpsProxy.url", "httpsProxy.bypass",
             "webSearch.enable", "webSearch.provider", "webSearch.endpoint",
-            "shortcuts.newChat", "shortcuts.newProject", "shortcuts.search",
+            "shortcuts.newChat", "shortcuts.newProject", "shortcuts.search", "shortcuts.switchWorkspace",
             "hardware.cpuThreads", "hardware.gpuLayers", "hardware.contextLength",
             "access.scope", "access.allowedFolders", "access.overrideHardBlocked",
             "terminal.shell", "terminal.timeoutMs", "terminal.maxOutputChars", "terminal.rules", "terminal.allowExecutionPolicyBypass",

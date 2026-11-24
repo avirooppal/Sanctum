@@ -28,6 +28,7 @@ import {
 } from "@tabler/icons-react";
 import { AddProjectDialog } from "./AddProjectDialog";
 import { SearchDialog } from "./SearchDialog";
+import { WorkspaceSwitcher } from "./WorkspaceSwitcher";
 import { handleTitleBarMouseDown, handleTitleBarDoubleClick, handleTitleBarContextMenu } from "./WindowControls";
 import { useAppStore } from "@/store/useAppStore";
 import { useShallow } from "zustand/react/shallow";
@@ -493,6 +494,11 @@ export const LeftSidebar: React.FC<LeftSidebarProps> = ({
                 </button>
               </div>
             </div>
+
+          {/* Top-level Workspace Switcher Dropdown */}
+          <div className="shrink-0">
+            <WorkspaceSwitcher collapsed={isExplorerCollapsed} />
+          </div>
 
           {/* Primary Action Buttons */}
           <nav className="space-y-1 shrink-0">
