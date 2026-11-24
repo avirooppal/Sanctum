@@ -377,7 +377,8 @@ namespace Sanctum.Harness {
                     string category = args["category"]?.Value<string>() ?? "fact";
                     string provenance = args["_provenance"]?.Value<string>() ?? "model-after-untrusted-content";
                     string sid = args["_sessionId"]?.Value<string>() ?? "";
-                    var entry = engine.Memory.Save(content, category, provenance, sid);
+                    string wsId = args["_workspaceId"]?.Value<string>();
+                    var entry = engine.Memory.Save(content, category, provenance, sid, pinned: false, workspaceId: wsId);
                     return entry.ToString(Formatting.None);
                 }
             });
@@ -394,7 +395,8 @@ namespace Sanctum.Harness {
                 },
                 Execute = (args, ct) => {
                     string q = (args["query"]?.Value<string>() ?? "").Trim();
-                    return new JObject { ["facts"] = engine.Memory.Recall(q) }.ToString(Formatting.None);
+                    string wsId = args["_workspaceId"]?.Value<string>();
+                    return new JObject { ["facts"] = engine.Memory.Recall(q, wsId) }.ToString(Formatting.None);
                 }
             });
 
@@ -410,27 +412,35 @@ namespace Sanctum.Harness {
                     ["required"] = new JArray("query")
                 },
                 Execute = (args, ct) => {
-                    string ws = args["_workspace"]?.Value<string>() ?? Environment.CurrentDirectory;
+                    string ws = args["_workspace"]?.Value<string>() ?? "";
+                    string wsId = args["_workspaceId"]?.Value<string>() ?? "";
                     string q = (args["query"]?.Value<string>() ?? "").Trim();
-                    string root = PermissionEngine.ResolveToolPath(ws, ".", allowRoot: true);
                     var hits = new JArray();
-                    foreach (string f in Directory.EnumerateFiles(root, "*", SearchOption.AllDirectories)) {
-                        ct.ThrowIfCancellationRequested();
-                        if (hits.Count >= 10) break;
-                        string ext = Path.GetExtension(f).ToLowerInvariant();
-                        if (ext != ".md" && ext != ".txt" && ext != ".json" && ext != ".csv") continue;
-                        try {
-                            string text = File.ReadAllText(f, Utf8NoBom);
-                            int idx = text.IndexOf(q, StringComparison.OrdinalIgnoreCase);
-                            if (idx >= 0) {
-                                int start = Math.Max(0, idx - 80);
-                                int len = Math.Min(text.Length - start, 240);
-                                hits.Add(new JObject {
-                                    ["source"] = f.Substring(root.Length).TrimStart('\\', '/'),
-                                    ["excerpt"] = text.Substring(start, len)
-                                });
-                            }
-                        } catch { }
+                    if (!string.IsNullOrEmpty(wsId)) {
+                        foreach (var vh in engine.Vault.Search(wsId, q, 10)) {
+                            hits.Add(vh);
+                        }
+                    }
+                    if (!string.IsNullOrWhiteSpace(ws) && Directory.Exists(ws) && hits.Count < 10) {
+                        string root = PermissionEngine.ResolveToolPath(ws, ".", allowRoot: true);
+                        foreach (string f in Directory.EnumerateFiles(root, "*", SearchOption.AllDirectories)) {
+                            ct.ThrowIfCancellationRequested();
+                            if (hits.Count >= 10) break;
+                            string ext = Path.GetExtension(f).ToLowerInvariant();
+                            if (ext != ".md" && ext != ".txt" && ext != ".json" && ext != ".csv") continue;
+                            try {
+                                string text = File.ReadAllText(f, Utf8NoBom);
+                                int idx = text.IndexOf(q, StringComparison.OrdinalIgnoreCase);
+                                if (idx >= 0) {
+                                    int start = Math.Max(0, idx - 80);
+                                    int len = Math.Min(text.Length - start, 240);
+                                    hits.Add(new JObject {
+                                        ["source"] = f.Substring(root.Length).TrimStart('\\', '/'),
+                                        ["excerpt"] = text.Substring(start, len)
+                                    });
+                                }
+                            } catch { }
+                        }
                     }
                     return new JObject { ["results"] = hits }.ToString(Formatting.None);
                 }

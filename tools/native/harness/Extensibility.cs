@@ -115,6 +115,7 @@ namespace Sanctum.Harness {
 
     public sealed class McpServerConfig {
         [JsonProperty("id")] public string Id { get; set; } = "";
+        [JsonProperty("workspaceId")] public string WorkspaceId { get; set; } = "";
         [JsonProperty("command")] public string Command { get; set; } = "";
         [JsonProperty("args")] public List<string> Args { get; set; } = new List<string>();
         [JsonProperty("cwd", NullValueHandling = NullValueHandling.Ignore)] public string Cwd { get; set; }
@@ -179,10 +180,14 @@ namespace Sanctum.Harness {
             return CanonicalJson.Sha256Hex((command ?? "") + "\n" + string.Join("\n", args ?? new List<string>()));
         }
 
-        public JArray ListServers() {
+        public JArray ListServers(string workspaceId = null) {
             lock (_cfgLock) {
                 var arr = new JArray();
                 foreach (var c in _configs.Values.OrderBy(x => x.Id, StringComparer.OrdinalIgnoreCase)) {
+                    if (!string.IsNullOrWhiteSpace(workspaceId) &&
+                        !string.Equals(c.WorkspaceId ?? "", workspaceId.Trim(), StringComparison.OrdinalIgnoreCase)) {
+                        continue;
+                    }
                     var obj = JObject.FromObject(c);
                     obj["running"] = _running.TryGetValue(c.Id, out var r) && r.Proc != null && !r.Proc.HasExited;
                     arr.Add(obj);
@@ -505,6 +510,7 @@ namespace Sanctum.Harness {
 
     public sealed class ScheduledJob {
         [JsonProperty("id")] public string Id { get; set; } = "";
+        [JsonProperty("workspaceId")] public string WorkspaceId { get; set; } = "";
         [JsonProperty("name")] public string Name { get; set; } = "";
         [JsonProperty("intervalSeconds")] public int IntervalSeconds { get; set; } = 3600;
         [JsonProperty("prompt")] public string Prompt { get; set; } = "";
@@ -554,8 +560,12 @@ namespace Sanctum.Harness {
             WindowsAclHelper.ApplyUserOnlyFileAcl(_path);
         }
 
-        public JArray ListJobs() {
-            lock (_lock) return JArray.FromObject(_jobs);
+        public JArray ListJobs(string workspaceId = null, bool allWorkspaces = false) {
+            lock (_lock) {
+                if (allWorkspaces || string.IsNullOrWhiteSpace(workspaceId)) return JArray.FromObject(_jobs);
+                string ws = workspaceId.Trim();
+                return JArray.FromObject(_jobs.Where(j => string.Equals(j.WorkspaceId ?? "", ws, StringComparison.OrdinalIgnoreCase)).ToList());
+            }
         }
 
         public (int status, JObject body) AddJob(ScheduledJob job, bool viaTrustedChannel) {
@@ -616,14 +626,40 @@ namespace Sanctum.Harness {
 
             string effectiveAutonomy = ProjectVerifier.CapChildAutonomy(job.MaxAutonomy ?? "auto_reads", "auto_reads");
 
+            // Part A2: Fail closed if the job's workspace is missing or untrusted
+            string effectiveWorkspacePath = job.Workspace ?? "";
+            if (!string.IsNullOrWhiteSpace(job.WorkspaceId)) {
+                var wsRec = _engine.Workspaces.GetById(job.WorkspaceId);
+                if (wsRec == null || wsRec.RootStatus == "missing") {
+                    return (409, new JObject {
+                        ["error"] = "Scheduled job workspace is missing (fail-closed).",
+                        ["code"] = "workspace_root_missing",
+                        ["workspaceId"] = job.WorkspaceId
+                    });
+                }
+                effectiveWorkspacePath = wsRec.RootPath ?? "";
+                if (!string.IsNullOrEmpty(effectiveWorkspacePath) && !_engine.WorkspaceTrust.IsWorkspaceTrusted(effectiveWorkspacePath)) {
+                    var trustInfo = _engine.WorkspaceTrust.GetTrustStatus(effectiveWorkspacePath);
+                    var items = trustInfo["items"] as JArray;
+                    if (items != null && items.Count > 0) {
+                        return (403, new JObject {
+                            ["error"] = "Scheduled job workspace has untrusted repo configuration (fail-closed).",
+                            ["code"] = "workspace_untrusted",
+                            ["workspaceId"] = job.WorkspaceId
+                        });
+                    }
+                }
+            }
+
             var session = _engine.CreateSession(
                 title: "[Scheduled] " + job.Name,
-                workspace: job.Workspace,
+                workspace: effectiveWorkspacePath,
                 mode: "build",
                 autonomy: effectiveAutonomy,
                 model: job.Model,
                 unattended: true,
-                role: "scheduler");
+                role: "scheduler",
+                workspaceId: job.WorkspaceId);
 
             var (_, code, resp) = _engine.StartRun(session.SessionId, job.Prompt);
 

@@ -33,6 +33,7 @@ namespace Sanctum.Harness {
 
     public sealed class SessionSummary {
         [JsonProperty("sessionId")] public string SessionId { get; set; } = "";
+        [JsonProperty("workspaceId")] public string WorkspaceId { get; set; } = "";
         [JsonProperty("title")] public string Title { get; set; } = "New Session";
         [JsonProperty("workspace")] public string Workspace { get; set; } = "";
         [JsonProperty("mode")] public string Mode { get; set; } = "build";

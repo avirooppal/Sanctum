@@ -86,6 +86,7 @@ namespace Sanctum.Harness {
         private readonly ExtensionsManager _extensions;
         private readonly WorkspaceTrustManager _workspaceTrust;
         private readonly WorkspaceManager _workspaces;
+        private readonly HostVaultService _vault;
         private readonly HostMemoryService _memory;
         private readonly ModelTierManager _tierManager;
         private readonly HarnessScheduler _scheduler;
@@ -117,6 +118,7 @@ namespace Sanctum.Harness {
             _extensions = new ExtensionsManager(dataRoot);
             _workspaceTrust = new WorkspaceTrustManager(dataRoot);
             _workspaces = new WorkspaceManager(dataRoot);
+            _vault = new HostVaultService(_workspaces);
             _memory = new HostMemoryService(dataRoot);
             _tierManager = new ModelTierManager(dataRoot);
             _scheduler = new HarnessScheduler(dataRoot, this);
@@ -141,6 +143,7 @@ namespace Sanctum.Harness {
         public ExtensionsManager Extensions => _extensions;
         public WorkspaceTrustManager WorkspaceTrust => _workspaceTrust;
         public WorkspaceManager Workspaces => _workspaces;
+        public HostVaultService Vault => _vault;
         public HostMemoryService Memory => _memory;
         public ModelTierManager TierManager => _tierManager;
         public HarnessScheduler Scheduler => _scheduler;
@@ -401,13 +404,31 @@ namespace Sanctum.Harness {
             bool unattended = false,
             string role = null,
             string parentSessionId = null,
-            string worktreePath = null) {
+            string worktreePath = null,
+            string workspaceId = null) {
             string id = "s_" + Guid.NewGuid().ToString("N").Substring(0, 12);
             string safeMode = (mode == "plan" || mode == "build") ? mode : "build";
             string safeAutonomy = (autonomy == "ask_all" || autonomy == "auto_reads") ? autonomy : "auto_reads";
+            string resolvedWsId = (workspaceId ?? "").Trim();
+            string resolvedWsPath = workspace ?? "";
+            if (!string.IsNullOrEmpty(resolvedWsId)) {
+                var wsRec = _workspaces.GetById(resolvedWsId);
+                if (wsRec != null && string.IsNullOrEmpty(resolvedWsPath)) {
+                    resolvedWsPath = wsRec.RootPath ?? "";
+                }
+            } else {
+                if (!string.IsNullOrWhiteSpace(resolvedWsPath)) {
+                    var matched = _workspaces.ResolveSelector(resolvedWsPath);
+                    if (matched != null) resolvedWsId = matched.Id;
+                }
+                if (string.IsNullOrEmpty(resolvedWsId)) {
+                    resolvedWsId = _workspaces.LastUsedWorkspaceId ?? "";
+                }
+            }
             var payload = new JObject {
                 ["title"] = string.IsNullOrWhiteSpace(title) ? "New Session" : title.Trim(),
-                ["workspace"] = workspace ?? "",
+                ["workspaceId"] = resolvedWsId,
+                ["workspace"] = resolvedWsPath,
                 ["mode"] = safeMode,
                 ["autonomy"] = safeAutonomy,
                 ["unattended"] = unattended,
@@ -521,7 +542,8 @@ namespace Sanctum.Harness {
                 unattended: parent.Unattended,
                 role: role,
                 parentSessionId: parentSessionId,
-                worktreePath: wtPath);
+                worktreePath: wtPath,
+                workspaceId: parent.WorkspaceId);
 
             AppendAndBroadcast(parentSessionId, "subagent_started", new JObject {
                 ["childSessionId"] = child.SessionId,
@@ -657,6 +679,7 @@ namespace Sanctum.Harness {
             _store.SeedForkSequence(childId, clamped);
             AppendAndBroadcast(childId, "session_started", new JObject {
                 ["title"] = string.IsNullOrWhiteSpace(title) ? (parent.Title + " (fork)") : title.Trim(),
+                ["workspaceId"] = parent.WorkspaceId ?? "",
                 ["workspace"] = parent.Workspace,
                 ["mode"] = parent.Mode,
                 ["autonomy"] = parent.Autonomy,
@@ -675,8 +698,8 @@ namespace Sanctum.Harness {
             return summary;
         }
 
-        public List<SessionSummary> ListSessions() {
-            var list = _store.ListSessions();
+        public List<SessionSummary> ListSessions(string workspaceId = null, bool allWorkspaces = false) {
+            var list = _store.ListSessions(workspaceId, allWorkspaces);
             foreach (var s in list) {
                 if (_activeRunIds.TryGetValue(s.SessionId, out var runId)) s.ActiveRunId = runId;
             }
@@ -1005,8 +1028,15 @@ namespace Sanctum.Harness {
                         string rawOut;
                         bool ok = true;
                         try {
+                            string curWorkspaceId = latestSummary?.WorkspaceId ?? "";
+                            var wsRecord = !string.IsNullOrEmpty(curWorkspaceId) ? _workspaces.GetById(curWorkspaceId) : null;
+                            if (wsRecord != null && wsRecord.RootStatus == "missing" &&
+                                (tool.Category == "files" || tool.Category == "shell")) {
+                                throw new InvalidOperationException("workspace_root_missing: Workspace folder is missing. Locate or remove it.");
+                            }
                             var execArgs = (JObject)(call.Arguments?.DeepClone() ?? new JObject());
                             execArgs["_workspace"] = curWorkspace;
+                            execArgs["_workspaceId"] = curWorkspaceId;
                             execArgs["_sessionId"] = sessionId;
                             using (var toolCts = CancellationTokenSource.CreateLinkedTokenSource(cts.Token)) {
                                 toolCts.CancelAfter(Math.Min(budgets.ToolTimeoutMs, tool.TimeoutMs));

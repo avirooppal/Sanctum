@@ -314,14 +314,20 @@ namespace Sanctum.Harness {
             return interruptedSessions;
         }
 
-        public List<SessionSummary> ListSessions() {
+        public List<SessionSummary> ListSessions(string workspaceId = null, bool allWorkspaces = false) {
             var list = new List<SessionSummary>();
             if (!Directory.Exists(_sessionsDir)) return list;
             foreach (string file in Directory.GetFiles(_sessionsDir, "*.jsonl")) {
                 string id = Path.GetFileNameWithoutExtension(file);
                 try {
                     var summary = BuildSummary(id);
-                    if (summary != null) list.Add(summary);
+                    if (summary == null) continue;
+                    if (!allWorkspaces && !string.IsNullOrWhiteSpace(workspaceId)) {
+                        if (!string.Equals(summary.WorkspaceId ?? "", workspaceId.Trim(), StringComparison.OrdinalIgnoreCase)) {
+                            continue;
+                        }
+                    }
+                    list.Add(summary);
                 } catch { }
             }
             return list.OrderByDescending(s => s.UpdatedAt, StringComparer.Ordinal).ToList();
@@ -343,6 +349,7 @@ namespace Sanctum.Harness {
                 summary.UpdatedAt = e.Ts;
                 if (e.Seq > summary.LastSeq) summary.LastSeq = e.Seq;
                 if (e.Type == "session_started" && e.SessionId == sessionId) {
+                    summary.WorkspaceId = e.Payload?["workspaceId"]?.Value<string>() ?? summary.WorkspaceId;
                     summary.Title = e.Payload?["title"]?.Value<string>() ?? summary.Title;
                     summary.Workspace = e.Payload?["workspace"]?.Value<string>() ?? summary.Workspace;
                     summary.Mode = e.Payload?["mode"]?.Value<string>() ?? summary.Mode;

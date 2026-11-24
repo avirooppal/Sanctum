@@ -38,6 +38,7 @@ namespace Sanctum.Harness {
 
     public sealed class PermissionRule {
         [JsonProperty("id")] public string Id { get; set; } = "";
+        [JsonProperty("workspaceId")] public string WorkspaceId { get; set; } = "";
         [JsonProperty("effect")] public string Effect { get; set; } = "ask"; // allow | ask | deny
         [JsonProperty("tool")] public string Tool { get; set; } = "*";
         [JsonProperty("commandPattern", NullValueHandling = NullValueHandling.Ignore)] public string CommandPattern { get; set; }
@@ -108,8 +109,16 @@ namespace Sanctum.Harness {
             WindowsAclHelper.ApplyUserOnlyFileAcl(_rulesPath);
         }
 
-        public JArray ListRules() {
-            lock (_rulesLock) return JArray.FromObject(_rules);
+        public JArray ListRules(string workspaceId = null) {
+            lock (_rulesLock) {
+                if (string.IsNullOrWhiteSpace(workspaceId)) return JArray.FromObject(_rules);
+                string ws = workspaceId.Trim();
+                var filtered = new List<PermissionRule>();
+                foreach (var r in _rules) {
+                    if (string.Equals(r.WorkspaceId ?? "", ws, StringComparison.OrdinalIgnoreCase)) filtered.Add(r);
+                }
+                return JArray.FromObject(filtered);
+            }
         }
 
         public (int status, JObject body) AddRule(PermissionRule rule, bool viaTrustedChannel) {

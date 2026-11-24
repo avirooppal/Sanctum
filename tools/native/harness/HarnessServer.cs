@@ -183,7 +183,7 @@ namespace Sanctum.Harness {
                 }
 
                 string rawBody = "";
-                if (method == "POST" || method == "PUT") {
+                if (method == "POST" || method == "PUT" || method == "PATCH") {
                     using (var sr = new StreamReader(req.InputStream, Utf8NoBom)) {
                         rawBody = sr.ReadToEnd();
                     }
@@ -207,6 +207,10 @@ namespace Sanctum.Harness {
                     if (!string.IsNullOrEmpty(qk) && bodyObj[qk] == null) {
                         bodyObj[qk] = req.QueryString[qk];
                     }
+                }
+                string hdrWs = req.Headers["X-Sanctum-Workspace"];
+                if (!string.IsNullOrWhiteSpace(hdrWs) && bodyObj["workspaceId"] == null) {
+                    bodyObj["workspaceId"] = hdrWs.Trim();
                 }
 
                 var (status, json) = DispatchProtocolCommand(method, path, bodyObj, viaTrustedChannel: false);
@@ -459,28 +463,58 @@ namespace Sanctum.Harness {
                         if ((method == "POST" || method == "PUT") && action == "ui-state") {
                             return _engine.Workspaces.SaveUiState(wsId, body);
                         }
+                        if (method == "GET" && action == "vault") {
+                            if (_engine.Workspaces.GetById(wsId) == null) return (404, new JObject { ["error"] = "Workspace not found." });
+                            return (200, _engine.Vault.List(wsId));
+                        }
+                    } else if (parts.Length == 3 && parts[1] == "vault") {
+                        string wsId = parts[0];
+                        string sub = parts[2];
+                        if (method == "POST" && sub == "documents") {
+                            return _engine.Vault.AddDocument(
+                                wsId,
+                                body["title"]?.Value<string>() ?? "",
+                                body["collection"]?.Value<string>() ?? "General",
+                                body["content"]?.Value<string>() ?? "");
+                        }
+                        if (method == "POST" && sub == "search") {
+                            if (_engine.Workspaces.GetById(wsId) == null) return (404, new JObject { ["error"] = "Workspace not found." });
+                            return (200, new JObject {
+                                ["workspaceId"] = wsId,
+                                ["results"] = _engine.Vault.Search(wsId, body["query"]?.Value<string>() ?? "")
+                            });
+                        }
+                    } else if (parts.Length == 4 && parts[1] == "vault" && parts[2] == "documents" && method == "DELETE") {
+                        return _engine.Vault.DeleteDocument(parts[0], parts[3]);
                     }
                 }
 
-                // Memory Editor & Provenance API
+                // Memory Editor & Provenance API (workspace tier + opt-in global tier)
                 if (method == "GET" && path == "/v1/memory") {
-                    return (200, _engine.Memory.ListAll());
+                    string wsId = body["workspaceId"]?.Value<string>();
+                    bool includeGlobal = string.Equals(body["includeGlobal"]?.ToString(), "true", StringComparison.OrdinalIgnoreCase);
+                    return (200, _engine.Memory.ListAll(wsId, includeGlobal));
                 }
                 if (method == "GET" && path == "/v1/memory/export") {
-                    return (200, new JObject { ["format"] = "json", ["content"] = _engine.Memory.ExportJson() });
+                    string wsId = body["workspaceId"]?.Value<string>();
+                    return (200, new JObject { ["format"] = "json", ["content"] = _engine.Memory.ExportJson(wsId) });
                 }
                 if (method == "POST" && path == "/v1/memory") {
                     string content = body["content"]?.Value<string>() ?? "";
                     string category = body["category"]?.Value<string>() ?? "fact";
                     bool pinned = body["pinned"]?.Value<bool>() ?? false;
-                    var entry = _engine.Memory.Save(content, category, "user", "", pinned);
+                    string wsId = body["workspaceId"]?.Value<string>();
+                    string scope = body["scope"]?.Value<string>();
+                    var entry = _engine.Memory.Save(content, category, "user", "", pinned, wsId, scope);
                     return (201, entry);
                 }
                 if (path.StartsWith("/v1/memory/")) {
                     string memId = path.Substring("/v1/memory/".Length).Trim('/');
+                    string wsId = body["workspaceId"]?.Value<string>();
+                    string scope = body["scope"]?.Value<string>();
                     if (!string.IsNullOrEmpty(memId) && !memId.Contains("/")) {
-                        if (method == "PUT" || method == "POST") return _engine.Memory.Update(memId, body);
-                        if (method == "DELETE") return _engine.Memory.Delete(memId);
+                        if (method == "PUT" || method == "POST") return _engine.Memory.Update(memId, body, wsId);
+                        if (method == "DELETE") return _engine.Memory.Delete(memId, wsId, scope);
                     }
                 }
 
@@ -494,7 +528,7 @@ namespace Sanctum.Harness {
 
                 // MCP Server Management (Job-Object supervised, trusted-channel first-run approval)
                 if (method == "GET" && path == "/v1/mcp/servers") {
-                    return (200, new JObject { ["servers"] = _engine.Mcp.ListServers() });
+                    return (200, new JObject { ["servers"] = _engine.Mcp.ListServers(body["workspaceId"]?.Value<string>()) });
                 }
                 if (method == "POST" && path == "/v1/mcp/servers") {
                     var cfg = body.ToObject<McpServerConfig>();
@@ -524,7 +558,9 @@ namespace Sanctum.Harness {
 
                 // Scheduler (unattended:true fail-closed runs)
                 if (method == "GET" && path == "/v1/schedules") {
-                    return (200, new JObject { ["jobs"] = _engine.Scheduler.ListJobs() });
+                    string wsId = body["workspaceId"]?.Value<string>();
+                    bool allWs = string.Equals(body["allWorkspaces"]?.ToString(), "true", StringComparison.OrdinalIgnoreCase);
+                    return (200, new JObject { ["jobs"] = _engine.Scheduler.ListJobs(wsId, allWs) });
                 }
                 if (method == "POST" && path == "/v1/schedules") {
                     var job = body.ToObject<ScheduledJob>();
@@ -542,7 +578,7 @@ namespace Sanctum.Harness {
                 }
 
                 if (method == "GET" && path == "/v1/rules") {
-                    return (200, new JObject { ["rules"] = _engine.Permissions.ListRules() });
+                    return (200, new JObject { ["rules"] = _engine.Permissions.ListRules(body["workspaceId"]?.Value<string>()) });
                 }
 
                 if (method == "POST" && path == "/v1/rules") {
@@ -603,7 +639,8 @@ namespace Sanctum.Harness {
                         "audit.jsonl", "egress_ledger.jsonl", "memory.json", "threads.json",
                         "settings.json", "workspace_trust.json", "network_policy.json",
                         "migration_notices.json", "approved_hooks.json", "permission_rules.json",
-                        "schedules.json", "mcp_servers.json", "encryption_config.json"
+                        "schedules.json", "mcp_servers.json", "encryption_config.json",
+                        "workspaces.json", "workspaces.json.bak", "migration_state.json"
                     };
                     foreach (string f in filesToWipe) {
                         try {
@@ -612,7 +649,7 @@ namespace Sanctum.Harness {
                         } catch { }
                     }
                     string[] dirsToWipe = new[] {
-                        "checkpoints", "shadow-git", "vault", "logs", "tool-trash", "backups", "exports", "webview2", "browser-profile"
+                        "checkpoints", "shadow-git", "vault", "logs", "tool-trash", "backups", "exports", "webview2", "browser-profile", "workspaces"
                     };
                     foreach (string d in dirsToWipe) {
                         try {
@@ -690,7 +727,14 @@ namespace Sanctum.Harness {
                 }
 
                 if (method == "GET" && path == "/v1/sessions") {
-                    return (200, new JObject { ["sessions"] = JArray.FromObject(_engine.ListSessions()) });
+                    bool allWs = string.Equals(body["allWorkspaces"]?.ToString(), "true", StringComparison.OrdinalIgnoreCase);
+                    string reqWsId = body["workspaceId"]?.Value<string>();
+                    string effectiveWsId = allWs ? null : (string.IsNullOrWhiteSpace(reqWsId) ? _engine.Workspaces.LastUsedWorkspaceId : reqWsId.Trim());
+                    return (200, new JObject {
+                        ["workspaceId"] = effectiveWsId ?? "",
+                        ["allWorkspaces"] = allWs,
+                        ["sessions"] = JArray.FromObject(_engine.ListSessions(effectiveWsId, allWs))
+                    });
                 }
 
                 if (method == "POST" && path == "/v1/sessions") {
@@ -700,7 +744,8 @@ namespace Sanctum.Harness {
                         body["mode"]?.Value<string>(),
                         body["autonomy"]?.Value<string>(),
                         body["model"]?.Value<string>(),
-                        body["unattended"]?.Value<bool>() ?? false);
+                        body["unattended"]?.Value<bool>() ?? false,
+                        workspaceId: body["workspaceId"]?.Value<string>());
                     int reqNumCtx = body["numCtx"]?.Value<int>() ?? 0;
                     if (reqNumCtx > 0) _engine.SetSessionNumCtx(s.SessionId, reqNumCtx);
                     if (body["think"] != null) _engine.SetSessionThink(s.SessionId, body["think"].Value<bool>());
@@ -719,6 +764,19 @@ namespace Sanctum.Harness {
                     string[] parts = rest.Split(new[] { '/' }, StringSplitOptions.RemoveEmptyEntries);
                     if (parts.Length == 0) return (404, new JObject { ["error"] = "Not found." });
                     string sessionId = parts[0];
+
+                    // Part A2: Verify session workspace ownership whenever workspaceId is supplied
+                    string reqWsId = body["workspaceId"]?.Value<string>();
+                    if (!string.IsNullOrWhiteSpace(reqWsId)) {
+                        var ownerSum = _engine.GetSessionSummary(sessionId);
+                        if (ownerSum != null && !string.IsNullOrEmpty(ownerSum.WorkspaceId) &&
+                            !string.Equals(ownerSum.WorkspaceId, reqWsId.Trim(), StringComparison.OrdinalIgnoreCase)) {
+                            return (403, new JObject {
+                                ["error"] = "Session does not belong to the specified workspace.",
+                                ["code"] = "workspace_mismatch"
+                            });
+                        }
+                    }
 
                     if (parts.Length == 1 && method == "GET") {
                         var sum = _engine.GetSessionSummary(sessionId);
@@ -911,6 +969,9 @@ namespace Sanctum.Harness {
                 ("POST", "/v1/workspaces/:id/delete", "trusted_channel_only"),
                 ("POST", "/v1/workspaces/:id/ui-state", "bearer_low_risk"),
                 ("PUT", "/v1/workspaces/:id/ui-state", "bearer_low_risk"),
+                ("POST", "/v1/workspaces/:id/vault/documents", "bearer_low_risk"),
+                ("POST", "/v1/workspaces/:id/vault/search", "bearer_low_risk"),
+                ("DELETE", "/v1/workspaces/:id/vault/documents/:docId", "bearer_low_risk"),
                 ("POST", "/v1/memory", "bearer_user_crud"),
                 ("PUT", "/v1/memory/:id", "bearer_user_crud"),
                 ("DELETE", "/v1/memory/:id", "bearer_user_crud"),
