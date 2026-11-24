@@ -358,13 +358,10 @@ namespace Sanctum.Harness {
                 }
             });
 
-            // 11. memory_save & 12. memory_recall
-            string memPath = Path.Combine(appDataDir, "memory.json");
-            object memLock = new object();
-
+            // 11. memory_save & 12. memory_recall (backed by HostMemoryService with provenance & caps)
             engine.RegisterTool(new HarnessToolDescriptor {
                 Name = "memory_save",
-                Description = "Save a redacted durable fact to local host memory.",
+                Description = "Save a redacted durable fact to local host memory with provenance.",
                 Category = "memory",
                 Safety = "write",
                 InputSchema = new JObject {
@@ -376,25 +373,12 @@ namespace Sanctum.Harness {
                     ["required"] = new JArray("content")
                 },
                 Execute = (args, ct) => {
-                    string clean = SecretsRedactor.Redact((args["content"]?.Value<string>() ?? "").Trim());
-                    if (string.IsNullOrEmpty(clean)) throw new ArgumentException("Memory content cannot be empty.");
-                    lock (memLock) {
-                        var root = File.Exists(memPath)
-                            ? CanonicalJson.ParseObject(File.ReadAllText(memPath, Utf8NoBom))
-                            : new JObject { ["enabled"] = true, ["facts"] = new JArray(), ["episodes"] = new JArray() };
-                        var facts = root["facts"] as JArray ?? new JArray();
-                        var entry = new JObject {
-                            ["id"] = "mem_" + Guid.NewGuid().ToString("N").Substring(0, 10),
-                            ["content"] = clean,
-                            ["category"] = args["category"]?.Value<string>() ?? "fact",
-                            ["createdAt"] = DateTime.UtcNow.ToString("o")
-                        };
-                        facts.Add(entry);
-                        root["facts"] = facts;
-                        Directory.CreateDirectory(appDataDir);
-                        File.WriteAllText(memPath, root.ToString(Formatting.Indented), Utf8NoBom);
-                        return entry.ToString(Formatting.None);
-                    }
+                    string content = args["content"]?.Value<string>() ?? "";
+                    string category = args["category"]?.Value<string>() ?? "fact";
+                    string provenance = args["_provenance"]?.Value<string>() ?? "model-after-untrusted-content";
+                    string sid = args["_sessionId"]?.Value<string>() ?? "";
+                    var entry = engine.Memory.Save(content, category, provenance, sid);
+                    return entry.ToString(Formatting.None);
                 }
             });
 
@@ -410,21 +394,7 @@ namespace Sanctum.Harness {
                 },
                 Execute = (args, ct) => {
                     string q = (args["query"]?.Value<string>() ?? "").Trim();
-                    lock (memLock) {
-                        var results = new JArray();
-                        if (File.Exists(memPath)) {
-                            var root = CanonicalJson.ParseObject(File.ReadAllText(memPath, Utf8NoBom));
-                            if (root["facts"] is JArray facts) {
-                                foreach (JObject f in facts) {
-                                    string c = f["content"]?.Value<string>() ?? "";
-                                    if (string.IsNullOrEmpty(q) || c.IndexOf(q, StringComparison.OrdinalIgnoreCase) >= 0) {
-                                        results.Add(f);
-                                    }
-                                }
-                            }
-                        }
-                        return new JObject { ["facts"] = results }.ToString(Formatting.None);
-                    }
+                    return new JObject { ["facts"] = engine.Memory.Recall(q) }.ToString(Formatting.None);
                 }
             });
 

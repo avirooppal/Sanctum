@@ -84,6 +84,7 @@ namespace Sanctum.Harness {
         private readonly HarnessMcpManager _mcp;
         private readonly ExtensionsManager _extensions;
         private readonly WorkspaceTrustManager _workspaceTrust;
+        private readonly HostMemoryService _memory;
         private readonly HarnessScheduler _scheduler;
         private readonly ConcurrentDictionary<string, JArray> _todos = new ConcurrentDictionary<string, JArray>(StringComparer.OrdinalIgnoreCase);
         private readonly Dictionary<string, HarnessToolDescriptor> _tools = new Dictionary<string, HarnessToolDescriptor>(StringComparer.OrdinalIgnoreCase);
@@ -107,6 +108,7 @@ namespace Sanctum.Harness {
             _mcp = new HarnessMcpManager(dataRoot, this);
             _extensions = new ExtensionsManager(dataRoot);
             _workspaceTrust = new WorkspaceTrustManager(dataRoot);
+            _memory = new HostMemoryService(dataRoot);
             _scheduler = new HarnessScheduler(dataRoot, this);
             RegisterPhase1aTools();
             BuiltinTools.RegisterAll(this, dataRoot);
@@ -126,6 +128,7 @@ namespace Sanctum.Harness {
         public HarnessMcpManager Mcp => _mcp;
         public ExtensionsManager Extensions => _extensions;
         public WorkspaceTrustManager WorkspaceTrust => _workspaceTrust;
+        public HostMemoryService Memory => _memory;
         public HarnessScheduler Scheduler => _scheduler;
         public int ActiveRunCount => _activeRuns.Count;
 
@@ -779,6 +782,31 @@ namespace Sanctum.Harness {
                             continue;
                         }
                         var decision = _permissions.Evaluate(sessionId, curMode, curAutonomy, tool, call.Arguments, curUnattended);
+
+                        // Phase 2.3: Memory poisoning guard — record provenance and NEVER allow silent memory_save after untrusted content
+                        if (tool != null && string.Equals(tool.Name, "memory_save", StringComparison.OrdinalIgnoreCase)) {
+                            bool sawUntrusted = history.Any(m => {
+                                string r = (m["role"]?.Value<string>() ?? "").ToLowerInvariant();
+                                string c = m["content"]?.Value<string>() ?? "";
+                                return r == "tool" || c.IndexOf("<untrusted_", StringComparison.OrdinalIgnoreCase) >= 0;
+                            });
+                            call.Arguments["_provenance"] = sawUntrusted ? "model-after-untrusted-content" : "model-after-user-prompt";
+                            call.Arguments["_sessionId"] = sessionId;
+                            if (sawUntrusted && decision.Kind == PermissionDecisionKind.Allow) {
+                                decision = curUnattended
+                                    ? new PermissionDecision {
+                                        Kind = PermissionDecisionKind.Deny,
+                                        RiskClass = "high",
+                                        Reason = "Unattended policy: memory_save after untrusted content requires explicit approval."
+                                    }
+                                    : new PermissionDecision {
+                                        Kind = PermissionDecisionKind.Ask,
+                                        RiskClass = "low",
+                                        Reason = "Memory save requested after untrusted content entered context; explicit user approval required.",
+                                        HostCardText = $"Save memory (after untrusted content): {call.Arguments["content"]?.Value<string>() ?? ""}"
+                                    };
+                            }
+                        }
 
                         if (decision.Kind == PermissionDecisionKind.Deny) {
                             AppendAndBroadcast(sessionId, "tool_finished", new JObject {

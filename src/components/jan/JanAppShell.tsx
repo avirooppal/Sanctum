@@ -14,6 +14,7 @@ import { SettingsLogs } from "@/components/jan/sections/SettingsLogs";
 import { SettingsMonitor } from "@/components/jan/sections/SettingsMonitor";
 import { SettingsCapabilities } from "@/components/jan/sections/SettingsCapabilities";
 import { SettingsNetworkActivity } from "@/components/jan/sections/SettingsNetworkActivity";
+import { SettingsMemory } from "@/components/jan/sections/SettingsMemory";
 import { JanUpdateToast } from "@/components/jan/JanUpdateToast";
 import { ChatScreen } from "@/components/screens/ChatScreen";
 import { WindowControls, handleTitleBarMouseDown, handleTitleBarDoubleClick, handleTitleBarContextMenu } from "@/components/jan/WindowControls";
@@ -274,6 +275,7 @@ export const JanAppShell: React.FC = () => {
               {activeSettingsSection === "general" && <SettingsGeneral />}
               {activeSettingsSection === "capabilities" && <SettingsCapabilities />}
               {activeSettingsSection === "network" && <SettingsNetworkActivity />}
+              {activeSettingsSection === "memory" && <SettingsMemory />}
               {activeSettingsSection === "appearance" && <SettingsAppearance />}
               {activeSettingsSection === "shortcuts" && <SettingsShortcuts />}
               {activeSettingsSection === "mcp-servers" && <SettingsMcp />}

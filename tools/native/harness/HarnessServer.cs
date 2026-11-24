@@ -397,6 +397,28 @@ namespace Sanctum.Harness {
                     return (200, _engine.WorkspaceTrust.RevokeTrust(ws));
                 }
 
+                // Memory Editor & Provenance API
+                if (method == "GET" && path == "/v1/memory") {
+                    return (200, _engine.Memory.ListAll());
+                }
+                if (method == "GET" && path == "/v1/memory/export") {
+                    return (200, new JObject { ["format"] = "json", ["content"] = _engine.Memory.ExportJson() });
+                }
+                if (method == "POST" && path == "/v1/memory") {
+                    string content = body["content"]?.Value<string>() ?? "";
+                    string category = body["category"]?.Value<string>() ?? "fact";
+                    bool pinned = body["pinned"]?.Value<bool>() ?? false;
+                    var entry = _engine.Memory.Save(content, category, "user", "", pinned);
+                    return (201, entry);
+                }
+                if (path.StartsWith("/v1/memory/")) {
+                    string memId = path.Substring("/v1/memory/".Length).Trim('/');
+                    if (!string.IsNullOrEmpty(memId) && !memId.Contains("/")) {
+                        if (method == "PUT" || method == "POST") return _engine.Memory.Update(memId, body);
+                        if (method == "DELETE") return _engine.Memory.Delete(memId);
+                    }
+                }
+
                 if (method == "GET" && path == "/v1/agents") {
                     return (200, new JObject { ["agents"] = _engine.ListAgents() });
                 }

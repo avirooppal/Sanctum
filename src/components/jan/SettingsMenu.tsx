@@ -7,6 +7,7 @@ import {
   IconCpu,
   IconWorld,
   IconShieldLock,
+  IconBrain,
   IconCommand,
   IconCircles,
   IconCode,
@@ -17,6 +18,7 @@ export type SettingsSection =
   | "general"
   | "capabilities"
   | "network"
+  | "memory"
   | "appearance"
   | "shortcuts"
   | "monitor"
@@ -36,6 +38,7 @@ export const SettingsMenu: React.FC<SettingsMenuProps> = ({
     { id: "general", label: "General", icon: <IconAdjustmentsHorizontal size={16} /> },
     { id: "capabilities", label: "Capabilities", icon: <IconWorld size={16} /> },
     { id: "network", label: "Network activity", icon: <IconShieldLock size={16} /> },
+    { id: "memory", label: "Memory", icon: <IconBrain size={16} /> },
     { id: "appearance", label: "Appearance", icon: <IconPalette size={16} /> },
     { id: "shortcuts", label: "Shortcuts", icon: <IconCommand size={16} /> },
     { id: "monitor", label: "System monitor", icon: <IconCpu size={16} /> },
