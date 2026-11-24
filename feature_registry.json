@@ -1,0 +1,187 @@
+{
+  "version": 1,
+  "limits": [
+    "Windows-only (.NET Framework 4.7.2, WebView2, Named Pipes, DPAPI, Job Objects).",
+    "Agent & tool reliability depends on local model quality (measured per model via 40-task eval suite).",
+    "workspace_only does NOT OS-sandbox approved run_command shell commands; confinement relies on PowerShell AST evaluation, explicit approval, Job Object memory/process caps, and stripped secret env vars.",
+    "A2UI Rich Replies are Experimental (Off by default; Auto requires >= 70% measured validity on this machine).",
+    "Browser agent pack is optional, off by default, and measured only on a 12-task static benchmark."
+  ],
+  "features": [
+    {
+      "id": "FEAT-LOCAL-PROVIDERS",
+      "name": "Strictly local model providers (Ollama, loopback OpenAI-compatible, Mock)",
+      "status": "verified",
+      "uiEntryPoint": "Header Model Pill (JanModelHeaderPill)",
+      "tests": ["tests/phase1_local_providers.test.ts"]
+    },
+    {
+      "id": "FEAT-CLOUD-REMOVED",
+      "name": "Cloud LLM providers (Anthropic, OpenAI, Gemini, OpenRouter)",
+      "status": "removed",
+      "uiEntryPoint": "Removed (migrated on startup with one-time notice)",
+      "tests": ["tests/phase1_local_providers.test.ts", "tests/phase1_cloud_migration.test.ts"]
+    },
+    {
+      "id": "FEAT-EGRESS-FACTORY",
+      "name": "Host-level EgressHttpFactory (deny-by-default allowlist)",
+      "status": "verified",
+      "uiEntryPoint": "Settings -> Network activity",
+      "tests": ["tests/phase1_egress_factory.test.ts"]
+    },
+    {
+      "id": "FEAT-EGRESS-LEDGER-OFFLINE",
+      "name": "Append-only redacted egress ledger & global Offline mode switch",
+      "status": "verified",
+      "uiEntryPoint": "Settings -> Network activity",
+      "tests": ["tests/phase1_egress_ledger_and_offline.test.ts", "tests/phase1_offline_proof.test.ts"]
+    },
+    {
+      "id": "FEAT-SHELL-AST-CONFINEMENT",
+      "name": "PowerShell AST command evaluator, Job Object limits & secret env stripping",
+      "status": "verified",
+      "uiEntryPoint": "Tool Approval Modal / CLI TTY",
+      "tests": ["tests/phase2_shell_confinement.test.ts"]
+    },
+    {
+      "id": "FEAT-WORKSPACE-TRUST",
+      "name": "Content-hashed workspace trust for .sanctum/*, AGENTS.md, hooks & MCP",
+      "status": "verified",
+      "uiEntryPoint": "Trusted channel (/v1/workspace/trust)",
+      "tests": ["tests/phase2_workspace_trust.test.ts"]
+    },
+    {
+      "id": "FEAT-MEMORY-PROVENANCE",
+      "name": "Host memory store with provenance, untrusted-context save gate & Memory Editor",
+      "status": "verified",
+      "uiEntryPoint": "Settings -> Memory",
+      "tests": ["tests/phase2_memory_poisoning.test.ts"]
+    },
+    {
+      "id": "FEAT-TRUSTED-CHANNEL-AUDIT",
+      "name": "Single-enforcement-point trusted channel & call-bound single-use approvals",
+      "status": "verified",
+      "uiEntryPoint": "Named Pipe / Native WebMessageReceived",
+      "tests": ["tests/phase2_trusted_channel_audit.test.ts"]
+    },
+    {
+      "id": "FEAT-DATA-AT-REST",
+      "name": "Optional DPAPI (CurrentUser) & PBKDF2-AES-256-HMAC portable archives + full erase-all",
+      "status": "verified",
+      "uiEntryPoint": "/v1/security/encryption, /v1/export, /v1/erase-all",
+      "tests": ["tests/phase2_data_at_rest.test.ts"]
+    },
+    {
+      "id": "FEAT-UPDATER-SIGNING",
+      "name": "Manual-only updater with pinned RSA-2048 signature, SHA-256, downgrade refusal & Authenticode build step",
+      "status": "verified",
+      "uiEntryPoint": "Settings -> General -> Check for updates",
+      "tests": ["tests/phase2_updater_and_signing.test.ts"]
+    },
+    {
+      "id": "FEAT-EXPLICIT-NUM-CTX",
+      "name": "Explicit per-session Ollama num_ctx & pre-truncation auto-compaction",
+      "status": "verified",
+      "uiEntryPoint": "Chat session context (/v1/sessions/:id/context)",
+      "tests": ["tests/phase3_context_window.test.ts"]
+    },
+    {
+      "id": "FEAT-ONE-CHAT-PATH",
+      "name": "Unified harness chat path across UI, CLI, and HTTP API",
+      "status": "verified",
+      "uiEntryPoint": "ChatScreen / CLI run / /v1/sessions",
+      "tests": ["tests/phase3_one_chat_path.test.ts"]
+    },
+    {
+      "id": "FEAT-MODEL-TIERS",
+      "name": "Model-adaptive capability tiers (minimal / standard / full) & JSON repair",
+      "status": "verified",
+      "uiEntryPoint": "/v1/capabilities/:model & /v1/sessions/:id/tier",
+      "tests": ["tests/phase3_model_tiers.test.ts"]
+    },
+    {
+      "id": "FEAT-MODEL-EVAL-40",
+      "name": "40-task per-model tool & agent eval suite with measured UI badge",
+      "status": "verified",
+      "uiEntryPoint": "Header Model Pill (measured reliability badge)",
+      "tests": ["tests/phase3_model_eval_suite.test.ts"]
+    },
+    {
+      "id": "FEAT-THINKING-CONTROLS",
+      "name": "Capability-gated thinking parameter forwarding to Ollama",
+      "status": "verified",
+      "uiEntryPoint": "Chat composer thinking toggle",
+      "tests": ["tests/phase3_thinking_controls.test.ts"]
+    },
+    {
+      "id": "FEAT-A2UI-RICH-REPLIES",
+      "name": "A2UI v0.9.1 Rich Replies (render_ui tool, native React 19 catalog, ErrorBoundary & Markdown fallback)",
+      "status": "experimental",
+      "uiEntryPoint": "Chat assistant reply ('Agent-generated UI' frame; Off by default)",
+      "tests": ["tests/phase3b_a2ui_host.test.ts", "tests/phase3b_a2ui_ui_and_model.test.ts"]
+    },
+    {
+      "id": "FEAT-SHADOW-GIT-CHECKPOINTS",
+      "name": "Shadow-git workspace checkpoints & full rewind (outside user repo)",
+      "status": "verified",
+      "uiEntryPoint": "Checkpoint drawer / /v1/sessions/:id/rewind",
+      "tests": ["tests/phase4_shadow_git_checkpoints.test.ts"]
+    },
+    {
+      "id": "FEAT-PROJECT-VERIFIER",
+      "name": "Real project verification command discovery (package.json, pyproject, Cargo, dotnet, Makefile)",
+      "status": "verified",
+      "uiEntryPoint": "/v1/sessions/:id/verify",
+      "tests": ["tests/phase4_verifier_plan_subagents.test.ts"]
+    },
+    {
+      "id": "FEAT-PLAN-MODE",
+      "name": "Editable PLAN.md artifact & plan checklist verification",
+      "status": "verified",
+      "uiEntryPoint": "Composer Auto/Plan toggle & /v1/sessions/:id/plan",
+      "tests": ["tests/phase4_verifier_plan_subagents.test.ts"]
+    },
+    {
+      "id": "FEAT-WORKTREES-SUBAGENTS",
+      "name": "Git worktrees with orphan cleanup on startup & subagent permission ceilings",
+      "status": "partial",
+      "uiEntryPoint": "/v1/worktrees & /v1/sessions/:id/subagents",
+      "tests": ["tests/phase4_verifier_plan_subagents.test.ts", "tests/phase3_context_and_agents.test.ts"]
+    },
+    {
+      "id": "FEAT-SCHEDULER",
+      "name": "Fail-closed unattended scheduler with expiry, autonomy ceiling & markdown reports",
+      "status": "verified",
+      "uiEntryPoint": "/v1/schedules",
+      "tests": ["tests/phase4_scheduler_and_web_tools.test.ts"]
+    },
+    {
+      "id": "FEAT-WEB-TOOLS-OPTIN",
+      "name": "Isolated opt-in web_fetch & web_search (off by default, Offline-blocked, untrusted-wrapped)",
+      "status": "experimental",
+      "uiEntryPoint": "Settings -> Network activity (Web fetch / search toggle)",
+      "tests": ["tests/phase4_scheduler_and_web_tools.test.ts"]
+    },
+    {
+      "id": "FEAT-BROWSER-AGENT-PACK",
+      "name": "Optional browser-use pack (off by default, 12-task static benchmark, Offline-aware)",
+      "status": "experimental",
+      "uiEntryPoint": "Browser Agent viewer tab",
+      "tests": ["tests/phase2_browser_agent.test.ts"]
+    },
+    {
+      "id": "FEAT-RAG-HYBRID-VERSIONED",
+      "name": "Local Hybrid RAG with embedding/chunk versioning, hash incremental re-index, untrusted citations & recall@3",
+      "status": "verified",
+      "uiEntryPoint": "Chat document attachments / Vault",
+      "tests": ["tests/phase5_rag_versioning_and_recall.test.ts", "tests/vector_store_rag.test.ts"]
+    },
+    {
+      "id": "FEAT-SPEECH-OCR-LOCAL",
+      "name": "Local-only Speech (Qwen3-ASR / Windows Offline) & OCR (Windows / PaddleOCR-VL) with pack integrity check",
+      "status": "verified",
+      "uiEntryPoint": "Settings -> Capabilities & Chat mic/upload",
+      "tests": ["tests/phase5_speech_ocr_local_only.test.ts"]
+    }
+  ]
+}
