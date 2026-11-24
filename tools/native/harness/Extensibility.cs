@@ -513,6 +513,10 @@ namespace Sanctum.Harness {
         [JsonProperty("enabled")] public bool Enabled { get; set; } = true;
         [JsonProperty("lastRunAt", NullValueHandling = NullValueHandling.Ignore)] public string LastRunAt { get; set; }
         [JsonProperty("lastSessionId", NullValueHandling = NullValueHandling.Ignore)] public string LastSessionId { get; set; }
+        [JsonProperty("expiresAt", NullValueHandling = NullValueHandling.Ignore)] public string ExpiresAt { get; set; }
+        [JsonProperty("maxAutonomy")] public string MaxAutonomy { get; set; } = "auto_reads";
+        [JsonProperty("allowNetwork")] public bool AllowNetwork { get; set; }
+        [JsonProperty("lastReportPath", NullValueHandling = NullValueHandling.Ignore)] public string LastReportPath { get; set; }
     }
 
     /// <summary>
@@ -592,25 +596,59 @@ namespace Sanctum.Harness {
             }
             if (job == null) return (404, new JObject { ["error"] = "Scheduled job not found." });
 
+            // Enforce expiry (fail closed)
+            if (!string.IsNullOrWhiteSpace(job.ExpiresAt) &&
+                DateTime.TryParse(job.ExpiresAt, out var expDt) &&
+                DateTime.UtcNow > expDt.ToUniversalTime()) {
+                return (410, new JObject {
+                    ["error"] = "Scheduled job has expired and will not run (fail-closed).",
+                    ["code"] = "job_expired",
+                    ["expiresAt"] = job.ExpiresAt
+                });
+            }
+
+            if (job.AllowNetwork && EgressHttpFactory.IsOfflineMode) {
+                return (403, new JObject {
+                    ["error"] = "Scheduled job requires network access, which is blocked in Offline mode.",
+                    ["code"] = "offline_mode_active"
+                });
+            }
+
+            string effectiveAutonomy = ProjectVerifier.CapChildAutonomy(job.MaxAutonomy ?? "auto_reads", "auto_reads");
+
             var session = _engine.CreateSession(
                 title: "[Scheduled] " + job.Name,
                 workspace: job.Workspace,
                 mode: "build",
-                autonomy: "auto_reads",
+                autonomy: effectiveAutonomy,
                 model: job.Model,
                 unattended: true,
                 role: "scheduler");
 
             var (_, code, resp) = _engine.StartRun(session.SessionId, job.Prompt);
+
+            string reportPath = "";
+            try {
+                string reportsDir = Path.Combine(Path.GetDirectoryName(_path), "reports");
+                Directory.CreateDirectory(reportsDir);
+                reportPath = Path.Combine(reportsDir, $"schedule-{job.Id}-{DateTime.UtcNow:yyyyMMddHHmmss}.md");
+                string reportMd = $"# Scheduled Job Report: {job.Name}\n\n- Job ID: `{job.Id}`\n- Session ID: `{session.SessionId}`\n- Autonomy Ceiling: `{effectiveAutonomy}`\n- Network Allowed: `{job.AllowNetwork && !EgressHttpFactory.IsOfflineMode}`\n- Triggered At: `{DateTime.UtcNow:o}`\n- Status Code: `{code}`\n";
+                File.WriteAllText(reportPath, reportMd, Utf8NoBom);
+                WindowsAclHelper.ApplyUserOnlyFileAcl(reportPath);
+            } catch { }
+
             lock (_lock) {
                 job.LastRunAt = DateTime.UtcNow.ToString("o");
                 job.LastSessionId = session.SessionId;
+                job.LastReportPath = reportPath;
                 Save();
             }
             return (code, new JObject {
                 ["jobId"] = job.Id,
                 ["sessionId"] = session.SessionId,
                 ["unattended"] = true,
+                ["autonomy"] = effectiveAutonomy,
+                ["reportPath"] = reportPath,
                 ["run"] = resp
             });
         }

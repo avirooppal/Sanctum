@@ -120,6 +120,7 @@ namespace Sanctum.Harness {
             BuiltinTools.RegisterAll(this, dataRoot);
             OrchestrationTools.RegisterAll(this);
             A2uiService.RegisterTool(this);
+            WebTools.RegisterAll(this);
             ThreadMigration.MigrateLegacyThreadsIfNeeded(dataRoot, _store);
             CloudRemovalMigration.RunIfNeeded(dataRoot, _store);
             _store.RecoverAllSessionsOnStartup();
