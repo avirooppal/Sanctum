@@ -119,6 +119,7 @@ namespace Sanctum.Harness {
             RegisterPhase1aTools();
             BuiltinTools.RegisterAll(this, dataRoot);
             OrchestrationTools.RegisterAll(this);
+            A2uiService.RegisterTool(this);
             ThreadMigration.MigrateLegacyThreadsIfNeeded(dataRoot, _store);
             CloudRemovalMigration.RunIfNeeded(dataRoot, _store);
             _store.RecoverAllSessionsOnStartup();
@@ -246,6 +247,55 @@ namespace Sanctum.Harness {
                 ["utilizationPct"] = pct,
                 ["nearTruncation"] = est >= (int)(numCtx * 0.80)
             };
+        }
+
+        public void EmitA2uiSurfaceEvent(string sessionId, JObject payload) {
+            if (string.IsNullOrEmpty(sessionId) || payload == null) return;
+            AppendAndBroadcast(sessionId, "a2ui_surface", payload, null, durableFlush: true);
+        }
+
+        public (int status, JObject body) HandleA2uiUserAction(string sessionId, JObject body) {
+            var sum = _store.BuildSummary(sessionId);
+            if (sum == null) return (404, new JObject { ["error"] = "Session not found." });
+
+            string idempotencyKey = (body["idempotencyKey"]?.Value<string>() ?? "").Trim();
+            string surfaceId = (body["surfaceId"]?.Value<string>() ?? "").Trim();
+            string componentId = (body["componentId"]?.Value<string>() ?? "").Trim();
+            string actionName = (body["actionName"]?.Value<string>() ?? "").Trim();
+            if (string.IsNullOrEmpty(surfaceId) || string.IsNullOrEmpty(actionName)) {
+                return (400, new JObject { ["error"] = "surfaceId and actionName are required." });
+            }
+
+            if (!string.IsNullOrEmpty(idempotencyKey) && TryGetIdempotentResult(sessionId, "a2ui:" + idempotencyKey, out var cached)) {
+                return (200, cached);
+            }
+
+            var dataObj = body["data"] as JObject ?? new JObject();
+            string rawData = dataObj.ToString(Newtonsoft.Json.Formatting.None);
+            if (Encoding.UTF8.GetByteCount(rawData) > A2uiService.MaxDataModelBytes) {
+                return (400, new JObject { ["error"] = "Action data payload exceeds size cap." });
+            }
+
+            var evt = AppendAndBroadcast(sessionId, "a2ui_user_action", new JObject {
+                ["surfaceId"] = surfaceId,
+                ["componentId"] = componentId,
+                ["actionName"] = actionName,
+                ["data"] = dataObj,
+                ["untrusted"] = true
+            }, null, durableFlush: true);
+
+            // Action NEVER executes tools directly — it only records an event & optionally forwards as untrusted user input
+            var resp = new JObject {
+                ["ok"] = true,
+                ["seq"] = evt.Seq,
+                ["surfaceId"] = surfaceId,
+                ["actionName"] = actionName,
+                ["toolsExecuted"] = false
+            };
+            if (!string.IsNullOrEmpty(idempotencyKey)) {
+                RecordIdempotentResult(sessionId, "a2ui:" + idempotencyKey, resp);
+            }
+            return (200, resp);
         }
 
         public JArray ListToolsJson() {

@@ -790,6 +790,9 @@ namespace Sanctum.Harness {
                             var prof = _engine.GetEffectiveTier(sessionId, sumT?.Model ?? "mock");
                             return (200, JObject.FromObject(prof));
                         }
+                        if (action == "a2ui-action") {
+                            return _engine.HandleA2uiUserAction(sessionId, body);
+                        }
                         if (action == "fork") {
                             long afterSeq = body["forkAfterSeq"]?.Value<long>() ?? 1;
                             var forked = _engine.ForkSession(sessionId, afterSeq, body["title"]?.Value<string>());
@@ -843,6 +846,7 @@ namespace Sanctum.Harness {
                 ("POST", "/v1/sessions/:id/autonomy", "trusted_channel_on_full_auto"),
                 ("POST", "/v1/sessions/:id/model", "bearer_low_risk"),
                 ("POST", "/v1/sessions/:id/tier", "bearer_low_risk"),
+                ("POST", "/v1/sessions/:id/a2ui-action", "untrusted_ui_event_only"),
                 ("POST", "/v1/evals/record", "bearer_low_risk"),
                 ("POST", "/v1/sessions/:id/fork", "bearer_low_risk"),
                 ("POST", "/v1/sessions/:id/compact", "bearer_low_risk"),
