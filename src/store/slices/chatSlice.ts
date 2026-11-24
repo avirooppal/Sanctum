@@ -1,13 +1,9 @@
-import { streamWorkspaceChat, type ToolApprovalResponse } from "../../../core/ai/tools/workspace_chat.ts";
-import { shouldActivateAgentTools } from "../../../core/ai/tools/tool_router.ts";
 import type { StateCreator } from "zustand";
 import type { ChatSession, ChatMessage, ChatProject, RequestStatusEvent } from "../../../contracts/types/index.ts";
 import { reconcileThreadSnapshots } from "../../../core/domain/threads.ts";
 import { saveImageToVaultDb } from "../../lib/vaultStorage.ts";
 import { globalVectorStore } from "../../../core/ai/rag/vectorStore.ts";
 import { globalMemoryStore, LocalMemoryStore } from "../../../core/ai/memory/memory_store.ts";
-import { LocalEngineClient } from "../../../core/ai/inference/engine.ts";
-import { DEFAULT_OLLAMA_ENDPOINT } from "../../../contracts/constants/index.ts";
 import { RequestStatusTracker } from "../../../core/ai/request_status.ts";
 import {
   probeHarness,
@@ -15,6 +11,9 @@ import {
   getHarnessSession,
   interruptHarnessRun,
   streamHarnessEvents,
+  streamHarnessChat,
+  type ToolApprovalResponse,
+  type ToolActivity,
 } from "../../lib/harnessClient.ts";
 
 export interface PendingToolApproval {
@@ -738,28 +737,17 @@ export const createChatSlice: StateCreator<any, [], [], ChatSlice> = (set, get) 
     if (!isSecondaryPane) {
       set({ attachedImage: null, attachedDocuments: [] });
     }
-    const noProjectMode =
-      typeof window !== "undefined" && localStorage.getItem("sanctum.noProjectMode.v1") === "1";
-    const recentToolNames = session.messages
-      .slice(-4)
-      .flatMap((m: ChatMessage) => (m.toolActivities || []).map((a) => a.name));
-    const shouldUseTools =
-      get().toolsEnabled ||
-      shouldActivateAgentTools(content, {
-        planMode: isPlanMode,
-        noProjectMode,
-        hasAttachedDocs: attachedDocs.length > 0,
-        recentToolNames,
-      });
-
     try {
-      const stream = shouldUseTools
-        ? streamWorkspaceChat
-        : LocalEngineClient.streamChat.bind(LocalEngineClient);
-      for await (const chunk of stream(activeModel.id, historyPayload, {
-        endpoint: DEFAULT_OLLAMA_ENDPOINT,
+      for await (const chunk of streamHarnessChat(activeModel.id, historyPayload, {
+        uiSessionId: session.id,
         planMode: isPlanMode,
-        autoVerify: get().autoVerifyEnabled,
+        ragContext: ragContextSnippet || undefined,
+        numCtx:
+          ragContextSnippet || session.messages.some((m: ChatMessage) => (m.attachments?.length || 0) > 0)
+            ? Math.max(activeModel.config.contextSize || 4096, 8192)
+            : activeModel.config.contextSize,
+        think: get().thinkEnabled,
+        signal: controller.signal,
         onApprovalRequest: ({ toolName, arguments: toolArgs }) =>
           new Promise<ToolApprovalResponse>((resolve) => {
             set({
@@ -771,8 +759,7 @@ export const createChatSlice: StateCreator<any, [], [], ChatSlice> = (set, get) 
               },
             });
           }),
-        getApprovalToken: (toolName: string) => requestHostApprovalToken(toolName),
-        onActivity: (activity: import("../../../core/ai/tools/workspace_chat.ts").ToolActivity) => {
+        onActivity: (activity: ToolActivity) => {
           if (
             activity.status === "success" &&
             ["create_file", "edit_file", "patch_file", "move_file", "delete_file"].includes(activity.name)
@@ -821,18 +808,6 @@ export const createChatSlice: StateCreator<any, [], [], ChatSlice> = (set, get) 
             ),
           }));
         },
-        temperature: session.temperature,
-        topP: session.topP,
-        think: get().thinkEnabled,
-        signal: controller.signal,
-        contextSize:
-          ragContextSnippet || session.messages.some((m: ChatMessage) => (m.attachments?.length || 0) > 0)
-            ? Math.max(activeModel.config.contextSize || 4096, 8192)
-            : activeModel.config.contextSize,
-        gpuLayers: activeModel.config.gpuLayers,
-        threads: activeModel.config.threads,
-        ragContext: ragContextSnippet,
-        imageAttached: imageBase64,
       })) {
         if (controller.signal.aborted) break;
         finalAssistantText = chunk.text;

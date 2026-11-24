@@ -1,8 +1,9 @@
 import type { StateCreator } from "zustand";
-import type { AgentRun, AgentStep } from "../../../contracts/types/index.ts";
-import { executeWorkspaceToolCall, operations } from "../../../core/ai/tools/workspace_chat.ts";
+import type { AgentRun } from "../../../contracts/types/index.ts";
+import { createHarnessSession, sendHarnessMessage, interruptHarnessRun } from "../../lib/harnessClient.ts";
 
 export type AutonomyMode = "step_by_step" | "auto_reads" | "full_auto";
+export type AgentOperationMode = "build" | "plan";
 
 export interface AgentPreset {
   id: string;
@@ -15,49 +16,12 @@ export interface AgentPreset {
 export const AGENT_PRESETS: AgentPreset[] = [
   {
     id: "general",
-    name: "General Autonomous Agent",
-    description: "Plans, searches files, queries Vault, and edits workspace with human approval.",
-    systemPrompt: "You are a local autonomous agent. Decompose goals into clear tool steps.",
-    allowedTools: Object.keys(operations),
-  },
-  {
-    id: "software_engineer",
-    name: "Software Engineer",
-    description: "Builds, debugs, executes tests, and runs local terminal workflows autonomously.",
-    systemPrompt: "You are a senior full-stack software engineer. Inspect codebase, edit files, and execute terminal commands to verify correctness.",
-    allowedTools: ["run_command", "start_background", "read_background_output", "stop_background", "list_directory", "search_files", "read_file", "read_file_range", "edit_file", "create_file", "apply_patch"],
-  },
-  {
-    id: "researcher",
-    name: "Deep Researcher",
-    description: "Searches Knowledge Vault and workspace documents, cross-checks facts, and saves findings to memory.",
-    systemPrompt: "Focus on thorough document retrieval, citation verification, and saving key facts to memory.",
-    allowedTools: ["vault_search", "memory_recall", "memory_save", "search_files", "read_file"],
-  },
-  {
-    id: "code_reviewer",
-    name: "Code Reviewer",
-    description: "Audits workspace files for bugs, security issues, and architectural boundaries.",
-    systemPrompt: "Inspect workspace code systematically using search_files and read_file_range.",
-    allowedTools: ["list_directory", "search_files", "read_file", "read_file_range", "edit_file"],
-  },
-  {
-    id: "file_organizer",
-    name: "Workspace Organizer",
-    description: "Inspects directory structure and proposes clean file organization.",
-    systemPrompt: "List directories, inspect files, and organize workspace paths safely.",
-    allowedTools: ["list_directory", "read_file", "create_directory", "move_path"],
-  },
-  {
-    id: "note_summarizer",
-    name: "Note Summarizer",
-    description: "Reads workspace notes and distills action items into persistent local memory.",
-    systemPrompt: "Read markdown/text notes, summarize key takeaways, and store durable facts.",
-    allowedTools: ["list_directory", "read_file", "memory_save", "create_file"],
+    name: "General Local Agent",
+    description: "Runs tasks through the host Agent Harness with call-bound approvals.",
+    systemPrompt: "You are a strictly local autonomous agent.",
+    allowedTools: ["list_directory", "read_file", "read_file_range", "search_files", "edit_file", "create_file", "run_command", "vault_search", "memory_recall", "memory_save"],
   },
 ];
-
-export type AgentOperationMode = "build" | "plan";
 
 export interface AgentSlice {
   agentRuns: AgentRun[];
@@ -84,137 +48,15 @@ export interface AgentSlice {
   clearAgentRuns: () => void;
 }
 
-function buildFallbackSteps(goal: string, chosenModel: string): AgentStep[] {
-  const isCode = /code|function|fix|bug|refactor|test|api/i.test(goal);
-  const isDoc = /doc|read|search|vault|rag|summarize|extract|memory|remember/i.test(goal);
-  const now = Date.now();
-
-  if (isCode) {
-    return [
-      {
-        id: `step-${now}-1`,
-        title: `Search workspace for "${goal.slice(0, 32)}..."`,
-        description: "Locate relevant source files and references in workspace.",
-        toolName: "search_files",
-        toolArgs: { path: ".", query: goal.split(/\s+/)[0] || "function" },
-        status: "completed",
-        result: "Indexed workspace files and matched target symbols.",
-        executionTimeMs: 95,
-      },
-      {
-        id: `step-${now}-2`,
-        title: "Inspect target file contents",
-        description: "Read source context before proposing edits.",
-        toolName: "list_directory",
-        toolArgs: { path: "." },
-        status: "completed",
-        result: "Verified workspace directory structure and target files.",
-        executionTimeMs: 110,
-      },
-      {
-        id: `step-${now}-3`,
-        title: "Apply workspace changes & verify",
-        description: "Execute gated modification step with human confirmation.",
-        toolName: "edit_file",
-        toolArgs: { path: "notes.md", prompt: goal, model: chosenModel },
-        status: "waiting_approval",
-        requiresApproval: true,
-      },
-      {
-        id: `step-${now}-4`,
-        title: "Verify outcome & record summary to memory",
-        description: "Check goal completion and persist key findings.",
-        toolName: "memory_save",
-        toolArgs: { content: `Completed task: ${goal}`, category: "project" },
-        status: "pending",
-      },
-    ];
-  }
-
-  if (isDoc) {
-    return [
-      {
-        id: `step-${now}-1`,
-        title: `Search local Knowledge Vault for "${goal.slice(0, 32)}..."`,
-        description: "Execute Hybrid (Dense + BM25 RRF) retrieval across indexed documents.",
-        toolName: "vault_search",
-        toolArgs: { query: goal, top_k: 4 },
-        status: "completed",
-        result: "Retrieved relevant passages via HybridRetriever.",
-        executionTimeMs: 75,
-      },
-      {
-        id: `step-${now}-2`,
-        title: "Recall related persistent memories",
-        description: "Check Core Facts and Episodic chat history.",
-        toolName: "memory_recall",
-        toolArgs: { query: goal },
-        status: "completed",
-        result: "Cross-referenced local memory store.",
-        executionTimeMs: 50,
-      },
-      {
-        id: `step-${now}-3`,
-        title: "Save synthesized findings to persistent memory",
-        description: "Store verified summary in local memory store.",
-        toolName: "memory_save",
-        toolArgs: { content: `Summary for: ${goal}`, category: "fact" },
-        status: "waiting_approval",
-        requiresApproval: true,
-      },
-    ];
-  }
-
-  return [
-    {
-      id: `step-${now}-1`,
-      title: `Inspect workspace for "${goal.slice(0, 32)}..."`,
-      description: "List workspace directory and check available files.",
-      toolName: "list_directory",
-      toolArgs: { path: "." },
-      status: "completed",
-      result: "Workspace root inspected.",
-      executionTimeMs: 80,
-    },
-    {
-      id: `step-${now}-2`,
-      title: "Recall relevant context from local memory",
-      description: "Query core facts and past episodes.",
-      toolName: "memory_recall",
-      toolArgs: { query: goal },
-      status: "completed",
-      result: "Retrieved local context.",
-      executionTimeMs: 65,
-    },
-    {
-      id: `step-${now}-3`,
-      title: `Execute primary action: ${goal.slice(0, 40)}`,
-      description: "Run gated tool action with human approval.",
-      toolName: "memory_save",
-      toolArgs: { content: `Executed goal: ${goal}`, category: "project" },
-      status: "waiting_approval",
-      requiresApproval: true,
-    },
-    {
-      id: `step-${now}-4`,
-      title: "Verify result against goal",
-      description: "Confirm output completeness and report confidence.",
-      toolName: "datetime",
-      toolArgs: {},
-      status: "pending",
-    },
-  ];
-}
-
 export const createAgentSlice: StateCreator<any, [], [], AgentSlice> = (set, get) => ({
   agentRuns: [],
   activeRunId: "",
   isAgentRunning: false,
   agentPrompt: "",
-  autonomyMode: "step_by_step",
+  autonomyMode: "auto_reads",
   agentMode: "build",
   activePresetId: "general",
-  maxStepBudget: 10,
+  maxStepBudget: 12,
 
   setAgentPrompt: (prompt) => set({ agentPrompt: prompt }),
   setActiveRunId: (id) => set({ activeRunId: id }),
@@ -224,325 +66,53 @@ export const createAgentSlice: StateCreator<any, [], [], AgentSlice> = (set, get
 
   startAgentTask: async (goal, modelId) => {
     if (!goal.trim()) return;
-
-    const chosenModel = modelId || get().activeModelId || get().models?.[0]?.id || "local-agent";
-    const runId = `run-${Date.now()}`;
-    const preset = AGENT_PRESETS.find((p) => p.id === get().activePresetId) || AGENT_PRESETS[0];
-    const isPlanMode = get().agentMode === "plan";
-
-    let generatedSteps: AgentStep[] = buildFallbackSteps(goal, chosenModel);
-
-    // Attempt live LLM planning via /api/chat if running in browser environment with active model
-    if (typeof window !== "undefined" && typeof fetch === "function") {
-      try {
-        const ac = new AbortController();
-        const timer = setTimeout(() => ac.abort(), 3500);
-        const sysContent = isPlanMode
-          ? `${preset.systemPrompt}\nPLAN MODE: Strictly read-only analysis. Only use read_file, search_files, list_directory, vault_search. Formulate a step-by-step diagnostic plan for user review.\nReturn JSON with {"steps":[{"title":"...","description":"...","toolName":"list_directory|read_file|search_files|vault_search|memory_recall","toolArgs":{},"requiresApproval":false}]}. /no_think`
-          : `${preset.systemPrompt}\nReturn JSON with {"steps":[{"title":"...","description":"...","toolName":"list_directory|read_file|search_files|vault_search|memory_recall|memory_save|create_file|edit_file|run_command","toolArgs":{},"requiresApproval":true}]}. Always include at least 3 steps and mark mutating steps requiresApproval:true. /no_think`;
-
-        const planRes = await fetch("/api/chat", {
-          method: "POST",
-          signal: ac.signal,
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({
-            model: chosenModel,
-            stream: false,
-            think: false,
-            format: "json",
-            messages: [
-              {
-                role: "system",
-                content: sysContent,
-              },
-              { role: "user", content: `Plan steps for goal: ${goal}` },
-            ],
-            options: { temperature: 0.2, num_predict: 512 },
-          }),
-        });
-        clearTimeout(timer);
-
-        if (planRes.ok) {
-          const data = await planRes.json();
-          const rawContent = data?.message?.content || "";
-          const parsed = JSON.parse(rawContent);
-          if (Array.isArray(parsed?.steps) && parsed.steps.length >= 3) {
-            const mapped: AgentStep[] = parsed.steps.slice(0, get().maxStepBudget || 10).map((s: any, idx: number) => {
-              const tName = String(s.toolName || "list_directory");
-              const op = operations[tName];
-              const isWrite = op ? op.safety === "write" : Boolean(s.requiresApproval);
-              return {
-                id: `step-${Date.now()}-${idx + 1}`,
-                title: String(s.title || `Step ${idx + 1}: ${tName}`),
-                description: String(s.description || ""),
-                toolName: tName,
-                toolArgs: typeof s.toolArgs === "object" && s.toolArgs ? s.toolArgs : { path: "." },
-                status: idx === 0 && isWrite ? "waiting_approval" : idx === 0 ? "waiting_approval" : "pending",
-                requiresApproval: isWrite || idx === parsed.steps.length - 1,
-              };
-            });
-            if (!mapped.some((s) => s.requiresApproval)) {
-              mapped[mapped.length - 1].requiresApproval = true;
-            }
-            const firstApprovalIdx = mapped.findIndex((s) => s.requiresApproval);
-            mapped.forEach((s, i) => {
-              if (i < firstApprovalIdx) s.status = "completed";
-              else if (i === firstApprovalIdx) s.status = "waiting_approval";
-              else s.status = "pending";
-            });
-            generatedSteps = mapped;
-          }
-        }
-      } catch {
-        // Fallback steps already prepared
-      }
-    }
-
-    const waitIdx = generatedSteps.findIndex((s) => s.status === "waiting_approval");
-    const newRun: AgentRun = {
-      id: runId,
-      goal,
-      modelId: chosenModel,
-      status: "waiting_approval",
-      currentStepIndex: waitIdx !== -1 ? waitIdx : 0,
-      createdAt: new Date().toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" }),
-      updatedAt: "Just now",
-      logs: [
-        `[${new Date().toLocaleTimeString()}] Task initiated: "${goal}" (Preset: ${preset.name})`,
-        `[${new Date().toLocaleTimeString()}] Model orchestrator: ${chosenModel}`,
-        `[${new Date().toLocaleTimeString()}] Generated ${generatedSteps.length} planned actions.`,
-        `[${new Date().toLocaleTimeString()}] Step ${(waitIdx !== -1 ? waitIdx : 0) + 1} staged: Awaiting human confirmation.`,
-      ],
-      steps: generatedSteps,
-    };
-
-    set((state: any) => ({
-      agentRuns: [newRun, ...state.agentRuns],
-      activeRunId: runId,
-      isAgentRunning: false,
-    }));
-  },
-
-  approveNextAction: async () => {
-    const run = get().agentRuns.find((r: AgentRun) => r.id === get().activeRunId);
-    if (!run) return;
-
-    const pendingIndex = run.steps.findIndex(
-      (s: AgentStep) => s.status === "waiting_approval" || s.status === "pending"
-    );
-    if (pendingIndex === -1) return;
-
-    const targetStep = run.steps[pendingIndex];
-
-    // Loop detection guardrail: check if identical toolName + args already ran 3 times
-    const stepSig = `${targetStep.toolName}:${JSON.stringify(targetStep.toolArgs || {})}`;
-    const priorSameCalls = run.steps
-      .slice(0, pendingIndex)
-      .filter((s: AgentStep) => s.status === "completed" && `${s.toolName}:${JSON.stringify(s.toolArgs || {})}` === stepSig).length;
-
-    if (priorSameCalls >= 3) {
-      set((state: any) => ({
-        isAgentRunning: false,
-        agentRuns: state.agentRuns.map((r: AgentRun) =>
-          r.id === state.activeRunId
-            ? {
-                ...r,
-                status: "paused",
-                logs: [
-                  ...r.logs,
-                  `[${new Date().toLocaleTimeString()}] Loop guardrail triggered: "${targetStep.toolName}" repeated 3 times with identical arguments. Paused for human review.`,
-                ],
-              }
-            : r
-        ),
-      }));
-      return;
-    }
-
-    set((state: any) => ({
-      isAgentRunning: true,
-      agentRuns: state.agentRuns.map((r: AgentRun) =>
-        r.id === state.activeRunId
-          ? {
-              ...r,
-              status: "running",
-              steps: r.steps.map((s, idx) =>
-                idx === pendingIndex ? { ...s, status: "running" } : s
-              ),
-              logs: [
-                ...r.logs,
-                `[${new Date().toLocaleTimeString()}] Confirmed action: "${targetStep.title}". Executing tool [${targetStep.toolName || "action"}]...`,
-              ],
-            }
-          : r
-      ),
-    }));
-
-    const t0 = Date.now();
-    let stepResultText = `Execution succeeded via tool [${targetStep.toolName || "action"}] (200 OK)`;
-
-    // If tool is registered in unified workspace operations, execute it for real
-    if (targetStep.toolName && operations[targetStep.toolName]) {
-      try {
-        let workspace = { root: ".", id: "default" };
-        if (typeof fetch === "function") {
-          const wsRes = await fetch("/api/workspace").catch(() => null);
-          if (wsRes && wsRes.ok) {
-            workspace = await wsRes.json();
-          }
-        }
-        const execRes = await executeWorkspaceToolCall(
-          {
-            name: targetStep.toolName,
-            arguments: targetStep.toolArgs || { path: "." },
-            id: targetStep.id,
-          },
-          workspace,
-          new AbortController().signal,
-          () => {},
-          {
-            sessionId: run.id,
-            onApprovalRequest: async () => ({ decision: "approved", scope: "once" }),
-          }
-        );
-        stepResultText = execRes.output.slice(0, 600);
-      } catch (err: any) {
-        stepResultText = `Executed [${targetStep.toolName}]: ${err?.message || "completed"}`;
-      }
-    } else {
-      await new Promise((resolve) => setTimeout(resolve, 150));
-    }
-
-    const elapsedMs = Math.max(10, Date.now() - t0);
-
-    set((state: any) => {
-      const active = state.agentRuns.find((r: AgentRun) => r.id === state.activeRunId);
-      if (!active) return state;
-
-      const updatedSteps = active.steps.map((s: AgentStep, idx: number) => {
-        if (idx === pendingIndex) {
-          return {
-            ...s,
-            status: "completed" as const,
-            result: stepResultText,
-            executionTimeMs: elapsedMs,
-          };
-        }
-        return s;
+    const chosenModel = modelId || get().activeModelId || get().models?.[0]?.id || "qwen3:1.7b";
+    const mode = get().agentMode === "plan" ? "plan" : "build";
+    const autonomy = get().autonomyMode === "step_by_step" ? "ask_all" : "auto_reads";
+    set({ isAgentRunning: true });
+    try {
+      const sess = await createHarnessSession({
+        title: goal.slice(0, 48),
+        mode,
+        autonomy,
+        model: chosenModel,
       });
-
-      const nextPendingIndex = updatedSteps.findIndex((s: AgentStep) => s.status === "pending");
-      const isComplete = nextPendingIndex === -1;
-
-      if (!isComplete) {
-        const nextStep = updatedSteps[nextPendingIndex];
-        updatedSteps[nextPendingIndex] = {
-          ...nextStep,
-          status: nextStep.requiresApproval ? "waiting_approval" : "pending",
-        };
-      }
-
-      const anyRemaining = updatedSteps.some(
-        (s: AgentStep) => s.status === "pending" || s.status === "waiting_approval"
-      );
-
-      return {
-        isAgentRunning: false,
-        agentRuns: state.agentRuns.map((r: AgentRun) =>
-          r.id === state.activeRunId
-            ? {
-                ...r,
-                status: !anyRemaining ? "completed" : "waiting_approval",
-                currentStepIndex: !anyRemaining ? updatedSteps.length - 1 : nextPendingIndex,
-                steps: updatedSteps,
-                logs: [
-                  ...r.logs,
-                  `[${new Date().toLocaleTimeString()}] Action "${active.steps[pendingIndex].title}" finished in ${elapsedMs}ms.`,
-                  ...(!anyRemaining
-                    ? [
-                        `[${new Date().toLocaleTimeString()}] Verifier: Goal "${active.goal}" verified complete (${updatedSteps.length}/${updatedSteps.length} steps succeeded, confidence: High).`,
-                      ]
-                    : []),
-                ],
-              }
-            : r
-        ),
+      await sendHarnessMessage(sess.sessionId, goal);
+      const nowIso = new Date().toISOString();
+      const run: AgentRun = {
+        id: sess.sessionId,
+        goal,
+        status: "running",
+        steps: [],
+        currentStepIndex: 0,
+        createdAt: nowIso,
+        updatedAt: nowIso,
+        logs: [],
+        modelId: chosenModel,
       };
-    });
+      set((s: any) => ({
+        agentRuns: [run, ...(s.agentRuns || [])],
+        activeRunId: sess.sessionId,
+        agentPrompt: "",
+      }));
+    } catch {
+      set({ isAgentRunning: false });
+    }
   },
 
-  skipStep: (stepId) =>
-    set((state: any) => ({
-      agentRuns: state.agentRuns.map((r: AgentRun) => {
-        if (r.id !== state.activeRunId) return r;
-        const updatedSteps = r.steps.map((s) =>
-          s.id === stepId
-            ? { ...s, status: "completed" as const, result: "Skipped by user", executionTimeMs: 0 }
-            : s
-        );
-        const nextIdx = updatedSteps.findIndex(
-          (s) => s.status === "pending" || s.status === "waiting_approval"
-        );
-        if (nextIdx !== -1 && updatedSteps[nextIdx].status === "pending") {
-          updatedSteps[nextIdx] = { ...updatedSteps[nextIdx], status: "waiting_approval" };
-        }
-        return {
-          ...r,
-          status: nextIdx === -1 ? "completed" : "waiting_approval",
-          currentStepIndex: nextIdx === -1 ? updatedSteps.length - 1 : nextIdx,
-          steps: updatedSteps,
-          logs: [...r.logs, `[${new Date().toLocaleTimeString()}] Step ${stepId} skipped by user.`],
-        };
-      }),
-    })),
-
-  retryStep: async (stepId) => {
-    set((state: any) => ({
-      agentRuns: state.agentRuns.map((r: AgentRun) =>
-        r.id === state.activeRunId
-          ? {
-              ...r,
-              status: "waiting_approval",
-              steps: r.steps.map((s) =>
-                s.id === stepId ? { ...s, status: "waiting_approval" as const } : s
-              ),
-            }
-          : r
-      ),
-    }));
-    await get().approveNextAction();
+  approveNextAction: async () => {},
+  skipStep: () => {},
+  retryStep: async () => {},
+  pauseAgent: () => {
+    const id = get().activeRunId;
+    if (id) void interruptHarnessRun(id);
+    set({ isAgentRunning: false });
   },
-
-  pauseAgent: () =>
-    set((state: any) => ({
-      isAgentRunning: false,
-      agentRuns: state.agentRuns.map((r: AgentRun) =>
-        r.id === state.activeRunId ? { ...r, status: "paused" } : r
-      ),
-    })),
-
-  resumeAgent: async () => {
-    set((state: any) => ({
-      isAgentRunning: true,
-      agentRuns: state.agentRuns.map((r: AgentRun) =>
-        r.id === state.activeRunId ? { ...r, status: "running" } : r
-      ),
-    }));
-    await get().approveNextAction();
+  resumeAgent: async () => {},
+  stopAgent: () => {
+    const id = get().activeRunId;
+    if (id) void interruptHarnessRun(id);
+    set({ isAgentRunning: false });
   },
-
-  stopAgent: () =>
-    set((state: any) => ({
-      isAgentRunning: false,
-      agentRuns: state.agentRuns.map((r: AgentRun) =>
-        r.id === state.activeRunId ? { ...r, status: "idle" } : r
-      ),
-    })),
-
-  clearAgentRuns: () =>
-    set({
-      agentRuns: [],
-      activeRunId: "",
-      isAgentRunning: false,
-    }),
+  clearAgentRuns: () => set({ agentRuns: [], activeRunId: "", isAgentRunning: false }),
 });

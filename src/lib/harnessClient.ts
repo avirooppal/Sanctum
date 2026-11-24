@@ -200,10 +200,25 @@ export async function streamHarnessEvents(
   }
 }
 
+export type ToolApprovalResponse =
+  | boolean
+  | { decision?: "allow_once" | "allow_session" | "deny" | string; approved?: boolean };
+
+export interface ToolActivity {
+  id: string;
+  callId?: string;
+  name: string;
+  arguments: Record<string, any>;
+  status: "running" | "success" | "error" | "denied";
+  result?: string;
+  output?: string;
+  error?: string;
+}
+
 const uiToHarnessSessionMap = new Map<string, { harnessId: string; lastSeq: number; model: string; mode: string }>();
 
 /**
- * Async-generator adapter that runs a UI chat turn through the native C# Agent Harness
+ * Async-generator adapter that runs ALL UI chat turns through the native C# Agent Harness
  * (/v1/sessions + SSE stream) with live streaming, thinking blocks, tool activity cards,
  * and approval prompts.
  */
@@ -212,52 +227,83 @@ export async function* streamHarnessChat(
   messages: Array<{ role: string; content: string }>,
   opts: {
     uiSessionId?: string;
+    workspace?: string;
     planMode?: boolean;
     ragContext?: string;
+    numCtx?: number;
+    think?: boolean;
+    baseUrl?: string;
+    token?: string;
     signal?: AbortSignal;
-    onActivity?: (activity: any) => void;
-    onApprovalRequest?: (req: { toolName: string; arguments: Record<string, any> }) => Promise<{ decision?: string; approved?: boolean } | boolean>;
+    onSessionId?: (harnessSessionId: string) => void;
+    onActivity?: (activity: ToolActivity) => void;
+    onApprovalRequest?: (req: { toolName: string; arguments: Record<string, any> }) => Promise<ToolApprovalResponse>;
   } = {}
 ): AsyncGenerator<{
   text: string;
   isFinished: boolean;
   metrics: { tps: number; ttftMs: number; totalTokens: number; vramUsedGB: number };
 }> {
+  const base = (opts.baseUrl || "").replace(/\/+$/, "");
+  const authHeaders: Record<string, string> = opts.token ? { Authorization: `Bearer ${opts.token}` } : {};
   const mode = opts.planMode ? "plan" : "build";
   const cacheKey = opts.uiSessionId || `ephemeral-${Date.now()}`;
   let mapping = uiToHarnessSessionMap.get(cacheKey);
 
   if (!mapping || mapping.model !== modelId || mapping.mode !== mode) {
-    let workspace = "";
-    try {
-      const wsRes = await fetch("/api/workspace");
-      if (wsRes.ok) {
-        const ws = await wsRes.json();
-        workspace = ws?.root || "";
-      }
-    } catch {}
-    const created = await createHarnessSession({
-      title: `Chat (${modelId})`,
-      workspace,
-      mode,
-      autonomy: "auto_reads",
-      model: modelId,
+    let workspace = opts.workspace || "";
+    if (!workspace && !base) {
+      try {
+        const wsRes = await fetch("/api/workspace");
+        if (wsRes.ok) {
+          const ws = await wsRes.json();
+          workspace = ws?.root || "";
+        }
+      } catch {}
+    }
+    const createRes = await fetch(`${base}/v1/sessions`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json", ...authHeaders },
+      body: JSON.stringify({
+        title: `Chat (${modelId})`,
+        workspace,
+        mode,
+        autonomy: "auto_reads",
+        model: modelId,
+        ...(opts.numCtx ? { numCtx: opts.numCtx } : {}),
+        ...(typeof opts.think === "boolean" ? { think: opts.think } : {}),
+      }),
     });
+    if (!createRes.ok) throw new Error(`Failed to create harness session (${createRes.status})`);
+    const created = (await createRes.json()) as HarnessSessionSummary;
     mapping = { harnessId: created.sessionId, lastSeq: created.lastSeq || 0, model: modelId, mode };
     uiToHarnessSessionMap.set(cacheKey, mapping);
   }
+  opts.onSessionId?.(mapping.harnessId);
 
   const lastUser = [...messages].reverse().find((m) => m.role === "user")?.content || "";
   const promptText = opts.ragContext
     ? `[Context]\n${opts.ragContext}\n\n[User Request]\n${lastUser}`
     : lastUser;
 
-  const started = await sendHarnessMessage(mapping.harnessId, promptText);
+  const msgRes = await fetch(`${base}/v1/sessions/${encodeURIComponent(mapping.harnessId)}/messages`, {
+    method: "POST",
+    headers: { "Content-Type": "application/json", ...authHeaders },
+    body: JSON.stringify({
+      content: promptText,
+      idempotencyKey: `ui-${crypto.randomUUID()}`,
+    }),
+  });
+  if (!msgRes.ok) {
+    const err = await msgRes.json().catch(() => ({}));
+    throw new Error(err?.error || `Harness message failed (${msgRes.status})`);
+  }
+  const started = await msgRes.json();
   const startSeq = Math.max(0, (started.seq || mapping.lastSeq) - 1);
 
   const res = await fetch(
-    `/v1/sessions/${encodeURIComponent(mapping.harnessId)}/events?after=${startSeq}`,
-    { signal: opts.signal }
+    `${base}/v1/sessions/${encodeURIComponent(mapping.harnessId)}/events?after=${startSeq}`,
+    { headers: authHeaders, signal: opts.signal }
   );
   if (!res.ok || !res.body) {
     throw new Error(`Harness event stream failed (${res.status})`);
