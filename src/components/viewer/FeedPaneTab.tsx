@@ -117,13 +117,14 @@ export const FeedPaneTab: React.FC = () => {
     if (!el) return;
     const syncBounds = () => {
       const rect = el.getBoundingClientRect();
-      const dpr = window.devicePixelRatio || 1;
       postFeedControl({
         action: "bounds",
-        x: Math.round(rect.left * dpr),
-        y: Math.round(rect.top * dpr),
-        width: Math.round(rect.width * dpr),
-        height: Math.round(rect.height * dpr),
+        x: rect.left,
+        y: rect.top,
+        width: rect.width,
+        height: rect.height,
+        winWidth: window.innerWidth,
+        winHeight: window.innerHeight,
       });
     };
     syncBounds();
@@ -319,23 +320,29 @@ export const FeedPaneTab: React.FC = () => {
         </div>
 
         <div className="flex items-center gap-1 shrink-0">
-          <select
-            aria-label="Feed preset"
-            value={status.activePresetId}
-            onChange={async (e) => {
-              await fetch("/v1/feed/settings", {
-                method: "POST",
-                headers: { "Content-Type": "application/json" },
-                body: JSON.stringify({ activePresetId: e.target.value }),
-              });
-              void refresh();
-            }}
-            className="h-6 rounded-lg border border-border bg-background px-1.5 text-[10px] text-foreground"
-          >
-            {status.presets.map((p) => (
-              <option key={p.id} value={p.id}>{p.name}</option>
-            ))}
-          </select>
+          {status.presets.length > 1 ? (
+            <select
+              aria-label="Feed preset"
+              value={status.activePresetId}
+              onChange={async (e) => {
+                await fetch("/v1/feed/settings", {
+                  method: "POST",
+                  headers: { "Content-Type": "application/json" },
+                  body: JSON.stringify({ activePresetId: e.target.value }),
+                });
+                void refresh();
+              }}
+              className="h-6 rounded-lg border border-border bg-background px-1.5 text-[10px] text-foreground"
+            >
+              {status.presets.map((p) => (
+                <option key={p.id} value={p.id}>{p.name}</option>
+              ))}
+            </select>
+          ) : (
+            <span className="text-[10px] font-medium px-2 py-0.5 rounded-lg border border-border/70 bg-background text-muted-foreground">
+              {status.activePreset?.name || "Instagram"}
+            </span>
+          )}
 
           <button
             type="button"

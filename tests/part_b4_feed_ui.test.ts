@@ -17,7 +17,7 @@ describe("Part B4: Feed Pane UI tab, slot, airspace, consent screen, status chip
     assert.match(feed, /data-testid="feed-offline-notice"/);
     assert.match(feed, /data-testid="feed-slot"/);
     assert.match(feed, /new ResizeObserver/);
-    assert.match(feed, /window\.devicePixelRatio/);
+    assert.match(feed, /winWidth:\s*window\.innerWidth/);
     assert.match(feed, /new MutationObserver/);
     assert.match(feed, /data-testid="feed-status-chip"/);
     assert.match(feed, /Feed paused:/);

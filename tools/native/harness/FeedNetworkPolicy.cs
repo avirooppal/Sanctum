@@ -82,24 +82,6 @@ namespace Sanctum.Harness {
                     "instagram.com", "cdninstagram.com", "fbcdn.net", "fbsbx.com"
                 },
                 Builtin = true
-            },
-            new FeedPreset {
-                Id = "hackernews",
-                Name = "Hacker News",
-                StartUrl = "https://news.ycombinator.com/",
-                AllowedHosts = new List<string> {
-                    "news.ycombinator.com", "ycombinator.com"
-                },
-                Builtin = true
-            },
-            new FeedPreset {
-                Id = "wikipedia",
-                Name = "Wikipedia",
-                StartUrl = "https://en.wikipedia.org/",
-                AllowedHosts = new List<string> {
-                    "wikipedia.org", "wikimedia.org"
-                },
-                Builtin = true
             }
         };
 

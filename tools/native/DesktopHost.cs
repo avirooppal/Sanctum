@@ -624,9 +624,8 @@ namespace Sanctum {
 
             // 3. Win32 Job Object so killing Sanctum.exe leaves 0 orphan child processes
             InitializeJobObject();
-            try {
-                Environment.SetEnvironmentVariable("WEBVIEW2_ADDITIONAL_BROWSER_ARGUMENTS", WEBVIEW2_SILENCE_FLAGS + (Array.IndexOf(args, "--devtools") >= 0 ? " " + Environment.GetEnvironmentVariable("WEBVIEW2_ADDITIONAL_BROWSER_ARGUMENTS") : ""));
-            } catch { }
+            // WEBVIEW2_SILENCE_FLAGS is passed directly to the main WebView2's CoreWebView2EnvironmentOptions
+            // so the isolated Feed Pane WebView2 environment can resolve allowlisted HTTPS hosts (e.g. Instagram).
 
             if (AttachConsole(ATTACH_PARENT_PROCESS)) {
                 try {
@@ -1826,10 +1825,24 @@ namespace Sanctum {
                             } else if (action == "close") {
                                 _feedPane.ClosePane();
                             } else if (action == "bounds") {
-                                int x = Convert.ToInt32(msg["x"]);
-                                int y = Convert.ToInt32(msg["y"]);
-                                int w = Convert.ToInt32(msg["width"]);
-                                int h = Convert.ToInt32(msg["height"]);
+                                double cssX = Convert.ToDouble(msg["x"]);
+                                double cssY = Convert.ToDouble(msg["y"]);
+                                double cssW = Convert.ToDouble(msg["width"]);
+                                double cssH = Convert.ToDouble(msg["height"]);
+                                double winW = msg.ContainsKey("winWidth") ? Convert.ToDouble(msg["winWidth"]) : 0;
+                                double winH = msg.ContainsKey("winHeight") ? Convert.ToDouble(msg["winHeight"]) : 0;
+                                int x, y, w, h;
+                                if (winW > 10 && winH > 10 && this.ClientSize.Width > 10 && this.ClientSize.Height > 10) {
+                                    x = (int)Math.Round((cssX / winW) * this.ClientSize.Width);
+                                    y = (int)Math.Ceiling((cssY / winH) * this.ClientSize.Height) + 1;
+                                    w = (int)Math.Round((cssW / winW) * this.ClientSize.Width);
+                                    h = Math.Max(0, (int)Math.Floor((cssH / winH) * this.ClientSize.Height) - 1);
+                                } else {
+                                    x = (int)Math.Round(cssX);
+                                    y = (int)Math.Round(cssY);
+                                    w = Math.Max(0, (int)Math.Round(cssW));
+                                    h = Math.Max(0, (int)Math.Round(cssH));
+                                }
                                 _feedPane.SetSlotBounds(new Rectangle(x, y, Math.Max(0, w), Math.Max(0, h)));
                             } else if (action == "airspace") {
                                 bool occ = msg.ContainsKey("occluded") && Convert.ToBoolean(msg["occluded"]);
