@@ -10,6 +10,7 @@ Sanctum's Agent Harness is a headless, model-agnostic runtime embedded in `Sanct
 ## Approval Trust Model (Single Enforcement Point)
 - **Low-risk** (workspace file edits, read-class tools): resolvable over HTTP bearer or trusted channel.
 - **High-risk** (non-allowlisted shell `exec`, destructive deletes, creating any persistent `permission_rules.json` rule, switching autonomy to `full_auto`, registering/enabling MCP servers, enabling workspace hooks, creating scheduled jobs): **trusted channel ONLY** (Named Pipe / CLI TTY / native dialog). HTTP bearer returns `403 trusted_channel_required`.
+- **Shell Confinement Limit**: `run_command` is evaluated via the PowerShell AST (`System.Management.Automation.Language.Parser`) and runs under a per-command Windows Job Object (1 GB memory cap, 16-process limit, kill-on-close, stripped secret env vars, output cap). However, **`workspace_only` does not OS-sandbox shell commands** (Windows Sandbox / Low-Integrity token is not viable without breaking workspace writes or requiring Hyper-V); treat `full_auto` accordingly.
 - **Call Binding**: approvals are single-use and bound to `(approvalId, sessionId, runId, callId, canonicalArgsSha256)`.
 - **Unattended Policy**: scheduled and `unattended: true` sessions fail closed (`Ask` -> `Deny` immediately).
 

@@ -85,6 +85,7 @@ def compile_desktop_host(output_path: str):
             os.path.join(fx_dir, "System.IO.Compression.dll"),
             os.path.join(fx_dir, "System.IO.Compression.FileSystem.dll"),
             r"C:\Windows\Microsoft.NET\assembly\GAC_MSIL\System.Speech\v4.0_4.0.0.0__31bf3856ad364e35\System.Speech.dll",
+            r"C:\Windows\Microsoft.NET\assembly\GAC_MSIL\System.Management.Automation\v4.0_3.0.0.0__31bf3856ad364e35\System.Management.Automation.dll",
             os.path.join(fx_dir, "System.Web.Extensions.dll"),
             os.path.join(fx_dir, "System.Management.dll"),
             os.path.join(fx_dir, "System.Drawing.dll"),

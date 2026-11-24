@@ -208,18 +208,8 @@ namespace Sanctum.Harness {
             return full;
         }
 
-        public static (string action, string reason) EvaluateCommandRule(string command) {
-            string cmd = (command ?? "").Trim();
-            if (string.IsNullOrEmpty(cmd)) return ("deny", "Empty command.");
-            foreach (var rx in HardDenyCommandPatterns) {
-                if (rx.IsMatch(cmd)) return ("deny", "Blocked by host command safety rule.");
-            }
-            if (!ShellChainOperators.IsMatch(cmd)) {
-                foreach (var rx in ReadOnlyAllowCommandPatterns) {
-                    if (rx.IsMatch(cmd)) return ("allow", "Matches read-only command allowlist.");
-                }
-            }
-            return ("ask", "Non-allowlisted shell command requires explicit user approval.");
+        public static (string action, string reason) EvaluateCommandRule(string command, string workspaceRoot = null) {
+            return PowerShellAstEvaluator.Evaluate(command, workspaceRoot);
         }
 
         public PermissionDecision Evaluate(
@@ -270,7 +260,8 @@ namespace Sanctum.Harness {
             // Hard-deny command safety rules ALWAYS win before custom rules
             if (string.Equals(tool.Name, "run_command", StringComparison.OrdinalIgnoreCase)) {
                 string cmd0 = args?["command"]?.Value<string>() ?? "";
-                var (ruleAction0, ruleReason0) = EvaluateCommandRule(cmd0);
+                string ws0 = args?["_workspace"]?.Value<string>();
+                var (ruleAction0, ruleReason0) = EvaluateCommandRule(cmd0, ws0);
                 if (ruleAction0 == "deny") {
                     return Finalize(new PermissionDecision { Kind = PermissionDecisionKind.Deny, RiskClass = "high", Reason = ruleReason0 });
                 }
@@ -290,7 +281,8 @@ namespace Sanctum.Harness {
             // Shell command rules
             if (string.Equals(tool.Name, "run_command", StringComparison.OrdinalIgnoreCase)) {
                 string cmd = args?["command"]?.Value<string>() ?? "";
-                var (ruleAction, ruleReason) = EvaluateCommandRule(cmd);
+                string ws = args?["_workspace"]?.Value<string>();
+                var (ruleAction, ruleReason) = EvaluateCommandRule(cmd, ws);
                 if (ruleAction == "allow" && autonomy != "ask_all") {
                     return Finalize(new PermissionDecision { Kind = PermissionDecisionKind.Allow, RiskClass = "low", Reason = ruleReason });
                 }

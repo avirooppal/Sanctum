@@ -281,6 +281,10 @@ namespace Sanctum.Harness {
                     string ws = args["_workspace"]?.Value<string>() ?? Environment.CurrentDirectory;
                     string cmd = args["command"]?.Value<string>() ?? "";
                     string cwd = PermissionEngine.ResolveToolPath(ws, args["cwd"]?.Value<string>() ?? ".", allowRoot: true);
+                    int timeoutMs = Math.Max(1000, Math.Min(120000, args["timeoutMs"]?.Value<int>() ?? 30000));
+                    const int maxOutChars = 65536;
+                    const int maxErrChars = 32768;
+
                     var psi = new ProcessStartInfo {
                         FileName = "powershell.exe",
                         Arguments = "-NoProfile -NonInteractive -Command \"" + cmd.Replace("\"", "\\\"") + "\"",
@@ -290,22 +294,65 @@ namespace Sanctum.Harness {
                         UseShellExecute = false,
                         CreateNoWindow = true
                     };
+                    // Strip secret/token environment variables before spawning child shell
+                    var keysToRemove = new List<string>();
+                    foreach (System.Collections.DictionaryEntry kv in psi.EnvironmentVariables) {
+                        string k = (kv.Key?.ToString() ?? "").ToUpperInvariant();
+                        if (k.Contains("KEY") || k.Contains("TOKEN") || k.Contains("SECRET") ||
+                            k.Contains("PASSWORD") || k.Contains("CREDENTIAL") ||
+                            k.StartsWith("AWS_") || k.StartsWith("AZURE_") || k.StartsWith("GH_") || k.StartsWith("GITHUB_")) {
+                            keysToRemove.Add(kv.Key.ToString());
+                        }
+                    }
+                    foreach (string k in keysToRemove) {
+                        try { psi.EnvironmentVariables.Remove(k); } catch { }
+                    }
+                    psi.EnvironmentVariables["OLLAMA_NO_CLOUD"] = "1";
+
                     var outSb = new StringBuilder();
                     var errSb = new StringBuilder();
+                    bool outTruncated = false;
+                    bool errTruncated = false;
+                    bool timedOut = false;
+
+                    using (var job = new ProcessJobObject(jobMemoryLimitBytes: 1024L * 1024 * 1024, activeProcessLimit: 16))
                     using (var proc = new Process { StartInfo = psi }) {
-                        proc.OutputDataReceived += (s, e) => { if (e.Data != null && outSb.Length < 65536) outSb.AppendLine(e.Data); };
-                        proc.ErrorDataReceived += (s, e) => { if (e.Data != null && errSb.Length < 32768) errSb.AppendLine(e.Data); };
+                        proc.OutputDataReceived += (s, e) => {
+                            if (e.Data == null) return;
+                            lock (outSb) {
+                                if (outSb.Length < maxOutChars) outSb.AppendLine(e.Data);
+                                else outTruncated = true;
+                            }
+                        };
+                        proc.ErrorDataReceived += (s, e) => {
+                            if (e.Data == null) return;
+                            lock (errSb) {
+                                if (errSb.Length < maxErrChars) errSb.AppendLine(e.Data);
+                                else errTruncated = true;
+                            }
+                        };
                         proc.Start();
+                        job.Assign(proc);
                         proc.BeginOutputReadLine();
                         proc.BeginErrorReadLine();
                         using (ct.Register(() => { try { if (!proc.HasExited) proc.Kill(); } catch { } })) {
-                            proc.WaitForExit();
+                            if (!proc.WaitForExit(timeoutMs)) {
+                                timedOut = true;
+                                try { proc.Kill(); } catch { }
+                            } else {
+                                proc.WaitForExit();
+                            }
                         }
                         ct.ThrowIfCancellationRequested();
+                        string stdoutStr = outSb.ToString();
+                        string stderrStr = errSb.ToString();
+                        if (outTruncated) stdoutStr += "\n[stdout truncated at 64 KB]";
+                        if (errTruncated) stderrStr += "\n[stderr truncated at 32 KB]";
                         return new JObject {
-                            ["exitCode"] = proc.ExitCode,
-                            ["stdout"] = outSb.ToString(),
-                            ["stderr"] = errSb.ToString()
+                            ["exitCode"] = timedOut ? -1 : proc.ExitCode,
+                            ["timedOut"] = timedOut,
+                            ["stdout"] = stdoutStr,
+                            ["stderr"] = stderrStr
                         }.ToString(Formatting.None);
                     }
                 }

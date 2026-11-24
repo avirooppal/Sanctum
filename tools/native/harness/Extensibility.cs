@@ -61,16 +61,27 @@ namespace Sanctum.Harness {
         }
 
         private const int JobObjectExtendedLimitInformation = 9;
+        private const uint JOB_OBJECT_LIMIT_ACTIVE_PROCESS = 0x00000008;
+        private const uint JOB_OBJECT_LIMIT_JOB_MEMORY = 0x00000200;
         private const uint JOB_OBJECT_LIMIT_KILL_ON_JOB_CLOSE = 0x2000;
 
         private IntPtr _handle;
 
-        public ProcessJobObject() {
+        public ProcessJobObject(long jobMemoryLimitBytes = 0, uint activeProcessLimit = 0) {
             try {
                 _handle = CreateJobObject(IntPtr.Zero, null);
                 if (_handle != IntPtr.Zero) {
                     var info = new JOBOBJECT_EXTENDED_LIMIT_INFORMATION();
-                    info.BasicLimitInformation.LimitFlags = JOB_OBJECT_LIMIT_KILL_ON_JOB_CLOSE;
+                    uint flags = JOB_OBJECT_LIMIT_KILL_ON_JOB_CLOSE;
+                    if (jobMemoryLimitBytes > 0) {
+                        flags |= JOB_OBJECT_LIMIT_JOB_MEMORY;
+                        info.JobMemoryLimit = new UIntPtr((ulong)jobMemoryLimitBytes);
+                    }
+                    if (activeProcessLimit > 0) {
+                        flags |= JOB_OBJECT_LIMIT_ACTIVE_PROCESS;
+                        info.BasicLimitInformation.ActiveProcessLimit = activeProcessLimit;
+                    }
+                    info.BasicLimitInformation.LimitFlags = flags;
                     int len = Marshal.SizeOf(typeof(JOBOBJECT_EXTENDED_LIMIT_INFORMATION));
                     IntPtr ptr = Marshal.AllocHGlobal(len);
                     try {
