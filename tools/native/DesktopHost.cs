@@ -2019,7 +2019,19 @@ namespace Sanctum {
                 Newtonsoft.Json.Linq.JObject bodyObj = string.IsNullOrWhiteSpace(rawBody)
                     ? new Newtonsoft.Json.Linq.JObject()
                     : Sanctum.Harness.CanonicalJson.ParseObject(rawBody);
-                var (stCode, respJson) = _embeddedHarnessServer.DispatchProtocolCommand(method, normPath, bodyObj, viaTrustedChannel: false);
+                bool trusted = false;
+                if (method == "POST" && normPath == "/v1/network/offline") {
+                    bool wantsOffline = (bool?)bodyObj["offline"] ?? true;
+                    if (!wantsOffline) {
+                        trusted = ConsumeApprovalToken(req.Headers["X-Sanctum-Approval"], "network_offline_disable");
+                    }
+                } else if (method == "POST" && normPath == "/v1/network/features") {
+                    bool wantsEnable = (bool?)bodyObj["enabled"] ?? false;
+                    if (wantsEnable) {
+                        trusted = ConsumeApprovalToken(req.Headers["X-Sanctum-Approval"], "network_feature_enable");
+                    }
+                }
+                var (stCode, respJson) = _embeddedHarnessServer.DispatchProtocolCommand(method, normPath, bodyObj, viaTrustedChannel: trusted);
                 byte[] outBytes = Encoding.UTF8.GetBytes(Sanctum.Harness.CanonicalJson.Serialize(respJson));
                 res.StatusCode = stCode;
                 res.ContentType = "application/json; charset=utf-8";

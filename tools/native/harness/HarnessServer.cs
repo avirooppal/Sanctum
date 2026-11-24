@@ -355,6 +355,33 @@ namespace Sanctum.Harness {
                     return (200, new JObject { ["ok"] = true, ["dismissed"] = dismissed });
                 }
 
+                // Network Policy, Offline Mode, and Append-Only Egress Ledger
+                if (method == "GET" && path == "/v1/network/policy") {
+                    return (200, EgressHttpFactory.GetPolicy());
+                }
+                if (method == "POST" && path == "/v1/network/offline") {
+                    bool offline = body["offline"]?.Value<bool>() ?? true;
+                    return EgressHttpFactory.SetOfflineMode(offline, viaTrustedChannel);
+                }
+                if (method == "POST" && path == "/v1/network/features") {
+                    string feat = body["feature"]?.Value<string>() ?? "";
+                    bool enabled = body["enabled"]?.Value<bool>() ?? false;
+                    return EgressHttpFactory.SetFeatureEnabled(feat, enabled, viaTrustedChannel);
+                }
+                if (method == "GET" && path == "/v1/network/ledger") {
+                    int limit = body["limit"]?.Value<int>() ?? 200;
+                    return (200, new JObject {
+                        ["entries"] = EgressHttpFactory.ReadLedger(limit),
+                        ["offlineMode"] = EgressHttpFactory.IsOfflineMode
+                    });
+                }
+                if (method == "GET" && path == "/v1/network/ledger/export") {
+                    return (200, new JObject {
+                        ["format"] = "jsonl",
+                        ["content"] = EgressHttpFactory.ExportLedgerJsonl()
+                    });
+                }
+
                 if (method == "GET" && path == "/v1/agents") {
                     return (200, new JObject { ["agents"] = _engine.ListAgents() });
                 }
