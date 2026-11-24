@@ -106,6 +106,7 @@ export interface ChatSession {
   temperature: number;
   topP: number;
   projectId?: string;
+  workspaceId?: string;
   pinned?: boolean;
 }
 

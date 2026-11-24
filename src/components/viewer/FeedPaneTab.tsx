@@ -90,8 +90,13 @@ export const FeedPaneTab: React.FC = () => {
 
   useEffect(() => {
     void refresh();
+    const onStatusChanged = () => void refresh();
+    window.addEventListener("sanctum:feed-status-changed", onStatusChanged);
     const t = setInterval(() => void refresh(), 2500);
-    return () => clearInterval(t);
+    return () => {
+      clearInterval(t);
+      window.removeEventListener("sanctum:feed-status-changed", onStatusChanged);
+    };
   }, [refresh]);
 
   // Open/close native WebView2 feed control with slot lifecycle
@@ -164,6 +169,21 @@ export const FeedPaneTab: React.FC = () => {
     if (!consentChecked) {
       toast.error("Please acknowledge the privacy disclosure first.");
       return;
+    }
+    // Inside native Sanctum Desktop host: open native Windows trusted-channel confirmation dialog directly
+    if (typeof window !== "undefined" && (window as any).chrome?.webview) {
+      try {
+        (window as any).chrome.webview.postMessage(
+          JSON.stringify({
+            type: "feedEnableConfirm",
+            consentAccepted: true,
+            inPrivateMode: inPrivateChoice,
+          })
+        );
+        return;
+      } catch {
+        // fall through
+      }
     }
     try {
       const res = await fetch("/v1/feed/enable", {

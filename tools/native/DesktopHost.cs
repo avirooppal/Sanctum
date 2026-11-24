@@ -1772,6 +1772,31 @@ namespace Sanctum {
                 }
                 if (raw.Contains("\"exportLogs\"")) {
                     ExportLogs();
+                } else if (raw.Contains("\"feedEnableConfirm\"")) {
+                    try {
+                        EnsureEmbeddedHarnessStarted();
+                        var serializer = new JavaScriptSerializer();
+                        var msg = serializer.Deserialize<Dictionary<string, object>>(raw);
+                        bool inPriv = msg != null && msg.ContainsKey("inPrivateMode") && Convert.ToBoolean(msg["inPrivateMode"]);
+                        string presetId = msg != null && msg.ContainsKey("presetId") ? Convert.ToString(msg["presetId"]) : null;
+                        this.BeginInvoke((Action)(() => {
+                            var dr = MessageBox.Show(
+                                "Enable Sanctum's Isolated Side Feed?\n\n" +
+                                "• Allows outbound HTTPS only to the selected preset's domains (default: Instagram).\n" +
+                                "• External sites (e.g. Meta/Instagram) see your browsing activity as in any browser.\n" +
+                                "• Runs in an isolated profile (feed-profile) with zero access to Sanctum, Ollama, or local files.\n" +
+                                "• The AI agent cannot see, screenshot, or control this pane.",
+                                "Sanctum — Trusted Channel Confirmation",
+                                MessageBoxButtons.YesNo,
+                                MessageBoxIcon.Question);
+                            if (dr == DialogResult.Yes && _embeddedHarnessEngine != null) {
+                                _embeddedHarnessEngine.Feed.EnableFeed(true, viaTrustedChannel: true, inPrivateMode: inPriv, presetId: presetId);
+                                try {
+                                    _webView?.CoreWebView2?.ExecuteScriptAsync("window.dispatchEvent(new CustomEvent('sanctum:feed-status-changed'));");
+                                } catch { }
+                            }
+                        }));
+                    } catch { }
                 } else if (raw.Contains("\"feedControl\"")) {
                     try {
                         EnsureEmbeddedHarnessStarted();

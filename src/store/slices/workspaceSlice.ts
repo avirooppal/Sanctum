@@ -104,7 +104,12 @@ export const createWorkspaceSlice: StateCreator<any, [], [], WorkspaceSlice> = (
         data?.lastUsedWorkspaceId ||
         list[0]?.id ||
         "";
-      set({ workspaces: list, activeWorkspaceId: nextActive });
+      // Stamp any legacy untagged chats onto the initial active workspace so workspaces stay isolated
+      const existingSessions = (get().chatSessions || []) as Array<{ id: string; workspaceId?: string }>;
+      const taggedSessions = nextActive
+        ? existingSessions.map((s) => (s.workspaceId ? s : { ...s, workspaceId: nextActive }))
+        : existingSessions;
+      set({ workspaces: list, activeWorkspaceId: nextActive, chatSessions: taggedSessions });
       const activeWs = list.find((w) => w.id === nextActive);
       if (activeWs) notifyHostWorkspaceTitle(activeWs.name);
     } catch {
@@ -136,7 +141,38 @@ export const createWorkspaceSlice: StateCreator<any, [], [], WorkspaceSlice> = (
     if (!target) return;
 
     // 1. Instant client-side view switch (no reload, never interrupts active runs)
-    set({ activeWorkspaceId: workspaceId, isWorkspaceSwitcherOpen: false });
+    // Switch activeSessionId strictly to a chat belonging to target workspace (create one if empty)
+    const allChats = (get().chatSessions || []) as Array<{ id: string; workspaceId?: string }>;
+    const wsChats = allChats.filter((s) => s.workspaceId === workspaceId);
+    if (wsChats.length > 0) {
+      set({
+        activeWorkspaceId: workspaceId,
+        activeSessionId: wsChats[0].id,
+        isWorkspaceSwitcherOpen: false,
+      });
+    } else {
+      const freshId = `chat-${crypto.randomUUID()}`;
+      const fallbackModel = get().activeModelId || get().models?.[0]?.id || "";
+      const freshChat = {
+        id: freshId,
+        title: "New Chat",
+        modelId: fallbackModel,
+        createdAt: "Just now",
+        updatedAt: "Just now",
+        systemPrompt: "You are a private local assistant running entirely on-device.",
+        temperature: 0.7,
+        topP: 0.9,
+        workspaceId,
+        pinned: false,
+        messages: [],
+      };
+      set({
+        activeWorkspaceId: workspaceId,
+        chatSessions: [freshChat, ...allChats],
+        activeSessionId: freshId,
+        isWorkspaceSwitcherOpen: false,
+      });
+    }
     notifyHostWorkspaceTitle(target.name);
 
     // 2. Persist outgoing workspace UI state to host asynchronously

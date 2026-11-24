@@ -57,6 +57,7 @@ export const LeftSidebar: React.FC<LeftSidebarProps> = ({
   const {
     chatSessions,
     activeSessionId,
+    activeWorkspaceId,
     setActiveSessionId,
     splitSessionId,
     setSplitSessionId,
@@ -79,6 +80,7 @@ export const LeftSidebar: React.FC<LeftSidebarProps> = ({
     useShallow((s) => ({
       chatSessions: s.chatSessions,
       activeSessionId: s.activeSessionId,
+      activeWorkspaceId: s.activeWorkspaceId,
       setActiveSessionId: s.setActiveSessionId,
       splitSessionId: s.splitSessionId,
       setSplitSessionId: s.setSplitSessionId,
@@ -448,8 +450,11 @@ export const LeftSidebar: React.FC<LeftSidebarProps> = ({
     );
   };
 
-  const pinnedSessions = chatSessions.filter((s) => s.pinned);
-  const ungroupedSessions = chatSessions.filter((s) => !s.projectId);
+  const workspaceSessions = activeWorkspaceId
+    ? chatSessions.filter((s) => !s.workspaceId || s.workspaceId === activeWorkspaceId)
+    : chatSessions;
+  const pinnedSessions = workspaceSessions.filter((s) => s.pinned);
+  const ungroupedSessions = workspaceSessions.filter((s) => !s.projectId);
 
   return (
     <>
@@ -619,7 +624,7 @@ export const LeftSidebar: React.FC<LeftSidebarProps> = ({
 
                 <div className="space-y-1">
                   {projects.map((p) => {
-                    const groupChats = chatSessions.filter((s) => s.projectId === p.id);
+                    const groupChats = workspaceSessions.filter((s) => s.projectId === p.id);
                     const isExpanded = expandedProjects[p.id] ?? true;
                     const isEditingProj = editingProjectId === p.id;
 

@@ -242,6 +242,7 @@ export const createChatSlice: StateCreator<any, [], [], ChatSlice> = (set, get) 
       temperature: 0.7,
       topP: 0.9,
       projectId: targetProject,
+      workspaceId: get().activeWorkspaceId || "",
       pinned: false,
       messages: [],
     };

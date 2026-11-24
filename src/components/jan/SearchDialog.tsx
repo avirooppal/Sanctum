@@ -28,12 +28,13 @@ export const SearchDialog: React.FC<SearchDialogProps> = ({ open, onOpenChange, 
   const [selectedIndex, setSelectedIndex] = useState(0);
   const inputRef = useRef<HTMLInputElement>(null);
 
-  const { chatSessions, setActiveSessionId, createNewChatSession, workspaces, switchWorkspace } = useAppStore(
+  const { chatSessions, setActiveSessionId, createNewChatSession, workspaces, activeWorkspaceId, switchWorkspace } = useAppStore(
     useShallow((s) => ({
       chatSessions: s.chatSessions,
       setActiveSessionId: s.setActiveSessionId,
       createNewChatSession: s.createNewChatSession,
       workspaces: s.workspaces,
+      activeWorkspaceId: s.activeWorkspaceId,
       switchWorkspace: s.switchWorkspace,
     }))
   );
@@ -52,8 +53,9 @@ export const SearchDialog: React.FC<SearchDialogProps> = ({ open, onOpenChange, 
     }
   }, [open]);
 
-  // Filter threads by search query
+  // Filter threads strictly within the active workspace
   const filteredThreads = chatSessions.filter((s) => {
+    if (activeWorkspaceId && s.workspaceId && s.workspaceId !== activeWorkspaceId) return false;
     if (!query.trim()) return true;
     const q = query.toLowerCase();
     const titleMatch = s.title.toLowerCase().includes(q);
