@@ -1,6 +1,7 @@
 "use client";
 
 import * as React from "react";
+import { createPortal } from "react-dom";
 import { cn } from "@/lib/utils";
 
 interface DialogProps {
@@ -36,18 +37,23 @@ export const Dialog: React.FC<DialogProps> = ({ open, onOpenChange, children }) 
   }, [open, titleId]);
   if (!open) return null;
 
-  return (
-    <div ref={container} role="dialog" aria-modal="true" aria-labelledby={titleId} tabIndex={-1} className="fixed inset-0 z-50 flex items-center justify-center p-4">
+  const dialogNode = (
+    <div ref={container} role="dialog" aria-modal="true" aria-labelledby={titleId} tabIndex={-1} className="fixed inset-0 z-[100] flex items-center justify-center p-4">
       {/* Backdrop */}
       <div
         className="fixed inset-0 bg-black/60 backdrop-blur-md transition-opacity animate-in fade-in duration-200"
         onClick={() => onOpenChange(false)}
       />
-      <div className="relative z-50 w-full animate-in zoom-in-95 duration-200 flex justify-center">
+      <div className="relative z-[101] w-full animate-in zoom-in-95 duration-200 flex justify-center">
         {children}
       </div>
     </div>
   );
+
+  if (typeof document !== "undefined") {
+    return createPortal(dialogNode, document.body);
+  }
+  return dialogNode;
 };
 
 export const DialogContent = React.forwardRef<

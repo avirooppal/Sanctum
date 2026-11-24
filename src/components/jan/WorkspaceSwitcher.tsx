@@ -256,31 +256,32 @@ export const WorkspaceSwitcher: React.FC<{ collapsed?: boolean }> = ({ collapsed
 
       {/* Workspace Switcher & Global Attention Inbox Dialog */}
       <Dialog open={isWorkspaceSwitcherOpen} onOpenChange={setWorkspaceSwitcherOpen}>
-        <DialogContent className="max-w-lg p-0 rounded-2xl border border-border/80 bg-card overflow-hidden">
+        <DialogContent className="max-w-[540px] w-full p-0 rounded-2xl border border-border/80 bg-background/95 backdrop-blur-2xl shadow-2xl overflow-hidden gap-0">
           <DialogTitle className="sr-only">Switch Workspace</DialogTitle>
-          <div className="p-3.5 border-b border-border/60 flex items-center gap-2">
-            <IconSearch size={15} className="text-muted-foreground" />
+          <div className="px-4 py-3.5 border-b border-border/60 flex items-center gap-3">
+            <IconSearch size={16} className="text-muted-foreground shrink-0" />
             <input
               type="text"
               value={search}
               onChange={(e) => setSearch(e.target.value)}
-              placeholder="Search workspaces… (Ctrl+Shift+W)"
-              className="flex-1 bg-transparent text-xs text-foreground placeholder:text-muted-foreground focus:outline-none"
+              placeholder="Search workspaces…"
+              autoFocus
+              className="flex-1 min-w-0 bg-transparent text-sm text-foreground placeholder:text-muted-foreground focus:outline-none"
             />
             <Button
               size="sm"
-              className="h-7 rounded-lg text-[11px] gap-1"
+              className="h-8 px-3 rounded-xl text-xs font-medium gap-1.5 shrink-0"
               onClick={() => {
                 setWorkspaceSwitcherOpen(false);
                 setWizardOpen(true);
               }}
             >
-              <IconPlus size={12} />
-              <span>New</span>
+              <IconPlus size={14} />
+              <span>New Workspace</span>
             </Button>
           </div>
 
-          <div className="max-h-72 overflow-y-auto p-2 space-y-1">
+          <div className="max-h-[340px] overflow-y-auto p-2.5 space-y-1">
             {filtered.map((ws) => {
               const counts = attentionInbox.byWorkspace[ws.id] || { runningCount: 0, attentionCount: 0 };
               const isCurrent = ws.id === activeWorkspaceId;
@@ -288,17 +289,19 @@ export const WorkspaceSwitcher: React.FC<{ collapsed?: boolean }> = ({ collapsed
                 <div
                   key={ws.id}
                   className={cn(
-                    "group flex items-center gap-2 px-2.5 py-2 rounded-xl transition-colors",
-                    isCurrent ? "bg-accent text-foreground" : "hover:bg-muted/50 text-muted-foreground"
+                    "group flex items-center gap-2.5 px-3 py-2.5 rounded-xl border transition-colors",
+                    isCurrent
+                      ? "bg-accent/80 border-border/80 text-foreground"
+                      : "border-transparent hover:bg-muted/50 text-muted-foreground"
                   )}
                 >
                   <button
                     type="button"
                     onClick={() => void switchWorkspace(ws.id)}
-                    className="flex items-center gap-2.5 flex-1 min-w-0 text-left"
+                    className="flex items-center gap-3 flex-1 min-w-0 text-left"
                   >
                     <span className="size-2.5 rounded-full shrink-0" style={{ backgroundColor: ws.color || "#6366f1" }} />
-                    {ws.rootPath ? <IconFolder size={14} className="shrink-0" /> : <IconMessageCircle size={14} className="shrink-0" />}
+                    {ws.rootPath ? <IconFolder size={15} className="shrink-0 text-muted-foreground" /> : <IconMessageCircle size={15} className="shrink-0 text-muted-foreground" />}
                     <div className="min-w-0 flex-1">
                       {editingId === ws.id ? (
                         <input
@@ -312,36 +315,36 @@ export const WorkspaceSwitcher: React.FC<{ collapsed?: boolean }> = ({ collapsed
                               setEditingId(null);
                             }
                           }}
-                          className="w-full rounded bg-background px-1.5 py-0.5 text-xs border border-border text-foreground"
+                          className="w-full rounded-lg bg-background px-2 py-1 text-xs border border-border text-foreground focus:outline-none focus:ring-2 focus:ring-primary/40"
                         />
                       ) : (
-                        <div className="text-xs font-medium text-foreground truncate">{ws.name}</div>
+                        <div className="text-sm font-medium text-foreground truncate">{ws.name}</div>
                       )}
-                      <div className="text-[10px] font-mono text-muted-foreground truncate">
+                      <div className="text-[11px] font-mono text-muted-foreground truncate">
                         {ws.rootPath || "Chat-only workspace"}
                       </div>
                     </div>
                   </button>
 
                   {counts.runningCount > 0 && (
-                    <span className="px-1.5 py-0.5 rounded-full text-[10px] font-mono bg-emerald-500/15 text-emerald-400">
+                    <span className="px-2 py-0.5 rounded-full text-[10px] font-mono bg-emerald-500/15 text-emerald-400 shrink-0">
                       {counts.runningCount} run
                     </span>
                   )}
                   {counts.attentionCount > 0 && (
-                    <span className="px-1.5 py-0.5 rounded-full text-[10px] font-mono bg-amber-500/20 text-amber-400">
+                    <span className="px-2 py-0.5 rounded-full text-[10px] font-mono bg-amber-500/20 text-amber-400 shrink-0">
                       {counts.attentionCount} attn
                     </span>
                   )}
 
-                  <div className="flex items-center gap-0.5 opacity-0 group-hover:opacity-100 transition-opacity">
+                  <div className="flex items-center gap-1 opacity-70 group-hover:opacity-100 transition-opacity shrink-0">
                     <button
                       type="button"
                       title={ws.pinned ? "Unpin" : "Pin"}
                       onClick={() => void togglePinWorkspace(ws.id, !ws.pinned)}
-                      className="p-1 rounded hover:bg-muted"
+                      className="p-1.5 rounded-lg hover:bg-muted text-muted-foreground hover:text-foreground"
                     >
-                      {ws.pinned ? <IconPinFilled size={12} className="text-primary" /> : <IconPin size={12} />}
+                      {ws.pinned ? <IconPinFilled size={13} className="text-primary" /> : <IconPin size={13} />}
                     </button>
                     <button
                       type="button"
@@ -355,25 +358,25 @@ export const WorkspaceSwitcher: React.FC<{ collapsed?: boolean }> = ({ collapsed
                           setEditName(ws.name);
                         }
                       }}
-                      className="p-1 rounded hover:bg-muted"
+                      className="p-1.5 rounded-lg hover:bg-muted text-muted-foreground hover:text-foreground"
                     >
-                      {editingId === ws.id ? <IconCheck size={12} /> : <IconPencil size={12} />}
+                      {editingId === ws.id ? <IconCheck size={13} /> : <IconPencil size={13} />}
                     </button>
                     <button
                       type="button"
                       title="Export Sanctum workspace data"
                       onClick={() => void handleExport(ws.id, ws.name)}
-                      className="p-1 rounded hover:bg-muted"
+                      className="p-1.5 rounded-lg hover:bg-muted text-muted-foreground hover:text-foreground"
                     >
-                      <IconDownload size={12} />
+                      <IconDownload size={13} />
                     </button>
                     <button
                       type="button"
                       title="Archive workspace"
                       onClick={() => void archiveWorkspace(ws.id, true)}
-                      className="p-1 rounded hover:bg-muted"
+                      className="p-1.5 rounded-lg hover:bg-muted text-muted-foreground hover:text-foreground"
                     >
-                      <IconArchive size={12} />
+                      <IconArchive size={13} />
                     </button>
                   </div>
                 </div>
@@ -383,29 +386,29 @@ export const WorkspaceSwitcher: React.FC<{ collapsed?: boolean }> = ({ collapsed
 
           {/* Global Attention Inbox */}
           {attentionInbox.items.length > 0 && (
-            <div className="border-t border-border/60 p-3 bg-muted/20 space-y-2" data-testid="global-attention-inbox">
-              <div className="flex items-center gap-1.5 text-[11px] font-semibold text-amber-400">
-                <IconBell size={13} />
+            <div className="border-t border-border/60 p-3.5 bg-muted/20 space-y-2" data-testid="global-attention-inbox">
+              <div className="flex items-center gap-1.5 text-xs font-semibold text-amber-400">
+                <IconBell size={14} />
                 <span>Attention Needed Across Workspaces ({attentionInbox.items.length})</span>
               </div>
-              <div className="space-y-1.5 max-h-36 overflow-y-auto">
+              <div className="space-y-1.5 max-h-40 overflow-y-auto">
                 {attentionInbox.items.map((item) => (
                   <div
                     key={item.approvalId}
-                    className="flex items-center justify-between gap-2 p-2 rounded-lg border border-amber-500/20 bg-card text-[11px]"
+                    className="flex items-center justify-between gap-3 p-2.5 rounded-xl border border-amber-500/20 bg-card text-xs"
                   >
                     <div className="min-w-0">
                       <div className="font-medium text-foreground truncate">
                         {item.workspaceName} · {item.tool}
                       </div>
-                      <div className="text-[10px] font-mono text-muted-foreground truncate">
+                      <div className="text-[11px] font-mono text-muted-foreground truncate">
                         {item.workspaceRoot}
                       </div>
                     </div>
                     <Button
                       size="sm"
                       variant="outline"
-                      className="h-6 text-[10px] px-2 shrink-0"
+                      className="h-7 text-xs px-2.5 rounded-lg shrink-0"
                       onClick={() => void switchWorkspace(item.workspaceId)}
                     >
                       Jump
@@ -415,12 +418,24 @@ export const WorkspaceSwitcher: React.FC<{ collapsed?: boolean }> = ({ collapsed
               </div>
             </div>
           )}
+
+          {/* Footer shortcuts matching SearchDialog */}
+          <div className="flex items-center justify-between px-4 py-2.5 border-t border-border/50 bg-muted/20 text-[11px] text-muted-foreground">
+            <span className="flex items-center gap-1.5">
+              <kbd className="px-1.5 py-0.5 rounded bg-muted text-[10px] border border-border font-mono">Ctrl+Shift+W</kbd>
+              <span>to toggle switcher</span>
+            </span>
+            <span className="flex items-center gap-1">
+              <kbd className="px-1.5 py-0.5 rounded bg-muted text-[10px] border border-border font-mono">esc</kbd>
+              <span>to close</span>
+            </span>
+          </div>
         </DialogContent>
       </Dialog>
 
       {/* New Workspace Wizard */}
       <Dialog open={wizardOpen} onOpenChange={setWizardOpen}>
-        <DialogContent className="max-w-md rounded-2xl border border-border/80 bg-card p-5 space-y-4">
+        <DialogContent className="max-w-[480px] w-full rounded-2xl border border-border/80 bg-background/95 backdrop-blur-2xl p-6 shadow-2xl space-y-4">
           <DialogTitle className="text-sm font-semibold text-foreground">New Workspace</DialogTitle>
           <div className="space-y-3">
             <div className="grid grid-cols-2 gap-2">

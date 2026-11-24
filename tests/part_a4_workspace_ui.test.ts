@@ -15,7 +15,9 @@ describe("Part A4: Workspace switcher UI, wizard, shortcuts, title/tray & host U
     const store = fs.readFileSync(path.join(ROOT, "src/store/useAppStore.ts"), "utf-8");
     const slice = fs.readFileSync(path.join(ROOT, "src/store/slices/workspaceSlice.ts"), "utf-8");
     const host = fs.readFileSync(path.join(ROOT, "tools/native/DesktopHost.cs"), "utf-8");
+    const dialog = fs.readFileSync(path.join(ROOT, "src/components/ui/dialog.tsx"), "utf-8");
 
+    assert.match(dialog, /createPortal\(dialogNode,\s*document\.body\)/);
     assert.match(switcher, /workspace-switcher-trigger/);
     assert.match(switcher, /workspace-missing-root-banner/);
     assert.match(switcher, /Folder missing: Locate \/ Remove/);
