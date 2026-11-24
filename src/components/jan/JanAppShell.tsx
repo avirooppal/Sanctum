@@ -1,6 +1,7 @@
 "use client";
 
 import React, { useState } from "react";
+import { toast } from "sonner";
 import { LeftSidebar } from "@/components/jan/LeftSidebar";
 import { SetupScreen } from "@/components/jan/SetupScreen";
 import { HubView } from "@/components/jan/HubView";
@@ -91,6 +92,29 @@ export const JanAppShell: React.FC = () => {
           useAppStore.getState().syncThreadsFromHost?.(),
           globalMemoryStore.syncFromHost(),
         ]);
+        try {
+          const nRes = await fetch("/v1/migration/notices");
+          if (nRes.ok) {
+            const nData = await nRes.json();
+            const notices = Array.isArray(nData?.notices) ? nData.notices : [];
+            for (const notice of notices) {
+              if (!notice?.id || !notice?.message) continue;
+              toast.info(notice.message, {
+                duration: Infinity,
+                action: {
+                  label: "Dismiss",
+                  onClick: () => {
+                    void fetch("/v1/migration/notices/dismiss", {
+                      method: "POST",
+                      headers: { "Content-Type": "application/json" },
+                      body: JSON.stringify({ id: notice.id }),
+                    }).catch(() => {});
+                  },
+                },
+              });
+            }
+          }
+        } catch {}
       })
       .finally(() => setHydrated(true));
     const mq = window.matchMedia("(max-width: 780px)");

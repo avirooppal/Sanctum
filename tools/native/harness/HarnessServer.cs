@@ -346,6 +346,15 @@ namespace Sanctum.Harness {
                     return (200, new JObject { ["tools"] = _engine.ListToolsJson() });
                 }
 
+                if (method == "GET" && path == "/v1/migration/notices") {
+                    return (200, new JObject { ["notices"] = CloudRemovalMigration.GetActiveNotices(_appDataDir) });
+                }
+                if (method == "POST" && path == "/v1/migration/notices/dismiss") {
+                    string nid = body["id"]?.Value<string>() ?? "";
+                    bool dismissed = CloudRemovalMigration.DismissNotice(_appDataDir, nid);
+                    return (200, new JObject { ["ok"] = true, ["dismissed"] = dismissed });
+                }
+
                 if (method == "GET" && path == "/v1/agents") {
                     return (200, new JObject { ["agents"] = _engine.ListAgents() });
                 }
