@@ -30,7 +30,18 @@ export const JanModelHeaderPill: React.FC<JanModelHeaderPillProps> = ({
   );
 
   const [open, setOpen] = useState(false);
+  const [evalsByModel, setEvalsByModel] = useState<Record<string, { passRate?: number; totalTasks?: number; measuredAt?: string }>>({});
   const containerRef = useRef<HTMLDivElement | null>(null);
+
+  useEffect(() => {
+    if (!open) return;
+    fetch("/v1/evals")
+      .then((r) => (r.ok ? r.json() : null))
+      .then((d) => {
+        if (d?.models && typeof d.models === "object") setEvalsByModel(d.models);
+      })
+      .catch(() => {});
+  }, [open]);
 
   useEffect(() => {
     if (!open) return;
@@ -145,6 +156,11 @@ export const JanModelHeaderPill: React.FC<JanModelHeaderPillProps> = ({
                         {m.fileSizeGB ? ` · ${m.fileSizeGB} GB` : ""}
                       </div>
                     )}
+                    {evalsByModel[m.id]?.totalTasks ? (
+                      <div className="text-[10px] font-mono text-emerald-400/90 truncate">
+                        tool reliability: {Math.round((evalsByModel[m.id].passRate || 0) * 100)}% on {evalsByModel[m.id].totalTasks} tasks ({String(evalsByModel[m.id].measuredAt || "").slice(0, 10)})
+                      </div>
+                    ) : null}
                   </div>
                   {selected && <IconCheck size={14} className="text-primary shrink-0" />}
                 </button>
