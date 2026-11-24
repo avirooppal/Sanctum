@@ -902,86 +902,18 @@ export const ChatScreen: React.FC<ChatScreenProps> = ({ onNavigate, onOpenMcpSet
         timerRef.current = setInterval(() => setRecordingSeconds((prev) => prev + 1), 1000);
         return;
       } catch {
-        // Fall through to Chromium neural speech recognition
+        // Fall through to local offline Windows Speech (no cloud browser speech fallback)
       }
     }
 
-    // 3. Priority 2: Modern Chromium/WebView2 Neural SpeechRecognition (vastly more accurate than legacy Windows SAPI)
-    const SpeechRecCtor =
-      typeof window !== "undefined"
-        ? (window as any).SpeechRecognition || (window as any).webkitSpeechRecognition
-        : null;
-    if (SpeechRecCtor && savedSttMode !== "webspeech_legacy") {
-      try {
-        const recognition = new SpeechRecCtor();
-        recognition.continuous = true;
-        recognition.interimResults = true;
-        recognition.lang = navigator.language || "en-US";
-        const basePrompt = prompt;
-        let finalTranscript = "";
-
-        recognition.onstart = () => {
-          setIsRecording(true);
-          setRecordingSeconds(0);
-          setWhisperStatus("Listening (Neural Speech)… Click mic to stop.");
-          timerRef.current = setInterval(() => setRecordingSeconds((prev) => prev + 1), 1000);
-        };
-
-        recognition.onresult = (event: any) => {
-          let interim = "";
-          for (let i = event.resultIndex; i < event.results.length; i++) {
-            const transcript = event.results[i][0]?.transcript || "";
-            if (event.results[i].isFinal) {
-              finalTranscript += transcript + " ";
-            } else {
-              interim += transcript;
-            }
-          }
-          const combined = [basePrompt.trim(), (finalTranscript + interim).trim()].filter(Boolean).join(" ");
-          setPrompt(combined);
-        };
-
-        recognition.onerror = (event: any) => {
-          const errCode = event?.error || "unknown";
-          if (timerRef.current) {
-            clearInterval(timerRef.current);
-            timerRef.current = null;
-          }
-          setIsRecording(false);
-          speechRecognitionRef.current = null;
-          if ((errCode === "network" || errCode === "service-not-allowed") && desktop) {
-            setWhisperStatus("Offline mode: falling back to Windows Offline Speech…");
-            desktop.postMessage(JSON.stringify({ type: "speechStart" }));
-          } else if (errCode !== "aborted" && errCode !== "no-speech") {
-            setWhisperStatus(`Voice input error (${errCode}).`);
-          }
-        };
-
-        recognition.onend = () => {
-          if (timerRef.current) {
-            clearInterval(timerRef.current);
-            timerRef.current = null;
-          }
-          setIsRecording(false);
-          speechRecognitionRef.current = null;
-        };
-
-        speechRecognitionRef.current = recognition;
-        recognition.start();
-        return;
-      } catch {
-        // Fall through to Windows SAPI
-      }
-    }
-
-    // 4. Priority 3: Offline Windows SAPI fallback
+    // 3. Local Offline Windows Speech fallback (strictly local-only; browser cloud SpeechRecognition removed)
     if (desktop) {
       setWhisperStatus("Offline Windows Speech active (start local Qwen3-ASR server on :8000 for neural offline accuracy).");
       desktop.postMessage(JSON.stringify({ type: "speechStart" }));
       return;
     }
 
-    setWhisperStatus("Microphone / Speech Recognition not available in this environment.");
+    setWhisperStatus("Local Speech Recognition not available in this environment.");
   };
 
   const stopRecording = () => {
