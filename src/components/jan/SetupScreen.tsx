@@ -12,6 +12,13 @@ import {
   IconChevronDown,
   IconChevronUp,
   IconCircleCheck,
+  IconUser,
+  IconShieldLock,
+  IconTerminal2,
+  IconBooks,
+  IconBrain,
+  IconSparkles,
+  IconGauge,
 } from "@tabler/icons-react";
 import { Button } from "@/components/ui/button";
 import { useAppStore } from "@/store/useAppStore";
@@ -40,6 +47,51 @@ interface CapabilityTestState {
   latencyMs?: number;
 }
 
+const SANCTUM_WALKTHROUGH_FEATURES = [
+  {
+    id: "local-privacy",
+    title: "100% Local & Private",
+    description:
+      "Runs on-device via Ollama or loopback OpenAI-compatible runtimes with a global Offline mode switch and Network Activity ledger.",
+    icon: IconShieldLock,
+  },
+  {
+    id: "coding-agent",
+    title: "Coding Agent & Rewind",
+    description:
+      "Edits files, runs PowerShell with AST guardrails and Job Object limits, and saves shadow-git checkpoints you can rewind anytime.",
+    icon: IconTerminal2,
+  },
+  {
+    id: "vault-ocr",
+    title: "Document Vault (RAG) & OCR",
+    description:
+      "Index PDFs, notes, and code locally with versioned vector search, Windows Offline OCR, and optional PaddleOCR-VL.",
+    icon: IconBooks,
+  },
+  {
+    id: "voice-stt",
+    title: "Local Voice Dictation",
+    description:
+      "Speak directly into chat using local Qwen3-ASR / WhisperX models or built-in Windows offline speech recognition.",
+    icon: IconMicrophone,
+  },
+  {
+    id: "memory-provenance",
+    title: "Memory with Provenance",
+    description:
+      "Remembers your name and preferences locally with source provenance tags, pinning, and prompt-injection protection.",
+    icon: IconBrain,
+  },
+  {
+    id: "adaptive-eval",
+    title: "Adaptive Tiers & Benchmarks",
+    description:
+      "Auto-tunes context length and tool budgets for your hardware, plus a built-in 40-task local tool-reliability benchmark.",
+    icon: IconGauge,
+  },
+] as const;
+
 export const SetupScreen = ({
   onComplete,
 }: {
@@ -54,13 +106,19 @@ export const SetupScreen = ({
   });
   const [error, setError] = useState("");
   const [starting, setStarting] = useState(false);
-  const { initModels, setActiveModelId, completeOnboarding } = useAppStore(
+  const { initModels, setActiveModelId, completeOnboarding, storedUserName, setUserName } = useAppStore(
     useShallow((s) => ({
       initModels: s.initModels,
       setActiveModelId: s.setActiveModelId,
       completeOnboarding: s.completeOnboarding,
+      storedUserName: s.userName,
+      setUserName: s.setUserName,
     }))
   );
+
+  // User Profile & Walkthrough State
+  const [userNameInput, setUserNameInput] = useState<string>(storedUserName || "");
+  const [isWalkthroughOpen, setIsWalkthroughOpen] = useState<boolean>(true);
 
   // 1. LLM Capability Configuration State
   const [isLlmConfigOpen, setIsLlmConfigOpen] = useState(false);
@@ -211,13 +269,65 @@ export const SetupScreen = ({
     void poll();
     void testCapability("stt", false);
     void testCapability("browser", false);
+    fetch("/api/settings?key=user.name")
+      .then((r) => (r.ok ? r.json() : null))
+      .then((data) => {
+        const saved = typeof data?.value === "string" ? data.value.trim() : "";
+        if (live && saved) {
+          setUserNameInput((prev) => (prev.trim() ? prev : saved));
+          setUserName(saved);
+        }
+      })
+      .catch(() => {});
     return () => {
       live = false;
       clearTimeout(timer);
     };
-  }, []);
+  }, [setUserName]);
+
+  const saveUserProfileMemory = async (cleanName: string) => {
+    if (!cleanName) return;
+    const factContent = `User's name is ${cleanName}.`;
+    try {
+      const listRes = await fetch("/v1/memory");
+      if (listRes.ok) {
+        const listData = await listRes.json();
+        const facts = Array.isArray(listData?.facts) ? listData.facts : [];
+        const existing = facts.find(
+          (f: { category?: string; content?: string; id?: string }) =>
+            f?.category === "profile" &&
+            typeof f?.content === "string" &&
+            f.content.toLowerCase().startsWith("user's name is ")
+        );
+        if (existing?.id) {
+          if (existing.content !== factContent) {
+            await fetch(`/v1/memory/${encodeURIComponent(existing.id)}`, {
+              method: "PUT",
+              headers: { "Content-Type": "application/json" },
+              body: JSON.stringify({ content: factContent, category: "profile", pinned: true }),
+            });
+          }
+          return;
+        }
+      }
+      await fetch("/v1/memory", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          content: factContent,
+          category: "profile",
+          provenance: "user",
+          pinned: true,
+        }),
+      });
+    } catch {
+      // non-blocking
+    }
+  };
 
   const saveCapabilitySettings = async () => {
+    const cleanName = userNameInput.trim().slice(0, 80);
+    setUserName(cleanName);
     try {
       await fetchWithApproval(
         "/api/settings",
@@ -225,6 +335,7 @@ export const SetupScreen = ({
           method: "POST",
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify({
+            "user.name": cleanName,
             "llm.mode": llmMode,
             "llm.customEndpoint": customLlmEndpoint,
             "llm.customModel": customLlmModel,
@@ -244,6 +355,7 @@ export const SetupScreen = ({
         "sanctum.sttEndpoint",
         sttMode === "custom" ? customEndpoint : "http://127.0.0.1:8000"
       );
+      await saveUserProfileMemory(cleanName);
     } catch {
       // non-blocking
     }
@@ -311,10 +423,11 @@ export const SetupScreen = ({
   };
 
   const ready = setup.phase === "ready";
+  const displayName = userNameInput.trim();
 
   return (
-    <div className="flex flex-1 items-center justify-center bg-background p-6 md:p-8 overflow-y-auto">
-      <div className="w-full max-w-xl rounded-2xl border border-border/80 bg-card p-6 md:p-8 space-y-5 shadow-xl">
+    <div className="flex flex-1 items-start md:items-center justify-center bg-background p-6 md:p-8 overflow-y-auto">
+      <div className="w-full max-w-2xl rounded-2xl border border-border/80 bg-card p-6 md:p-8 space-y-5 shadow-xl my-auto">
         {/* Brand Header */}
         <div className="flex items-center justify-between">
           <div className="flex items-center gap-3">
@@ -334,9 +447,13 @@ export const SetupScreen = ({
               </p>
               <h1 className="text-xl md:text-2xl font-bold tracking-tight text-foreground">
                 {ready
-                  ? "Sanctum is Ready"
+                  ? displayName
+                    ? `Sanctum is Ready, ${displayName}`
+                    : "Sanctum is Ready"
                   : setup.phase === "idle"
-                  ? "Welcome to Sanctum"
+                  ? displayName
+                    ? `Welcome to Sanctum, ${displayName}`
+                    : "Welcome to Sanctum"
                   : "Setting Up Local AI"}
               </h1>
             </div>
@@ -346,15 +463,111 @@ export const SetupScreen = ({
         {/* Phase Context Description */}
         {setup.phase === "idle" ? (
           <p className="text-xs md:text-sm text-muted-foreground leading-relaxed">
-            Configure your workspace capabilities below — use Sanctum&apos;s built-in local models or
-            connect your own custom endpoints for LLM, Speech-to-Text, and Browser Agent, and test
-            each capability live.
+            Your private, local-first AI workspace. Tell Sanctum your name, explore what&apos;s
+            built in, and verify your local capabilities below.
           </p>
         ) : (
           <p role="status" className="text-xs md:text-sm text-muted-foreground">
             {setup.detail}
           </p>
         )}
+
+        {/* USER PROFILE NAME INPUT */}
+        <div className="rounded-xl border border-border/70 bg-muted/20 p-4 space-y-2.5">
+          <div className="flex items-center gap-2">
+            <div className="size-7 rounded-lg bg-primary/10 text-primary flex items-center justify-center shrink-0">
+              <IconUser size={15} />
+            </div>
+            <div>
+              <label
+                htmlFor="setup-user-name"
+                className="text-xs font-semibold text-foreground block"
+              >
+                What should Sanctum call you?
+              </label>
+              <p className="text-[11px] text-muted-foreground">
+                Saved locally to your profile and pinned memory so your assistant remembers and
+                understands who you are.
+              </p>
+            </div>
+          </div>
+          <input
+            id="setup-user-name"
+            data-testid="setup-user-name-input"
+            type="text"
+            maxLength={80}
+            value={userNameInput}
+            onChange={(e) => setUserNameInput(e.target.value)}
+            placeholder="Enter your name (e.g. Alex)"
+            autoComplete="name"
+            className="w-full rounded-lg border border-border bg-background px-3 py-2 text-xs md:text-sm text-foreground placeholder:text-muted-foreground/70 focus:outline-none focus:ring-2 focus:ring-primary/40"
+          />
+          {displayName && (
+            <p className="text-[11px] text-emerald-400 font-medium">
+              Sanctum will greet you as {displayName} and include your name in local assistant
+              context.
+            </p>
+          )}
+        </div>
+
+        {/* FIRST-TIME FEATURE WALKTHROUGH */}
+        <div
+          className="rounded-xl border border-border/70 bg-muted/20 overflow-hidden"
+          data-testid="setup-feature-walkthrough"
+        >
+          <button
+            type="button"
+            onClick={() => setIsWalkthroughOpen((prev) => !prev)}
+            className="w-full flex items-center justify-between p-3.5 text-left hover:bg-muted/40 transition-colors"
+          >
+            <div className="flex items-center gap-2.5">
+              <div className="size-7 rounded-lg bg-primary/10 text-primary flex items-center justify-center shrink-0">
+                <IconSparkles size={15} />
+              </div>
+              <div>
+                <div className="flex items-center gap-2">
+                  <span className="text-xs font-semibold text-foreground">
+                    What Sanctum Can Do
+                  </span>
+                  <span className="text-[10px] font-mono px-1.5 py-0.2 rounded-full font-medium border bg-primary/10 text-primary border-primary/20">
+                    {SANCTUM_WALKTHROUGH_FEATURES.length} Built-in Features
+                  </span>
+                </div>
+                <p className="text-[11px] text-muted-foreground">
+                  Quick walkthrough of Sanctum&apos;s local AI, coding agent, security, and memory
+                  capabilities
+                </p>
+              </div>
+            </div>
+            <div className="text-muted-foreground">
+              {isWalkthroughOpen ? <IconChevronUp size={16} /> : <IconChevronDown size={16} />}
+            </div>
+          </button>
+
+          {isWalkthroughOpen && (
+            <div className="p-4 pt-2 border-t border-border/60 grid grid-cols-1 sm:grid-cols-2 gap-2.5">
+              {SANCTUM_WALKTHROUGH_FEATURES.map((feature) => {
+                const Icon = feature.icon;
+                return (
+                  <div
+                    key={feature.id}
+                    className="p-3 rounded-xl border border-border/60 bg-card/80 space-y-1"
+                  >
+                    <div className="flex items-center gap-2">
+                      <Icon size={14} className="text-primary shrink-0" />
+                      <span className="text-xs font-semibold text-foreground">
+                        {feature.title}
+                      </span>
+                    </div>
+                    <p className="text-[11px] text-muted-foreground leading-snug">
+                      {feature.description}
+                    </p>
+                  </div>
+                );
+              })}
+            </div>
+          )}
+        </div>
 
         {/* Busy Progress Bar */}
         {setup.busy && (
@@ -454,7 +667,7 @@ export const SetupScreen = ({
                     {llmMode === "custom" && <IconCircleCheck size={14} className="text-primary" />}
                   </div>
                   <p className="text-[11px] text-muted-foreground mt-1">
-                    Connect your own Ollama, vLLM, LM Studio, or OpenAI URL.
+                    Connect your own local Ollama, llama.cpp, or LM Studio loopback URL.
                   </p>
                 </button>
               </div>
@@ -478,18 +691,18 @@ export const SetupScreen = ({
                         type="text"
                         value={customLlmModel}
                         onChange={(e) => setCustomLlmModel(e.target.value)}
-                        placeholder="qwen3:1.7b or gpt-4o"
+                        placeholder="qwen3:1.7b or llama3.2"
                         className="w-full rounded-lg border border-border bg-background px-2.5 py-1.5 text-xs font-mono text-foreground"
                       />
                     </div>
                   </div>
                   <div className="space-y-1">
-                    <label className="text-[11px] font-medium text-foreground">API Key (Optional)</label>
+                    <label className="text-[11px] font-medium text-foreground">Local Auth Token (Optional)</label>
                     <input
                       type="password"
                       value={customLlmApiKey}
                       onChange={(e) => setCustomLlmApiKey(e.target.value)}
-                      placeholder="sk-..."
+                      placeholder="Optional local server token"
                       className="w-full rounded-lg border border-border bg-background px-2.5 py-1.5 text-xs font-mono text-foreground"
                     />
                   </div>

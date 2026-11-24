@@ -111,6 +111,19 @@ namespace Sanctum.Harness {
                 return result;
             }
 
+            if (lastUser.IndexOf("[MOCK:WHOAMI]", StringComparison.OrdinalIgnoreCase) >= 0) {
+                var sysParts = new List<string>();
+                foreach (var m in messages) {
+                    if ((m["role"]?.Value<string>() ?? "") == "system") {
+                        string c = m["content"]?.Value<string>() ?? "";
+                        if (!string.IsNullOrWhiteSpace(c)) sysParts.Add(c);
+                    }
+                }
+                string whoamiReply = sysParts.Count == 0 ? "No user profile context." : string.Join("\n", sysParts);
+                onContentDelta(whoamiReply);
+                return new ProviderTurnResult { Content = whoamiReply, PromptTokens = 10, CompletionTokens = 10 };
+            }
+
             if (lastUser.IndexOf("[MOCK:LOOP]", StringComparison.OrdinalIgnoreCase) >= 0) {
                 onContentDelta("Checking again...");
                 return new ProviderTurnResult {

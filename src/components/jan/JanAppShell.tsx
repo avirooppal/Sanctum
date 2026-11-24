@@ -61,6 +61,9 @@ export const JanAppShell: React.FC = () => {
       .then((data) => {
         const s = data?.settings;
         if (!s) return;
+        if (typeof s["user.name"] === "string" && s["user.name"].trim()) {
+          useAppStore.getState().setUserName(s["user.name"]);
+        }
         const patch: Partial<AppearanceConfig> = {};
         if (s["appearance.theme"]) patch.theme = s["appearance.theme"];
         if (s["appearance.fontSize"]) patch.fontSize = s["appearance.fontSize"];

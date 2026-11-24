@@ -3159,6 +3159,7 @@ private void HandleTerminal(HttpListenerRequest req, HttpListenerResponse res) {
         }
 
         private static readonly HashSet<string> _knownSettingKeys = new HashSet<string>(StringComparer.Ordinal) {
+            "user.name",
             "general.language", "general.autoUpdateCheck", "general.spellCheck", "general.dataFolder",
             "appearance.theme", "appearance.fontSize", "appearance.showTokenSpeed", "appearance.coloredUserBubble",
             "assistants.defaultModel", "assistants.systemPrompt", "assistants.temperature", "assistants.topP",
@@ -3183,6 +3184,12 @@ private void HandleTerminal(HttpListenerRequest req, HttpListenerResponse res) {
         private static void ValidateSetting(string key, object val) {
             if (!_knownSettingKeys.Contains(key)) {
                 throw new Exception("Unknown setting key: " + key);
+            }
+            if (key == "user.name") {
+                string s = (Convert.ToString(val) ?? "").Trim();
+                if (s.Length > 80) {
+                    throw new Exception("user.name must be 80 characters or fewer.");
+                }
             }
             if (key == "access.scope") {
                 string s = Convert.ToString(val);

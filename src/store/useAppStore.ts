@@ -77,6 +77,7 @@ export const useAppStore = create<AppState>()(
 
         set({
           hasCompletedOnboarding: false,
+          userName: "",
           activeModule: "chat",
           chatSessions: [
             {
@@ -192,6 +193,7 @@ export const useAppStore = create<AppState>()(
         const stripped = stripHeavyPayloadsForLocalStorage(state.documents, []);
         return {
         hasCompletedOnboarding: state.hasCompletedOnboarding,
+        userName: state.userName,
         activeModule: state.activeModule,
         isExplorerCollapsed: state.isExplorerCollapsed,
         // Chat sessions and agent runs are owned exclusively by the host harness session log (Phase 5).

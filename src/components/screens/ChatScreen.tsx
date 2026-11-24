@@ -527,6 +527,7 @@ export const ChatScreen: React.FC<ChatScreenProps> = ({ onNavigate, onOpenMcpSet
     duplicateChatSession,
     agentExecutionMode,
     setAgentExecutionMode,
+    userName,
   } = useAppStore(
     useShallow((s) => ({
       chatSessions: s.chatSessions,
@@ -566,6 +567,7 @@ export const ChatScreen: React.FC<ChatScreenProps> = ({ onNavigate, onOpenMcpSet
       duplicateChatSession: s.duplicateChatSession,
       agentExecutionMode: s.agentExecutionMode,
       setAgentExecutionMode: s.setAgentExecutionMode,
+      userName: s.userName,
     }))
   );
 
@@ -1179,7 +1181,9 @@ export const ChatScreen: React.FC<ChatScreenProps> = ({ onNavigate, onOpenMcpSet
                 />
                 <div className="space-y-1">
                   <h2 className="text-xl font-semibold tracking-tight text-foreground">
-                    What would you like to explore?
+                    {userName
+                      ? `What would you like to explore, ${userName}?`
+                      : "What would you like to explore?"}
                   </h2>
                   <p className="text-xs text-muted-foreground">
                     {model

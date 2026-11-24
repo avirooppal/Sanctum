@@ -74,6 +74,7 @@ namespace Sanctum.Harness {
     }
 
     public sealed class HarnessEngine : IDisposable {
+        private readonly string _dataRoot;
         private readonly SessionLogStore _store;
         private readonly IModelProvider _provider;
         private readonly HarnessAuditLog _audit;
@@ -102,6 +103,7 @@ namespace Sanctum.Harness {
         public HarnessEngine(SessionLogStore store, IModelProvider provider, string appDataDir = null) {
             _store = store;
             string dataRoot = appDataDir ?? Path.GetDirectoryName(store.SessionsDir);
+            _dataRoot = dataRoot;
             EgressHttpFactory.Initialize(dataRoot);
             DataAtRestCrypto.Initialize(dataRoot);
             _provider = provider;
@@ -1072,10 +1074,75 @@ namespace Sanctum.Harness {
             }
         }
 
+        private string ReadUserProfileName() {
+            try {
+                if (!string.IsNullOrEmpty(_dataRoot)) {
+                    string settingsPath = Path.Combine(_dataRoot, "settings.json");
+                    if (File.Exists(settingsPath)) {
+                        var obj = CanonicalJson.ParseObject(File.ReadAllText(settingsPath, Encoding.UTF8));
+                        string raw = (obj?["user.name"]?.Value<string>() ?? "").Replace("\r", " ").Replace("\n", " ").Trim();
+                        if (!string.IsNullOrEmpty(raw)) {
+                            return raw.Length > 80 ? raw.Substring(0, 80) : raw;
+                        }
+                    }
+                }
+            } catch { }
+            try {
+                var listed = _memory.ListAll();
+                if (listed?["facts"] is JArray facts) {
+                    foreach (JObject f in facts) {
+                        string cat = f["category"]?.Value<string>() ?? "";
+                        string prov = f["provenance"]?.Value<string>() ?? "";
+                        if (string.Equals(cat, "profile", StringComparison.OrdinalIgnoreCase) && prov == "user") {
+                            string content = (f["content"]?.Value<string>() ?? "").Trim();
+                            const string prefix = "User's name is ";
+                            if (content.StartsWith(prefix, StringComparison.OrdinalIgnoreCase)) {
+                                string extracted = content.Substring(prefix.Length).Trim().TrimEnd('.');
+                                if (!string.IsNullOrEmpty(extracted)) {
+                                    return extracted.Length > 80 ? extracted.Substring(0, 80) : extracted;
+                                }
+                            }
+                        }
+                    }
+                }
+            } catch { }
+            return "";
+        }
+
         private List<JObject> BuildModelMessagesFromLog(string sessionId) {
             var events = _store.ReadEvents(sessionId, 0);
             var sum = _store.BuildSummary(sessionId);
             var msgs = new List<JObject>();
+
+            // 0. Inject user profile identity & pinned user memories so the local assistant understands who it is helping
+            string userName = ReadUserProfileName();
+            var pinnedProfileLines = new List<string>();
+            if (!string.IsNullOrEmpty(userName)) {
+                pinnedProfileLines.Add($"The user's name is {userName}. Address them naturally by name when helpful.");
+            }
+            try {
+                var memRoot = _memory.ListAll();
+                if (memRoot?["facts"] is JArray facts) {
+                    int added = 0;
+                    foreach (JObject f in facts) {
+                        if (added >= 10) break;
+                        bool pinned = f["pinned"]?.Value<bool>() ?? false;
+                        string prov = f["provenance"]?.Value<string>() ?? "";
+                        string content = (f["content"]?.Value<string>() ?? "").Trim();
+                        if (!pinned || prov != "user" || string.IsNullOrEmpty(content)) continue;
+                        if (!string.IsNullOrEmpty(userName) && content.IndexOf(userName, StringComparison.OrdinalIgnoreCase) >= 0 &&
+                            content.StartsWith("User's name is ", StringComparison.OrdinalIgnoreCase)) continue;
+                        pinnedProfileLines.Add("- " + content);
+                        added++;
+                    }
+                }
+            } catch { }
+            if (pinnedProfileLines.Count > 0) {
+                msgs.Add(new JObject {
+                    ["role"] = "system",
+                    ["content"] = "User profile:\n" + string.Join("\n", pinnedProfileLines)
+                });
+            }
 
             // 1. Inject workspace AGENTS.md & .sanctum/rules/*.md instructions ONLY if workspace is trusted
             if (sum != null && !string.IsNullOrWhiteSpace(sum.Workspace) && _workspaceTrust.IsWorkspaceTrusted(sum.Workspace)) {
