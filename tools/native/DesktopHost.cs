@@ -32,6 +32,7 @@ namespace Sanctum {
         private static Sanctum.Harness.HarnessServer _embeddedHarnessServer;
         private static NotifyIcon _harnessTrayIcon;
         private static NotifyIcon _mainTrayIcon;
+        private FeedPaneController _feedPane;
         private static volatile bool _forceQuit;
 
         private static void EnsureEmbeddedHarnessStarted() {
@@ -1771,6 +1772,38 @@ namespace Sanctum {
                 }
                 if (raw.Contains("\"exportLogs\"")) {
                     ExportLogs();
+                } else if (raw.Contains("\"feedControl\"")) {
+                    try {
+                        EnsureEmbeddedHarnessStarted();
+                        if (_feedPane == null && _embeddedHarnessEngine != null) {
+                            _feedPane = new FeedPaneController(this, _embeddedHarnessEngine.Feed, null);
+                        }
+                        var serializer = new JavaScriptSerializer();
+                        var msg = serializer.Deserialize<Dictionary<string, object>>(raw);
+                        string action = msg != null && msg.ContainsKey("action") ? (Convert.ToString(msg["action"]) ?? "") : "";
+                        this.BeginInvoke((Action)(() => {
+                            if (_feedPane == null) return;
+                            if (action == "open") {
+                                string url = msg.ContainsKey("url") ? Convert.ToString(msg["url"]) : null;
+                                _ = _feedPane.OpenAsync(url);
+                            } else if (action == "close") {
+                                _feedPane.ClosePane();
+                            } else if (action == "bounds") {
+                                int x = Convert.ToInt32(msg["x"]);
+                                int y = Convert.ToInt32(msg["y"]);
+                                int w = Convert.ToInt32(msg["width"]);
+                                int h = Convert.ToInt32(msg["height"]);
+                                _feedPane.SetSlotBounds(new Rectangle(x, y, Math.Max(0, w), Math.Max(0, h)));
+                            } else if (action == "airspace") {
+                                bool occ = msg.ContainsKey("occluded") && Convert.ToBoolean(msg["occluded"]);
+                                _feedPane.SetAirspaceOccluded(occ);
+                            } else if (action == "pause") {
+                                _ = _feedPane.PauseForAttentionAsync();
+                            } else if (action == "resume") {
+                                _feedPane.ResumeFromAttention();
+                            }
+                        }));
+                    } catch { }
                 } else if (raw.Contains("\"setWorkspaceTitle\"")) {
                     try {
                         var serializer = new JavaScriptSerializer();

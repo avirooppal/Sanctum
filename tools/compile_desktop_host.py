@@ -118,6 +118,7 @@ def compile_desktop_host(output_path: str):
         cmd.append(os.path.abspath("tools/native/DesktopWorkspaceEndpoints.cs"))
         cmd.append(os.path.abspath("tools/native/DesktopBrowserEndpoints.cs"))
         cmd.append(os.path.abspath("tools/native/DesktopMcpEndpoints.cs"))
+        cmd.append(os.path.abspath("tools/native/FeedPaneController.cs"))
         harness_dir = os.path.abspath(os.path.join(root_dir, "tools", "native", "harness"))
         if os.path.isdir(harness_dir):
             for fname in sorted(os.listdir(harness_dir)):

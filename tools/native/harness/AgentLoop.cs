@@ -88,6 +88,7 @@ namespace Sanctum.Harness {
         private readonly WorkspaceManager _workspaces;
         private readonly HostVaultService _vault;
         private readonly HostMemoryService _memory;
+        private readonly FeedHostService _feed;
         private readonly ModelTierManager _tierManager;
         private readonly HarnessScheduler _scheduler;
         private readonly ConcurrentDictionary<string, JArray> _todos = new ConcurrentDictionary<string, JArray>(StringComparer.OrdinalIgnoreCase);
@@ -120,6 +121,7 @@ namespace Sanctum.Harness {
             _workspaces = new WorkspaceManager(dataRoot);
             _vault = new HostVaultService(_workspaces);
             _memory = new HostMemoryService(dataRoot);
+            _feed = new FeedHostService(dataRoot, _audit);
             _tierManager = new ModelTierManager(dataRoot);
             _scheduler = new HarnessScheduler(dataRoot, this);
             RegisterPhase1aTools();
@@ -145,6 +147,7 @@ namespace Sanctum.Harness {
         public WorkspaceManager Workspaces => _workspaces;
         public HostVaultService Vault => _vault;
         public HostMemoryService Memory => _memory;
+        public FeedHostService Feed => _feed;
         public ModelTierManager TierManager => _tierManager;
         public HarnessScheduler Scheduler => _scheduler;
         public int ActiveRunCount => _activeRuns.Count;

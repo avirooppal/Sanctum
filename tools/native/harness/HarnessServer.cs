@@ -411,6 +411,43 @@ namespace Sanctum.Harness {
                 if (method == "GET" && path == "/v1/attention") {
                     return (200, _engine.GetAttentionInbox());
                 }
+
+                // Part B2: Feed Pane Host Policy, Consent, Presets & Profile API
+                if (method == "GET" && path == "/v1/feed/status") {
+                    return (200, _engine.Feed.GetStatus());
+                }
+                if (method == "POST" && path == "/v1/feed/enable") {
+                    bool consent = body["consentAccepted"]?.Value<bool>() ?? false;
+                    bool? inPriv = body["inPrivateMode"] != null ? (bool?)body["inPrivateMode"].Value<bool>() : null;
+                    string presetId = body["presetId"]?.Value<string>();
+                    return _engine.Feed.EnableFeed(consent, viaTrustedChannel, inPriv, presetId);
+                }
+                if (method == "POST" && path == "/v1/feed/disable") {
+                    return _engine.Feed.DisableFeed();
+                }
+                if (method == "POST" && path == "/v1/feed/settings") {
+                    string presetId = body["activePresetId"]?.Value<string>();
+                    bool? inPriv = body["inPrivateMode"] != null ? (bool?)body["inPrivateMode"].Value<bool>() : null;
+                    int? idleMin = body["idleDestroyMinutes"] != null ? (int?)body["idleDestroyMinutes"].Value<int>() : null;
+                    bool? dbg = body["debugLogBlocked"] != null ? (bool?)body["debugLogBlocked"].Value<bool>() : null;
+                    return _engine.Feed.SelectPreset(presetId, inPriv, idleMin, dbg);
+                }
+                if (method == "POST" && path == "/v1/feed/presets/custom") {
+                    return _engine.Feed.AddCustomPresetOrDomain(body, viaTrustedChannel);
+                }
+                if (method == "POST" && path == "/v1/feed/profile/clear") {
+                    return _engine.Feed.ClearFeedProfile();
+                }
+                if (method == "POST" && path == "/v1/feed/policy/check") {
+                    string url = body["url"]?.Value<string>() ?? "";
+                    string presetId = body["presetId"]?.Value<string>();
+                    bool skipDns = body["skipDnsLookup"]?.Value<bool>() ?? false;
+                    var dec = _engine.Feed.EvaluateRequest(url, presetId, skipDns);
+                    if (dec.Allowed && body["recordSummary"]?.Value<bool>() == true) {
+                        _engine.Feed.RecordHostTransfer(dec.Host, body["approxBytes"]?.Value<long>() ?? 256);
+                    }
+                    return (200, dec.ToJson());
+                }
                 if (method == "GET" && path == "/v1/workspaces") {
                     bool includeArchived = body["includeArchived"]?.Value<bool>() ?? false;
                     return (200, _engine.Workspaces.ListWorkspaces(includeArchived));
@@ -673,7 +710,8 @@ namespace Sanctum.Harness {
                         "settings.json", "workspace_trust.json", "network_policy.json",
                         "migration_notices.json", "approved_hooks.json", "permission_rules.json",
                         "schedules.json", "mcp_servers.json", "encryption_config.json",
-                        "workspaces.json", "workspaces.json.bak", "migration_state.json"
+                        "workspaces.json", "workspaces.json.bak", "migration_state.json",
+                        "feed_config.json", "feed_presets.json"
                     };
                     foreach (string f in filesToWipe) {
                         try {
@@ -682,7 +720,7 @@ namespace Sanctum.Harness {
                         } catch { }
                     }
                     string[] dirsToWipe = new[] {
-                        "checkpoints", "shadow-git", "vault", "logs", "tool-trash", "backups", "exports", "webview2", "browser-profile", "workspaces"
+                        "checkpoints", "shadow-git", "vault", "logs", "tool-trash", "backups", "exports", "webview2", "browser-profile", "workspaces", "feed-profile"
                     };
                     foreach (string d in dirsToWipe) {
                         try {
@@ -996,6 +1034,12 @@ namespace Sanctum.Harness {
                 ("POST", "/v1/workspaces/transfer", "trusted_channel_only"),
                 ("POST", "/v1/workspaces/import", "bearer_low_risk"),
                 ("POST", "/v1/workspaces/resolve", "bearer_low_risk"),
+                ("POST", "/v1/feed/enable", "trusted_channel_only"),
+                ("POST", "/v1/feed/disable", "bearer_low_risk"),
+                ("POST", "/v1/feed/settings", "bearer_low_risk"),
+                ("POST", "/v1/feed/presets/custom", "trusted_channel_only"),
+                ("POST", "/v1/feed/profile/clear", "bearer_low_risk"),
+                ("POST", "/v1/feed/policy/check", "bearer_low_risk"),
                 ("POST", "/v1/workspaces", "bearer_low_risk"),
                 ("PUT", "/v1/workspaces/:id", "bearer_low_risk"),
                 ("PATCH", "/v1/workspaces/:id", "bearer_low_risk"),

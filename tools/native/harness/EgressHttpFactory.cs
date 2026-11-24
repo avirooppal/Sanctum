@@ -14,7 +14,8 @@ namespace Sanctum.Harness {
         ManualUpdate = 2,
         BrowserAgent = 3,
         WebFetch = 4,
-        RemoteMcp = 5
+        RemoteMcp = 5,
+        FeedPane = 6
     }
 
     public sealed class EgressBlockedException : UnauthorizedAccessException {
@@ -47,6 +48,7 @@ namespace Sanctum.Harness {
         private static bool _allowBrowserAgent = false;    // Off by default
         private static bool _allowWebFetch = false;        // Off by default
         private static bool _allowRemoteMcp = false;       // Off by default
+        private static bool _allowFeedPane = false;        // Off by default
 
         private static readonly string[] ModelDownloadHosts = new[] {
             "ollama.com",
@@ -91,6 +93,7 @@ namespace Sanctum.Harness {
                 if (obj["allowBrowserAgent"] != null) _allowBrowserAgent = obj["allowBrowserAgent"].Value<bool>();
                 if (obj["allowWebFetch"] != null) _allowWebFetch = obj["allowWebFetch"].Value<bool>();
                 if (obj["allowRemoteMcp"] != null) _allowRemoteMcp = obj["allowRemoteMcp"].Value<bool>();
+                if (obj["allowFeedPane"] != null) _allowFeedPane = obj["allowFeedPane"].Value<bool>();
             } catch { }
         }
 
@@ -157,6 +160,7 @@ namespace Sanctum.Harness {
                 else if (f == "browseragent" || f == "browser_agent") _allowBrowserAgent = enabled;
                 else if (f == "webfetch" || f == "web_fetch" || f == "webtools" || f == "web_tools") _allowWebFetch = enabled;
                 else if (f == "remotemcp" || f == "remote_mcp") _allowRemoteMcp = enabled;
+                else if (f == "feedpane" || f == "feed_pane") _allowFeedPane = enabled;
                 else return (400, new JObject { ["error"] = "Unknown network feature: " + featureName });
 
                 SavePolicyLocked();
@@ -195,6 +199,15 @@ namespace Sanctum.Harness {
                 }
             }
             return false;
+        }
+
+        /// <summary>
+        /// Part B2: Records a host-level summary for the Feed Pane with ZERO URLs, paths, or content.
+        /// </summary>
+        public static void RecordFeedHostSummary(string host, long approxBytes, string outcome = "allowed") {
+            string cleanHost = (host ?? "").Trim().ToLowerInvariant();
+            if (string.IsNullOrEmpty(cleanHost)) return;
+            RecordLedgerEntry(EgressFeature.FeedPane, cleanHost, "", outcome, "host-summary-only", 0, Math.Max(0, approxBytes), "");
         }
 
         public static void CheckAllowed(string url, EgressFeature feature, string sessionId = "", long bytesSent = 0) {
