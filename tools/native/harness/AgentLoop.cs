@@ -99,6 +99,7 @@ namespace Sanctum.Harness {
             _store = store;
             string dataRoot = appDataDir ?? Path.GetDirectoryName(store.SessionsDir);
             EgressHttpFactory.Initialize(dataRoot);
+            DataAtRestCrypto.Initialize(dataRoot);
             _provider = provider;
             _audit = new HarnessAuditLog(dataRoot);
             _permissions = new PermissionEngine(dataRoot, _audit);

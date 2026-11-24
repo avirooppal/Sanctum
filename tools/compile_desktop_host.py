@@ -82,6 +82,7 @@ def compile_desktop_host(output_path: str):
             os.path.join(fx_dir, "mscorlib.dll"),
             os.path.join(fx_dir, "System.dll"),
             os.path.join(fx_dir, "System.Core.dll"),
+            os.path.join(fx_dir, "System.Security.dll"),
             os.path.join(fx_dir, "System.IO.Compression.dll"),
             os.path.join(fx_dir, "System.IO.Compression.FileSystem.dll"),
             r"C:\Windows\Microsoft.NET\assembly\GAC_MSIL\System.Speech\v4.0_4.0.0.0__31bf3856ad364e35\System.Speech.dll",

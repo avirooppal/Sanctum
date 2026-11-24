@@ -35,6 +35,27 @@ namespace Sanctum.Harness {
                 exitCode = RunEvalPermissionFixture(args.Length > 1 ? args[1] : "");
                 return true;
             }
+            if (cmd == "--bench-crypto") {
+                try { AttachConsole(-1); } catch { }
+                string payload = new string('A', 100 * 1024);
+                var sw1 = Stopwatch.StartNew();
+                string dpapi = DataAtRestCrypto.ProtectDpapi(payload);
+                string dpapiBack = DataAtRestCrypto.UnprotectDpapi(dpapi);
+                sw1.Stop();
+                var sw2 = Stopwatch.StartNew();
+                string enc = DataAtRestCrypto.EncryptWithPassphrase(payload, "correct-horse-battery-staple");
+                string dec = DataAtRestCrypto.DecryptWithPassphrase(enc, "correct-horse-battery-staple");
+                sw2.Stop();
+                Console.WriteLine(JsonConvert.SerializeObject(new {
+                    payloadBytes = payload.Length,
+                    dpapiRoundtripMs = Math.Round(sw1.Elapsed.TotalMilliseconds, 2),
+                    pbkdf2AesHmacRoundtripMs = Math.Round(sw2.Elapsed.TotalMilliseconds, 2),
+                    dpapiOk = dpapiBack == payload,
+                    pbkdf2Ok = dec == payload
+                }));
+                exitCode = (dpapiBack == payload && dec == payload) ? 0 : 1;
+                return true;
+            }
             if (cmd == "--eval-egress") {
                 try { AttachConsole(-1); } catch { }
                 string evalDataDir = GetArg(args, "--data-dir") ?? Path.Combine(Path.GetTempPath(), "sanctum-egress-eval");

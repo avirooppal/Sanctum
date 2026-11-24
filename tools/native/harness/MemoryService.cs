@@ -27,7 +27,7 @@ namespace Sanctum.Harness {
                 return new JObject { ["enabled"] = true, ["facts"] = new JArray(), ["episodes"] = new JArray() };
             }
             try {
-                var obj = CanonicalJson.ParseObject(File.ReadAllText(_memPath, Utf8NoBom));
+                var obj = CanonicalJson.ParseObject(DataAtRestCrypto.ReadTextFile(_memPath));
                 if (!(obj["facts"] is JArray)) obj["facts"] = new JArray();
                 return obj;
             } catch {
@@ -36,9 +36,7 @@ namespace Sanctum.Harness {
         }
 
         private void SaveRootLocked(JObject root) {
-            Directory.CreateDirectory(Path.GetDirectoryName(_memPath));
-            File.WriteAllText(_memPath, root.ToString(Formatting.Indented), Utf8NoBom);
-            WindowsAclHelper.ApplyUserOnlyFileAcl(_memPath);
+            DataAtRestCrypto.WriteTextFile(_memPath, root.ToString(Formatting.Indented));
         }
 
         public JObject ListAll() {

@@ -495,14 +495,35 @@ namespace Sanctum.Harness {
                     return (200, new JObject { ["entries"] = _engine.Audit.ReadRecent(limit) });
                 }
 
+                if (method == "GET" && path == "/v1/security/encryption") {
+                    return (200, DataAtRestCrypto.GetStatus());
+                }
+                if (method == "POST" && path == "/v1/security/encryption") {
+                    bool enabled = body["enabled"]?.Value<bool>() ?? false;
+                    return DataAtRestCrypto.SetDpapiEnabled(enabled, viaTrustedChannel);
+                }
+
                 if (method == "GET" && path == "/v1/export") {
                     var bundle = _engine.Store.ExportBundle();
                     bundle["rules"] = _engine.Permissions.ListRules();
                     bundle["schedules"] = _engine.Scheduler.ListJobs();
+                    bundle["memory"] = _engine.Memory.ListAll();
+                    string passphrase = body["passphrase"]?.Value<string>();
+                    if (!string.IsNullOrEmpty(passphrase)) {
+                        string encrypted = DataAtRestCrypto.EncryptWithPassphrase(bundle.ToString(Formatting.None), passphrase);
+                        return (200, new JObject { ["encrypted"] = true, ["format"] = "SANCTUM_PBKDF2_V1", ["archive"] = encrypted });
+                    }
                     return (200, bundle);
                 }
 
                 if (method == "POST" && path == "/v1/import") {
+                    if (body["archive"] != null) {
+                        string archive = body["archive"].Value<string>() ?? "";
+                        string passphrase = body["passphrase"]?.Value<string>() ?? "";
+                        string decrypted = DataAtRestCrypto.DecryptWithPassphrase(archive, passphrase);
+                        var parsed = CanonicalJson.ParseObject(decrypted);
+                        return (200, _engine.Store.ImportBundle(parsed));
+                    }
                     return (200, _engine.Store.ImportBundle(body));
                 }
 
@@ -516,10 +537,40 @@ namespace Sanctum.Harness {
                     }
                     _engine.InterruptAllRuns();
                     var erased = _engine.Store.EraseAll();
+                    var wipedTargets = new JArray("sessions", "blobs");
+                    string[] filesToWipe = new[] {
+                        "audit.jsonl", "egress_ledger.jsonl", "memory.json", "threads.json",
+                        "settings.json", "workspace_trust.json", "network_policy.json",
+                        "migration_notices.json", "approved_hooks.json", "permission_rules.json",
+                        "schedules.json", "mcp_servers.json", "encryption_config.json"
+                    };
+                    foreach (string f in filesToWipe) {
+                        try {
+                            string p = Path.Combine(_appDataDir, f);
+                            if (File.Exists(p)) { File.Delete(p); wipedTargets.Add(f); }
+                        } catch { }
+                    }
+                    string[] dirsToWipe = new[] {
+                        "checkpoints", "shadow-git", "vault", "logs", "tool-trash", "backups", "exports", "webview2", "browser-profile"
+                    };
+                    foreach (string d in dirsToWipe) {
+                        try {
+                            string p = Path.Combine(_appDataDir, d);
+                            if (Directory.Exists(p)) { Directory.Delete(p, true); wipedTargets.Add(d); }
+                        } catch { }
+                    }
+                    // Also wipe LocalAppData WebView2 / browser-profile if caller didn't override to isolated temp dir
                     try {
-                        string auditFile = Path.Combine(_appDataDir, "audit.jsonl");
-                        if (File.Exists(auditFile)) File.Delete(auditFile);
+                        string defaultAppData = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData), "Sanctum");
+                        if (string.Equals(Path.GetFullPath(_appDataDir).TrimEnd('\\'), Path.GetFullPath(defaultAppData).TrimEnd('\\'), StringComparison.OrdinalIgnoreCase)) {
+                            string localSanctum = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData), "Sanctum");
+                            foreach (string ld in new[] { "webview2", "EBWebView", "browser-profile" }) {
+                                string lp = Path.Combine(localSanctum, ld);
+                                if (Directory.Exists(lp)) { try { Directory.Delete(lp, true); wipedTargets.Add("local:" + ld); } catch { } }
+                            }
+                        }
                     } catch { }
+                    erased["wipedTargets"] = wipedTargets;
                     erased["erased"] = true;
                     return (200, erased);
                 }
@@ -750,6 +801,7 @@ namespace Sanctum.Harness {
                 ("DELETE", "/v1/schedules/:id", "trusted_channel_only"),
                 ("POST", "/v1/schedules/:id/run", "unattended_fail_closed"),
                 ("POST", "/v1/rules", "trusted_channel_only"),
+                ("POST", "/v1/security/encryption", "trusted_channel_only"),
                 ("POST", "/v1/import", "bearer_low_risk"),
                 ("POST", "/v1/erase-all", "trusted_or_explicit_confirm"),
                 ("POST", "/v1/untrusted/wrap", "bearer_low_risk"),
