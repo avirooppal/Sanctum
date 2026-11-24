@@ -382,6 +382,21 @@ namespace Sanctum.Harness {
                     });
                 }
 
+                // Workspace Trust (content-hashed, trusted-channel gated)
+                if (method == "GET" && path == "/v1/workspace/trust") {
+                    string ws = body["workspace"]?.Value<string>() ?? "";
+                    return (200, _engine.WorkspaceTrust.GetTrustStatus(ws));
+                }
+                if (method == "POST" && path == "/v1/workspace/trust") {
+                    string ws = body["workspace"]?.Value<string>() ?? "";
+                    string hash = body["contentHash"]?.Value<string>() ?? "";
+                    return _engine.WorkspaceTrust.TrustWorkspace(ws, hash, viaTrustedChannel);
+                }
+                if (method == "DELETE" && path == "/v1/workspace/trust") {
+                    string ws = body["workspace"]?.Value<string>() ?? "";
+                    return (200, _engine.WorkspaceTrust.RevokeTrust(ws));
+                }
+
                 if (method == "GET" && path == "/v1/agents") {
                     return (200, new JObject { ["agents"] = _engine.ListAgents() });
                 }
@@ -577,9 +592,11 @@ namespace Sanctum.Harness {
                         if (action == "context") {
                             var sum = _engine.GetSessionSummary(sessionId);
                             if (sum == null) return (404, new JObject { ["error"] = "Session not found." });
+                            bool wsTrusted = _engine.WorkspaceTrust.IsWorkspaceTrusted(sum.Workspace);
                             return (200, new JObject {
                                 ["sessionId"] = sessionId,
-                                ["instructions"] = ContextEngine.LoadInstructions(sum.Workspace),
+                                ["workspaceTrusted"] = wsTrusted,
+                                ["instructions"] = wsTrusted ? ContextEngine.LoadInstructions(sum.Workspace) : new JObject { ["files"] = new JArray(), ["combined"] = "", ["blockedUntrusted"] = true },
                                 ["repoMap"] = ContextEngine.BuildRepoMap(sum.Workspace, 120),
                                 ["todos"] = _engine.GetTodos(sessionId)
                             });

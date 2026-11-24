@@ -83,6 +83,7 @@ namespace Sanctum.Harness {
         private readonly WorktreeManager _worktrees;
         private readonly HarnessMcpManager _mcp;
         private readonly ExtensionsManager _extensions;
+        private readonly WorkspaceTrustManager _workspaceTrust;
         private readonly HarnessScheduler _scheduler;
         private readonly ConcurrentDictionary<string, JArray> _todos = new ConcurrentDictionary<string, JArray>(StringComparer.OrdinalIgnoreCase);
         private readonly Dictionary<string, HarnessToolDescriptor> _tools = new Dictionary<string, HarnessToolDescriptor>(StringComparer.OrdinalIgnoreCase);
@@ -105,6 +106,7 @@ namespace Sanctum.Harness {
             _worktrees = new WorktreeManager(dataRoot);
             _mcp = new HarnessMcpManager(dataRoot, this);
             _extensions = new ExtensionsManager(dataRoot);
+            _workspaceTrust = new WorkspaceTrustManager(dataRoot);
             _scheduler = new HarnessScheduler(dataRoot, this);
             RegisterPhase1aTools();
             BuiltinTools.RegisterAll(this, dataRoot);
@@ -123,6 +125,7 @@ namespace Sanctum.Harness {
         public WorktreeManager Worktrees => _worktrees;
         public HarnessMcpManager Mcp => _mcp;
         public ExtensionsManager Extensions => _extensions;
+        public WorkspaceTrustManager WorkspaceTrust => _workspaceTrust;
         public HarnessScheduler Scheduler => _scheduler;
         public int ActiveRunCount => _activeRuns.Count;
 
@@ -762,6 +765,19 @@ namespace Sanctum.Harness {
 
                         _tools.TryGetValue(call.Name, out var tool);
                         bool curUnattended = latestSummary?.Unattended ?? false;
+                        // Phase 2.2: Untrusted workspaces allow chat & read-only tools, but block exec/subagent/MCP tools until trusted
+                        if (tool != null && !_workspaceTrust.IsWorkspaceTrusted(curWorkspace) &&
+                            (tool.Safety == "exec" || tool.Category == "mcp" || string.Equals(tool.Name, "spawn_subagent", StringComparison.OrdinalIgnoreCase))) {
+                            AppendAndBroadcast(sessionId, "tool_finished", new JObject {
+                                ["callId"] = call.Id,
+                                ["tool"] = call.Name,
+                                ["ok"] = false,
+                                ["denied"] = true,
+                                ["error"] = "Workspace is untrusted; exec, hooks, MCP, and subagents are disabled until you trust this workspace via the trusted channel."
+                            }, runId, durableFlush: true);
+                            history.Add(new JObject { ["role"] = "tool", ["tool_call_id"] = call.Id, ["name"] = call.Name, ["content"] = "Permission denied: workspace is untrusted." });
+                            continue;
+                        }
                         var decision = _permissions.Evaluate(sessionId, curMode, curAutonomy, tool, call.Arguments, curUnattended);
 
                         if (decision.Kind == PermissionDecisionKind.Deny) {
@@ -901,8 +917,8 @@ namespace Sanctum.Harness {
             var sum = _store.BuildSummary(sessionId);
             var msgs = new List<JObject>();
 
-            // 1. Inject workspace AGENTS.md & .sanctum/rules/*.md instructions if present
-            if (sum != null && !string.IsNullOrWhiteSpace(sum.Workspace)) {
+            // 1. Inject workspace AGENTS.md & .sanctum/rules/*.md instructions ONLY if workspace is trusted
+            if (sum != null && !string.IsNullOrWhiteSpace(sum.Workspace) && _workspaceTrust.IsWorkspaceTrusted(sum.Workspace)) {
                 var instr = ContextEngine.LoadInstructions(sum.Workspace);
                 string combined = instr["combined"]?.Value<string>() ?? "";
                 if (!string.IsNullOrWhiteSpace(combined)) {

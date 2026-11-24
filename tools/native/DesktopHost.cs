@@ -2030,6 +2030,8 @@ namespace Sanctum {
                     if (wantsEnable) {
                         trusted = ConsumeApprovalToken(req.Headers["X-Sanctum-Approval"], "network_feature_enable");
                     }
+                } else if (method == "POST" && normPath == "/v1/workspace/trust") {
+                    trusted = ConsumeApprovalToken(req.Headers["X-Sanctum-Approval"], "workspace_trust");
                 }
                 var (stCode, respJson) = _embeddedHarnessServer.DispatchProtocolCommand(method, normPath, bodyObj, viaTrustedChannel: trusted);
                 byte[] outBytes = Encoding.UTF8.GetBytes(Sanctum.Harness.CanonicalJson.Serialize(respJson));
