@@ -50,6 +50,14 @@ namespace Sanctum.Harness {
                 exitCode = ok ? 0 : 1;
                 return true;
             }
+            if (cmd == "--rollback-workspace-migration") {
+                try { AttachConsole(-1); } catch { }
+                string dir = GetArg(args, "--data-dir") ?? Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData), "Sanctum");
+                var rb = WorkspaceManager.RollbackMigration(dir);
+                Console.WriteLine(JsonConvert.SerializeObject(new { ok = rb.ok, message = rb.message }));
+                exitCode = rb.ok ? 0 : 1;
+                return true;
+            }
             if (cmd == "--bench-crypto") {
                 try { AttachConsole(-1); } catch { }
                 string payload = new string('A', 100 * 1024);

@@ -401,6 +401,67 @@ namespace Sanctum.Harness {
                     return (200, _engine.WorkspaceTrust.RevokeTrust(ws));
                 }
 
+                // Part A1: Workspaces Registry, Root Validation & UI State API
+                if (method == "GET" && path == "/v1/workspaces") {
+                    bool includeArchived = body["includeArchived"]?.Value<bool>() ?? false;
+                    return (200, _engine.Workspaces.ListWorkspaces(includeArchived));
+                }
+                if (method == "POST" && path == "/v1/workspaces/validate-root") {
+                    string rootPath = body["rootPath"]?.Value<string>() ?? "";
+                    string excludeId = body["excludeWorkspaceId"]?.Value<string>();
+                    var vres = _engine.Workspaces.ValidateRootPath(rootPath, excludeId);
+                    return (vres.Ok ? 200 : (vres.Code == "workspace_root_overlap" ? 409 : 400), vres.ToJson());
+                }
+                if (method == "POST" && path == "/v1/workspaces") {
+                    string name = body["name"]?.Value<string>() ?? "";
+                    string rootPath = body["rootPath"]?.Value<string>();
+                    string color = body["color"]?.Value<string>() ?? "#6366f1";
+                    string icon = body["icon"]?.Value<string>() ?? "folder";
+                    string copyFrom = body["copySettingsFromId"]?.Value<string>();
+                    var overrides = body["settingsOverrides"]?.ToObject<WorkspaceSettingsOverrides>();
+                    return _engine.Workspaces.CreateWorkspace(name, rootPath, color, icon, copyFrom, overrides);
+                }
+                if (path.StartsWith("/v1/workspaces/")) {
+                    string rest = path.Substring("/v1/workspaces/".Length);
+                    string[] parts = rest.Split(new[] { '/' }, StringSplitOptions.RemoveEmptyEntries);
+                    if (parts.Length == 1) {
+                        string wsId = parts[0];
+                        if (method == "GET") {
+                            var rec = _engine.Workspaces.GetById(wsId);
+                            if (rec == null) return (404, new JObject { ["error"] = "Workspace not found." });
+                            return (200, rec.ToPublicJson());
+                        }
+                        if (method == "PUT" || method == "PATCH") {
+                            return _engine.Workspaces.UpdateWorkspace(wsId, body);
+                        }
+                    } else if (parts.Length == 2) {
+                        string wsId = parts[0];
+                        string action = parts[1];
+                        if (method == "POST" && action == "rename") {
+                            return _engine.Workspaces.RenameWorkspace(wsId, body["name"]?.Value<string>() ?? "");
+                        }
+                        if (method == "POST" && action == "relocate") {
+                            return _engine.Workspaces.RelocateWorkspace(wsId, body["rootPath"]?.Value<string>() ?? "");
+                        }
+                        if (method == "POST" && action == "archive") {
+                            bool arch = body["archived"]?.Value<bool>() ?? true;
+                            return _engine.Workspaces.UpdateWorkspace(wsId, new JObject { ["archived"] = arch });
+                        }
+                        if (method == "POST" && action == "delete") {
+                            string confirmName = body["confirmName"]?.Value<string>() ?? "";
+                            return _engine.Workspaces.DeleteWorkspace(wsId, confirmName, viaTrustedChannel);
+                        }
+                        if (method == "GET" && action == "ui-state") {
+                            var st = _engine.Workspaces.LoadUiState(wsId);
+                            if (st == null) return (404, new JObject { ["error"] = "Workspace not found." });
+                            return (200, st);
+                        }
+                        if ((method == "POST" || method == "PUT") && action == "ui-state") {
+                            return _engine.Workspaces.SaveUiState(wsId, body);
+                        }
+                    }
+                }
+
                 // Memory Editor & Provenance API
                 if (method == "GET" && path == "/v1/memory") {
                     return (200, _engine.Memory.ListAll());
@@ -840,6 +901,16 @@ namespace Sanctum.Harness {
                 ("POST", "/v1/network/features", "trusted_channel_on_enable"),
                 ("POST", "/v1/workspace/trust", "trusted_channel_only"),
                 ("DELETE", "/v1/workspace/trust", "fail_closed_revoke"),
+                ("POST", "/v1/workspaces/validate-root", "bearer_low_risk"),
+                ("POST", "/v1/workspaces", "bearer_low_risk"),
+                ("PUT", "/v1/workspaces/:id", "bearer_low_risk"),
+                ("PATCH", "/v1/workspaces/:id", "bearer_low_risk"),
+                ("POST", "/v1/workspaces/:id/rename", "bearer_low_risk"),
+                ("POST", "/v1/workspaces/:id/relocate", "bearer_low_risk"),
+                ("POST", "/v1/workspaces/:id/archive", "bearer_low_risk"),
+                ("POST", "/v1/workspaces/:id/delete", "trusted_channel_only"),
+                ("POST", "/v1/workspaces/:id/ui-state", "bearer_low_risk"),
+                ("PUT", "/v1/workspaces/:id/ui-state", "bearer_low_risk"),
                 ("POST", "/v1/memory", "bearer_user_crud"),
                 ("PUT", "/v1/memory/:id", "bearer_user_crud"),
                 ("DELETE", "/v1/memory/:id", "bearer_user_crud"),

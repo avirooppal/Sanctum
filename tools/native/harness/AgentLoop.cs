@@ -85,6 +85,7 @@ namespace Sanctum.Harness {
         private readonly HarnessMcpManager _mcp;
         private readonly ExtensionsManager _extensions;
         private readonly WorkspaceTrustManager _workspaceTrust;
+        private readonly WorkspaceManager _workspaces;
         private readonly HostMemoryService _memory;
         private readonly ModelTierManager _tierManager;
         private readonly HarnessScheduler _scheduler;
@@ -115,6 +116,7 @@ namespace Sanctum.Harness {
             _mcp = new HarnessMcpManager(dataRoot, this);
             _extensions = new ExtensionsManager(dataRoot);
             _workspaceTrust = new WorkspaceTrustManager(dataRoot);
+            _workspaces = new WorkspaceManager(dataRoot);
             _memory = new HostMemoryService(dataRoot);
             _tierManager = new ModelTierManager(dataRoot);
             _scheduler = new HarnessScheduler(dataRoot, this);
@@ -138,6 +140,7 @@ namespace Sanctum.Harness {
         public HarnessMcpManager Mcp => _mcp;
         public ExtensionsManager Extensions => _extensions;
         public WorkspaceTrustManager WorkspaceTrust => _workspaceTrust;
+        public WorkspaceManager Workspaces => _workspaces;
         public HostMemoryService Memory => _memory;
         public ModelTierManager TierManager => _tierManager;
         public HarnessScheduler Scheduler => _scheduler;

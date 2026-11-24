@@ -2,8 +2,11 @@ using System;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.IO;
+using System.Runtime.InteropServices;
+using System.Text;
 using System.Text.RegularExpressions;
 using System.Threading;
+using Microsoft.Win32.SafeHandles;
 using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
 
@@ -177,6 +180,50 @@ namespace Sanctum.Harness {
             return false;
         }
 
+        [DllImport("kernel32.dll", CharSet = CharSet.Unicode, SetLastError = true)]
+        private static extern SafeFileHandle CreateFileW(
+            string lpFileName, uint dwDesiredAccess, uint dwShareMode, IntPtr lpSecurityAttributes,
+            uint dwCreationDisposition, uint dwFlagsAndAttributes, IntPtr hTemplateFile);
+
+        [DllImport("kernel32.dll", CharSet = CharSet.Unicode, SetLastError = true)]
+        private static extern uint GetFinalPathNameByHandleW(
+            SafeFileHandle hFile, StringBuilder lpszFilePath, uint cchFilePath, uint dwFlags);
+
+        /// <summary>
+        /// Canonicalizes a filesystem path by expanding 8.3 short names, symlinks, and junctions
+        /// via GetFinalPathNameByHandleW when the path exists on disk.
+        /// </summary>
+        public static string CanonicalizePath(string rawPath) {
+            if (string.IsNullOrWhiteSpace(rawPath)) return "";
+            string full = Path.GetFullPath(rawPath.Trim());
+            if (Directory.Exists(full) || File.Exists(full)) {
+                try {
+                    const uint FILE_SHARE_ALL = 0x00000001 | 0x00000002 | 0x00000004;
+                    const uint OPEN_EXISTING = 3;
+                    const uint FILE_FLAG_BACKUP_SEMANTICS = 0x02000000;
+                    using (var h = CreateFileW(full, 0, FILE_SHARE_ALL, IntPtr.Zero, OPEN_EXISTING, FILE_FLAG_BACKUP_SEMANTICS, IntPtr.Zero)) {
+                        if (!h.IsInvalid) {
+                            var sb = new StringBuilder(1024);
+                            uint len = GetFinalPathNameByHandleW(h, sb, (uint)sb.Capacity, 0);
+                            if (len > 0 && len < sb.Capacity) {
+                                string resolved = sb.ToString();
+                                if (resolved.StartsWith(@"\\?\UNC\", StringComparison.OrdinalIgnoreCase)) {
+                                    resolved = @"\\" + resolved.Substring(8);
+                                } else if (resolved.StartsWith(@"\\?\", StringComparison.Ordinal)) {
+                                    resolved = resolved.Substring(4);
+                                }
+                                if (!string.IsNullOrWhiteSpace(resolved)) {
+                                    full = resolved;
+                                }
+                            }
+                        }
+                    }
+                } catch { }
+            }
+            if (full.Length > 3) full = full.TrimEnd(Path.DirectorySeparatorChar, Path.AltDirectorySeparatorChar);
+            return full;
+        }
+
         public static string ResolveToolPath(string workspaceRoot, string rawPath, bool allowRoot = true) {
             if (string.IsNullOrWhiteSpace(workspaceRoot)) throw new InvalidOperationException("Workspace root is not set.");
             string trimmed = (rawPath ?? "").Trim();
@@ -184,7 +231,7 @@ namespace Sanctum.Harness {
             if (trimmed.StartsWith("\\\\") || trimmed.StartsWith("//")) throw new UnauthorizedAccessException("UNC network paths are blocked.");
             if (Path.IsPathRooted(trimmed)) throw new UnauthorizedAccessException("Absolute paths are forbidden under 'workspace_only' access scope.");
 
-            string root = Path.GetFullPath(workspaceRoot).TrimEnd(Path.DirectorySeparatorChar);
+            string root = CanonicalizePath(workspaceRoot).TrimEnd(Path.DirectorySeparatorChar);
             string full = Path.GetFullPath(Path.Combine(root, string.IsNullOrEmpty(trimmed) ? "." : trimmed));
 
             // Block symlinks/junctions
