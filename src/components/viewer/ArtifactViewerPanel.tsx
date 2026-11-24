@@ -18,6 +18,7 @@ import { useAppStore } from "@/store/useAppStore";
 import { useShallow } from "zustand/react/shallow";
 import { WorkspaceFileTree } from "./WorkspaceFileTree";
 import { FileContentRenderer, FsReadResponse } from "./FileContentRenderer";
+import { FeedPaneTab } from "./FeedPaneTab";
 import { fetchWithApproval } from "@/lib/hostBridge";
 import { toast } from "sonner";
 
@@ -67,7 +68,17 @@ export const ArtifactViewerPanel: React.FC = () => {
   const [loadingTabId, setLoadingTabId] = useState<string | null>(null);
   const [treeRefreshSignal, setTreeRefreshSignal] = useState(0);
   const [dragTabIndex, setDragTabIndex] = useState<number | null>(null);
+  const [rightPanelMode, setRightPanelMode] = useState<"viewer" | "feed">("viewer");
   const lastEventSeqRef = useRef<number>(0);
+
+  useEffect(() => {
+    const onToggleFeed = () => {
+      setIsViewerOpen(true);
+      setRightPanelMode((prev) => (prev === "feed" ? "viewer" : "feed"));
+    };
+    window.addEventListener("sanctum:toggle-feed-pane", onToggleFeed);
+    return () => window.removeEventListener("sanctum:toggle-feed-pane", onToggleFeed);
+  }, [setIsViewerOpen]);
 
   const activeTab = viewerTabs.find((t) => t.id === activeViewerTabId) || viewerTabs[0] || null;
 
@@ -297,6 +308,33 @@ export const ArtifactViewerPanel: React.FC = () => {
 
       {/* Top Multi-Tab Bar (leaves right padding for native window controls) */}
       <div className="flex items-center justify-between gap-1 h-10 px-2 pr-32 border-b border-border/70 bg-sidebar/90 shrink-0">
+        <div className="flex items-center gap-0.5 rounded-lg bg-muted/40 p-0.5 shrink-0 mr-1" role="tablist" aria-label="Right panel mode">
+          <button
+            type="button"
+            role="tab"
+            aria-selected={rightPanelMode === "viewer"}
+            onClick={() => setRightPanelMode("viewer")}
+            className={cn(
+              "px-2 py-0.5 rounded-md text-[11px] font-medium transition-colors",
+              rightPanelMode === "viewer" ? "bg-card text-foreground shadow-xs" : "text-muted-foreground hover:text-foreground"
+            )}
+          >
+            Viewer
+          </button>
+          <button
+            type="button"
+            role="tab"
+            data-testid="right-panel-feed-tab"
+            aria-selected={rightPanelMode === "feed"}
+            onClick={() => setRightPanelMode("feed")}
+            className={cn(
+              "px-2 py-0.5 rounded-md text-[11px] font-medium transition-colors",
+              rightPanelMode === "feed" ? "bg-card text-foreground shadow-xs" : "text-muted-foreground hover:text-foreground"
+            )}
+          >
+            Feed
+          </button>
+        </div>
         <div
           role="tablist"
           className="flex items-center gap-1 overflow-x-auto no-scrollbar min-w-0 flex-1 py-1"
@@ -390,6 +428,10 @@ export const ArtifactViewerPanel: React.FC = () => {
         </div>
       </div>
 
+      {rightPanelMode === "feed" ? (
+        <FeedPaneTab />
+      ) : (
+      <>
       {/* Sub-bar: Breadcrumb + Preview/Raw Toggle + Actions (only shown when a file tab is active or sidebar is collapsed) */}
       {(activeTab || !isTreeOpen) && (
       <div className="flex items-center justify-between gap-2 px-3 py-1.5 border-b border-border/60 bg-card/70 text-xs shrink-0">
@@ -565,6 +607,8 @@ export const ArtifactViewerPanel: React.FC = () => {
           />
         )}
       </div>
+      </>
+      )}
     </section>
   );
 };

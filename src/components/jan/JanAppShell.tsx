@@ -168,6 +168,10 @@ export const JanAppShell: React.FC = () => {
         e.stopPropagation();
         const st = useAppStore.getState();
         st.setWorkspaceSwitcherOpen(!st.isWorkspaceSwitcherOpen);
+      } else if (e.shiftKey && key === "f") {
+        e.preventDefault();
+        e.stopPropagation();
+        window.dispatchEvent(new CustomEvent("sanctum:toggle-feed-pane"));
       } else if (key === "p") {
         e.preventDefault();
         e.stopPropagation();
