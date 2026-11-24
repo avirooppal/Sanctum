@@ -23,6 +23,9 @@ namespace Sanctum.Harness {
     public sealed class PendingApproval {
         public string ApprovalId { get; set; } = "";
         public string SessionId { get; set; } = "";
+        public string WorkspaceId { get; set; } = "";
+        public string WorkspaceName { get; set; } = "";
+        public string WorkspaceRoot { get; set; } = "";
         public string RunId { get; set; } = "";
         public string CallId { get; set; } = "";
         public string ToolName { get; set; } = "";
@@ -467,6 +470,14 @@ namespace Sanctum.Harness {
             if (_pending.TryRemove(approvalId, out var pa)) {
                 pa.WaitHandle.Dispose();
             }
+        }
+
+        public List<PendingApproval> ListPendingApprovals() {
+            var list = new List<PendingApproval>();
+            foreach (var kv in _pending) {
+                if (!kv.Value.Resolved) list.Add(kv.Value);
+            }
+            return list;
         }
     }
 }

@@ -97,7 +97,7 @@ namespace Sanctum.Harness {
                 }
                 return true;
             }
-            if (cmd != "--harness" && cmd != "run" && cmd != "sessions" && cmd != "resume" && cmd != "attach") {
+            if (cmd != "--harness" && cmd != "run" && cmd != "sessions" && cmd != "resume" && cmd != "attach" && cmd != "workspaces") {
                 return false;
             }
 
@@ -113,6 +113,80 @@ namespace Sanctum.Harness {
 
             try {
                 var runtime = EnsureDaemonRunning(dataDir, args);
+                if (cmd == "workspaces") {
+                    string sub = args.Length >= 2 ? args[1].Trim().ToLowerInvariant() : "list";
+                    if (sub == "list") {
+                        var (st, body) = SendPipeCommand(runtime.PipeName, "GET", "/v1/workspaces", new JObject { ["includeArchived"] = HasFlag(args, "--all") });
+                        Console.WriteLine(JsonConvert.SerializeObject(body, Formatting.None));
+                        exitCode = st >= 200 && st < 300 ? 0 : 1;
+                        return true;
+                    }
+                    if (sub == "create") {
+                        var (st, body) = SendPipeCommand(runtime.PipeName, "POST", "/v1/workspaces", new JObject {
+                            ["name"] = GetArg(args, "--name") ?? "New Workspace",
+                            ["rootPath"] = GetArg(args, "--path"),
+                            ["color"] = GetArg(args, "--color") ?? "#6366f1",
+                            ["icon"] = GetArg(args, "--icon") ?? "folder",
+                            ["copySettingsFromId"] = GetArg(args, "--copy-settings-from")
+                        });
+                        Console.WriteLine(JsonConvert.SerializeObject(body, Formatting.None));
+                        exitCode = st >= 200 && st < 300 ? 0 : 1;
+                        return true;
+                    }
+                    if (sub == "rename") {
+                        if (args.Length < 3) { Console.Error.WriteLine("Usage: sanctum workspaces rename <id|name> --name <newName>"); exitCode = 2; return true; }
+                        var (rs, rbody) = SendPipeCommand(runtime.PipeName, "POST", "/v1/workspaces/resolve", new JObject { ["selector"] = args[2], ["create"] = false });
+                        if (rs < 200 || rs >= 300) { Console.Error.WriteLine(rbody.ToString(Formatting.None)); exitCode = 1; return true; }
+                        string wsId = rbody["id"].Value<string>();
+                        var (st, body) = SendPipeCommand(runtime.PipeName, "POST", $"/v1/workspaces/{wsId}/rename", new JObject { ["name"] = GetArg(args, "--name") ?? "" });
+                        Console.WriteLine(JsonConvert.SerializeObject(body, Formatting.None));
+                        exitCode = st >= 200 && st < 300 ? 0 : 1;
+                        return true;
+                    }
+                    if (sub == "remove") {
+                        if (args.Length < 3) { Console.Error.WriteLine("Usage: sanctum workspaces remove <id|name> --confirm <exactName>"); exitCode = 2; return true; }
+                        var (rs, rbody) = SendPipeCommand(runtime.PipeName, "POST", "/v1/workspaces/resolve", new JObject { ["selector"] = args[2], ["create"] = false });
+                        if (rs < 200 || rs >= 300) { Console.Error.WriteLine(rbody.ToString(Formatting.None)); exitCode = 1; return true; }
+                        string wsId = rbody["id"].Value<string>();
+                        var (st, body) = SendPipeCommand(runtime.PipeName, "POST", $"/v1/workspaces/{wsId}/delete", new JObject { ["confirmName"] = GetArg(args, "--confirm") ?? "" });
+                        Console.WriteLine(JsonConvert.SerializeObject(body, Formatting.None));
+                        exitCode = st >= 200 && st < 300 ? 0 : 1;
+                        return true;
+                    }
+                    if (sub == "export") {
+                        if (args.Length < 3) { Console.Error.WriteLine("Usage: sanctum workspaces export <id|name> [--out <file>]"); exitCode = 2; return true; }
+                        var (rs, rbody) = SendPipeCommand(runtime.PipeName, "POST", "/v1/workspaces/resolve", new JObject { ["selector"] = args[2], ["create"] = false });
+                        if (rs < 200 || rs >= 300) { Console.Error.WriteLine(rbody.ToString(Formatting.None)); exitCode = 1; return true; }
+                        string wsId = rbody["id"].Value<string>();
+                        var (st, body) = SendPipeCommand(runtime.PipeName, "GET", $"/v1/workspaces/{wsId}/export", new JObject());
+                        string outFile = GetArg(args, "--out");
+                        if (st >= 200 && st < 300 && !string.IsNullOrWhiteSpace(outFile)) {
+                            File.WriteAllText(outFile, body.ToString(Formatting.Indented), Utf8NoBom);
+                            Console.WriteLine(JsonConvert.SerializeObject(new { ok = true, outFile, workspaceId = wsId }, Formatting.None));
+                        } else {
+                            Console.WriteLine(JsonConvert.SerializeObject(body, Formatting.None));
+                        }
+                        exitCode = st >= 200 && st < 300 ? 0 : 1;
+                        return true;
+                    }
+                    if (sub == "import") {
+                        string inFile = GetArg(args, "--in");
+                        if (string.IsNullOrWhiteSpace(inFile) || !File.Exists(inFile)) { Console.Error.WriteLine("Usage: sanctum workspaces import --in <file>"); exitCode = 2; return true; }
+                        var bundle = JObject.Parse(File.ReadAllText(inFile, Utf8NoBom));
+                        var reqBody = new JObject { ["bundle"] = bundle };
+                        string ovName = GetArg(args, "--name");
+                        string ovPath = GetArg(args, "--path");
+                        if (!string.IsNullOrWhiteSpace(ovName)) reqBody["name"] = ovName;
+                        if (!string.IsNullOrWhiteSpace(ovPath)) reqBody["rootPath"] = ovPath;
+                        var (st, body) = SendPipeCommand(runtime.PipeName, "POST", "/v1/workspaces/import", reqBody);
+                        Console.WriteLine(JsonConvert.SerializeObject(body, Formatting.None));
+                        exitCode = st >= 200 && st < 300 ? 0 : 1;
+                        return true;
+                    }
+                    Console.Error.WriteLine("Unknown workspaces subcommand: " + sub);
+                    exitCode = 2;
+                    return true;
+                }
                 if (cmd == "sessions") {
                     var (st, body) = SendPipeCommand(runtime.PipeName, "GET", "/v1/sessions", new JObject());
                     Console.WriteLine(JsonConvert.SerializeObject(body, Formatting.None));
@@ -138,7 +212,22 @@ namespace Sanctum.Harness {
                     string task = args[1];
                     string mode = GetArg(args, "--mode") ?? "build";
                     string autonomy = GetArg(args, "--autonomy") ?? "auto_reads";
-                    string workspace = GetArg(args, "--workspace") ?? Environment.CurrentDirectory;
+                    string workspaceArg = GetArg(args, "--workspace");
+                    string resolvedWsId = null;
+                    string resolvedWsPath = Environment.CurrentDirectory;
+                    if (!string.IsNullOrWhiteSpace(workspaceArg)) {
+                        var (wsSt, wsBody) = SendPipeCommand(runtime.PipeName, "POST", "/v1/workspaces/resolve", new JObject {
+                            ["selector"] = workspaceArg,
+                            ["create"] = HasFlag(args, "--create")
+                        });
+                        if (wsSt < 200 || wsSt >= 300) {
+                            Console.Error.WriteLine(wsBody.ToString(Formatting.None));
+                            exitCode = 1;
+                            return true;
+                        }
+                        resolvedWsId = wsBody["id"]?.Value<string>();
+                        resolvedWsPath = wsBody["rootPath"]?.Value<string>() ?? "";
+                    }
                     string model = GetArg(args, "--model") ?? "mock";
                     string provArg = GetArg(args, "--provider");
                     if (!string.IsNullOrWhiteSpace(provArg)) {
@@ -155,7 +244,8 @@ namespace Sanctum.Harness {
 
                     var (st1, created) = SendPipeCommand(runtime.PipeName, "POST", "/v1/sessions", new JObject {
                         ["title"] = task.Length > 48 ? task.Substring(0, 48) : task,
-                        ["workspace"] = workspace,
+                        ["workspaceId"] = resolvedWsId ?? "",
+                        ["workspace"] = resolvedWsPath,
                         ["mode"] = mode,
                         ["autonomy"] = autonomy,
                         ["model"] = model
@@ -300,28 +390,51 @@ namespace Sanctum.Harness {
         }
 
         public static (int status, JObject body) SendPipeCommand(string pipeName, string method, string path, JObject body, int timeoutMs = 5000) {
-            using (var client = new NamedPipeClientStream(".", pipeName, PipeDirection.InOut)) {
-                client.Connect(timeoutMs);
-                using (var writer = new StreamWriter(client, Utf8NoBom, 4096, true) { AutoFlush = true })
-                using (var reader = new StreamReader(client, Utf8NoBom, false, 4096, true)) {
-                    writer.WriteLine(JsonConvert.SerializeObject(new { method, path, body }, Formatting.None));
-                    string line = reader.ReadLine();
-                    if (string.IsNullOrEmpty(line)) throw new IOException("Empty pipe response.");
-                    var parsed = JObject.Parse(line);
-                    return (parsed["status"]?.Value<int>() ?? 500, parsed["body"] as JObject ?? new JObject());
+            Exception lastErr = null;
+            int perAttempt = Math.Max(800, timeoutMs / 3);
+            for (int attempt = 0; attempt < 4; attempt++) {
+                try {
+                    using (var client = new NamedPipeClientStream(".", pipeName, PipeDirection.InOut)) {
+                        client.Connect(perAttempt);
+                        using (var writer = new StreamWriter(client, Utf8NoBom, 4096, true) { AutoFlush = true })
+                        using (var reader = new StreamReader(client, Utf8NoBom, false, 4096, true)) {
+                            writer.WriteLine(JsonConvert.SerializeObject(new { method, path, body }, Formatting.None));
+                            string line = reader.ReadLine();
+                            if (string.IsNullOrEmpty(line)) throw new IOException("Empty pipe response.");
+                            var parsed = JObject.Parse(line);
+                            return (parsed["status"]?.Value<int>() ?? 500, parsed["body"] as JObject ?? new JObject());
+                        }
+                    }
+                } catch (Exception ex) when (ex is IOException || ex is TimeoutException) {
+                    lastErr = ex;
+                    Thread.Sleep(50 * (attempt + 1));
                 }
             }
+            throw lastErr ?? new IOException("Pipe communication failed.");
         }
 
         private static int StreamSseUntilFinished(RuntimeInfo runtime, string sessionId, long afterSeq, bool jsonOut) {
-            var req = EgressHttpFactory.CreateRequest($"http://127.0.0.1:{runtime.HttpPort}/v1/sessions/{sessionId}/events?after={afterSeq}", EgressFeature.Loopback);
-            req.Proxy = null;
-            req.Method = "GET";
-            req.Headers["Authorization"] = "Bearer " + runtime.Token;
-            req.Timeout = 30000;
-            req.ReadWriteTimeout = 30000;
+            HttpWebResponse resp = null;
+            Exception lastErr = null;
+            string url = $"http://127.0.0.1:{runtime.HttpPort}/v1/sessions/{sessionId}/events?after={afterSeq}";
+            for (int attempt = 0; attempt < 3; attempt++) {
+                try {
+                    var req = EgressHttpFactory.CreateRequest(url, EgressFeature.Loopback);
+                    req.Proxy = null;
+                    req.Method = "GET";
+                    req.Headers["Authorization"] = "Bearer " + runtime.Token;
+                    req.Timeout = 30000;
+                    req.ReadWriteTimeout = 30000;
+                    resp = (HttpWebResponse)req.GetResponse();
+                    break;
+                } catch (WebException ex) {
+                    lastErr = new IOException($"SSE connect failed ({url}): {ex.Message} | inner={ex.InnerException?.Message}", ex);
+                    Thread.Sleep(100 * (attempt + 1));
+                }
+            }
+            if (resp == null) throw lastErr ?? new IOException("Could not connect to SSE stream.");
 
-            using (var resp = (HttpWebResponse)req.GetResponse())
+            using (resp)
             using (var sr = new StreamReader(resp.GetResponseStream(), Utf8NoBom)) {
                 string line;
                 while ((line = sr.ReadLine()) != null) {

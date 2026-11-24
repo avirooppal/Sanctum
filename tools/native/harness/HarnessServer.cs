@@ -82,8 +82,10 @@ namespace Sanctum.Harness {
             var httpThread = new Thread(HttpAcceptLoop) { IsBackground = true, Name = "HarnessHttpLoop" };
             httpThread.Start();
 
-            var pipeThread = new Thread(PipeAcceptLoop) { IsBackground = true, Name = "HarnessPipeLoop" };
-            pipeThread.Start();
+            for (int i = 0; i < 2; i++) {
+                var pipeThread = new Thread(PipeAcceptLoop) { IsBackground = true, Name = "HarnessPipeLoop-" + i };
+                pipeThread.Start();
+            }
         }
 
         private void WriteRuntimeFile() {
@@ -405,7 +407,10 @@ namespace Sanctum.Harness {
                     return (200, _engine.WorkspaceTrust.RevokeTrust(ws));
                 }
 
-                // Part A1: Workspaces Registry, Root Validation & UI State API
+                // Part A1/A3: Workspaces Registry, Root Validation, Attention Inbox, Transfer, Export/Import & UI State API
+                if (method == "GET" && path == "/v1/attention") {
+                    return (200, _engine.GetAttentionInbox());
+                }
                 if (method == "GET" && path == "/v1/workspaces") {
                     bool includeArchived = body["includeArchived"]?.Value<bool>() ?? false;
                     return (200, _engine.Workspaces.ListWorkspaces(includeArchived));
@@ -415,6 +420,31 @@ namespace Sanctum.Harness {
                     string excludeId = body["excludeWorkspaceId"]?.Value<string>();
                     var vres = _engine.Workspaces.ValidateRootPath(rootPath, excludeId);
                     return (vres.Ok ? 200 : (vres.Code == "workspace_root_overlap" ? 409 : 400), vres.ToJson());
+                }
+                if (method == "POST" && path == "/v1/workspaces/transfer") {
+                    return _engine.TransferBetweenWorkspaces(body, viaTrustedChannel);
+                }
+                if (method == "POST" && path == "/v1/workspaces/import") {
+                    var bundle = body["bundle"] as JObject ?? body;
+                    return _engine.ImportWorkspaceData(
+                        bundle,
+                        body["name"]?.Value<string>(),
+                        body["rootPath"]?.Value<string>());
+                }
+                if (method == "POST" && path == "/v1/workspaces/resolve") {
+                    string sel = (body["selector"]?.Value<string>() ?? "").Trim();
+                    bool autoCreate = body["create"]?.Value<bool>() ?? false;
+                    var existing = _engine.Workspaces.ResolveSelector(sel);
+                    if (existing != null) return (200, existing.ToPublicJson());
+                    if (!autoCreate) {
+                        return (404, new JObject {
+                            ["error"] = $"Unknown workspace '{sel}'. Pass --create to register a new workspace.",
+                            ["code"] = "workspace_not_found"
+                        });
+                    }
+                    string derivedName = Path.GetFileName(sel.TrimEnd('\\', '/'));
+                    if (string.IsNullOrWhiteSpace(derivedName)) derivedName = "Workspace";
+                    return _engine.Workspaces.CreateWorkspace(derivedName, sel);
                 }
                 if (method == "POST" && path == "/v1/workspaces") {
                     string name = body["name"]?.Value<string>() ?? "";
@@ -466,6 +496,9 @@ namespace Sanctum.Harness {
                         if (method == "GET" && action == "vault") {
                             if (_engine.Workspaces.GetById(wsId) == null) return (404, new JObject { ["error"] = "Workspace not found." });
                             return (200, _engine.Vault.List(wsId));
+                        }
+                        if (method == "GET" && action == "export") {
+                            return _engine.ExportWorkspaceData(wsId);
                         }
                     } else if (parts.Length == 3 && parts[1] == "vault") {
                         string wsId = parts[0];
@@ -960,6 +993,9 @@ namespace Sanctum.Harness {
                 ("POST", "/v1/workspace/trust", "trusted_channel_only"),
                 ("DELETE", "/v1/workspace/trust", "fail_closed_revoke"),
                 ("POST", "/v1/workspaces/validate-root", "bearer_low_risk"),
+                ("POST", "/v1/workspaces/transfer", "trusted_channel_only"),
+                ("POST", "/v1/workspaces/import", "bearer_low_risk"),
+                ("POST", "/v1/workspaces/resolve", "bearer_low_risk"),
                 ("POST", "/v1/workspaces", "bearer_low_risk"),
                 ("PUT", "/v1/workspaces/:id", "bearer_low_risk"),
                 ("PATCH", "/v1/workspaces/:id", "bearer_low_risk"),

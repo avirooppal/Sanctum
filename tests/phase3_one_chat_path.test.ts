@@ -108,7 +108,7 @@ describe("Phase 3.2: One chat path (UI, CLI, and HTTP API produce identical harn
     // 3. CLI path (Sanctum-Desktop.exe run)
     const cliRes = spawnSync(
       HOST_EXE,
-      ["run", "Read hello.txt", "--workspace", wsDir, "--model", "mock-model", "--data-dir", dataDir, "--json"],
+      ["run", "Read hello.txt", "--workspace", wsDir, "--create", "--model", "mock-model", "--data-dir", dataDir, "--json"],
       { encoding: "utf-8", timeout: 15000 }
     );
     assert.equal(cliRes.status, 0, `CLI run failed: ${cliRes.stderr}`);

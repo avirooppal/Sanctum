@@ -706,6 +706,175 @@ namespace Sanctum.Harness {
             return list;
         }
 
+        public JObject GetAttentionInbox() {
+            var items = new JArray();
+            var byWs = new Dictionary<string, (int running, int attention)>(StringComparer.OrdinalIgnoreCase);
+
+            // Count active runs per workspace
+            foreach (var kv in _activeRunIds) {
+                var sum = _store.BuildSummary(kv.Key);
+                string wsId = sum?.WorkspaceId ?? "";
+                if (!byWs.TryGetValue(wsId, out var c)) c = (0, 0);
+                byWs[wsId] = (c.running + 1, c.attention);
+            }
+
+            // Collect pending approvals across all workspaces
+            var pendingList = _permissions.ListPendingApprovals();
+            foreach (var p in pendingList) {
+                string wsId = p.WorkspaceId ?? "";
+                if (!byWs.TryGetValue(wsId, out var c)) c = (0, 0);
+                byWs[wsId] = (c.running, c.attention + 1);
+                items.Add(new JObject {
+                    ["kind"] = "approval_requested",
+                    ["approvalId"] = p.ApprovalId,
+                    ["sessionId"] = p.SessionId,
+                    ["runId"] = p.RunId,
+                    ["callId"] = p.CallId,
+                    ["workspaceId"] = wsId,
+                    ["workspaceName"] = p.WorkspaceName,
+                    ["workspaceRoot"] = p.WorkspaceRoot,
+                    ["tool"] = p.ToolName,
+                    ["riskClass"] = p.RiskClass,
+                    ["cardText"] = p.HostCardText
+                });
+            }
+
+            var byWsJson = new JObject();
+            int totalRunning = 0, totalAttention = 0;
+            foreach (var kv in byWs) {
+                totalRunning += kv.Value.running;
+                totalAttention += kv.Value.attention;
+                byWsJson[kv.Key] = new JObject {
+                    ["runningCount"] = kv.Value.running,
+                    ["attentionCount"] = kv.Value.attention
+                };
+            }
+            return new JObject {
+                ["totalRunning"] = totalRunning,
+                ["totalAttention"] = totalAttention,
+                ["byWorkspace"] = byWsJson,
+                ["items"] = items
+            };
+        }
+
+        public (int status, JObject body) TransferBetweenWorkspaces(JObject body, bool viaTrustedChannel) {
+            if (!viaTrustedChannel) {
+                return (403, new JObject {
+                    ["error"] = "Cross-workspace transfer or sharing requires the trusted channel.",
+                    ["code"] = "trusted_channel_required"
+                });
+            }
+            string kind = (body["kind"]?.Value<string>() ?? "").Trim().ToLowerInvariant();
+            string sourceWsId = (body["sourceWorkspaceId"]?.Value<string>() ?? "").Trim();
+            string targetWsId = (body["targetWorkspaceId"]?.Value<string>() ?? "").Trim();
+            string targetScope = (body["targetScope"]?.Value<string>() ?? "").Trim().ToLowerInvariant();
+            string itemId = (body["itemId"]?.Value<string>() ?? "").Trim();
+
+            if (string.IsNullOrEmpty(sourceWsId) || string.IsNullOrEmpty(itemId)) {
+                return (400, new JObject { ["error"] = "sourceWorkspaceId and itemId are required." });
+            }
+            if (kind == "memory") {
+                var srcMem = _memory.ListAll(sourceWsId, includeGlobal: false);
+                var facts = srcMem["facts"] as JArray;
+                JObject found = null;
+                if (facts != null) {
+                    foreach (JObject f in facts) {
+                        if (string.Equals(f["id"]?.Value<string>(), itemId, StringComparison.OrdinalIgnoreCase)) { found = f; break; }
+                    }
+                }
+                if (found == null) return (404, new JObject { ["error"] = "Source memory item not found." });
+                bool toGlobal = targetScope == "global" || string.IsNullOrEmpty(targetWsId);
+                if (!toGlobal && _workspaces.GetById(targetWsId) == null) return (404, new JObject { ["error"] = "Target workspace not found." });
+                var saved = _memory.Save(
+                    found["content"]?.Value<string>() ?? "",
+                    found["category"]?.Value<string>() ?? "fact",
+                    "user",
+                    "",
+                    found["pinned"]?.Value<bool>() ?? false,
+                    workspaceId: toGlobal ? null : targetWsId,
+                    scope: toGlobal ? "global" : "workspace");
+                return (200, new JObject { ["ok"] = true, ["kind"] = "memory", ["transferred"] = saved });
+            }
+            if (kind == "vault") {
+                if (_workspaces.GetById(targetWsId) == null) return (404, new JObject { ["error"] = "Target workspace not found." });
+                var srcVault = _vault.List(sourceWsId);
+                var docs = srcVault["documents"] as JArray;
+                JObject found = null;
+                if (docs != null) {
+                    foreach (JObject d in docs) {
+                        if (string.Equals(d["id"]?.Value<string>(), itemId, StringComparison.OrdinalIgnoreCase)) { found = d; break; }
+                    }
+                }
+                if (found == null) return (404, new JObject { ["error"] = "Source vault document not found." });
+                var (st, added) = _vault.AddDocument(
+                    targetWsId,
+                    found["title"]?.Value<string>() ?? "Shared Document",
+                    found["collection"]?.Value<string>() ?? "Shared",
+                    found["content"]?.Value<string>() ?? "");
+                return (st == 201 ? 200 : st, new JObject { ["ok"] = st == 201, ["kind"] = "vault", ["transferred"] = added });
+            }
+            return (400, new JObject { ["error"] = "Unsupported transfer kind. Use 'memory' or 'vault'." });
+        }
+
+        public (int status, JObject body) ExportWorkspaceData(string workspaceId) {
+            var rec = _workspaces.GetById(workspaceId);
+            if (rec == null) return (404, new JObject { ["error"] = "Workspace not found." });
+            return (200, new JObject {
+                ["bundleVersion"] = 1,
+                ["sanctumDataOnly"] = true,
+                ["exportedAt"] = DateTime.UtcNow.ToString("o"),
+                ["workspace"] = new JObject {
+                    ["name"] = rec.Name,
+                    ["color"] = rec.Color,
+                    ["icon"] = rec.Icon,
+                    ["settingsOverrides"] = JObject.FromObject(rec.SettingsOverrides ?? new WorkspaceSettingsOverrides())
+                },
+                ["memory"] = _memory.ListAll(rec.Id, includeGlobal: false)["facts"] ?? new JArray(),
+                ["vault"] = _vault.List(rec.Id)["documents"] ?? new JArray(),
+                ["uiState"] = _workspaces.LoadUiState(rec.Id) ?? new JObject(),
+                ["sessionCount"] = ListSessions(rec.Id, allWorkspaces: false).Count
+            });
+        }
+
+        public (int status, JObject body) ImportWorkspaceData(JObject bundle, string overrideName = null, string overrideRootPath = null) {
+            if (bundle == null || !(bundle["workspace"] is JObject wsMeta)) {
+                return (400, new JObject { ["error"] = "Invalid workspace export bundle." });
+            }
+            string name = !string.IsNullOrWhiteSpace(overrideName) ? overrideName.Trim() : (wsMeta["name"]?.Value<string>() ?? "Imported Workspace");
+            string color = wsMeta["color"]?.Value<string>() ?? "#6366f1";
+            string icon = wsMeta["icon"]?.Value<string>() ?? "folder";
+            var ov = wsMeta["settingsOverrides"]?.ToObject<WorkspaceSettingsOverrides>();
+            var (st, created) = _workspaces.CreateWorkspace(name, overrideRootPath, color, icon, null, ov);
+            if (st != 201) return (st, created);
+            string newId = created["id"]?.Value<string>() ?? "";
+
+            int memCount = 0;
+            if (bundle["memory"] is JArray mems) {
+                foreach (JObject m in mems) {
+                    string c = m["content"]?.Value<string>() ?? "";
+                    if (string.IsNullOrWhiteSpace(c)) continue;
+                    _memory.Save(c, m["category"]?.Value<string>() ?? "fact", "user", "", m["pinned"]?.Value<bool>() ?? false, workspaceId: newId);
+                    memCount++;
+                }
+            }
+            int vaultCount = 0;
+            if (bundle["vault"] is JArray docs) {
+                foreach (JObject d in docs) {
+                    string title = d["title"]?.Value<string>() ?? "";
+                    string content = d["content"]?.Value<string>() ?? "";
+                    if (string.IsNullOrWhiteSpace(title) || string.IsNullOrWhiteSpace(content)) continue;
+                    _vault.AddDocument(newId, title, d["collection"]?.Value<string>() ?? "General", content);
+                    vaultCount++;
+                }
+            }
+            if (bundle["uiState"] is JObject ui) {
+                _workspaces.SaveUiState(newId, ui);
+            }
+            created["importedMemoryCount"] = memCount;
+            created["importedVaultCount"] = vaultCount;
+            return (201, created);
+        }
+
         public void SetMode(string sessionId, string mode) {
             if (mode != "plan" && mode != "build") throw new ArgumentException("Mode must be 'plan' or 'build'.");
             if (!_store.SessionExists(sessionId)) throw new KeyNotFoundException("Session not found.");
@@ -981,10 +1150,23 @@ namespace Sanctum.Harness {
                         }
 
                         if (decision.Kind == PermissionDecisionKind.Ask) {
+                            string pendingWsId = latestSummary?.WorkspaceId ?? "";
+                            var pendingWsRec = !string.IsNullOrEmpty(pendingWsId) ? _workspaces.GetById(pendingWsId) : null;
+                            string pendingWsName = pendingWsRec?.Name ?? "Default";
+                            string pendingWsRoot = !string.IsNullOrWhiteSpace(pendingWsRec?.RootPath)
+                                ? pendingWsRec.RootPath
+                                : (!string.IsNullOrWhiteSpace(curWorkspace) ? curWorkspace : "Chat-only");
+                            decision.HostCardText = $"[Workspace: {pendingWsName} ({pendingWsRoot})] " + (decision.HostCardText ?? "");
                             var pending = _permissions.CreatePendingApproval(sessionId, runId, call.Id, call.Name, call.Arguments, decision);
+                            pending.WorkspaceId = pendingWsId;
+                            pending.WorkspaceName = pendingWsName;
+                            pending.WorkspaceRoot = pendingWsRoot;
                             AppendAndBroadcast(sessionId, "approval_requested", new JObject {
                                 ["approvalId"] = pending.ApprovalId,
                                 ["callId"] = pending.CallId,
+                                ["workspaceId"] = pendingWsId,
+                                ["workspaceName"] = pendingWsName,
+                                ["workspaceRoot"] = pendingWsRoot,
                                 ["tool"] = pending.ToolName,
                                 ["riskClass"] = pending.RiskClass,
                                 ["argsSha256"] = pending.CanonicalArgsSha256,
