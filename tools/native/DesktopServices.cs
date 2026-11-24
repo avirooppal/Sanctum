@@ -47,8 +47,8 @@ namespace Sanctum {
             lock (SetupLock) return new { phase = _setupPhase, detail = _setupDetail, percent = _setupPercent, busy = _setupBusy, model = _setupModel };
         }
         private static HttpWebRequest EngineRequest(string path, object body, int timeout) {
-            var request = (HttpWebRequest)WebRequest.Create(EngineBase + path);
-            request.Proxy = null; request.Timeout = timeout; request.ReadWriteTimeout = timeout;
+            var request = Sanctum.Harness.EgressHttpFactory.CreateRequest(EngineBase + path, Sanctum.Harness.EgressFeature.Loopback);
+            request.Timeout = timeout; request.ReadWriteTimeout = timeout;
             if (body != null) {
                 request.Method = "POST"; request.ContentType = "application/json";
                 byte[] bytes = Encoding.UTF8.GetBytes(new JavaScriptSerializer().Serialize(body));
@@ -117,7 +117,7 @@ namespace Sanctum {
             string file = Path.Combine(directory, filename);
             string partial = file + ".download";
             progress("Downloading " + publisher + " runtime");
-            var request = (HttpWebRequest)WebRequest.Create(url);
+            var request = Sanctum.Harness.EgressHttpFactory.CreateRequest(url, Sanctum.Harness.EgressFeature.ModelDownload);
             request.Timeout = 30000; request.ReadWriteTimeout = 60000; request.UserAgent = "Sanctum-Desktop/1.0";
             try {
                 using (cancellation.Register(() => request.Abort()))

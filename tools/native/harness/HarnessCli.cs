@@ -35,6 +35,24 @@ namespace Sanctum.Harness {
                 exitCode = RunEvalPermissionFixture(args.Length > 1 ? args[1] : "");
                 return true;
             }
+            if (cmd == "--eval-egress") {
+                try { AttachConsole(-1); } catch { }
+                string evalDataDir = GetArg(args, "--data-dir") ?? Path.Combine(Path.GetTempPath(), "sanctum-egress-eval");
+                EgressHttpFactory.Initialize(evalDataDir);
+                string url = args.Length > 1 ? args[1] : "";
+                string featStr = args.Length > 2 ? args[2] : "Loopback";
+                EgressFeature feat = EgressFeature.Loopback;
+                Enum.TryParse(featStr, true, out feat);
+                try {
+                    EgressHttpFactory.CheckAllowed(url, feat, "eval");
+                    Console.WriteLine(JsonConvert.SerializeObject(new { allowed = true, url = EgressHttpFactory.RedactUrl(new Uri(url)), feature = feat.ToString() }));
+                    exitCode = 0;
+                } catch (Exception ex) {
+                    Console.WriteLine(JsonConvert.SerializeObject(new { allowed = false, error = ex.Message, feature = feat.ToString() }));
+                    exitCode = 1;
+                }
+                return true;
+            }
             if (cmd != "--harness" && cmd != "run" && cmd != "sessions" && cmd != "resume" && cmd != "attach") {
                 return false;
             }
@@ -252,7 +270,7 @@ namespace Sanctum.Harness {
         }
 
         private static int StreamSseUntilFinished(RuntimeInfo runtime, string sessionId, long afterSeq, bool jsonOut) {
-            var req = (HttpWebRequest)WebRequest.Create($"http://127.0.0.1:{runtime.HttpPort}/v1/sessions/{sessionId}/events?after={afterSeq}");
+            var req = EgressHttpFactory.CreateRequest($"http://127.0.0.1:{runtime.HttpPort}/v1/sessions/{sessionId}/events?after={afterSeq}", EgressFeature.Loopback);
             req.Proxy = null;
             req.Method = "GET";
             req.Headers["Authorization"] = "Bearer " + runtime.Token;

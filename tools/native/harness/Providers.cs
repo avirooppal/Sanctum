@@ -334,8 +334,7 @@ namespace Sanctum.Harness {
             }
 
             byte[] bodyBytes = Utf8NoBom.GetBytes(payload.ToString(Formatting.None));
-            var req = (HttpWebRequest)WebRequest.Create(_baseUrl + "/chat/completions");
-            req.Proxy = null;
+            var req = EgressHttpFactory.CreateRequest(_baseUrl + "/chat/completions", EgressFeature.Loopback);
             req.Method = "POST";
             req.ContentType = "application/json";
             req.Timeout = 60000;

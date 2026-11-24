@@ -1519,8 +1519,8 @@ namespace Sanctum {
 
                 object serverStatus = null;
                 try {
-                    var hReq = (HttpWebRequest)WebRequest.Create("http://127.0.0.1:8000/health");
-                    hReq.Proxy = null; hReq.Timeout = 1000;
+                    var hReq = Sanctum.Harness.EgressHttpFactory.CreateRequest("http://127.0.0.1:8000/health", Sanctum.Harness.EgressFeature.Loopback);
+                    hReq.Timeout = 1000;
                     using (var hRes = hReq.GetResponse())
                     using (var r = new StreamReader(hRes.GetResponseStream())) {
                         serverStatus = serializer.DeserializeObject(r.ReadToEnd());
@@ -1618,7 +1618,7 @@ namespace Sanctum {
                         emitNdjson(new { status = "Preparing download for " + modelId + " (" + repoId + ")..." });
 
                         string manifestUrl = "https://huggingface.co/api/models/" + repoId + "/tree/main?recursive=1";
-                        var manifestReq = (HttpWebRequest)WebRequest.Create(manifestUrl);
+                        var manifestReq = Sanctum.Harness.EgressHttpFactory.CreateRequest(manifestUrl, Sanctum.Harness.EgressFeature.ModelDownload);
                         manifestReq.Method = "GET";
                         manifestReq.UserAgent = "Sanctum-STT-Downloader/2.0";
                         manifestReq.Timeout = 30000;
@@ -1679,7 +1679,7 @@ namespace Sanctum {
 
                             string tmpPath = targetPath + ".part";
                             try {
-                                var fileReq = (HttpWebRequest)WebRequest.Create(fileUrl);
+                                var fileReq = Sanctum.Harness.EgressHttpFactory.CreateRequest(fileUrl, Sanctum.Harness.EgressFeature.ModelDownload);
                                 fileReq.Method = "GET";
                                 fileReq.UserAgent = "Sanctum-STT-Downloader/2.0";
                                 fileReq.AllowAutoRedirect = true;
@@ -1756,8 +1756,7 @@ namespace Sanctum {
             bool httpOnline = false;
             try {
                 string healthUrl = sttEndpoint.TrimEnd('/') + "/health";
-                var hReq = (HttpWebRequest)WebRequest.Create(healthUrl);
-                hReq.Proxy = null;
+                var hReq = Sanctum.Harness.EgressHttpFactory.CreateRequest(healthUrl, Sanctum.Harness.EgressFeature.Loopback);
                 hReq.Timeout = 1200;
                 using (var hRes = (HttpWebResponse)hReq.GetResponse()) {
                     httpOnline = ((int)hRes.StatusCode >= 200 && (int)hRes.StatusCode < 400);
@@ -1819,8 +1818,7 @@ namespace Sanctum {
 
                 foreach (string targetUrl in candidateUrls) {
                     try {
-                        var upReq = (HttpWebRequest)WebRequest.Create(targetUrl);
-                        upReq.Proxy = null;
+                        var upReq = Sanctum.Harness.EgressHttpFactory.CreateRequest(targetUrl, Sanctum.Harness.EgressFeature.Loopback);
                         upReq.Method = "POST";
                         upReq.Timeout = 30000;
                         upReq.ContentType = req.ContentType;
@@ -1897,8 +1895,7 @@ namespace Sanctum {
                         string lastErr = "Unreachable endpoint";
                         foreach (string pUrl in probeUrls) {
                             try {
-                                var pReq = (HttpWebRequest)WebRequest.Create(pUrl);
-                                pReq.Proxy = null;
+                                var pReq = Sanctum.Harness.EgressHttpFactory.CreateRequest(pUrl, Sanctum.Harness.EgressFeature.Loopback);
                                 pReq.Timeout = 4000;
                                 if (!string.IsNullOrEmpty(apiKey)) {
                                     pReq.Headers["Authorization"] = "Bearer " + apiKey;
@@ -1977,8 +1974,7 @@ namespace Sanctum {
                         string lastErr = "Unreachable STT server";
                         foreach (string pUrl in probeUrls) {
                             try {
-                                var pReq = (HttpWebRequest)WebRequest.Create(pUrl);
-                                pReq.Proxy = null;
+                                var pReq = Sanctum.Harness.EgressHttpFactory.CreateRequest(pUrl, Sanctum.Harness.EgressFeature.Loopback);
                                 pReq.Timeout = 3000;
                                 if (!string.IsNullOrEmpty(apiKey)) {
                                     pReq.Headers["Authorization"] = "Bearer " + apiKey;
@@ -2025,8 +2021,7 @@ namespace Sanctum {
 
                     bool port8000 = false;
                     try {
-                        var hReq = (HttpWebRequest)WebRequest.Create("http://127.0.0.1:8000/health");
-                        hReq.Proxy = null;
+                        var hReq = Sanctum.Harness.EgressHttpFactory.CreateRequest("http://127.0.0.1:8000/health", Sanctum.Harness.EgressFeature.Loopback);
                         hReq.Timeout = 1000;
                         using (var hRes = (HttpWebResponse)hReq.GetResponse()) {
                             port8000 = ((int)hRes.StatusCode >= 200 && (int)hRes.StatusCode < 400);
@@ -2212,7 +2207,7 @@ namespace Sanctum {
 
         private static string FetchGitHubText(string url, int timeoutMs) {
             ServicePointManager.SecurityProtocol = SecurityProtocolType.Tls12 | SecurityProtocolType.Tls11 | SecurityProtocolType.Tls;
-            var r = (HttpWebRequest)WebRequest.Create(url);
+            var r = Sanctum.Harness.EgressHttpFactory.CreateRequest(url, Sanctum.Harness.EgressFeature.ManualUpdate);
             r.Method = "GET";
             r.UserAgent = "Sanctum-Updater/1.0";
             r.Accept = "application/vnd.github+json";
@@ -2390,7 +2385,7 @@ namespace Sanctum {
                     ServicePointManager.SecurityProtocol = SecurityProtocolType.Tls12 | SecurityProtocolType.Tls11 | SecurityProtocolType.Tls;
                     emit(new { status = "Downloading latest Sanctum.exe...", percent = 2 });
 
-                    var dlReq = (HttpWebRequest)WebRequest.Create(downloadUrl);
+                    var dlReq = Sanctum.Harness.EgressHttpFactory.CreateRequest(downloadUrl, Sanctum.Harness.EgressFeature.ManualUpdate);
                     dlReq.Method = "GET";
                     dlReq.UserAgent = "Sanctum-Updater/1.0";
                     dlReq.AllowAutoRedirect = true;
@@ -2491,8 +2486,7 @@ namespace Sanctum {
 
             if (method == "GET") {
                 try {
-                    var healthReq = (HttpWebRequest)WebRequest.Create(endpoint + "/health");
-                    healthReq.Proxy = null;
+                    var healthReq = Sanctum.Harness.EgressHttpFactory.CreateRequest(endpoint + "/health", Sanctum.Harness.EgressFeature.Loopback);
                     healthReq.Method = "GET";
                     healthReq.Timeout = 3000;
                     using (var healthRes = (HttpWebResponse)healthReq.GetResponse())
@@ -2523,8 +2517,7 @@ namespace Sanctum {
                     bodyBytes = ms.ToArray();
                 }
 
-                var upReq = (HttpWebRequest)WebRequest.Create(endpoint + "/ocr");
-                upReq.Proxy = null;
+                var upReq = Sanctum.Harness.EgressHttpFactory.CreateRequest(endpoint + "/ocr", Sanctum.Harness.EgressFeature.Loopback);
                 upReq.Method = "POST";
                 upReq.Timeout = 180000;
                 upReq.ContentType = req.ContentType;
@@ -2734,8 +2727,7 @@ namespace Sanctum {
                 bool sidecarOnline = false;
                 try {
                     string ep = (Environment.GetEnvironmentVariable("SANCTUM_OCR_ENDPOINT") ?? "http://127.0.0.1:8010").Trim().TrimEnd('/');
-                    var hReq = (HttpWebRequest)WebRequest.Create(ep + "/health");
-                    hReq.Proxy = null;
+                    var hReq = Sanctum.Harness.EgressHttpFactory.CreateRequest(ep + "/health", Sanctum.Harness.EgressFeature.Loopback);
                     hReq.Method = "GET";
                     hReq.Timeout = 1500;
                     using (var hRes = (HttpWebResponse)hReq.GetResponse()) {
@@ -2823,7 +2815,7 @@ namespace Sanctum {
                     string repoId = "PaddlePaddle/PaddleOCR-VL-1.6";
                     emit(new { status = "Fetching PaddleOCR-VL-1.6 manifest...", percent = 3 });
 
-                    var metaReq = (HttpWebRequest)WebRequest.Create("https://huggingface.co/api/models/" + repoId);
+                    var metaReq = Sanctum.Harness.EgressHttpFactory.CreateRequest("https://huggingface.co/api/models/" + repoId, Sanctum.Harness.EgressFeature.ModelDownload);
                     metaReq.UserAgent = "Sanctum-OCR-Downloader/1.0";
                     metaReq.Timeout = 30000;
                     string metaJson;
@@ -2865,7 +2857,7 @@ namespace Sanctum {
                         emit(new { status = "Downloading " + rel + " (" + (idx + 1) + "/" + totalFiles + ")", percent = basePct });
 
                         string url = "https://huggingface.co/" + repoId + "/resolve/main/" + Uri.EscapeUriString(rel);
-                        var dlReq = (HttpWebRequest)WebRequest.Create(url);
+                        var dlReq = Sanctum.Harness.EgressHttpFactory.CreateRequest(url, Sanctum.Harness.EgressFeature.ModelDownload);
                         dlReq.UserAgent = "Sanctum-OCR-Downloader/1.0";
                         dlReq.AllowAutoRedirect = true;
                         dlReq.Timeout = 180000;

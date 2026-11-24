@@ -47,8 +47,7 @@ namespace Sanctum.Harness {
 
             try {
                 byte[] body = Utf8NoBom.GetBytes(JsonConvert.SerializeObject(new { name = model }));
-                var req = (HttpWebRequest)WebRequest.Create(_endpoint + "/api/show");
-                req.Proxy = null;
+                var req = EgressHttpFactory.CreateRequest(_endpoint + "/api/show", EgressFeature.Loopback);
                 req.Method = "POST";
                 req.ContentType = "application/json";
                 req.Timeout = 5000;
@@ -116,8 +115,7 @@ namespace Sanctum.Harness {
             }
 
             byte[] bodyBytes = Utf8NoBom.GetBytes(payload.ToString(Formatting.None));
-            var req = (HttpWebRequest)WebRequest.Create(_endpoint + "/api/chat");
-            req.Proxy = null;
+            var req = EgressHttpFactory.CreateRequest(_endpoint + "/api/chat", EgressFeature.Loopback);
             req.Method = "POST";
             req.ContentType = "application/json";
             req.Timeout = 60000;

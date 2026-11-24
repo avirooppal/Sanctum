@@ -697,7 +697,7 @@ namespace Sanctum {
                 }
 
                 try {
-                    var webReq = (HttpWebRequest)WebRequest.Create(currentUrl);
+                    var webReq = Sanctum.Harness.EgressHttpFactory.CreateRequest(currentUrl, Sanctum.Harness.EgressFeature.BrowserAgent);
                     webReq.Proxy = null;
                     webReq.AllowAutoRedirect = false; // Manually inspect every redirect target against URL/IP/DNS guard!
                     webReq.Timeout = 8000;
@@ -1019,7 +1019,7 @@ namespace Sanctum {
                     if (!Directory.Exists(downloadsDir)) Directory.CreateDirectory(downloadsDir);
                     string destPath = ToolPath(Path.Combine("downloads", rawFileName), false, "create");
 
-                    var webReq = (HttpWebRequest)WebRequest.Create(dlUrl);
+                    var webReq = Sanctum.Harness.EgressHttpFactory.CreateRequest(dlUrl, Sanctum.Harness.EgressFeature.BrowserAgent);
                     webReq.Proxy = null;
                     webReq.Timeout = 10000;
                     using (var webRes = (HttpWebResponse)webReq.GetResponse())

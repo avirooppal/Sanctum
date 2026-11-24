@@ -96,6 +96,7 @@ namespace Sanctum.Harness {
         public HarnessEngine(SessionLogStore store, IModelProvider provider, string appDataDir = null) {
             _store = store;
             string dataRoot = appDataDir ?? Path.GetDirectoryName(store.SessionsDir);
+            EgressHttpFactory.Initialize(dataRoot);
             _provider = provider;
             _audit = new HarnessAuditLog(dataRoot);
             _permissions = new PermissionEngine(dataRoot, _audit);

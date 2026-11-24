@@ -728,9 +728,11 @@ namespace Sanctum {
             }
 
             InitDirectories(customDataDir);
+            Sanctum.Harness.EgressHttpFactory.Initialize(_appDataDir);
             if (resetData) {
                 WipeAppData(true, true);
                 InitDirectories(customDataDir);
+            Sanctum.Harness.EgressHttpFactory.Initialize(_appDataDir);
                 if (headless) {
                     Console.WriteLine("{\"status\":\"reset_complete\"}");
                     return 0;
@@ -2938,8 +2940,7 @@ private void HandleTerminal(HttpListenerRequest req, HttpListenerResponse res) {
         private void HandleListModels(HttpListenerResponse res) {
             EnsureEngineStarted();
             try {
-                var request = (HttpWebRequest)WebRequest.Create(EngineBase + "/api/tags");
-                request.Proxy = null;
+                var request = Sanctum.Harness.EgressHttpFactory.CreateRequest(EngineBase + "/api/tags", Sanctum.Harness.EgressFeature.Loopback);
                 request.Timeout = 5000;
                 using (var response = request.GetResponse())
                 using (var reader = new StreamReader(response.GetResponseStream())) {
@@ -2953,6 +2954,11 @@ private void HandleTerminal(HttpListenerRequest req, HttpListenerResponse res) {
         }
 
         private void HandleDownloadOrPull(HttpListenerRequest req, HttpListenerResponse res) {
+            if (Sanctum.Harness.EgressHttpFactory.IsOfflineMode) {
+                WriteJson(res, 403, new { error = "Offline mode is active. Model downloads are disabled." });
+                return;
+            }
+            Sanctum.Harness.EgressHttpFactory.CheckAllowed("https://registry.ollama.ai/v2/", Sanctum.Harness.EgressFeature.ModelDownload);
             ProxyRequest(req, res, EngineBase + "/api/pull");
         }
 
@@ -2962,8 +2968,7 @@ private void HandleTerminal(HttpListenerRequest req, HttpListenerResponse res) {
             bool started = false;
             try {
                 if (target.StartsWith(EngineBase + "/")) EnsureEngineStarted();
-                upstream = (HttpWebRequest)WebRequest.Create(target);
-                upstream.Proxy = null;
+                upstream = Sanctum.Harness.EgressHttpFactory.CreateRequest(target, Sanctum.Harness.EgressFeature.Loopback);
                 upstream.Method = req.HttpMethod;
                 upstream.Timeout = 600000;
                 upstream.ReadWriteTimeout = 600000;

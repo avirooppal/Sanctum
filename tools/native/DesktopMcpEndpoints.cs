@@ -359,7 +359,7 @@ namespace Sanctum {
             if (!isNotification) payload["id"] = Environment.TickCount;
 
             byte[] bodyBytes = Encoding.UTF8.GetBytes(serializer.Serialize(payload));
-            var req = (HttpWebRequest)WebRequest.Create(url);
+            var req = Sanctum.Harness.EgressHttpFactory.CreateRequest(url, Sanctum.Harness.EgressFeature.RemoteMcp, "", bodyBytes.Length);
             req.Method = "POST";
             req.ContentType = "application/json";
             req.Accept = "application/json, text/event-stream";
