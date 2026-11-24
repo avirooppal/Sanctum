@@ -346,6 +346,10 @@ namespace Sanctum.Harness {
                     return (200, new JObject { ["tools"] = _engine.ListToolsJson() });
                 }
 
+                if (method == "GET" && path == "/v1/routes") {
+                    return (200, new JObject { ["mutatingRoutes"] = GetDeclaredMutatingRoutes() });
+                }
+
                 if (method == "GET" && path == "/v1/migration/notices") {
                     return (200, new JObject { ["notices"] = CloudRemovalMigration.GetActiveNotices(_appDataDir) });
                 }
@@ -725,6 +729,59 @@ namespace Sanctum.Harness {
             } catch (Exception ex) {
                 return (500, new JObject { ["error"] = ex.Message });
             }
+        }
+
+        private static JArray GetDeclaredMutatingRoutes() {
+            var routes = new (string method, string route, string approvalClass)[] {
+                ("POST", "/v1/migration/notices/dismiss", "bearer_low_risk"),
+                ("POST", "/v1/network/offline", "trusted_channel_on_disable"),
+                ("POST", "/v1/network/features", "trusted_channel_on_enable"),
+                ("POST", "/v1/workspace/trust", "trusted_channel_only"),
+                ("DELETE", "/v1/workspace/trust", "fail_closed_revoke"),
+                ("POST", "/v1/memory", "bearer_user_crud"),
+                ("PUT", "/v1/memory/:id", "bearer_user_crud"),
+                ("DELETE", "/v1/memory/:id", "bearer_user_crud"),
+                ("POST", "/v1/mcp/servers", "trusted_channel_only"),
+                ("DELETE", "/v1/mcp/servers/:id", "trusted_channel_only"),
+                ("POST", "/v1/mcp/servers/:id/discover", "bearer_low_risk"),
+                ("POST", "/v1/mcp/servers/:id/restart", "bearer_low_risk"),
+                ("POST", "/v1/extensions/hooks/approve", "trusted_channel_only"),
+                ("POST", "/v1/schedules", "trusted_channel_only"),
+                ("DELETE", "/v1/schedules/:id", "trusted_channel_only"),
+                ("POST", "/v1/schedules/:id/run", "unattended_fail_closed"),
+                ("POST", "/v1/rules", "trusted_channel_only"),
+                ("POST", "/v1/import", "bearer_low_risk"),
+                ("POST", "/v1/erase-all", "trusted_or_explicit_confirm"),
+                ("POST", "/v1/untrusted/wrap", "bearer_low_risk"),
+                ("POST", "/v1/tasks/:id/kill", "bearer_low_risk"),
+                ("POST", "/v1/approvals/:id", "call_bound_single_use"),
+                ("POST", "/v1/sessions", "bearer_low_risk"),
+                ("DELETE", "/v1/sessions/:id/worktree", "bearer_low_risk"),
+                ("POST", "/v1/sessions/:id/messages", "bearer_low_risk"),
+                ("POST", "/v1/sessions/:id/interrupt", "bearer_low_risk"),
+                ("POST", "/v1/sessions/:id/mode", "bearer_low_risk"),
+                ("POST", "/v1/sessions/:id/autonomy", "trusted_channel_on_full_auto"),
+                ("POST", "/v1/sessions/:id/model", "bearer_low_risk"),
+                ("POST", "/v1/sessions/:id/fork", "bearer_low_risk"),
+                ("POST", "/v1/sessions/:id/compact", "bearer_low_risk"),
+                ("POST", "/v1/sessions/:id/checkpoints", "bearer_low_risk"),
+                ("POST", "/v1/sessions/:id/rewind", "bearer_low_risk"),
+                ("POST", "/v1/sessions/:id/tasks", "call_bound_command_rules"),
+                ("POST", "/v1/sessions/:id/todos", "bearer_low_risk"),
+                ("POST", "/v1/sessions/:id/verify", "call_bound_command_rules"),
+                ("POST", "/v1/sessions/:id/subagents", "bearer_low_risk"),
+                ("POST", "/v1/sessions/:id/worktree", "bearer_low_risk"),
+                ("POST", "/v1/sessions/:id/mentions", "bearer_low_risk"),
+            };
+            var arr = new JArray();
+            foreach (var r in routes) {
+                arr.Add(new JObject {
+                    ["method"] = r.method,
+                    ["route"] = r.route,
+                    ["approvalClass"] = r.approvalClass
+                });
+            }
+            return arr;
         }
 
         private static void WriteHttpJson(HttpListenerResponse res, int status, JObject payload) {
