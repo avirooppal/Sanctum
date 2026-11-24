@@ -2414,17 +2414,23 @@ namespace Sanctum {
                         }
                     }
 
-                    if (!string.IsNullOrEmpty(expectedSha256) && expectedSha256.Length == 64) {
-                        emit(new { status = "Verifying SHA-256 signature...", percent = 95 });
-                        using (var sha = SHA256.Create())
-                        using (var fs = File.OpenRead(tempExe)) {
-                            byte[] hash = sha.ComputeHash(fs);
-                            string actual = BitConverter.ToString(hash).Replace("-", "").ToLowerInvariant();
-                            if (!string.Equals(actual, expectedSha256, StringComparison.OrdinalIgnoreCase)) {
-                                try { File.Delete(tempExe); } catch { }
-                                throw new Exception("SHA-256 verification failed. Update aborted for safety.");
-                            }
-                        }
+                    string candidateVersion = payload != null && payload.ContainsKey("version")
+                        ? Convert.ToString(payload["version"]).Trim()
+                        : "";
+                    string manifestSignature = payload != null && payload.ContainsKey("signature")
+                        ? Convert.ToString(payload["signature"]).Trim()
+                        : "";
+
+                    emit(new { status = "Verifying update signature, version & SHA-256...", percent = 95 });
+                    var manifestObj = new Newtonsoft.Json.Linq.JObject {
+                        ["version"] = candidateVersion,
+                        ["exeSha256"] = expectedSha256,
+                        ["signature"] = manifestSignature
+                    };
+                    var verifyRes = Sanctum.Harness.UpdateVerifier.VerifyUpdatePackage(manifestObj, tempExe, "1.0.0");
+                    if (!verifyRes.ok) {
+                        try { File.Delete(tempExe); } catch { }
+                        throw new Exception("Update verification failed (" + verifyRes.code + "): " + verifyRes.error);
                     }
 
                     emit(new { status = "Closing Sanctum and installing update...", percent = 100, installing = true });

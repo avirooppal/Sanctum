@@ -444,7 +444,48 @@ Add-Type -TypeDefinition $source -Language CSharp -ReferencedAssemblies "System.
         sys.exit(1)
 
     print(f"Compiled direct launcher to {out_path} ({os.path.getsize(out_path)} bytes)")
+    sign_binary_if_configured(out_path)
+
+
+def sign_binary_if_configured(binary_path: str) -> bool:
+    """
+    Authenticode-signs binary_path when SANCTUM_SIGN_PFX is set.
+    No-op when no certificate is configured (suitable for unsigned local dev builds).
+    """
+    pfx_path = os.environ.get("SANCTUM_SIGN_PFX", "").strip()
+    if not pfx_path:
+        print(f"[sign] SANCTUM_SIGN_PFX not set; skipping Authenticode signing for {os.path.basename(binary_path)} (no-op).")
+        return False
+    if not os.path.exists(pfx_path):
+        raise FileNotFoundError(f"SANCTUM_SIGN_PFX not found: {pfx_path}")
+
+    pfx_pass = os.environ.get("SANCTUM_SIGN_PASS", "")
+    ts_url = os.environ.get("SANCTUM_SIGN_TIMESTAMP_URL", "").strip()
+    escaped_bin = os.path.abspath(binary_path).replace("'", "''")
+    escaped_pfx = os.path.abspath(pfx_path).replace("'", "''")
+    escaped_pass = pfx_pass.replace("'", "''")
+    ts_flag = f"-TimestampServer '{ts_url}'" if ts_url else ""
+
+    ps_script = (
+        f"$sec = ConvertTo-SecureString -String '{escaped_pass}' -Force -AsPlainText; "
+        f"$cert = New-Object System.Security.Cryptography.X509Certificates.X509Certificate2('{escaped_pfx}', $sec); "
+        f"$r = Set-AuthenticodeSignature -FilePath '{escaped_bin}' -Certificate $cert -HashAlgorithm SHA256 {ts_flag}; "
+        f"if (-not $r.SignerCertificate) {{ throw ('Signing failed: ' + $r.StatusMessage) }}; "
+        f"Write-Output ('Signed: ' + $r.SignerCertificate.Subject + ' Status=' + $r.Status)"
+    )
+    res = subprocess.run(
+        ["powershell", "-NoProfile", "-NonInteractive", "-Command", ps_script],
+        capture_output=True,
+        text=True,
+    )
+    if res.returncode != 0:
+        raise RuntimeError(f"Authenticode signing failed for {binary_path}: {res.stderr}\n{res.stdout}")
+    print(f"[sign] {res.stdout.strip()}")
+    return True
 
 
 if __name__ == "__main__":
-    build_installer()
+    if len(sys.argv) == 3 and sys.argv[1] == "--sign-only":
+        sign_binary_if_configured(sys.argv[2])
+    else:
+        build_installer()

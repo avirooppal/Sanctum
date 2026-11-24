@@ -35,6 +35,21 @@ namespace Sanctum.Harness {
                 exitCode = RunEvalPermissionFixture(args.Length > 1 ? args[1] : "");
                 return true;
             }
+            if (cmd == "--verify-update") {
+                try { AttachConsole(-1); } catch { }
+                string manifestPath = args.Length > 1 ? args[1] : "";
+                string filePath = args.Length > 2 ? args[2] : "";
+                string curVer = args.Length > 3 ? args[3] : "1.0.0";
+                string pubKeyPath = GetArg(args, "--pub-key-xml");
+                string pubKeyXml = (!string.IsNullOrEmpty(pubKeyPath) && File.Exists(pubKeyPath))
+                    ? File.ReadAllText(pubKeyPath, Utf8NoBom)
+                    : null;
+                var manifest = File.Exists(manifestPath) ? JObject.Parse(File.ReadAllText(manifestPath, Utf8NoBom)) : null;
+                var (ok, code, err) = UpdateVerifier.VerifyUpdatePackage(manifest, filePath, curVer, pubKeyXml);
+                Console.WriteLine(JsonConvert.SerializeObject(new { ok, code, error = err }));
+                exitCode = ok ? 0 : 1;
+                return true;
+            }
             if (cmd == "--bench-crypto") {
                 try { AttachConsole(-1); } catch { }
                 string payload = new string('A', 100 * 1024);
