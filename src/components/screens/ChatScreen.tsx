@@ -740,6 +740,20 @@ export const ChatScreen: React.FC<ChatScreenProps> = ({ onNavigate, onOpenMcpSet
       },
     },
     {
+      name: "doomscroll",
+      aliases: ["doomscrolling", "feed", "instagram"],
+      syntax: "/doomscroll",
+      description: "Toggle Doomscrolling (Instagram) pane",
+      requiresArg: false,
+      execute: (mode?: string) => {
+        window.dispatchEvent(
+          new CustomEvent("sanctum:toggle-feed-pane", {
+            detail: { mode: mode === "open" ? "open" : "toggle" },
+          })
+        );
+      },
+    },
+    {
       name: "clear",
       aliases: ["new", "reset"],
       syntax: "/clear",
@@ -764,7 +778,35 @@ export const ChatScreen: React.FC<ChatScreenProps> = ({ onNavigate, onOpenMcpSet
 
   const send = () => {
     const trimmed = prompt.trim();
-    if ((!trimmed && !attachedImage && attachedDocuments.length === 0) || !model || isStreaming) return;
+    if (!trimmed && !attachedImage && attachedDocuments.length === 0) return;
+
+    // /doomscroll works anytime — standalone, inline with a message, or while a chat is streaming
+    const doomscrollRegex = /(?:^|\s)\/(?:doomscroll|doomscrolling)(?=\s|$)/i;
+    if (doomscrollRegex.test(trimmed)) {
+      const remaining = trimmed.replace(/(?:^|\s)\/(?:doomscroll|doomscrolling)(?=\s|$)/gi, " ").trim();
+      window.dispatchEvent(
+        new CustomEvent("sanctum:toggle-feed-pane", {
+          detail: { mode: remaining ? "open" : "toggle" },
+        })
+      );
+      if (!remaining && !attachedImage && attachedDocuments.length === 0) {
+        setPrompt("");
+        setSlashQuery(null);
+        return;
+      }
+      if (isStreaming || !model) {
+        setPrompt(remaining);
+        setSlashQuery(null);
+        return;
+      }
+      const messageText = remaining || (attachedImage ? PromptTemplates.ANALYZE_IMAGE : PromptTemplates.ANALYZE_DOCUMENT);
+      sendMessage(messageText);
+      setPrompt("");
+      setSlashQuery(null);
+      return;
+    }
+
+    if (!model || isStreaming) return;
 
     // Check direct slash command execution:
     if (trimmed.startsWith("/")) {
@@ -1287,9 +1329,11 @@ export const ChatScreen: React.FC<ChatScreenProps> = ({ onNavigate, onOpenMcpSet
                             setSlashQuery(null);
                             textareaRef.current?.focus();
                           } else {
-                            void cmd.execute();
-                            setPrompt("");
+                            const remaining = prompt.replace(/(?:^|\s)\/[a-zA-Z0-9_-]*$/, "").trim();
+                            void cmd.execute(cmd.name === "doomscroll" && remaining ? "open" : undefined);
+                            setPrompt(remaining ? `${remaining} ` : "");
                             setSlashQuery(null);
+                            textareaRef.current?.focus();
                           }
                         }}
                         onMouseEnter={() => setSelectedSlashIndex(idx)}
@@ -1437,8 +1481,9 @@ export const ChatScreen: React.FC<ChatScreenProps> = ({ onNavigate, onOpenMcpSet
                         setSlashQuery(null);
                         textareaRef.current?.focus();
                       } else {
-                        void chosen.execute();
-                        setPrompt("");
+                        const remaining = prompt.replace(/(?:^|\s)\/[a-zA-Z0-9_-]*$/, "").trim();
+                        void chosen.execute(chosen.name === "doomscroll" && remaining ? "open" : undefined);
+                        setPrompt(remaining ? `${remaining} ` : "");
                         setSlashQuery(null);
                       }
                     }

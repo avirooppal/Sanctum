@@ -196,6 +196,19 @@ export const SplitChatPane: React.FC<SplitChatPaneProps> = ({
       execute: () => setIsTerminalOpen((v) => !v),
     },
     {
+      name: "doomscroll",
+      aliases: ["doomscrolling", "feed", "instagram"],
+      syntax: "/doomscroll",
+      description: "Toggle Doomscrolling (Instagram) pane",
+      execute: (mode?: string) => {
+        window.dispatchEvent(
+          new CustomEvent("sanctum:toggle-feed-pane", {
+            detail: { mode: mode === "open" ? "open" : "toggle" },
+          })
+        );
+      },
+    },
+    {
       name: "swap",
       syntax: "/swap",
       description: "Swap left and right chat panes",
@@ -205,7 +218,16 @@ export const SplitChatPane: React.FC<SplitChatPaneProps> = ({
 
   const matchingSlash =
     slashQuery !== null
-      ? slashCommands.filter((c) => c.name.startsWith(slashQuery.toLowerCase()))
+      ? slashCommands.filter((c) => {
+          const q = slashQuery.toLowerCase();
+          if (!q) return true;
+          return (
+            c.name.includes(q) ||
+            c.syntax.toLowerCase().includes(q) ||
+            c.description.toLowerCase().includes(q) ||
+            ("aliases" in c && Array.isArray(c.aliases) && c.aliases.some((a) => a.includes(q)))
+          );
+        })
       : [];
 
   useEffect(() => {
@@ -319,8 +341,9 @@ export const SplitChatPane: React.FC<SplitChatPaneProps> = ({
 
   const handleDraftChange = (val: string) => {
     setDraft(val);
-    if (val.startsWith("/") && !val.includes(" ") && !val.includes("\n")) {
-      setSlashQuery(val.slice(1));
+    const slashMatch = val.match(/(?:^|\s)\/([a-zA-Z0-9_-]*)$/);
+    if (slashMatch) {
+      setSlashQuery(slashMatch[1].toLowerCase());
       setSelectedSlashIdx(0);
     } else {
       setSlashQuery(null);
@@ -331,7 +354,37 @@ export const SplitChatPane: React.FC<SplitChatPaneProps> = ({
 
   const handleSend = () => {
     const text = draft.trim();
-    if ((!text && localDocs.length === 0) || isStreaming || !hasModel) return;
+    if (!text && localDocs.length === 0) return;
+
+    // /doomscroll works anytime — standalone, inline with a message, or while streaming
+    const doomscrollRegex = /(?:^|\s)\/(?:doomscroll|doomscrolling)(?=\s|$)/i;
+    if (doomscrollRegex.test(text)) {
+      const remaining = text.replace(/(?:^|\s)\/(?:doomscroll|doomscrolling)(?=\s|$)/gi, " ").trim();
+      window.dispatchEvent(
+        new CustomEvent("sanctum:toggle-feed-pane", {
+          detail: { mode: remaining ? "open" : "toggle" },
+        })
+      );
+      if (!remaining && localDocs.length === 0) {
+        setDraft("");
+        setSlashQuery(null);
+        return;
+      }
+      if (isStreaming || !hasModel) {
+        setDraft(remaining);
+        setSlashQuery(null);
+        return;
+      }
+      const docsToSend = [...localDocs];
+      setDraft("");
+      setLocalDocs([]);
+      setSlashQuery(null);
+      setMentionQuery(null);
+      void sendMessage(remaining || "Please analyze the attached document.", splitSession.id, docsToSend);
+      return;
+    }
+
+    if (isStreaming || !hasModel) return;
     const docsToSend = [...localDocs];
     setDraft("");
     setLocalDocs([]);
@@ -460,8 +513,9 @@ export const SplitChatPane: React.FC<SplitChatPaneProps> = ({
                   key={cmd.name}
                   type="button"
                   onClick={() => {
-                    cmd.execute();
-                    setDraft("");
+                    const remaining = draft.replace(/(?:^|\s)\/[a-zA-Z0-9_-]*$/, "").trim();
+                    cmd.execute(cmd.name === "doomscroll" && remaining ? "open" : undefined);
+                    setDraft(remaining ? `${remaining} ` : "");
                     setSlashQuery(null);
                   }}
                   onMouseEnter={() => setSelectedSlashIdx(idx)}
@@ -543,8 +597,9 @@ export const SplitChatPane: React.FC<SplitChatPaneProps> = ({
                 if (e.key === "Enter" || e.key === "Tab") {
                   e.preventDefault();
                   const chosen = matchingSlash[selectedSlashIdx] || matchingSlash[0];
-                  chosen?.execute();
-                  setDraft("");
+                  const remaining = draft.replace(/(?:^|\s)\/[a-zA-Z0-9_-]*$/, "").trim();
+                  chosen?.execute(chosen.name === "doomscroll" && remaining ? "open" : undefined);
+                  setDraft(remaining ? `${remaining} ` : "");
                   setSlashQuery(null);
                   return;
                 }

@@ -19,6 +19,7 @@ import { useShallow } from "zustand/react/shallow";
 import { WorkspaceFileTree } from "./WorkspaceFileTree";
 import { FileContentRenderer, FsReadResponse } from "./FileContentRenderer";
 import { FeedPaneTab } from "./FeedPaneTab";
+import { Switch } from "@/components/ui/switch";
 import { fetchWithApproval } from "@/lib/hostBridge";
 import { toast } from "sonner";
 
@@ -70,10 +71,21 @@ export const ArtifactViewerPanel: React.FC = () => {
   const [dragTabIndex, setDragTabIndex] = useState<number | null>(null);
   const [rightPanelMode, setRightPanelMode] = useState<"viewer" | "feed">("viewer");
   const lastEventSeqRef = useRef<number>(0);
+  const isViewerOpenRef = useRef(isViewerOpen);
+  isViewerOpenRef.current = isViewerOpen;
 
   useEffect(() => {
-    const onToggleFeed = () => {
-      setIsViewerOpen(true);
+    const onToggleFeed = (e: Event) => {
+      const mode = (e as CustomEvent)?.detail?.mode as "open" | "toggle" | undefined;
+      if (!isViewerOpenRef.current) {
+        setIsViewerOpen(true);
+        setRightPanelMode("feed");
+        return;
+      }
+      if (mode === "open") {
+        setRightPanelMode("feed");
+        return;
+      }
       setRightPanelMode((prev) => (prev === "feed" ? "viewer" : "feed"));
     };
     window.addEventListener("sanctum:toggle-feed-pane", onToggleFeed);
@@ -307,113 +319,110 @@ export const ArtifactViewerPanel: React.FC = () => {
       />
 
       {/* Top Multi-Tab Bar (leaves right padding for native window controls) */}
-      <div className="flex items-center justify-between gap-1 h-10 px-2 pr-32 border-b border-border/70 bg-sidebar/90 shrink-0">
-        <div className="flex items-center gap-0.5 rounded-lg bg-muted/40 p-0.5 shrink-0 mr-1" role="tablist" aria-label="Right panel mode">
-          <button
-            type="button"
-            role="tab"
-            aria-selected={rightPanelMode === "viewer"}
-            onClick={() => setRightPanelMode("viewer")}
-            className={cn(
-              "px-2 py-0.5 rounded-md text-[11px] font-medium transition-colors",
-              rightPanelMode === "viewer" ? "bg-card text-foreground shadow-xs" : "text-muted-foreground hover:text-foreground"
-            )}
-          >
-            Viewer
-          </button>
-          <button
-            type="button"
-            role="tab"
+      <div className="flex items-center justify-between gap-2 h-10 px-2.5 pr-32 border-b border-border/70 bg-sidebar/90 shrink-0">
+        <div className="flex items-center gap-2 shrink-0">
+          <Switch
+            id="doomscrolling-toggle"
             data-testid="right-panel-feed-tab"
-            aria-selected={rightPanelMode === "feed"}
-            onClick={() => setRightPanelMode("feed")}
+            aria-label="Doomscrolling"
+            checked={rightPanelMode === "feed"}
+            onCheckedChange={(checked) => setRightPanelMode(checked ? "feed" : "viewer")}
+            className="scale-90 origin-left"
+          />
+          <label
+            htmlFor="doomscrolling-toggle"
             className={cn(
-              "px-2 py-0.5 rounded-md text-[11px] font-medium transition-colors",
-              rightPanelMode === "feed" ? "bg-card text-foreground shadow-xs" : "text-muted-foreground hover:text-foreground"
+              "text-xs font-medium cursor-pointer select-none transition-colors",
+              rightPanelMode === "feed" ? "text-foreground" : "text-muted-foreground hover:text-foreground"
             )}
           >
-            Feed
-          </button>
+            Doomscrolling
+          </label>
         </div>
-        <div
-          role="tablist"
-          className="flex items-center gap-1 overflow-x-auto no-scrollbar min-w-0 flex-1 py-1"
-        >
-          {viewerTabs.length === 0 ? (
-            <span className="text-xs text-muted-foreground px-2">
-              Workspace Explorer
-            </span>
-          ) : (
-            viewerTabs.map((t, idx) => {
-              const isActive = t.id === activeTab?.id;
-              const isDirty =
-                t.dirtyContent !== null &&
-                t.dirtyContent !== undefined &&
-                tabDataMap[t.id] &&
-                t.dirtyContent !== tabDataMap[t.id]?.content;
 
-              return (
-                <div
-                  key={t.id}
-                  role="tab"
-                  aria-selected={isActive}
-                  draggable
-                  onDragStart={() => setDragTabIndex(idx)}
-                  onDragOver={(e) => e.preventDefault()}
-                  onDrop={() => {
-                    if (dragTabIndex !== null && dragTabIndex !== idx) {
-                      reorderViewerTabs(dragTabIndex, idx);
-                    }
-                    setDragTabIndex(null);
-                  }}
-                  onClick={() => setActiveViewerTab(t.id)}
-                  onAuxClick={(e) => {
-                    // Middle-click closes tab
-                    if (e.button === 1) {
-                      e.preventDefault();
-                      closeViewerTab(t.id);
-                    }
-                  }}
-                  className={cn(
-                    "group flex items-center gap-1.5 h-7 px-2.5 rounded-lg text-xs cursor-pointer shrink-0 max-w-[180px] border transition-colors",
-                    isActive
-                      ? "bg-card text-foreground border-border/80 shadow-xs font-medium"
-                      : "bg-transparent text-muted-foreground border-transparent hover:bg-muted/50 hover:text-foreground"
-                  )}
-                >
-                  <FileText className="size-3 text-sky-400 shrink-0" />
-                  <span className="truncate" title={t.path}>
-                    {t.title}
-                  </span>
-                  {(isDirty || t.changedOnDisk) && (
-                    <span
-                      title={
-                        t.changedOnDisk
-                          ? "File changed on disk"
-                          : "Unsaved changes"
+        {rightPanelMode === "viewer" ? (
+          <div
+            role="tablist"
+            className="flex items-center gap-1 overflow-x-auto no-scrollbar min-w-0 flex-1 py-1 pl-2 border-l border-border/60"
+          >
+            {viewerTabs.length === 0 ? (
+              <span className="text-xs text-muted-foreground px-1.5 truncate">
+                Workspace Explorer
+              </span>
+            ) : (
+              viewerTabs.map((t, idx) => {
+                const isActive = t.id === activeTab?.id;
+                const isDirty =
+                  t.dirtyContent !== null &&
+                  t.dirtyContent !== undefined &&
+                  tabDataMap[t.id] &&
+                  t.dirtyContent !== tabDataMap[t.id]?.content;
+
+                return (
+                  <div
+                    key={t.id}
+                    role="tab"
+                    aria-selected={isActive}
+                    draggable
+                    onDragStart={() => setDragTabIndex(idx)}
+                    onDragOver={(e) => e.preventDefault()}
+                    onDrop={() => {
+                      if (dragTabIndex !== null && dragTabIndex !== idx) {
+                        reorderViewerTabs(dragTabIndex, idx);
                       }
-                      className={cn(
-                        "size-1.5 rounded-full shrink-0",
-                        t.changedOnDisk ? "bg-amber-400" : "bg-primary"
-                      )}
-                    />
-                  )}
-                  <button
-                    type="button"
-                    aria-label={`Close ${t.title}`}
-                    onClick={(e) => {
-                      e.stopPropagation();
-                      closeViewerTab(t.id);
+                      setDragTabIndex(null);
                     }}
-                    className="p-0.5 rounded opacity-60 hover:opacity-100 hover:bg-muted"
+                    onClick={() => setActiveViewerTab(t.id)}
+                    onAuxClick={(e) => {
+                      // Middle-click closes tab
+                      if (e.button === 1) {
+                        e.preventDefault();
+                        closeViewerTab(t.id);
+                      }
+                    }}
+                    className={cn(
+                      "group flex items-center gap-1.5 h-7 px-2.5 rounded-lg text-xs cursor-pointer shrink-0 max-w-[180px] border transition-colors",
+                      isActive
+                        ? "bg-card text-foreground border-border/80 shadow-xs font-medium"
+                        : "bg-transparent text-muted-foreground border-transparent hover:bg-muted/50 hover:text-foreground"
+                    )}
                   >
-                    <X className="size-3" />
-                  </button>
-                </div>
-              );
-            })
-          )}
-        </div>
+                    <FileText className="size-3 text-sky-400 shrink-0" />
+                    <span className="truncate" title={t.path}>
+                      {t.title}
+                    </span>
+                    {(isDirty || t.changedOnDisk) && (
+                      <span
+                        title={
+                          t.changedOnDisk
+                            ? "File changed on disk"
+                            : "Unsaved changes"
+                        }
+                        className={cn(
+                          "size-1.5 rounded-full shrink-0",
+                          t.changedOnDisk ? "bg-amber-400" : "bg-primary"
+                        )}
+                      />
+                    )}
+                    <button
+                      type="button"
+                      aria-label={`Close ${t.title}`}
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        closeViewerTab(t.id);
+                      }}
+                      className="p-0.5 rounded opacity-60 hover:opacity-100 hover:bg-muted"
+                    >
+                      <X className="size-3" />
+                    </button>
+                  </div>
+                );
+              })
+            )}
+          </div>
+        ) : (
+          <div className="flex-1" />
+        )}
 
         <div className="flex items-center gap-1 shrink-0">
           <button

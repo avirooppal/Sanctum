@@ -3,14 +3,9 @@
 import React, { useCallback, useEffect, useRef, useState } from "react";
 import {
   IconShieldLock,
-  IconPlayerPause,
-  IconPlayerPlay,
-  IconTrash,
   IconWifiOff,
   IconBell,
-  IconClock,
   IconEyeOff,
-  IconPower,
 } from "@tabler/icons-react";
 import { Button } from "@/components/ui/button";
 import { useAppStore } from "@/store/useAppStore";
@@ -208,21 +203,7 @@ export const FeedPaneTab: React.FC = () => {
     }
   };
 
-  const handleClearProfile = async () => {
-    try {
-      const res = await fetch("/v1/feed/profile/clear", { method: "POST" });
-      if (res.ok) {
-        postFeedControl({ action: "close" });
-        toast.success("Signed out and cleared feed profile data.");
-        void refresh();
-      }
-    } catch {
-      toast.error("Could not clear feed profile.");
-    }
-  };
-
   const primaryReason = attention?.reasons?.[0] || null;
-  const isPaused = attention?.state === "PausedAttention" || attention?.state === "PausedByUser";
 
   // 1. Offline mode block
   if (status?.offlineBlocked) {
@@ -293,93 +274,9 @@ export const FeedPaneTab: React.FC = () => {
     );
   }
 
-  // 3. Enabled Feed Pane (Toolbar + Slot / Attention Pause Overlay)
+  // 3. Enabled Feed Pane (Direct Instagram Slot / Attention Pause Overlay)
   return (
     <div className="flex-1 flex flex-col min-h-0">
-      {/* Compact Feed Status & Controls Header */}
-      <div className="px-2.5 py-2 border-b border-border/60 bg-muted/20 flex items-center justify-between gap-1.5 shrink-0">
-        <div className="flex items-center gap-1.5 min-w-0">
-          <span
-            data-testid="feed-status-chip"
-            className="text-[10px] font-mono px-2 py-0.5 rounded-full border truncate bg-card text-foreground border-border/70"
-          >
-            {attention?.state === "PausedAttention"
-              ? `Feed paused: ${primaryReason?.summary || "waiting for your approval"}`
-              : attention?.state === "PausedByUser"
-              ? "Feed paused"
-              : attention?.state === "Suspended"
-              ? "Feed suspended"
-              : "Feed active"}
-          </span>
-          {attention?.wellbeing.showTimer && (
-            <span className="text-[10px] font-mono text-muted-foreground flex items-center gap-0.5 shrink-0">
-              <IconClock size={11} />
-              {Math.round(attention.wellbeing.todayActiveMinutes)}m
-            </span>
-          )}
-        </div>
-
-        <div className="flex items-center gap-1 shrink-0">
-          {status.presets.length > 1 ? (
-            <select
-              aria-label="Feed preset"
-              value={status.activePresetId}
-              onChange={async (e) => {
-                await fetch("/v1/feed/settings", {
-                  method: "POST",
-                  headers: { "Content-Type": "application/json" },
-                  body: JSON.stringify({ activePresetId: e.target.value }),
-                });
-                void refresh();
-              }}
-              className="h-6 rounded-lg border border-border bg-background px-1.5 text-[10px] text-foreground"
-            >
-              {status.presets.map((p) => (
-                <option key={p.id} value={p.id}>{p.name}</option>
-              ))}
-            </select>
-          ) : (
-            <span className="text-[10px] font-medium px-2 py-0.5 rounded-lg border border-border/70 bg-background text-muted-foreground">
-              {status.activePreset?.name || "Instagram"}
-            </span>
-          )}
-
-          <button
-            type="button"
-            title={isPaused ? "Resume feed" : "Pause feed"}
-            onClick={async () => {
-              await fetch(isPaused ? "/v1/feed/attention/resume" : "/v1/feed/attention/pause", { method: "POST" });
-              void refresh();
-            }}
-            className="p-1 rounded-lg hover:bg-muted text-muted-foreground hover:text-foreground"
-          >
-            {isPaused ? <IconPlayerPlay size={13} /> : <IconPlayerPause size={13} />}
-          </button>
-
-          <button
-            type="button"
-            title="Sign out and clear feed data"
-            onClick={() => void handleClearProfile()}
-            className="p-1 rounded-lg hover:bg-muted text-muted-foreground hover:text-foreground"
-          >
-            <IconTrash size={13} />
-          </button>
-
-          <button
-            type="button"
-            title="Disable Feed Pane"
-            onClick={async () => {
-              await fetch("/v1/feed/disable", { method: "POST" });
-              postFeedControl({ action: "close" });
-              void refresh();
-            }}
-            className="p-1 rounded-lg hover:bg-muted text-muted-foreground hover:text-destructive"
-          >
-            <IconPower size={13} />
-          </button>
-        </div>
-      </div>
-
       {/* Host-owned slot area */}
       <div ref={slotRef} data-testid="feed-slot" className="relative flex-1 min-h-0 bg-background/60">
         {attention?.state === "PausedAttention" && primaryReason ? (
