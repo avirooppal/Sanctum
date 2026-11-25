@@ -2249,9 +2249,33 @@ namespace Sanctum {
                 } else {
                     var serializer = new JavaScriptSerializer();
                     bool manifestFetched = false;
-                    // 1. Fetch authoritative release-manifest.json (contains exact buildStamp + exeSha256)
+                    string fullCommitSha = "";
+
+                    // 1. Fetch latest commit SHA & message first so manifest + exe are pinned to the exact same commit (no CDN cache skew)
                     try {
-                        string manifestJson = FetchGitHubText("https://raw.githubusercontent.com/avirooppal/Sanctum/main/release-manifest.json", 7000);
+                        string commitJson = FetchGitHubText("https://api.github.com/repos/avirooppal/Sanctum/commits/main", 8000);
+                        var commitObj = serializer.Deserialize<Dictionary<string, object>>(commitJson);
+                        if (commitObj != null && commitObj.ContainsKey("sha")) {
+                            fullCommitSha = Convert.ToString(commitObj["sha"]).Trim();
+                            if (!string.IsNullOrEmpty(fullCommitSha) && fullCommitSha.Length >= 7) {
+                                latestCommit = fullCommitSha.Substring(0, 7);
+                            }
+                            var commitInner = commitObj.ContainsKey("commit") ? (commitObj["commit"] as Dictionary<string, object>) : null;
+                            if (commitInner != null && commitInner.ContainsKey("message")) {
+                                string msg = Convert.ToString(commitInner["message"]);
+                                int nl = msg.IndexOf('\n');
+                                if (nl > 0) msg = msg.Substring(0, nl);
+                                releaseNotes = msg.Trim();
+                            }
+                        }
+                    } catch { }
+
+                    string gitRef = !string.IsNullOrEmpty(fullCommitSha) ? fullCommitSha : "main";
+                    downloadUrl = "https://github.com/avirooppal/Sanctum/raw/" + gitRef + "/Sanctum.exe";
+
+                    // 2. Fetch authoritative release-manifest.json at the exact commit (contains exact buildStamp + exeSha256)
+                    try {
+                        string manifestJson = FetchGitHubText("https://raw.githubusercontent.com/avirooppal/Sanctum/" + gitRef + "/release-manifest.json", 7000);
                         var mObj = serializer.Deserialize<Dictionary<string, object>>(manifestJson);
                         if (mObj != null) {
                             manifestFetched = true;
@@ -2264,37 +2288,15 @@ namespace Sanctum {
                             if (mObj.ContainsKey("exeSha256")) {
                                 expectedSha256 = Convert.ToString(mObj["exeSha256"]).Trim().ToLowerInvariant();
                             }
-                            if (mObj.ContainsKey("downloadUrl") && !string.IsNullOrEmpty(Convert.ToString(mObj["downloadUrl"]))) {
-                                downloadUrl = Convert.ToString(mObj["downloadUrl"]);
-                            }
-                        }
-                    } catch { }
-
-                    // 2. Fetch latest commit message for readable release notes
-                    try {
-                        string commitJson = FetchGitHubText("https://api.github.com/repos/avirooppal/Sanctum/commits/main", 8000);
-                        var commitObj = serializer.Deserialize<Dictionary<string, object>>(commitJson);
-                        if (commitObj != null && commitObj.ContainsKey("sha")) {
-                            string fullSha = Convert.ToString(commitObj["sha"]);
-                            if (!string.IsNullOrEmpty(fullSha) && fullSha.Length >= 7) {
-                                latestCommit = fullSha.Substring(0, 7);
-                            }
-                            var commitInner = commitObj.ContainsKey("commit") ? (commitObj["commit"] as Dictionary<string, object>) : null;
-                            if (commitInner != null && commitInner.ContainsKey("message")) {
-                                string msg = Convert.ToString(commitInner["message"]);
-                                int nl = msg.IndexOf('\n');
-                                if (nl > 0) msg = msg.Substring(0, nl);
-                                releaseNotes = msg.Trim();
-                            }
                         }
                     } catch {
-                        if (!manifestFetched) checkSource = "offline";
+                        if (string.IsNullOrEmpty(fullCommitSha)) checkSource = "offline";
                     }
 
-                    // 3. Fallback SHA256SUMS if manifest didn't provide exeSha256
+                    // 3. Fallback SHA256SUMS at the same commit if manifest didn't provide exeSha256
                     if (string.IsNullOrEmpty(expectedSha256)) {
                         try {
-                            string sums = FetchGitHubText("https://raw.githubusercontent.com/avirooppal/Sanctum/main/SHA256SUMS", 6000);
+                            string sums = FetchGitHubText("https://raw.githubusercontent.com/avirooppal/Sanctum/" + gitRef + "/SHA256SUMS", 6000);
                             foreach (string rawLine in sums.Split(new[] { "\r\n", "\n" }, StringSplitOptions.RemoveEmptyEntries)) {
                                 string line = rawLine.Trim();
                                 if (line.IndexOf("Sanctum.exe", StringComparison.OrdinalIgnoreCase) >= 0) {

@@ -1,5 +1,7 @@
 import base64
+import datetime
 import hashlib
+import json
 import os
 import shutil
 import subprocess
@@ -47,6 +49,24 @@ def build_installer():
     with open(os.path.join(ROOT, "SHA256SUMS"), "w", encoding="utf-8", newline="\n") as sf:
         sf.write(f"{sha_hex}  Sanctum.exe\n")
     print(f"Updated SHA256SUMS: {sha_hex}  Sanctum.exe")
+
+    # Keep release-manifest.json in sync with build_stamp.txt and Sanctum.exe SHA-256
+    stamp_path = os.path.join(ROOT, "deploy", "installer", "build_stamp.txt")
+    build_stamp = ""
+    if os.path.exists(stamp_path):
+        with open(stamp_path, "r", encoding="utf-8") as bf:
+            build_stamp = bf.read().strip()
+    manifest = {
+        "version": VERSION,
+        "buildStamp": build_stamp,
+        "exeSha256": sha_hex,
+        "downloadUrl": "https://github.com/avirooppal/Sanctum/raw/main/Sanctum.exe",
+        "publishedAt": datetime.datetime.now(datetime.timezone.utc).strftime("%Y-%m-%dT%H:%M:%SZ"),
+    }
+    with open(os.path.join(ROOT, "release-manifest.json"), "w", encoding="utf-8", newline="\n") as mf:
+        json.dump(manifest, mf, indent=2)
+        mf.write("\n")
+    print(f"Updated release-manifest.json: buildStamp={build_stamp[:12]}... exeSha256={sha_hex[:12]}...")
     print("=== Build Complete ===")
 
 
