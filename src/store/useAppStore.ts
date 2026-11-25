@@ -8,7 +8,6 @@ import { RagSlice, createRagSlice } from "./slices/ragSlice";
 import { TelemetrySlice, createTelemetrySlice } from "./slices/telemetrySlice";
 import { AgentSlice, createAgentSlice } from "./slices/agentSlice";
 import { ViewerSlice, createViewerSlice } from "./slices/viewerSlice";
-import { WorkspaceSlice, createWorkspaceSlice } from "./slices/workspaceSlice";
 import { globalVectorStore } from "../../core/ai/rag/vectorStore.ts";
 import { globalMemoryStore } from "../../core/ai/memory/memory_store.ts";
 import {
@@ -23,8 +22,7 @@ export type AppState = NavigationSlice &
   RagSlice &
   TelemetrySlice &
   AgentSlice &
-  ViewerSlice &
-  WorkspaceSlice & {
+  ViewerSlice & {
     resetAllData: () => void;
     exportPortableArchive: () => string;
     importPortableArchive: (json: string) => void;
@@ -67,7 +65,6 @@ export const useAppStore = create<AppState>()(
       ...createTelemetrySlice(set, get, api),
       ...createAgentSlice(set, get, api),
       ...createViewerSlice(set, get, api),
-      ...createWorkspaceSlice(set, get, api),
 
       resetAllData: () => {
         try {

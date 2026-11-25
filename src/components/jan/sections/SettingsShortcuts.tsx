@@ -10,7 +10,6 @@ export const SettingsShortcuts: React.FC = () => {
   const [newChat, setNewChat] = useState<string>("Ctrl+N");
   const [newProject, setNewProject] = useState<string>("Ctrl+P");
   const [search, setSearch] = useState<string>("Ctrl+K");
-  const [switchWorkspace, setSwitchWorkspace] = useState<string>("Ctrl+Shift+W");
   const [isSaving, setIsSaving] = useState<boolean>(false);
 
   useEffect(() => {
@@ -21,7 +20,6 @@ export const SettingsShortcuts: React.FC = () => {
           if (data.settings["shortcuts.newChat"]) setNewChat(data.settings["shortcuts.newChat"]);
           if (data.settings["shortcuts.newProject"]) setNewProject(data.settings["shortcuts.newProject"]);
           if (data.settings["shortcuts.search"]) setSearch(data.settings["shortcuts.search"]);
-          if (data.settings["shortcuts.switchWorkspace"]) setSwitchWorkspace(data.settings["shortcuts.switchWorkspace"]);
         }
       })
       .catch(() => {});
@@ -37,7 +35,6 @@ export const SettingsShortcuts: React.FC = () => {
           "shortcuts.newChat": newChat,
           "shortcuts.newProject": newProject,
           "shortcuts.search": search,
-          "shortcuts.switchWorkspace": switchWorkspace,
         }),
       }, "settings_write");
       if (res.ok) {
@@ -115,19 +112,6 @@ export const SettingsShortcuts: React.FC = () => {
               type="text"
               value={search}
               onChange={(e) => setSearch(e.target.value)}
-              className="w-28 px-3 py-1.5 rounded-xl border border-border bg-background text-xs font-mono text-center text-foreground"
-            />
-          </div>
-
-          <div className="flex items-center justify-between pt-3 border-t border-border/50">
-            <div>
-              <span className="text-xs font-medium text-foreground">Switch Workspace</span>
-              <p className="text-[11px] text-muted-foreground">Open the workspace switcher and global attention inbox.</p>
-            </div>
-            <input
-              type="text"
-              value={switchWorkspace}
-              onChange={(e) => setSwitchWorkspace(e.target.value)}
               className="w-28 px-3 py-1.5 rounded-xl border border-border bg-background text-xs font-mono text-center text-foreground"
             />
           </div>

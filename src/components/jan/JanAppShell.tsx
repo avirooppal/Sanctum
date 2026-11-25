@@ -139,16 +139,6 @@ export const JanAppShell: React.FC = () => {
   }, [activeModule, initModels, hydrated]);
 
   React.useEffect(() => {
-    if (!hydrated) return;
-    void useAppStore.getState().loadWorkspaces();
-    void useAppStore.getState().refreshAttentionInbox();
-    const timer = setInterval(() => {
-      void useAppStore.getState().refreshAttentionInbox();
-    }, 5000);
-    return () => clearInterval(timer);
-  }, [hydrated]);
-
-  React.useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
       const hasModifier = e.ctrlKey || e.metaKey;
 
@@ -163,12 +153,7 @@ export const JanAppShell: React.FC = () => {
       const key = e.key.toLowerCase();
 
       // Intercept and prevent native browser accelerators
-      if (e.shiftKey && key === "w") {
-        e.preventDefault();
-        e.stopPropagation();
-        const st = useAppStore.getState();
-        st.setWorkspaceSwitcherOpen(!st.isWorkspaceSwitcherOpen);
-      } else if (e.shiftKey && key === "f") {
+      if (e.shiftKey && key === "f") {
         e.preventDefault();
         e.stopPropagation();
         window.dispatchEvent(new CustomEvent("sanctum:toggle-feed-pane"));

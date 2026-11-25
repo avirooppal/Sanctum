@@ -1,4 +1,5 @@
 import base64
+import hashlib
 import os
 import shutil
 import subprocess
@@ -35,7 +36,17 @@ def build_installer():
 
     # Sanctum.exe is the only end-user artifact: download, run, done.
     print("=== Step 2: Compiling single-file Sanctum.exe ===")
-    build_direct_launcher(os.path.join(ROOT, "Sanctum.exe"), build_payload_b64())
+    exe_path = os.path.join(ROOT, "Sanctum.exe")
+    build_direct_launcher(exe_path, build_payload_b64())
+    # Keep SHA256SUMS in sync with Sanctum.exe so self-updater checksum verification passes
+    h = hashlib.sha256()
+    with open(exe_path, "rb") as f:
+        for chunk in iter(lambda: f.read(1024 * 1024), b""):
+            h.update(chunk)
+    sha_hex = h.hexdigest()
+    with open(os.path.join(ROOT, "SHA256SUMS"), "w", encoding="utf-8", newline="\n") as sf:
+        sf.write(f"{sha_hex}  Sanctum.exe\n")
+    print(f"Updated SHA256SUMS: {sha_hex}  Sanctum.exe")
     print("=== Build Complete ===")
 
 

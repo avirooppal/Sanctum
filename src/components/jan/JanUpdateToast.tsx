@@ -61,6 +61,7 @@ export const JanUpdateToast: React.FC = () => {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
+          version: update.latestVersion,
           downloadUrl: update.downloadUrl,
           expectedSha256: update.expectedSha256 || "",
         }),

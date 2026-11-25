@@ -25,10 +25,21 @@ namespace Sanctum.Harness {
             return cand.Item3 > cur.Item3;
         }
 
+        public static bool IsNotDowngradeVersion(string currentVersion, string candidateVersion) {
+            if (!TryParseSemVer(currentVersion, out var cur) || !TryParseSemVer(candidateVersion, out var cand)) {
+                return false;
+            }
+            if (cand.Item1 != cur.Item1) return cand.Item1 > cur.Item1;
+            if (cand.Item2 != cur.Item2) return cand.Item2 > cur.Item2;
+            return cand.Item3 >= cur.Item3;
+        }
+
         private static bool TryParseSemVer(string raw, out Tuple<int, int, int> ver) {
             ver = null;
             if (string.IsNullOrWhiteSpace(raw)) return false;
             string s = raw.Trim().TrimStart('v', 'V');
+            int plus = s.IndexOf('+');
+            if (plus >= 0) s = s.Substring(0, plus);
             int dash = s.IndexOf('-');
             if (dash >= 0) s = s.Substring(0, dash);
             string[] parts = s.Split('.');

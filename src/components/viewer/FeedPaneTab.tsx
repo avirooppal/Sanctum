@@ -8,7 +8,6 @@ import {
   IconEyeOff,
 } from "@tabler/icons-react";
 import { Button } from "@/components/ui/button";
-import { useAppStore } from "@/store/useAppStore";
 import { toast } from "sonner";
 
 interface FeedPreset {
@@ -289,22 +288,13 @@ export const FeedPaneTab: React.FC = () => {
             </div>
             <div className="space-y-1">
               <h4 className="text-sm font-semibold text-foreground">
-                Sanctum needs you: {primaryReason.summary} ({primaryReason.workspaceName})
+                Sanctum needs you: {primaryReason.summary}
               </h4>
               <p className="text-xs text-muted-foreground">
                 Feed muted and suspended until {attention.reasons.length} pending item(s) are resolved.
               </p>
             </div>
             <div className="flex items-center gap-2">
-              {primaryReason.workspaceId && (
-                <Button
-                  size="sm"
-                  className="rounded-xl text-xs"
-                  onClick={() => void useAppStore.getState().switchWorkspace(primaryReason.workspaceId)}
-                >
-                  Jump to {primaryReason.workspaceName}
-                </Button>
-              )}
               <Button
                 size="sm"
                 variant="outline"

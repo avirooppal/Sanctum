@@ -2421,16 +2421,41 @@ namespace Sanctum {
                         ? Convert.ToString(payload["signature"]).Trim()
                         : "";
 
-                    emit(new { status = "Verifying update signature, version & SHA-256...", percent = 95 });
-                    var manifestObj = new Newtonsoft.Json.Linq.JObject {
-                        ["version"] = candidateVersion,
-                        ["exeSha256"] = expectedSha256,
-                        ["signature"] = manifestSignature
-                    };
-                    var verifyRes = Sanctum.Harness.UpdateVerifier.VerifyUpdatePackage(manifestObj, tempExe, "1.0.0");
-                    if (!verifyRes.ok) {
-                        try { File.Delete(tempExe); } catch { }
-                        throw new Exception("Update verification failed (" + verifyRes.code + "): " + verifyRes.error);
+                    emit(new { status = "Verifying update package...", percent = 95 });
+                    if (!string.IsNullOrWhiteSpace(manifestSignature)) {
+                        var manifestObj = new Newtonsoft.Json.Linq.JObject {
+                            ["version"] = candidateVersion,
+                            ["exeSha256"] = expectedSha256,
+                            ["signature"] = manifestSignature
+                        };
+                        var verifyRes = Sanctum.Harness.UpdateVerifier.VerifyUpdatePackage(manifestObj, tempExe, "1.0.0");
+                        if (!verifyRes.ok) {
+                            try { File.Delete(tempExe); } catch { }
+                            throw new Exception("Update verification failed (" + verifyRes.code + "): " + verifyRes.error);
+                        }
+                    } else {
+                        // Direct GitHub main-branch update: refuse SemVer downgrades, verify PE executable & SHA-256 when provided
+                        if (!string.IsNullOrWhiteSpace(candidateVersion) &&
+                            !Sanctum.Harness.UpdateVerifier.IsNotDowngradeVersion("1.0.0", candidateVersion)) {
+                            try { File.Delete(tempExe); } catch { }
+                            throw new Exception("Update refused: candidate version '" + candidateVersion + "' is older than current '1.0.0'.");
+                        }
+                        var fi = new FileInfo(tempExe);
+                        byte[] header = new byte[2];
+                        using (var hfs = File.OpenRead(tempExe)) {
+                            hfs.Read(header, 0, 2);
+                        }
+                        if (fi.Length < 100000 || header[0] != 0x4D || header[1] != 0x5A) {
+                            try { File.Delete(tempExe); } catch { }
+                            throw new Exception("Downloaded update file is not a valid Windows executable.");
+                        }
+                        if (expectedSha256.Length == 64) {
+                            string actualSha256 = Sanctum.Harness.UpdateVerifier.ComputeFileSha256(tempExe);
+                            if (!string.Equals(actualSha256, expectedSha256, StringComparison.OrdinalIgnoreCase)) {
+                                try { File.Delete(tempExe); } catch { }
+                                throw new Exception("Update SHA-256 mismatch: expected " + expectedSha256 + ", got " + actualSha256 + ".");
+                            }
+                        }
                     }
 
                     emit(new { status = "Closing Sanctum and installing update...", percent = 100, installing = true });

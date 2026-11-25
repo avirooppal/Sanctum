@@ -10,7 +10,6 @@ import {
   IconSearch,
   IconMessage,
   IconPlus,
-  IconFolder,
   IconCornerDownLeft,
 } from "@tabler/icons-react";
 import { useAppStore } from "@/store/useAppStore";
@@ -28,22 +27,13 @@ export const SearchDialog: React.FC<SearchDialogProps> = ({ open, onOpenChange, 
   const [selectedIndex, setSelectedIndex] = useState(0);
   const inputRef = useRef<HTMLInputElement>(null);
 
-  const { chatSessions, setActiveSessionId, createNewChatSession, workspaces, activeWorkspaceId, switchWorkspace } = useAppStore(
+  const { chatSessions, setActiveSessionId, createNewChatSession } = useAppStore(
     useShallow((s) => ({
       chatSessions: s.chatSessions,
       setActiveSessionId: s.setActiveSessionId,
       createNewChatSession: s.createNewChatSession,
-      workspaces: s.workspaces,
-      activeWorkspaceId: s.activeWorkspaceId,
-      switchWorkspace: s.switchWorkspace,
     }))
   );
-
-  const matchingWorkspaces = workspaces.filter((w) => {
-    if (w.archived) return false;
-    if (!query.trim()) return true;
-    return w.name.toLowerCase().includes(query.toLowerCase());
-  });
 
   useEffect(() => {
     if (open) {
@@ -53,9 +43,8 @@ export const SearchDialog: React.FC<SearchDialogProps> = ({ open, onOpenChange, 
     }
   }, [open]);
 
-  // Filter threads strictly within the active workspace
+  // Filter threads by search query
   const filteredThreads = chatSessions.filter((s) => {
-    if (activeWorkspaceId && s.workspaceId && s.workspaceId !== activeWorkspaceId) return false;
     if (!query.trim()) return true;
     const q = query.toLowerCase();
     const titleMatch = s.title.toLowerCase().includes(q);
@@ -124,37 +113,6 @@ export const SearchDialog: React.FC<SearchDialogProps> = ({ open, onOpenChange, 
             </div>
             <span className="text-[11px] font-mono text-muted-foreground">Ctrl+N</span>
           </button>
-
-          {matchingWorkspaces.length > 0 && (
-            <div className="pt-2">
-              <span className="px-3 text-[11px] font-semibold tracking-wider text-muted-foreground uppercase">
-                Workspaces (Ctrl+Shift+W)
-              </span>
-              <div className="mt-1 space-y-0.5">
-                {matchingWorkspaces.map((ws) => (
-                  <button
-                    key={ws.id}
-                    type="button"
-                    onClick={() => {
-                      void switchWorkspace(ws.id);
-                      onSelect?.();
-                      onOpenChange(false);
-                    }}
-                    className="w-full flex items-center justify-between px-3 py-2 rounded-xl text-left text-sm text-muted-foreground hover:bg-muted/50 hover:text-foreground transition-colors"
-                  >
-                    <div className="flex items-center gap-2.5 truncate max-w-[380px]">
-                      <span className="size-2 rounded-full shrink-0" style={{ backgroundColor: ws.color || "#6366f1" }} />
-                      <IconFolder className="size-3.5 text-muted-foreground shrink-0" />
-                      <span className="truncate font-medium text-foreground">{ws.name}</span>
-                    </div>
-                    <span className="text-[10px] text-muted-foreground shrink-0 font-mono">
-                      {ws.rootPath ? "Folder" : "Chat-only"}
-                    </span>
-                  </button>
-                ))}
-              </div>
-            </div>
-          )}
 
           {filteredThreads.length > 0 && (
             <div className="pt-2">
