@@ -2,10 +2,9 @@
 
 import React, { useCallback, useEffect, useRef, useState } from "react";
 import {
-  IconShieldLock,
+  IconAlertTriangle,
   IconWifiOff,
   IconBell,
-  IconEyeOff,
 } from "@tabler/icons-react";
 import { Button } from "@/components/ui/button";
 import { toast } from "sonner";
@@ -64,8 +63,6 @@ function postFeedControl(payload: Record<string, unknown>) {
 export const FeedPaneTab: React.FC = () => {
   const [status, setStatus] = useState<FeedStatus | null>(null);
   const [attention, setAttention] = useState<AttentionState | null>(null);
-  const [consentChecked, setConsentChecked] = useState(false);
-  const [inPrivateChoice, setInPrivateChoice] = useState(false);
   const [airspaceOccluded, setAirspaceOccluded] = useState(false);
   const slotRef = useRef<HTMLDivElement>(null);
 
@@ -161,10 +158,6 @@ export const FeedPaneTab: React.FC = () => {
   }, [attention?.state, attention?.wellbeing.showTimer, attention?.wellbeing.dailyCapMinutes]);
 
   const handleEnable = async () => {
-    if (!consentChecked) {
-      toast.error("Please acknowledge the privacy disclosure first.");
-      return;
-    }
     // Inside native Sanctum Desktop host: open native Windows trusted-channel confirmation dialog directly
     if (typeof window !== "undefined" && (window as any).chrome?.webview) {
       try {
@@ -172,7 +165,7 @@ export const FeedPaneTab: React.FC = () => {
           JSON.stringify({
             type: "feedEnableConfirm",
             consentAccepted: true,
-            inPrivateMode: inPrivateChoice,
+            inPrivateMode: false,
           })
         );
         return;
@@ -184,18 +177,17 @@ export const FeedPaneTab: React.FC = () => {
       const res = await fetch("/v1/feed/enable", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ consentAccepted: true, inPrivateMode: inPrivateChoice }),
+        body: JSON.stringify({ consentAccepted: true, inPrivateMode: false }),
       });
       if (res.status === 403) {
-        toast.info("Trusted-channel confirmation required in desktop host or CLI to enable Feed Pane.");
+        toast.info("Trusted-channel confirmation required in desktop host or CLI to enable Doomscrolling.");
         return;
       }
       if (!res.ok) {
         const d = await res.json().catch(() => ({}));
-        toast.error(d.error || "Could not enable Feed Pane.");
+        toast.error(d.error || "Could not open Instagram.");
         return;
       }
-      toast.success("Feed Pane enabled.");
       void refresh();
     } catch {
       toast.error("Failed to reach host.");
@@ -219,56 +211,33 @@ export const FeedPaneTab: React.FC = () => {
     );
   }
 
-  // 2. Consent screen (off by default)
+  // 2. Compact top warning popup (off by default)
   if (!status?.enabled) {
     return (
-      <div className="flex-1 overflow-y-auto p-5 space-y-4" data-testid="feed-consent-screen">
-        <div className="flex items-center gap-2.5">
-          <div className="size-8 rounded-xl bg-primary/10 text-primary flex items-center justify-center shrink-0">
-            <IconShieldLock size={17} />
+      <div className="flex-1 flex items-start justify-center pt-5 px-4" data-testid="feed-consent-screen">
+        <div className="w-full max-w-sm rounded-2xl border border-amber-500/25 bg-card/85 backdrop-blur-xl p-4 shadow-[0_12px_36px_-10px_rgba(0,0,0,0.6),inset_0_1px_0_rgba(255,255,255,0.06)] space-y-3">
+          <div className="flex items-start gap-2.5">
+            <div className="size-7 rounded-lg bg-amber-500/15 text-amber-400 flex items-center justify-center shrink-0 mt-0.5">
+              <IconAlertTriangle size={15} />
+            </div>
+            <div className="space-y-1 min-w-0">
+              <h3 className="text-xs font-semibold text-foreground">Open Instagram?</h3>
+              <p className="text-[11px] text-muted-foreground leading-relaxed">
+                Runs in an isolated browser — the AI agent cannot see or control this pane. Instagram/Meta still tracks your browsing here.
+              </p>
+            </div>
           </div>
-          <div>
-            <h3 className="text-sm font-semibold text-foreground">Isolated Side Feed</h3>
-            <p className="text-[11px] text-muted-foreground">Off by default · Trusted-channel opt-in</p>
+
+          <div className="flex items-center justify-end gap-2 pt-0.5">
+            <Button
+              size="sm"
+              className="h-7 px-3 rounded-xl text-xs"
+              onClick={() => void handleEnable()}
+            >
+              Continue
+            </Button>
           </div>
         </div>
-
-        <div className="rounded-xl border border-border/70 bg-muted/20 p-3.5 text-xs text-muted-foreground space-y-2 leading-relaxed">
-          <p>
-            Scroll a plain, user-operated side browser (default preset: <strong className="text-foreground">Instagram</strong>) while your local agent works.
-          </p>
-          <ul className="list-disc pl-4 space-y-1 text-[11px]">
-            <li>Runs in a separate isolated WebView2 profile (<code className="font-mono">feed-profile</code>) with zero access to Sanctum, Ollama, or local files.</li>
-            <li><strong className="text-foreground">The AI agent cannot see, read, screenshot, or control this pane.</strong></li>
-            <li>Automatically mutes and suspends whenever Sanctum needs your approval or input.</li>
-            <li><strong className="text-amber-400">Privacy notice:</strong> Instagram/Meta (or any visited preset) will see your browsing activity just as in any normal browser; Sanctum cannot prevent third-party tracking on external sites.</li>
-          </ul>
-        </div>
-
-        <label className="flex items-start gap-2 text-xs text-foreground cursor-pointer">
-          <input
-            type="checkbox"
-            checked={consentChecked}
-            onChange={(e) => setConsentChecked(e.target.checked)}
-            className="mt-0.5 rounded border-border"
-          />
-          <span>I understand external sites (e.g. Meta/Instagram) see my activity in this pane, and host-level egress summaries will appear in Network activity.</span>
-        </label>
-
-        <label className="flex items-center gap-2 text-xs text-muted-foreground cursor-pointer">
-          <input
-            type="checkbox"
-            checked={inPrivateChoice}
-            onChange={(e) => setInPrivateChoice(e.target.checked)}
-            className="rounded border-border"
-          />
-          <IconEyeOff size={13} />
-          <span>Use InPrivate mode (do not persist cookies/session)</span>
-        </label>
-
-        <Button size="sm" className="w-full rounded-xl" disabled={!consentChecked} onClick={() => void handleEnable()}>
-          Enable Feed Pane
-        </Button>
       </div>
     );
   }

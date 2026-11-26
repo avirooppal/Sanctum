@@ -504,7 +504,7 @@ export const SplitChatPane: React.FC<SplitChatPaneProps> = ({
             e.target.value = "";
           }}
         />
-        <div className="relative rounded-[20px] border border-border/80 bg-card/90 backdrop-blur-md focus-within:border-primary/45 transition-all shadow-xl">
+        <div className="relative rounded-[24px] border border-white/[0.10] bg-card/80 backdrop-blur-2xl shadow-[0_16px_44px_-12px_rgba(0,0,0,0.65),inset_0_1px_0_rgba(255,255,255,0.06)] focus-within:border-primary/45 transition-all duration-200">
           {/* Slash Command Popover */}
           {slashQuery !== null && matchingSlash.length > 0 && (
             <div className="absolute bottom-full left-3 mb-2 z-40 w-72 rounded-xl border border-border bg-popover p-1 shadow-2xl">

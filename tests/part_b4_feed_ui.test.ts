@@ -15,7 +15,7 @@ describe("Part B4: Feed Pane UI tab, slot, airspace, consent screen, status chip
 
     assert.match(feed, /data-testid="feed-consent-screen"/);
     assert.match(feed, /Instagram\/Meta/);
-    assert.match(feed, /The AI agent cannot see, read, screenshot, or control this pane/);
+    assert.match(feed, /the AI agent cannot see or control this pane/);
     assert.match(feed, /data-testid="feed-offline-notice"/);
     assert.match(feed, /data-testid="feed-slot"/);
     assert.match(feed, /new ResizeObserver/);
@@ -23,7 +23,6 @@ describe("Part B4: Feed Pane UI tab, slot, airspace, consent screen, status chip
     assert.match(feed, /new MutationObserver/);
     assert.match(feed, /data-testid="feed-paused-card"/);
     assert.match(feed, /Sanctum needs you:/);
-    assert.match(feed, /InPrivate mode/);
     assert.match(panel, /data-testid="right-panel-feed-tab"/);
     assert.match(panel, /Doomscrolling/);
     assert.match(panel, /<FeedPaneTab \/>/);

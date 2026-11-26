@@ -134,11 +134,11 @@ const MessageRow: React.FC<{
   if (msg.role === "user") {
     return (
       <div id={`msg-${msg.id}`} className="flex flex-col items-end gap-1 group">
-        <div className="max-w-[80%] rounded-2xl rounded-br-sm bg-primary text-primary-foreground px-4 py-2.5 text-sm whitespace-pre-wrap shadow-sm">
+        <div className="max-w-[78%] rounded-[20px] rounded-br-md bg-gradient-to-br from-primary via-primary to-primary/90 text-primary-foreground px-4 py-2.5 text-[14.5px] leading-relaxed whitespace-pre-wrap shadow-[0_8px_24px_-8px_rgba(0,0,0,0.5),inset_0_1px_0_rgba(255,255,255,0.18)]">
           {msg.content}
-          {msg.image && <img src={msg.image.src} alt={msg.image.name} className="mt-2 max-h-52 rounded-lg" />}
+          {msg.image && <img src={msg.image.src} alt={msg.image.name} className="mt-2 max-h-52 rounded-xl" />}
           {msg.attachments?.map((doc) => (
-            <div key={doc.name} className="mt-2 text-xs opacity-80">
+            <div key={doc.name} className="mt-2 text-xs opacity-85">
               📎 {doc.name}
             </div>
           ))}
@@ -147,7 +147,7 @@ const MessageRow: React.FC<{
           <button
             type="button"
             onClick={handleCopy}
-            className="p-1 rounded text-muted-foreground hover:text-foreground transition-colors"
+            className="p-1 rounded-md text-muted-foreground hover:text-foreground hover:bg-card/60 transition-colors"
             title="Copy message"
           >
             {copied ? <Check className="size-3 text-emerald-400" /> : <Copy className="size-3" />}
@@ -156,7 +156,7 @@ const MessageRow: React.FC<{
             <button
               type="button"
               onClick={onDelete}
-              className="p-1 rounded text-muted-foreground hover:text-destructive transition-colors"
+              className="p-1 rounded-md text-muted-foreground hover:text-destructive hover:bg-card/60 transition-colors"
               title="Delete message"
             >
               <Trash2 className="size-3" />
@@ -185,10 +185,11 @@ const MessageRow: React.FC<{
 
   return (
     <div id={`msg-${msg.id}`} className="flex gap-3 group">
-      <div className="min-w-0 flex-1 space-y-2.5">
+      <div className="min-w-0 flex-1 space-y-2.5 rounded-2xl border border-white/[0.07] bg-card/60 backdrop-blur-xl px-4 py-3.5 shadow-[0_10px_30px_-14px_rgba(0,0,0,0.5),inset_0_1px_0_rgba(255,255,255,0.04)]">
         {/* Assistant header: Model name + Timestamp */}
         <div className="flex items-center gap-2 text-xs">
-          <span className="font-semibold text-foreground">{modelName || "Local Model"}</span>
+          <span className="size-1.5 rounded-full bg-primary/85 shrink-0" />
+          <span className="font-semibold tracking-tight text-foreground">{modelName || "Local Model"}</span>
           {msg.timestamp && (
             <span className="text-[11px] text-muted-foreground/70">{msg.timestamp}</span>
           )}
@@ -217,11 +218,21 @@ const MessageRow: React.FC<{
           return (
             <details
               key={activity.id}
-              className="group/tool rounded-lg border border-border/60 bg-card/40 px-3 py-1.5 text-xs"
+              className="group/tool rounded-xl border border-white/[0.08] bg-background/45 backdrop-blur-md px-3 py-2 text-xs transition-colors hover:border-white/[0.14]"
             >
               <summary className="flex items-center justify-between gap-2 cursor-pointer list-none text-muted-foreground hover:text-foreground">
-                <div className="flex items-center gap-1.5 min-w-0">
-                  <span className="font-medium text-foreground/85">
+                <div className="flex items-center gap-2 min-w-0">
+                  <span
+                    className={cn(
+                      "size-1.5 rounded-full shrink-0",
+                      activity.status === "error"
+                        ? "bg-destructive"
+                        : activity.status === "running"
+                        ? "bg-amber-400 animate-pulse"
+                        : "bg-emerald-400"
+                    )}
+                  />
+                  <span className="font-medium text-foreground/90">
                     Ran {String(activity.arguments.action || activity.name)}
                   </span>
                   {targetLabel && (
@@ -234,12 +245,12 @@ const MessageRow: React.FC<{
                       "text-[11px]",
                       activity.status === "error"
                         ? "text-destructive"
-                        : "text-muted-foreground"
+                        : "text-muted-foreground/80"
                     )}
                   >
                     {statusLabel}
                   </span>
-                  <ChevronRight className="size-3.5 transition-transform group-open/tool:rotate-90 shrink-0" />
+                  <ChevronRight className="size-3.5 transition-transform group-open/tool:rotate-90 shrink-0 opacity-70" />
                 </div>
 
                 {filePathArg && onOpenFile && (
@@ -250,7 +261,7 @@ const MessageRow: React.FC<{
                       e.stopPropagation();
                       onOpenFile(filePathArg);
                     }}
-                    className="px-1.5 py-0.5 rounded bg-muted/70 hover:bg-accent text-[10px] font-mono text-foreground shrink-0"
+                    className="px-2 py-0.5 rounded-lg border border-white/[0.08] bg-muted/60 hover:bg-accent text-[10px] font-mono text-foreground shrink-0 transition-colors"
                   >
                     Open {filePathArg.split("/").pop()}
                   </button>
@@ -1306,7 +1317,7 @@ export const ChatScreen: React.FC<ChatScreenProps> = ({ onNavigate, onOpenMcpSet
             }}
             style={{ width: "100%", maxWidth: "768px" }}
             className={cn(
-              "relative mx-auto w-full max-w-3xl rounded-[20px] border border-border/80 bg-card/90 backdrop-blur-md focus-within:border-primary/45 transition-all shadow-xl",
+              "relative mx-auto w-full max-w-3xl rounded-[24px] border border-white/[0.10] bg-card/80 backdrop-blur-2xl shadow-[0_16px_44px_-12px_rgba(0,0,0,0.65),inset_0_1px_0_rgba(255,255,255,0.06)] focus-within:border-primary/45 focus-within:shadow-[0_20px_50px_-12px_rgba(0,0,0,0.75),0_0_0_1px_rgba(234,88,12,0.18)] transition-all duration-200",
               isRecording && "border-destructive ring-1 ring-destructive/20"
             )}
           >
@@ -1509,10 +1520,10 @@ export const ChatScreen: React.FC<ChatScreenProps> = ({ onNavigate, onOpenMcpSet
                   : "Waiting for a local model…"
               }
               disabled={!model}
-              className="block w-full min-h-[58px] resize-none bg-transparent px-4 pt-4 pb-2 text-[14.5px] leading-relaxed outline-none placeholder:text-muted-foreground/65 disabled:opacity-50"
+              className="block w-full min-h-[58px] resize-none bg-transparent px-4 pt-3.5 pb-2.5 text-[15px] leading-relaxed outline-none placeholder:text-muted-foreground/55 disabled:opacity-50"
             />
 
-            <div className="flex flex-wrap items-center justify-between gap-2 px-2.5 pb-2.5 pt-1">
+            <div className="flex flex-wrap items-center justify-between gap-2 px-3 pb-3 pt-1.5">
               <div className="flex flex-wrap items-center gap-1 min-w-0">
                 {/* + Attach Button */}
                 <button
@@ -1520,7 +1531,7 @@ export const ChatScreen: React.FC<ChatScreenProps> = ({ onNavigate, onOpenMcpSet
                   onClick={handleFileClick}
                   aria-label="Attach file"
                   title="Attach PDF, DOCX, images, text, or code"
-                  className="p-1.5 rounded-lg text-muted-foreground hover:text-foreground hover:bg-accent/60 transition-colors"
+                  className="p-1.5 rounded-xl text-muted-foreground hover:text-foreground hover:bg-white/[0.07] transition-colors"
                 >
                   <Plus className="size-4" />
                 </button>
@@ -1608,7 +1619,7 @@ export const ChatScreen: React.FC<ChatScreenProps> = ({ onNavigate, onOpenMcpSet
 
                 {/* Context Window % Badge */}
                 <div
-                  className="flex items-center gap-1 px-1 text-[11px] font-mono text-muted-foreground"
+                  className="flex items-center gap-1 px-2 py-0.5 rounded-full bg-white/[0.04] border border-white/[0.06] text-[10.5px] font-mono text-muted-foreground"
                   title={`Estimated context usage: ${estTokens} / ${maxContext.toLocaleString()} tokens`}
                 >
                   <span>{contextPercent}%</span>
@@ -1617,7 +1628,7 @@ export const ChatScreen: React.FC<ChatScreenProps> = ({ onNavigate, onOpenMcpSet
                 {/* Send Button */}
                 <Button
                   size="icon"
-                  className="size-7 rounded-full bg-primary hover:bg-primary/90 text-primary-foreground shadow-sm"
+                  className="size-8 rounded-full bg-primary hover:bg-primary/90 text-primary-foreground shadow-[0_2px_12px_rgba(234,88,12,0.35)] transition-transform active:scale-95"
                   disabled={!isStreaming && (
                     (!prompt.trim() && !attachedImage && attachedDocuments.length === 0) ||
                     !model
@@ -1625,7 +1636,7 @@ export const ChatScreen: React.FC<ChatScreenProps> = ({ onNavigate, onOpenMcpSet
                   onClick={isStreaming ? () => stopInference(activeSessionId) : send}
                   aria-label={isStreaming ? "Stop generation" : "Send message"}
                 >
-                  {isStreaming ? <Square className="size-3.5" /> : <ArrowUp className="size-3.5" />}
+                  {isStreaming ? <Square className="size-3.5" /> : <ArrowUp className="size-4" />}
                 </Button>
               </div>
             </div>

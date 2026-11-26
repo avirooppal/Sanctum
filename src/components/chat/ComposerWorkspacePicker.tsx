@@ -234,7 +234,7 @@ export const ComposerWorkspacePicker: React.FC<ComposerWorkspacePickerProps> = (
   return (
     <div
       ref={containerRef}
-      className="relative flex items-center justify-between px-3 py-1.5 border-b border-border/50 bg-muted/20 rounded-t-2xl"
+      className="relative flex items-center justify-between px-3.5 py-2 border-b border-white/[0.06] bg-white/[0.025] rounded-t-[24px]"
     >
       {/* Left: Workspace Selector Trigger */}
       <button
