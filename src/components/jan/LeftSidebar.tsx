@@ -399,31 +399,59 @@ export const LeftSidebar: React.FC<LeftSidebarProps> = ({
             </button>
 
             {/* Move to Group / Project selector */}
-            <div className="pt-1 border-t border-border/50 space-y-1">
-              <div className="flex items-center gap-1.5 px-2 py-0.5 text-[10px] font-medium text-muted-foreground">
+            <div className="pt-1 border-t border-border/50 space-y-0.5">
+              <div className="flex items-center gap-1.5 px-2 py-1 text-[10px] font-semibold uppercase tracking-wider text-muted-foreground">
                 <IconFolderSymlink size={12} />
                 <span>Move to Group / Project</span>
               </div>
-              <select
-                value={session.projectId || ""}
-                onChange={(e) => {
-                  const targetProj = e.target.value || undefined;
-                  moveChatToProject(session.id, targetProj);
-                  if (targetProj) {
-                    setExpandedProjects((prev) => ({ ...prev, [targetProj]: true }));
-                  }
-                  setMenuOpenChatId(null);
-                  toast.success(targetProj ? "Chat moved to group" : "Chat removed from group");
-                }}
-                className="w-full px-2 py-1 rounded-lg border border-border bg-background text-[11px] text-foreground"
-              >
-                <option value="">Ungrouped (All Chats)</option>
-                {projects.map((p) => (
-                  <option key={p.id} value={p.id}>
-                    {p.name}
-                  </option>
-                ))}
-              </select>
+              <div className="max-h-36 overflow-y-auto space-y-0.5">
+                <button
+                  type="button"
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    moveChatToProject(session.id, undefined);
+                    setMenuOpenChatId(null);
+                    toast.success("Chat removed from group");
+                  }}
+                  className={cn(
+                    "w-full flex items-center justify-between gap-2 px-2 py-1.5 rounded-lg text-[11px] text-left transition-colors",
+                    !session.projectId
+                      ? "bg-primary/15 text-foreground font-medium"
+                      : "text-muted-foreground hover:bg-muted/70 hover:text-foreground"
+                  )}
+                >
+                  <span className="truncate">Ungrouped (All Chats)</span>
+                  {!session.projectId && <IconCheck size={12} className="text-primary shrink-0" />}
+                </button>
+                {projects.map((p) => {
+                  const isCurrent = session.projectId === p.id;
+                  return (
+                    <button
+                      key={p.id}
+                      type="button"
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        moveChatToProject(session.id, p.id);
+                        setExpandedProjects((prev) => ({ ...prev, [p.id]: true }));
+                        setMenuOpenChatId(null);
+                        toast.success(`Moved to ${p.name}`);
+                      }}
+                      className={cn(
+                        "w-full flex items-center justify-between gap-2 px-2 py-1.5 rounded-lg text-[11px] text-left transition-colors",
+                        isCurrent
+                          ? "bg-primary/15 text-foreground font-medium"
+                          : "text-muted-foreground hover:bg-muted/70 hover:text-foreground"
+                      )}
+                    >
+                      <span className="flex items-center gap-1.5 truncate">
+                        <IconFolder size={12} className="shrink-0 opacity-75" />
+                        <span className="truncate">{p.name}</span>
+                      </span>
+                      {isCurrent && <IconCheck size={12} className="text-primary shrink-0" />}
+                    </button>
+                  );
+                })}
+              </div>
             </div>
 
             <div className="pt-1 border-t border-border/50">

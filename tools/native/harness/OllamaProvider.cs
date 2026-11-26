@@ -111,9 +111,38 @@ namespace Sanctum.Harness {
                 }
             }
 
+            // Normalize messages for Ollama /api/chat:
+            // Ollama requires assistant tool_calls[].function.arguments to be a JSON object (not a string).
+            var ollamaMessages = new JArray();
+            if (messages != null) {
+                foreach (var msg in messages) {
+                    if (msg == null) continue;
+                    var clone = (JObject)msg.DeepClone();
+                    if (clone["tool_calls"] is JArray tcs) {
+                        foreach (var tcTok in tcs) {
+                            if (tcTok is JObject tc && tc["function"] is JObject fn) {
+                                var argsTok = fn["arguments"];
+                                if (argsTok == null || argsTok.Type == JTokenType.Null) {
+                                    fn["arguments"] = new JObject();
+                                } else if (argsTok.Type == JTokenType.String) {
+                                    string rawArgs = argsTok.Value<string>() ?? "";
+                                    try {
+                                        var parsed = JToken.Parse(rawArgs);
+                                        fn["arguments"] = parsed is JObject parsedObj ? parsedObj : new JObject();
+                                    } catch {
+                                        fn["arguments"] = new JObject();
+                                    }
+                                }
+                            }
+                        }
+                    }
+                    ollamaMessages.Add(clone);
+                }
+            }
+
             var payload = new JObject {
                 ["model"] = model,
-                ["messages"] = new JArray(messages),
+                ["messages"] = ollamaMessages,
                 ["stream"] = true,
                 ["options"] = new JObject {
                     ["num_ctx"] = effectiveNumCtx
@@ -139,7 +168,24 @@ namespace Sanctum.Harness {
 
             using (ct.Register(() => { try { req.Abort(); } catch { } })) {
                 using (var rs = req.GetRequestStream()) rs.Write(bodyBytes, 0, bodyBytes.Length);
-                using (var resp = (HttpWebResponse)req.GetResponse())
+                HttpWebResponse resp;
+                try {
+                    resp = (HttpWebResponse)req.GetResponse();
+                } catch (WebException wex) when (wex.Response is HttpWebResponse errResp) {
+                    string errBody = "";
+                    try {
+                        using (var esr = new StreamReader(errResp.GetResponseStream(), Utf8NoBom)) {
+                            errBody = esr.ReadToEnd();
+                        }
+                    } catch { }
+                    string detail = errBody;
+                    try {
+                        var errObj = CanonicalJson.ParseObject(errBody);
+                        if (errObj["error"] != null) detail = errObj["error"].Value<string>();
+                    } catch { }
+                    throw new InvalidOperationException($"Ollama HTTP {(int)errResp.StatusCode}: {(string.IsNullOrWhiteSpace(detail) ? wex.Message : detail)}", wex);
+                }
+                using (resp)
                 using (var sr = new StreamReader(resp.GetResponseStream(), Utf8NoBom)) {
                     var contentSb = new StringBuilder();
                     var reasoningSb = new StringBuilder();

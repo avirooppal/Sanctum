@@ -142,7 +142,7 @@ export const createChatSlice: StateCreator<any, [], [], ChatSlice> = (set, get) 
   projects: [
     {
       id: "proj-default",
-      name: "General Workspace",
+      name: "General",
       createdAt: "Today",
     },
   ],

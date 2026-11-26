@@ -96,7 +96,7 @@ export const useAppStore = create<AppState>()(
           projects: [
             {
               id: "proj-default",
-              name: "General Workspace",
+              name: "General",
               createdAt: "Just now",
             },
           ],
