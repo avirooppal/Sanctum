@@ -204,15 +204,7 @@ export const JanAppShell: React.FC = () => {
         >
           <WindowControls />
         </div>
-        <LeftSidebar
-          activeModule={activeModule}
-          onNavigate={(mod) => setActiveModule(mod)}
-          isProjectDialogOpen={isProjectDialogOpen}
-          onProjectDialogOpenChange={setIsProjectDialogOpen}
-          isSearchDialogOpen={isSearchDialogOpen}
-          onSearchDialogOpenChange={setIsSearchDialogOpen}
-        />
-        <main className="flex-1 flex overflow-hidden relative">
+        <main className="flex-1 flex w-full h-full overflow-hidden relative">
           <SetupScreen onComplete={(destination = "chat") => setActiveModule(destination)} />
         </main>
       </div>

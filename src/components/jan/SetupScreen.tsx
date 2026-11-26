@@ -19,6 +19,8 @@ import {
   IconBrain,
   IconSparkles,
   IconGauge,
+  IconArrowLeft,
+  IconArrowRight,
 } from "@tabler/icons-react";
 import { Button } from "@/components/ui/button";
 import { useAppStore } from "@/store/useAppStore";
@@ -116,9 +118,11 @@ export const SetupScreen = ({
     }))
   );
 
-  // User Profile & Walkthrough State
+  // User Profile & Slideshow State
   const [userNameInput, setUserNameInput] = useState<string>(storedUserName || "");
-  const [isWalkthroughOpen, setIsWalkthroughOpen] = useState<boolean>(true);
+  const [slideIndex, setSlideIndex] = useState<number>(0);
+  const [skipping, setSkipping] = useState<boolean>(false);
+  const TOTAL_SLIDES = 4;
 
   // 1. LLM Capability Configuration State
   const [isLlmConfigOpen, setIsLlmConfigOpen] = useState(false);
@@ -425,172 +429,249 @@ export const SetupScreen = ({
   const ready = setup.phase === "ready";
   const displayName = userNameInput.trim();
 
+  // Auto-advance to final Setup/Launch slide when setup is running or ready
+  useEffect(() => {
+    if (setup.busy || ready) {
+      setSlideIndex(TOTAL_SLIDES - 1);
+    }
+  }, [setup.busy, ready]);
+
+  // Keyboard arrow navigation between slides (ignored while typing in inputs)
+  useEffect(() => {
+    const onKeyDown = (e: KeyboardEvent) => {
+      const tag = (e.target as HTMLElement | null)?.tagName;
+      if (tag === "INPUT" || tag === "TEXTAREA" || tag === "SELECT") {
+        if (e.key === "Enter" && slideIndex < TOTAL_SLIDES - 1) {
+          e.preventDefault();
+          setSlideIndex((i) => Math.min(TOTAL_SLIDES - 1, i + 1));
+        }
+        return;
+      }
+      if (e.key === "ArrowRight") {
+        e.preventDefault();
+        setSlideIndex((i) => Math.min(TOTAL_SLIDES - 1, i + 1));
+      } else if (e.key === "ArrowLeft") {
+        e.preventDefault();
+        setSlideIndex((i) => Math.max(0, i - 1));
+      }
+    };
+    window.addEventListener("keydown", onKeyDown);
+    return () => window.removeEventListener("keydown", onKeyDown);
+  }, [slideIndex]);
+
+  const handleSkip = async () => {
+    if (skipping) return;
+    setSkipping(true);
+    try {
+      await saveCapabilitySettings();
+      await initModels().catch(() => {});
+      if (setup.model && useAppStore.getState().models.some((m) => m.id === setup.model)) {
+        setActiveModelId(setup.model);
+      }
+      completeOnboarding();
+      onComplete?.("chat");
+    } finally {
+      setSkipping(false);
+    }
+  };
+
+  const SLIDE_LABELS = ["Welcome", "Features", "Capabilities", "Launch"];
+
   return (
-    <div className="flex flex-1 items-start md:items-center justify-center bg-background p-6 md:p-8 overflow-y-auto">
-      <div className="w-full max-w-2xl rounded-2xl border border-border/80 bg-card p-6 md:p-8 space-y-5 shadow-xl my-auto">
-        {/* Brand Header */}
-        <div className="flex items-center justify-between">
-          <div className="flex items-center gap-3">
-            <img
-              src="/logo.jpg"
-              alt="Sanctum logo"
-              width={48}
-              height={48}
-              className="rounded-xl border border-border/60 shadow-xs object-cover"
-            />
-            <div>
-              <p
-                className="text-[11px] font-mono text-muted-foreground uppercase tracking-wider"
-                data-testid="setup-step-counter"
-              >
-                {ready ? "Step 3 of 3" : setup.phase === "idle" ? "Step 1 of 3" : "Step 2 of 3"}
-              </p>
-              <h1 className="text-xl md:text-2xl font-bold tracking-tight text-foreground">
-                {ready
-                  ? displayName
-                    ? `Sanctum is Ready, ${displayName}`
-                    : "Sanctum is Ready"
-                  : setup.phase === "idle"
-                  ? displayName
-                    ? `Welcome to Sanctum, ${displayName}`
-                    : "Welcome to Sanctum"
-                  : "Setting Up Local AI"}
-              </h1>
-            </div>
-          </div>
-        </div>
-
-        {/* Phase Context Description */}
-        {setup.phase === "idle" ? (
-          <p className="text-xs md:text-sm text-muted-foreground leading-relaxed">
-            Your private, local-first AI workspace. Tell Sanctum your name, explore what&apos;s
-            built in, and verify your local capabilities below.
-          </p>
-        ) : (
-          <p role="status" className="text-xs md:text-sm text-muted-foreground">
-            {setup.detail}
-          </p>
-        )}
-
-        {/* USER PROFILE NAME INPUT */}
-        <div className="rounded-xl border border-border/70 bg-muted/20 p-4 space-y-2.5">
-          <div className="flex items-center gap-2">
-            <div className="size-7 rounded-lg bg-primary/10 text-primary flex items-center justify-center shrink-0">
-              <IconUser size={15} />
-            </div>
-            <div>
-              <label
-                htmlFor="setup-user-name"
-                className="text-xs font-semibold text-foreground block"
-              >
-                What should Sanctum call you?
-              </label>
-              <p className="text-[11px] text-muted-foreground">
-                Saved locally to your profile and pinned memory so your assistant remembers and
-                understands who you are.
-              </p>
-            </div>
-          </div>
-          <input
-            id="setup-user-name"
-            data-testid="setup-user-name-input"
-            type="text"
-            maxLength={80}
-            value={userNameInput}
-            onChange={(e) => setUserNameInput(e.target.value)}
-            placeholder="Enter your name (e.g. Alex)"
-            autoComplete="name"
-            className="w-full rounded-lg border border-border bg-background px-3 py-2 text-xs md:text-sm text-foreground placeholder:text-muted-foreground/70 focus:outline-none focus:ring-2 focus:ring-primary/40"
+    <div
+      className="relative flex flex-col flex-1 h-full w-full overflow-hidden bg-background text-foreground pt-10"
+      style={{
+        backgroundImage:
+          "radial-gradient(ellipse 65% 50% at 50% 0%, hsl(var(--primary) / 0.09), transparent 70%)",
+      }}
+    >
+      {/* Top Slideshow Bar: Step Counter, Progress Pills, Skip */}
+      <header className="w-full max-w-4xl mx-auto px-6 sm:px-10 pt-3 pb-2 flex items-center justify-between gap-4 shrink-0">
+        <div className="flex items-center gap-3">
+          <img
+            src="/logo.jpg"
+            alt="Sanctum logo"
+            width={28}
+            height={28}
+            className="rounded-lg border border-white/[0.10] object-cover"
           />
-          {displayName && (
-            <p className="text-[11px] text-emerald-400 font-medium">
-              Sanctum will greet you as {displayName} and include your name in local assistant
-              context.
-            </p>
-          )}
+          <span
+            className="text-[11px] font-mono text-muted-foreground uppercase tracking-wider"
+            data-testid="setup-step-counter"
+          >
+            Step {slideIndex + 1} of {TOTAL_SLIDES} · {SLIDE_LABELS[slideIndex]}
+          </span>
         </div>
 
-        {/* FIRST-TIME FEATURE WALKTHROUGH */}
-        <div
-          className="rounded-xl border border-border/70 bg-muted/20 overflow-hidden"
-          data-testid="setup-feature-walkthrough"
-        >
-          <button
-            type="button"
-            onClick={() => setIsWalkthroughOpen((prev) => !prev)}
-            className="w-full flex items-center justify-between p-3.5 text-left hover:bg-muted/40 transition-colors"
-          >
-            <div className="flex items-center gap-2.5">
-              <div className="size-7 rounded-lg bg-primary/10 text-primary flex items-center justify-center shrink-0">
-                <IconSparkles size={15} />
-              </div>
-              <div>
-                <div className="flex items-center gap-2">
-                  <span className="text-xs font-semibold text-foreground">
-                    What Sanctum Can Do
-                  </span>
-                  <span className="text-[10px] font-mono px-1.5 py-0.2 rounded-full font-medium border bg-primary/10 text-primary border-primary/20">
-                    {SANCTUM_WALKTHROUGH_FEATURES.length} Built-in Features
-                  </span>
-                </div>
-                <p className="text-[11px] text-muted-foreground">
-                  Quick walkthrough of Sanctum&apos;s local AI, coding agent, security, and memory
-                  capabilities
-                </p>
-              </div>
-            </div>
-            <div className="text-muted-foreground">
-              {isWalkthroughOpen ? <IconChevronUp size={16} /> : <IconChevronDown size={16} />}
-            </div>
-          </button>
+        {/* Clickable Slide Indicator Pills */}
+        <div className="hidden sm:flex items-center gap-1.5" role="tablist" aria-label="Setup slides">
+          {SLIDE_LABELS.map((label, idx) => (
+            <button
+              key={label}
+              type="button"
+              role="tab"
+              aria-selected={slideIndex === idx}
+              aria-label={`Go to ${label}`}
+              onClick={() => setSlideIndex(idx)}
+              className={cn(
+                "h-1.5 rounded-full transition-all duration-200",
+                slideIndex === idx
+                  ? "w-7 bg-primary"
+                  : idx < slideIndex
+                  ? "w-2.5 bg-primary/45 hover:bg-primary/70"
+                  : "w-2.5 bg-muted hover:bg-muted-foreground/40"
+              )}
+            />
+          ))}
+        </div>
 
-          {isWalkthroughOpen && (
-            <div className="p-4 pt-2 border-t border-border/60 grid grid-cols-1 sm:grid-cols-2 gap-2.5">
-              {SANCTUM_WALKTHROUGH_FEATURES.map((feature) => {
-                const Icon = feature.icon;
-                return (
-                  <div
-                    key={feature.id}
-                    className="p-3 rounded-xl border border-border/60 bg-card/80 space-y-1"
-                  >
-                    <div className="flex items-center gap-2">
-                      <Icon size={14} className="text-primary shrink-0" />
-                      <span className="text-xs font-semibold text-foreground">
-                        {feature.title}
-                      </span>
-                    </div>
-                    <p className="text-[11px] text-muted-foreground leading-snug">
-                      {feature.description}
+        <button
+          type="button"
+          onClick={() => void handleSkip()}
+          disabled={skipping}
+          data-testid="setup-skip-button"
+          className="px-3 py-1 rounded-full text-xs font-medium text-muted-foreground hover:text-foreground hover:bg-white/[0.06] border border-transparent hover:border-white/[0.08] transition-colors"
+        >
+          {skipping ? "Skipping…" : "Skip"}
+        </button>
+      </header>
+
+      {/* Main Centered Slideshow Stage with Side Arrows */}
+      <div className="flex-1 min-h-0 w-full max-w-5xl mx-auto px-4 sm:px-8 flex items-center justify-center gap-4">
+        {/* Left Arrow Button */}
+        <button
+          type="button"
+          onClick={() => setSlideIndex((i) => Math.max(0, i - 1))}
+          disabled={slideIndex === 0}
+          aria-label="Previous step"
+          className={cn(
+            "hidden md:flex size-10 shrink-0 items-center justify-center rounded-full border border-white/[0.08] bg-card/70 backdrop-blur-xl text-foreground transition-all",
+            slideIndex === 0
+              ? "opacity-25 cursor-not-allowed"
+              : "hover:border-primary/45 hover:bg-card hover:scale-105 active:scale-95 shadow-lg"
+          )}
+        >
+          <IconArrowLeft size={18} />
+        </button>
+
+        {/* Slide Card */}
+        <div className="w-full max-w-2xl max-h-[calc(100vh-170px)] overflow-y-auto rounded-[24px] border border-white/[0.09] bg-card/80 backdrop-blur-2xl p-6 sm:p-8 shadow-[0_20px_60px_-15px_rgba(0,0,0,0.7),inset_0_1px_0_rgba(255,255,255,0.06)]">
+          {/* SLIDE 0: WELCOME & NAME */}
+          {slideIndex === 0 && (
+            <div className="space-y-6 py-2">
+              <div className="flex flex-col items-center text-center space-y-3">
+                <img
+                  src="/logo.jpg"
+                  alt="Sanctum logo"
+                  width={64}
+                  height={64}
+                  className="rounded-2xl border border-white/[0.12] shadow-lg object-cover"
+                />
+                <div className="space-y-1.5">
+                  <h1 className="text-2xl sm:text-3xl font-bold tracking-tight text-foreground">
+                    {displayName ? `Welcome to Sanctum, ${displayName}` : "Welcome to Sanctum"}
+                  </h1>
+                  <p className="text-xs sm:text-sm text-muted-foreground max-w-md mx-auto leading-relaxed">
+                    Your private, local-first AI workspace. Everything runs on your machine with full control.
+                  </p>
+                </div>
+              </div>
+
+              <div className="rounded-2xl border border-white/[0.08] bg-background/50 p-5 space-y-3">
+                <div className="flex items-center gap-2.5">
+                  <div className="size-8 rounded-xl bg-primary/15 text-primary flex items-center justify-center shrink-0">
+                    <IconUser size={16} />
+                  </div>
+                  <div>
+                    <label
+                      htmlFor="setup-user-name"
+                      className="text-xs font-semibold text-foreground block"
+                    >
+                      What should Sanctum call you?
+                    </label>
+                    <p className="text-[11px] text-muted-foreground">
+                      Saved locally to your profile and pinned memory so your assistant remembers you.
                     </p>
                   </div>
-                );
-              })}
+                </div>
+                <input
+                  id="setup-user-name"
+                  data-testid="setup-user-name-input"
+                  type="text"
+                  maxLength={80}
+                  value={userNameInput}
+                  onChange={(e) => setUserNameInput(e.target.value)}
+                  placeholder="Enter your name (e.g. Alex)"
+                  autoComplete="name"
+                  autoFocus
+                  className="w-full rounded-xl border border-border/80 bg-background/90 px-3.5 py-2.5 text-sm text-foreground placeholder:text-muted-foreground/60 focus:outline-none focus:ring-2 focus:ring-primary/40"
+                />
+                {displayName && (
+                  <p className="text-[11px] text-emerald-400 font-medium">
+                    Sanctum will greet you as {displayName} and include your name in local assistant context.
+                  </p>
+                )}
+              </div>
             </div>
           )}
-        </div>
 
-        {/* Busy Progress Bar */}
-        {setup.busy && (
-          <div className="space-y-2 p-4 rounded-xl border border-border/70 bg-muted/30">
-            <div className="flex items-center justify-between text-xs">
-              <span className="font-medium text-foreground">Downloading &amp; Verifying Model</span>
-              <span className="font-mono text-muted-foreground">
-                {setup.percent == null ? "Working…" : `${Math.round(setup.percent)}%`}
-              </span>
+          {/* SLIDE 1: WHAT SANCTUM CAN DO */}
+          {slideIndex === 1 && (
+            <div className="space-y-5" data-testid="setup-feature-walkthrough">
+              <div className="flex items-center justify-between gap-2">
+                <div className="flex items-center gap-2.5">
+                  <div className="size-9 rounded-xl bg-primary/15 text-primary flex items-center justify-center shrink-0">
+                    <IconSparkles size={18} />
+                  </div>
+                  <div>
+                    <h2 className="text-lg font-bold tracking-tight text-foreground">
+                      What Sanctum Can Do
+                    </h2>
+                    <p className="text-xs text-muted-foreground">
+                      Built-in local AI, coding agent, security, and memory capabilities
+                    </p>
+                  </div>
+                </div>
+                <span className="text-[10px] font-mono px-2 py-0.5 rounded-full font-medium border bg-primary/10 text-primary border-primary/25 shrink-0">
+                  {SANCTUM_WALKTHROUGH_FEATURES.length} Built-in
+                </span>
+              </div>
+
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                {SANCTUM_WALKTHROUGH_FEATURES.map((feature) => {
+                  const Icon = feature.icon;
+                  return (
+                    <div
+                      key={feature.id}
+                      className="p-3.5 rounded-2xl border border-white/[0.07] bg-background/45 space-y-1.5"
+                    >
+                      <div className="flex items-center gap-2">
+                        <Icon size={15} className="text-primary shrink-0" />
+                        <span className="text-xs font-semibold text-foreground">
+                          {feature.title}
+                        </span>
+                      </div>
+                      <p className="text-[11px] text-muted-foreground leading-relaxed">
+                        {feature.description}
+                      </p>
+                    </div>
+                  );
+                })}
+              </div>
             </div>
-            <progress
-              className="w-full h-2 rounded-full overflow-hidden bg-muted accent-primary"
-              max={100}
-              value={setup.percent ?? undefined}
-              aria-label="Setup progress"
-            />
-            <p className="text-[11px] text-muted-foreground">
-              {setup.percent == null
-                ? "Allocating weights and configuring inference backend. Keep Sanctum open."
-                : `${Math.round(setup.percent)}% of verified weights downloaded.`}
-            </p>
-          </div>
-        )}
+          )}
+
+          {/* SLIDE 2: LOCAL CAPABILITIES */}
+          {slideIndex === 2 && (
+            <div className="space-y-3.5">
+              <div className="space-y-1">
+                <h2 className="text-lg font-bold tracking-tight text-foreground">
+                  Local Capabilities
+                </h2>
+                <p className="text-xs text-muted-foreground">
+                  Pre-configured for zero-setup local use. Click any item to customize or test.
+                </p>
+              </div>
 
         {/* CAPABILITY 1: LLM / AI RUNTIME */}
         <div className="rounded-xl border border-border/70 bg-muted/20 overflow-hidden">
@@ -1124,72 +1205,185 @@ export const SetupScreen = ({
           )}
         </div>
 
-        {/* Error Alert */}
-        {error && (
-          <div
-            role="alert"
-            className="p-3.5 rounded-xl bg-destructive/10 border border-destructive/20 text-destructive text-xs"
-          >
-            {error}
-          </div>
-        )}
-
-        {/* Action Controls */}
-        <div className="space-y-3 pt-1">
-          {ready ? (
-            <div className="space-y-3">
-              <div className="p-3.5 rounded-xl bg-emerald-500/10 border border-emerald-500/20 text-emerald-400 text-xs flex items-center justify-between">
-                <div>
-                  <span className="font-semibold text-foreground">Verified Model:</span>{" "}
-                  <code className="font-mono">{setup.model}</code>
-                </div>
-                <IconCheck size={16} className="text-emerald-500" />
-              </div>
-              <Button onClick={finish} className="w-full h-10 rounded-xl font-medium">
-                Start Chatting
-              </Button>
             </div>
-          ) : setup.busy ? (
-            <Button
-              variant="outline"
-              onClick={async () => {
-                await fetch("/api/setup/cancel", { method: "POST" });
-              }}
-              className="w-full h-10 rounded-xl"
-            >
-              Stop Setup
-            </Button>
-          ) : (
-            <Button
-              onClick={start}
-              disabled={starting}
-              className="w-full h-10 rounded-xl font-medium"
-            >
-              {starting
-                ? "Starting Setup..."
-                : setup.phase === "idle"
-                ? "Set Up Sanctum"
-                : "Retry Setup"}
-            </Button>
           )}
 
-          <div className="flex items-center justify-between text-xs text-muted-foreground px-1">
-            <button
-              type="button"
-              className="hover:text-foreground underline underline-offset-2 transition-colors"
-              onClick={() =>
-                (window as any).chrome?.webview?.postMessage(
-                  JSON.stringify({ type: "openLogs" })
-                )
-              }
-            >
-              Open Setup Logs
-            </button>
+          {/* SLIDE 3: SET UP & LAUNCH */}
+          {slideIndex === 3 && (
+            <div className="space-y-5 py-2">
+              <div className="text-center space-y-1.5">
+                <h2 className="text-2xl font-bold tracking-tight text-foreground">
+                  {ready
+                    ? displayName
+                      ? `Sanctum is Ready, ${displayName}`
+                      : "Sanctum is Ready"
+                    : setup.busy
+                    ? "Setting Up Local AI"
+                    : "Ready to Launch"}
+                </h2>
+                <p role="status" className="text-xs sm:text-sm text-muted-foreground max-w-md mx-auto">
+                  {setup.phase === "idle"
+                    ? "Sanctum will verify your local Ollama runtime and default model, then open your workspace."
+                    : setup.detail}
+                </p>
+              </div>
 
-            <span className="text-[11px]">Local • Private • Sovereign</span>
-          </div>
+              {setup.busy && (
+                <div className="space-y-2.5 p-4 rounded-2xl border border-white/[0.08] bg-background/50">
+                  <div className="flex items-center justify-between text-xs">
+                    <span className="font-medium text-foreground">Downloading &amp; Verifying Model</span>
+                    <span className="font-mono text-muted-foreground">
+                      {setup.percent == null ? "Working…" : `${Math.round(setup.percent)}%`}
+                    </span>
+                  </div>
+                  <div className="w-full h-2 rounded-full overflow-hidden bg-muted">
+                    <div
+                      className={cn(
+                        "h-full rounded-full bg-primary transition-all duration-300",
+                        setup.percent == null && "w-1/2 animate-pulse"
+                      )}
+                      style={
+                        setup.percent != null
+                          ? { width: `${Math.min(100, Math.max(4, Math.round(setup.percent)))}%` }
+                          : undefined
+                      }
+                    />
+                  </div>
+                  <p className="text-[11px] text-muted-foreground">
+                    {setup.percent == null
+                      ? "Allocating weights and configuring inference backend. Keep Sanctum open."
+                      : `${Math.round(setup.percent)}% of verified weights downloaded.`}
+                  </p>
+                </div>
+              )}
+
+              {/* Error Alert */}
+              {error && (
+                <div
+                  role="alert"
+                  className="p-3.5 rounded-xl bg-destructive/10 border border-destructive/20 text-destructive text-xs"
+                >
+                  {error}
+                </div>
+              )}
+
+              {/* Action Controls */}
+              <div className="space-y-3 pt-1">
+                {ready ? (
+                  <div className="space-y-3">
+                    <div className="p-3.5 rounded-xl bg-emerald-500/10 border border-emerald-500/20 text-emerald-400 text-xs flex items-center justify-between">
+                      <div>
+                        <span className="font-semibold text-foreground">Verified Model:</span>{" "}
+                        <code className="font-mono">{setup.model}</code>
+                      </div>
+                      <IconCheck size={16} className="text-emerald-500" />
+                    </div>
+                    <Button onClick={finish} className="w-full h-11 rounded-xl font-medium text-sm">
+                      Start Chatting
+                    </Button>
+                  </div>
+                ) : setup.busy ? (
+                  <Button
+                    variant="outline"
+                    onClick={async () => {
+                      await fetch("/api/setup/cancel", { method: "POST" });
+                    }}
+                    className="w-full h-11 rounded-xl"
+                  >
+                    Stop Setup
+                  </Button>
+                ) : (
+                  <Button
+                    onClick={start}
+                    disabled={starting}
+                    className="w-full h-11 rounded-xl font-medium text-sm"
+                  >
+                    {starting
+                      ? "Starting Setup..."
+                      : setup.phase === "idle"
+                      ? "Set Up Sanctum"
+                      : "Retry Setup"}
+                  </Button>
+                )}
+
+                <div className="flex items-center justify-between text-xs text-muted-foreground px-1">
+                  <button
+                    type="button"
+                    className="hover:text-foreground underline underline-offset-2 transition-colors"
+                    onClick={() =>
+                      (window as any).chrome?.webview?.postMessage(
+                        JSON.stringify({ type: "openLogs" })
+                      )
+                    }
+                  >
+                    Open Setup Logs
+                  </button>
+
+                  <span className="text-[11px]">Local • Private • Sovereign</span>
+                </div>
+              </div>
+            </div>
+          )}
         </div>
+
+        {/* Right Arrow Button */}
+        <button
+          type="button"
+          onClick={() => setSlideIndex((i) => Math.min(TOTAL_SLIDES - 1, i + 1))}
+          disabled={slideIndex === TOTAL_SLIDES - 1}
+          aria-label="Next step"
+          className={cn(
+            "hidden md:flex size-10 shrink-0 items-center justify-center rounded-full border border-white/[0.08] bg-card/70 backdrop-blur-xl text-foreground transition-all",
+            slideIndex === TOTAL_SLIDES - 1
+              ? "opacity-25 cursor-not-allowed"
+              : "hover:border-primary/45 hover:bg-card hover:scale-105 active:scale-95 shadow-lg"
+          )}
+        >
+          <IconArrowRight size={18} />
+        </button>
       </div>
+
+      {/* Bottom Footer Controls */}
+      <footer className="w-full max-w-2xl mx-auto px-6 pb-6 pt-2 flex items-center justify-between gap-3 shrink-0">
+        <Button
+          type="button"
+          variant="ghost"
+          size="sm"
+          disabled={slideIndex === 0}
+          onClick={() => setSlideIndex((i) => Math.max(0, i - 1))}
+          className="rounded-xl text-xs gap-1.5"
+        >
+          <IconArrowLeft size={14} />
+          <span>Back</span>
+        </Button>
+
+        <span className="text-[11px] text-muted-foreground hidden sm:inline">
+          Use arrow keys or click Next
+        </span>
+
+        {slideIndex < TOTAL_SLIDES - 1 ? (
+          <Button
+            type="button"
+            size="sm"
+            onClick={() => setSlideIndex((i) => Math.min(TOTAL_SLIDES - 1, i + 1))}
+            className="rounded-xl text-xs gap-1.5 px-4"
+          >
+            <span>Next</span>
+            <IconArrowRight size={14} />
+          </Button>
+        ) : (
+          <Button
+            type="button"
+            variant="ghost"
+            size="sm"
+            onClick={() => void handleSkip()}
+            disabled={skipping}
+            className="rounded-xl text-xs text-muted-foreground hover:text-foreground"
+          >
+            Skip for now
+          </Button>
+        )}
+      </footer>
     </div>
   );
 };
