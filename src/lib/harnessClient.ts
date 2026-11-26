@@ -202,7 +202,7 @@ export async function streamHarnessEvents(
 
 export type ToolApprovalResponse =
   | boolean
-  | { decision?: "allow_once" | "allow_session" | "deny" | string; approved?: boolean };
+  | { decision?: "approved" | "denied" | "allow_once" | "allow_session" | "deny" | string; approved?: boolean; scope?: string };
 
 export interface ToolActivity {
   id: string;
@@ -383,6 +383,7 @@ export async function* streamHarnessChat(
         const argsSha256 = String(evt.payload?.argsSha256 || "");
         const meta = activeTools.get(callId);
         let approved = false;
+        let scope = "once";
         if (opts.onApprovalRequest) {
           const resp = await opts.onApprovalRequest({
             toolName,
@@ -391,12 +392,22 @@ export async function* streamHarnessChat(
           approved =
             typeof resp === "boolean"
               ? resp
-              : Boolean(resp?.approved || resp?.decision === "allow_once" || resp?.decision === "allow_session");
+              : Boolean(
+                  resp?.approved ||
+                    resp?.decision === "approved" ||
+                    resp?.decision === "allow_once" ||
+                    resp?.decision === "allow_session"
+                );
+          if (typeof resp === "object" && resp?.scope) {
+            scope = String(resp.scope);
+          } else if (typeof resp === "object" && resp?.decision === "allow_session") {
+            scope = "session";
+          }
         }
         if (approvalId) {
           await resolveHarnessApproval(approvalId, {
             approved,
-            scope: "once",
+            scope,
             callId,
             argsSha256,
           }).catch(() => {});

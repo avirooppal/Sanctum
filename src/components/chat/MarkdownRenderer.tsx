@@ -12,9 +12,18 @@ interface MarkdownRendererProps {
 
 const RUNNABLE_LANGS = new Set(["python", "py", "javascript", "js", "node", "bash", "sh", "powershell", "ps1"]);
 
+function dedentCode(raw: string): string {
+  const lines = raw.replace(/\r\n/g, "\n").split("\n");
+  const nonEmpty = lines.filter((l) => l.trim().length > 0);
+  if (nonEmpty.length === 0) return raw.trim();
+  const minIndent = Math.min(...nonEmpty.map((l) => l.match(/^[ \t]*/)?.[0].length ?? 0));
+  return lines.map((l) => l.slice(minIndent)).join("\n").trim();
+}
+
 function buildRunCommand(lang: string, code: string): string | null {
   const l = lang.toLowerCase();
-  const b64 = typeof window !== "undefined" ? btoa(unescape(encodeURIComponent(code))) : "";
+  const cleaned = dedentCode(code);
+  const b64 = typeof window !== "undefined" ? btoa(unescape(encodeURIComponent(cleaned))) : "";
   if (!b64) return null;
   if (l === "python" || l === "py") {
     return `python -c "import base64; exec(base64.b64decode('${b64}').decode('utf-8'))"`;
@@ -23,7 +32,7 @@ function buildRunCommand(lang: string, code: string): string | null {
     return `node -e "eval(Buffer.from('${b64}','base64').toString('utf8'))"`;
   }
   if (l === "powershell" || l === "ps1" || l === "bash" || l === "sh") {
-    return code.trim();
+    return cleaned;
   }
   return null;
 }

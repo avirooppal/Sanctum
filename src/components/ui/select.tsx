@@ -84,13 +84,13 @@ export const SelectTrigger = React.forwardRef<
       onKeyDown={(e) => { if (e.key === "Escape") ctx?.setOpen(false); }}
       onClick={() => ctx?.setOpen(!ctx.open)}
       className={cn(
-        "flex h-9 w-full items-center justify-between rounded-md border border-input bg-transparent px-3 py-2 text-sm shadow-xs ring-offset-background placeholder:text-muted-foreground focus:outline-none focus:ring-1 focus:ring-ring disabled:cursor-not-allowed disabled:opacity-50",
+        "flex h-9 w-full items-center justify-between rounded-xl border border-border/80 bg-background/80 px-3 py-1.5 text-xs text-foreground shadow-xs ring-offset-background placeholder:text-muted-foreground hover:bg-muted/40 focus:outline-none focus:ring-1 focus:ring-primary/50 disabled:cursor-not-allowed disabled:opacity-50 transition-colors",
         className
       )}
       {...props}
     >
       {children}
-      <ChevronDown className="size-4 opacity-50 shrink-0 ml-2" />
+      <ChevronDown className={cn("size-3.5 opacity-60 shrink-0 ml-2 transition-transform", ctx?.open && "rotate-180")} />
     </button>
   );
 });
@@ -136,7 +136,7 @@ export function SelectContent({
       onKeyDown={(e) => { if (e.key === "Escape") ctx?.setOpen(false); }}
       data-no-drag
       className={cn(
-        "absolute z-50 mt-1 max-h-60 w-full overflow-auto rounded-md border border-border bg-popover p-1 text-popover-foreground shadow-md animate-in fade-in-80",
+        "absolute right-0 z-50 mt-1.5 max-h-60 min-w-full overflow-auto rounded-xl border border-white/[0.10] bg-popover/95 backdrop-blur-xl p-1 text-popover-foreground shadow-2xl animate-in fade-in-80",
         className
       )}
     >
@@ -167,15 +167,15 @@ export function SelectItem({
         ctx?.onValueChange(value);
       }}
       className={cn(
-        "relative flex w-full cursor-pointer select-none items-center rounded-sm py-1.5 pl-8 pr-2 text-sm outline-none hover:bg-accent hover:text-accent-foreground",
-        isSelected && "font-medium text-accent-foreground",
+        "relative flex w-full cursor-pointer select-none items-center justify-between gap-2 rounded-lg px-2.5 py-1.5 text-xs outline-none transition-colors whitespace-nowrap",
+        isSelected
+          ? "bg-primary/15 text-foreground font-medium"
+          : "text-muted-foreground hover:bg-muted/60 hover:text-foreground",
         className
       )}
     >
-      <span className="absolute left-2 flex size-3.5 items-center justify-center">
-        {isSelected && <Check className="size-4" />}
-      </span>
       <span>{children}</span>
+      {isSelected && <Check className="size-3.5 text-primary shrink-0" />}
     </button>
   );
 }

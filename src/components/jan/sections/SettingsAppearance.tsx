@@ -11,6 +11,7 @@ import {
   IconPalette,
 } from "@tabler/icons-react";
 import { Button } from "@/components/ui/button";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { fetchWithApproval } from "@/lib/hostBridge";
 import {
   ACCENT_SWATCHES,
@@ -303,7 +304,10 @@ export const SettingsAppearance: React.FC = () => {
                   max={85}
                   value={Math.round(cfg.wallpaperOpacity * 100)}
                   onChange={(e) => void updateAndPersist({ wallpaperOpacity: Number(e.target.value) / 100 })}
-                  className="w-full accent-primary"
+                  style={{
+                    background: `linear-gradient(to right, hsl(var(--primary)) 0%, hsl(var(--primary)) ${((Math.round(cfg.wallpaperOpacity * 100) - 5) / 80) * 100}%, hsl(var(--muted)) ${((Math.round(cfg.wallpaperOpacity * 100) - 5) / 80) * 100}%, hsl(var(--muted)) 100%)`,
+                  }}
+                  className="w-full"
                 />
               </div>
 
@@ -318,7 +322,10 @@ export const SettingsAppearance: React.FC = () => {
                   max={24}
                   value={cfg.wallpaperBlur}
                   onChange={(e) => void updateAndPersist({ wallpaperBlur: Number(e.target.value) })}
-                  className="w-full accent-primary"
+                  style={{
+                    background: `linear-gradient(to right, hsl(var(--primary)) 0%, hsl(var(--primary)) ${(cfg.wallpaperBlur / 24) * 100}%, hsl(var(--muted)) ${(cfg.wallpaperBlur / 24) * 100}%, hsl(var(--muted)) 100%)`,
+                  }}
+                  className="w-full"
                 />
               </div>
             </div>
@@ -453,20 +460,25 @@ export const SettingsAppearance: React.FC = () => {
               <span className="text-xs font-medium text-foreground">Color Theme</span>
               <p className="text-[11px] text-muted-foreground">Select interface color palette.</p>
             </div>
-            <select
+            <Select
               value={cfg.theme}
-              onChange={(e) =>
+              onValueChange={(val) =>
                 void updateAndPersist(
-                  { theme: e.target.value as AppearanceConfig["theme"] },
-                  `Theme switched to ${e.target.value}`
+                  { theme: val as AppearanceConfig["theme"] },
+                  `Theme switched to ${val}`
                 )
               }
-              className="px-3 py-1.5 rounded-xl border border-border bg-background text-xs text-foreground"
+              className="w-44"
             >
-              <option value="dark">Dark Theme</option>
-              <option value="light">Light Theme</option>
-              <option value="system">System Synchronized</option>
-            </select>
+              <SelectTrigger className="h-8">
+                <SelectValue />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="dark">Dark Theme</SelectItem>
+                <SelectItem value="light">Light Theme</SelectItem>
+                <SelectItem value="system">System Synchronized</SelectItem>
+              </SelectContent>
+            </Select>
           </div>
 
           <div className="flex items-center justify-between pt-3 border-t border-border/50">
@@ -474,20 +486,25 @@ export const SettingsAppearance: React.FC = () => {
               <span className="text-xs font-medium text-foreground">Font Size</span>
               <p className="text-[11px] text-muted-foreground">Interface text scale.</p>
             </div>
-            <select
+            <Select
               value={cfg.fontSize}
-              onChange={(e) =>
+              onValueChange={(val) =>
                 void updateAndPersist(
-                  { fontSize: e.target.value as AppearanceConfig["fontSize"] },
-                  `Font size set to ${e.target.value}`
+                  { fontSize: val as AppearanceConfig["fontSize"] },
+                  `Font size set to ${val}`
                 )
               }
-              className="px-3 py-1.5 rounded-xl border border-border bg-background text-xs text-foreground"
+              className="w-44"
             >
-              <option value="small">Compact (13px)</option>
-              <option value="medium">Default (14px)</option>
-              <option value="large">Large (16px)</option>
-            </select>
+              <SelectTrigger className="h-8">
+                <SelectValue />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="small">Compact (13px)</SelectItem>
+                <SelectItem value="medium">Default (14px)</SelectItem>
+                <SelectItem value="large">Large (16px)</SelectItem>
+              </SelectContent>
+            </Select>
           </div>
 
           <div className="flex items-center justify-between pt-3 border-t border-border/50">

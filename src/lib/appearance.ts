@@ -170,6 +170,40 @@ export function resolveWallpaperStyle(config: AppearanceConfig): React.CSSProper
   };
 }
 
+function hexToHslChannels(hex: string): { hsl: string; isLight: boolean } | null {
+  const m = hex.trim().match(/^#([0-9a-fA-F]{6})$/);
+  if (!m) return null;
+  const r = parseInt(m[1].slice(0, 2), 16) / 255;
+  const g = parseInt(m[1].slice(2, 4), 16) / 255;
+  const b = parseInt(m[1].slice(4, 6), 16) / 255;
+  const max = Math.max(r, g, b);
+  const min = Math.min(r, g, b);
+  const l = (max + min) / 2;
+  let h = 0;
+  let s = 0;
+  if (max !== min) {
+    const d = max - min;
+    s = l > 0.5 ? d / (2 - max - min) : d / (max + min);
+    switch (max) {
+      case r:
+        h = (g - b) / d + (g < b ? 6 : 0);
+        break;
+      case g:
+        h = (b - r) / d + 2;
+        break;
+      case b:
+        h = (r - g) / d + 4;
+        break;
+    }
+    h *= 60;
+  }
+  const lum = 0.299 * r + 0.587 * g + 0.114 * b;
+  return {
+    hsl: `${Math.round(h)} ${Math.round(s * 100)}% ${Math.round(l * 100)}%`,
+    isLight: lum > 0.72,
+  };
+}
+
 export function applyAppearanceConfig(config: Partial<AppearanceConfig>): void {
   if (typeof document === "undefined") return;
   const html = document.documentElement;
@@ -186,13 +220,15 @@ export function applyAppearanceConfig(config: Partial<AppearanceConfig>): void {
     html.style.fontSize = px;
   }
   if (config.accentColor !== undefined) {
-    const hex = (config.accentColor || "").trim();
-    if (/^#[0-9a-fA-F]{6}$/.test(hex)) {
-      html.style.setProperty("--primary", hex);
-      html.style.setProperty("--ring", hex);
-      html.style.setProperty("--sidebar-primary", hex);
+    const converted = hexToHslChannels(config.accentColor || "");
+    if (converted) {
+      html.style.setProperty("--primary", converted.hsl);
+      html.style.setProperty("--primary-foreground", converted.isLight ? "0 0% 8%" : "0 0% 100%");
+      html.style.setProperty("--ring", converted.hsl);
+      html.style.setProperty("--sidebar-primary", converted.hsl);
     } else {
       html.style.removeProperty("--primary");
+      html.style.removeProperty("--primary-foreground");
       html.style.removeProperty("--ring");
       html.style.removeProperty("--sidebar-primary");
     }
